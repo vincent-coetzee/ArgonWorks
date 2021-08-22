@@ -1281,7 +1281,18 @@ public class Parser: CompilerPass
             {
             return(self.parseParentheses
                 {
-                return(self.parseExpression())
+                let expression = self.parseExpression()
+                if self.token.isComma
+                    {
+                    let tuple = TupleExpression()
+                    tuple.append(expression)
+                    while self.token.isComma
+                        {
+                        tuple.append(self.parseExpression())
+                        }
+                    return(tuple)
+                    }
+                return(expression)
                 })
             }
         else if self.token.isLeftBrace

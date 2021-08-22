@@ -14,6 +14,11 @@ extension UTType
         {
         UTType(exportedAs: "com.macsemantics.argon.project")
         }
+        
+    static var argonSourceFile: UTType
+        {
+        UTType(exportedAs: "com.macsemantics.argon.source")
+        }
     }
 
 struct ProjectDocument: FileDocument

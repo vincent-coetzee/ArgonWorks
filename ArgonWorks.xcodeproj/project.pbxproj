@@ -22,6 +22,8 @@
 		BFA3ADD026D04B0200F17CF6 /* ProcessorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */; };
 		BFA3ADD226D0590F00F17CF6 /* InstructionCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */; };
 		BFA3ADD426D0676F00F17CF6 /* RegistersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */; };
+		BFB9F74926D2D03F0015B19F /* TupleExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB9F74826D2D03F0015B19F /* TupleExpression.swift */; };
+		BFB9F74B26D2D0F00015B19F /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB9F74A26D2D0F00015B19F /* Tuple.swift */; };
 		BFC1EC8226CFF9E9009B7C34 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */; };
 		BFC1EC8426CFF9E9009B7C34 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */; };
 		BFC1EC8626CFF9E9009B7C34 /* ModuleDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */; };
@@ -247,6 +249,8 @@
 		BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessorViewController.swift; sourceTree = "<group>"; };
 		BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionCellView.swift; sourceTree = "<group>"; };
 		BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistersViewController.swift; sourceTree = "<group>"; };
+		BFB9F74826D2D03F0015B19F /* TupleExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TupleExpression.swift; sourceTree = "<group>"; };
+		BFB9F74A26D2D0F00015B19F /* Tuple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
 		BFC1EC7E26CFF9E9009B7C34 /* ArgonWorks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArgonWorks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -618,6 +622,7 @@
 				BFC1ED0E26CFFAA7009B7C34 /* SuffixExpression.swift */,
 				BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */,
 				BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */,
+				BFB9F74826D2D03F0015B19F /* TupleExpression.swift */,
 			);
 			path = Expressions;
 			sourceTree = "<group>";
@@ -787,6 +792,7 @@
 				BFC1EDAB26CFFADC009B7C34 /* SystemClass.swift */,
 				BFC1EDA226CFFADC009B7C34 /* TaggedPrimitiveClass.swift */,
 				BFC1EDB026CFFADC009B7C34 /* VoidClass.swift */,
+				BFB9F74A26D2D0F00015B19F /* Tuple.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -1090,6 +1096,7 @@
 				BFC1ED8826CFFAD5009B7C34 /* Name.swift in Sources */,
 				BFC1EE3026CFFAF6009B7C34 /* ProjectDocument.swift in Sources */,
 				BFC1EDD626CFFADC009B7C34 /* ContainerSymbol.swift in Sources */,
+				BFB9F74B26D2D0F00015B19F /* Tuple.swift in Sources */,
 				BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */,
 				BFC1ED6C26CFFABA009B7C34 /* Parser.swift in Sources */,
 				BFC1ED1626CFFAA7009B7C34 /* MakeTerm.swift in Sources */,
@@ -1115,6 +1122,7 @@
 				BFC1ECFA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift in Sources */,
 				BFC1EDE126CFFADC009B7C34 /* SymbolType.swift in Sources */,
 				BFC1EE1626CFFADC009B7C34 /* Symbol.swift in Sources */,
+				BFB9F74926D2D03F0015B19F /* TupleExpression.swift in Sources */,
 				BFA3ADD226D0590F00F17CF6 /* InstructionCellView.swift in Sources */,
 				BFC1ED1A26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift in Sources */,
 				BFC1EE1526CFFADC009B7C34 /* Node.swift in Sources */,

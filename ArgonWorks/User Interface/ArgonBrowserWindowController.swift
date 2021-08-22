@@ -6,9 +6,12 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 
 class ArgonBrowserWindowController: NSWindowController
     {
+    @IBOutlet var toolbar: NSToolbar!
+    
     private var symbols: Array<Symbol> = []
     private let small = VirtualMachine(small: true)
     
@@ -53,10 +56,64 @@ class ArgonBrowserWindowController: NSWindowController
         
     private func initSourceEditor()
         {
+        self.sourceEditor.gutterBackgroundColor = NSColor.black
+        self.sourceEditor.backgroundColor = NSColor.black
+        self.sourceEditor.gutterForegroundColor = NSColor.lightGray
+        for item in self.toolbar.visibleItems!
+            {
+            item.isEnabled = true
+            }
+        for item in self.toolbar.items
+            {
+            if item.label == "Open"
+                {
+                item.target = self
+                item.action = #selector(ArgonBrowserWindowController.openDocument(_:))
+                }
+            }
         }
         
     private func initInspector()
         {
+        }
+        
+    public func validateToolbarItem(item:NSToolbarItem) -> Bool
+        {
+        return(true)
+        }
+        
+    @IBAction public func openDocument(_ sender:Any?)
+        {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [UTType.argonSourceFile]
+        panel.canChooseFiles = true
+        panel.prompt = "Open"
+        panel.message = "Select an Argon source file to be opened in the Argon source editor."
+        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
+        if panel.runModal() == .OK
+            {
+            if let url = panel.url,let string = try? String(contentsOf: url)
+                {
+                self.sourceEditor.string = string
+                }
+            }
+        }
+        
+    @IBAction public func onOpenDocument(_ sender:Any?)
+        {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [UTType.argonSourceFile]
+        panel.canChooseFiles = true
+        panel.prompt = "Open"
+        panel.message = "Select an Argon source file to be opened in the Argon source editor."
+        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
+        if panel.runModal() == .OK
+            {
+            if let url = panel.url,let string = try? String(contentsOf: url)
+                {
+                self.sourceEditor.string = string
+                }
+            }
         }
     }
 
