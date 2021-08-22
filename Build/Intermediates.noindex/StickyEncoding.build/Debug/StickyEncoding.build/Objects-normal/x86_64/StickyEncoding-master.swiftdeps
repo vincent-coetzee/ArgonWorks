@@ -1,0 +1,35 @@
+version: "Apple Swift version 5.5 (swiftlang-1300.0.29.102 clang-1300.0.28.1)"
+options: "8ee1be9a498768d6e413b2382f77669dc152d454dd6040d60fbfd995096f1b3f"
+build_start_time: [1629472846, 934916973]
+build_end_time: [1629472847, 786466121]
+inputs:
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/BinaryCodingKey.swift"
+  : [1629472220, 208403110]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/BinaryDecoder.swift"
+  : [1629472220, 208962678]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/BinaryEncoder.swift"
+  : [1629472220, 209236860]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/CodingKey+Extensions.swift"
+  : [1629472220, 209408283]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/DecodingError+Extensions.swift"
+  : [1629472220, 209545612]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/EncodedType.swift"
+  : [1629472220, 209681987]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/KeyedStorageContainer.swift"
+  : [1629472220, 209804773]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/MemoryAlignment.swift"
+  : [1629472220, 209939479]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/NullStorageContainer.swift"
+  : [1629472220, 210070371]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/PassthroughReference.swift"
+  : [1629472220, 210196971]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/SingleValueContainer.swift"
+  : [1629472220, 210365533]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/StorageContainer.swift"
+  : [1629472220, 210481643]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/StorageContainerReaderWriter.swift"
+  : [1629472220, 210700511]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/StrorageContainerReference.swift"
+  : [1629472220, 210860252]
+  ? "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/SourcePackages/checkouts/sticky-encoding/Sources/StickyEncoding/UnkeyedStorageContainer.swift"
+  : [1629472220, 210998058]

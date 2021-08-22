@@ -1,0 +1,57 @@
+{
+  "_buildCommand2" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildAndRun"
+  },
+  "buildCommand" : "build",
+  "configuredTargets" : [
+    {
+      "guid" : "84d15d4a9c4620ea86d6640236a01848a8590ca5d7d6e3da4ff4f4913f4dff8e"
+    }
+  ],
+  "containerPath" : "/Users/vincent/Development/Development2021/ArgonWorks/ArgonWorks.xcodeproj",
+  "continueBuildingAfterErrors" : true,
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "x86_64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "macosx",
+      "sdk" : "macosx12.0",
+      "sdkVariant" : "macos",
+      "supportedArchitectures" : [
+        "x86_64h",
+        "x86_64"
+      ],
+      "targetArchitecture" : "x86_64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/vincent/Development/Development2021/ArgonWorks/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/vincent/Development/Development2021/ArgonWorks/Build/Products",
+      "derivedDataPath" : "/Users/vincent/Library/Xcode",
+      "indexDataStoreFolderPath" : "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/Index/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/vincent/Library/Xcode/ArgonWorks-asvbdqmqhlkxhjbldmgviplqzhib/Index/PrecompiledHeaders",
+      "pchPath" : "/Users/vincent/Development/Development2021/ArgonWorks/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "synthesized" : {
+        "table" : {
+          "ENABLE_PREVIEWS" : "NO"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "schemeCommand2" : "launch",
+  "shouldCollectMetrics" : false,
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

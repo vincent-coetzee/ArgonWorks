@@ -1,0 +1,6 @@
+module Interpreter [system] [extern_c] {
+    header "Interpreter.h"
+    export *
+}
+
+

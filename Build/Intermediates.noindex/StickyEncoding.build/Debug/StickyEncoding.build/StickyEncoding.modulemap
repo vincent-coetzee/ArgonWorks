@@ -1,0 +1,4 @@
+module StickyEncoding {
+header "StickyEncoding-Swift.h"
+export *
+}

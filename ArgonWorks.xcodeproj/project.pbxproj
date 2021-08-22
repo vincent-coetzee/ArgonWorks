@@ -7,21 +7,456 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF86721326D0EC5300A12B1A /* ProcessorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */; };
+		BF86721526D134C000A12B1A /* SlotList.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721426D134C000A12B1A /* SlotList.swift */; };
+		BF86721926D18ED200A12B1A /* Parent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721826D18ED200A12B1A /* Parent.swift */; };
+		BF86721C26D2AA0100A12B1A /* ArgonBrowserWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */; };
+		BF86721F26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */; };
+		BF86722126D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */; };
+		BF86722326D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */; };
+		BFA3ADA426CFFD9300F17CF6 /* EnglishWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */; };
+		BFA3ADA526CFFD9300F17CF6 /* words.txt in Resources */ = {isa = PBXBuildFile; fileRef = BFA3ADA326CFFD9300F17CF6 /* words.txt */; };
+		BFA3ADA826D0042300F17CF6 /* DocumentsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */; };
+		BFA3ADCC26D008ED00F17CF6 /* MemoryBrowserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */; };
+		BFA3ADCE26D0195F00F17CF6 /* MemorySlotCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */; };
+		BFA3ADD026D04B0200F17CF6 /* ProcessorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */; };
+		BFA3ADD226D0590F00F17CF6 /* InstructionCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */; };
+		BFA3ADD426D0676F00F17CF6 /* RegistersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */; };
 		BFC1EC8226CFF9E9009B7C34 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */; };
 		BFC1EC8426CFF9E9009B7C34 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */; };
-		BFC1EC8626CFF9E9009B7C34 /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8526CFF9E9009B7C34 /* Document.swift */; };
+		BFC1EC8626CFF9E9009B7C34 /* ModuleDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */; };
 		BFC1EC8826CFF9EB009B7C34 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */; };
 		BFC1EC8B26CFF9EB009B7C34 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */; };
+		BFC1EC9826CFFA7C009B7C34 /* Interpreter.c in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9726CFFA7C009B7C34 /* Interpreter.c */; };
+		BFC1ECA026CFFA8E009B7C34 /* ArgonServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9A26CFFA8E009B7C34 /* ArgonServer.swift */; };
+		BFC1ECA126CFFA8E009B7C34 /* SignalHandler.c in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9B26CFFA8E009B7C34 /* SignalHandler.c */; };
+		BFC1ECA226CFFA8E009B7C34 /* PersistentDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9C26CFFA8E009B7C34 /* PersistentDictionary.swift */; };
+		BFC1ECA326CFFA8E009B7C34 /* ObjectHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9D26CFFA8E009B7C34 /* ObjectHandle.swift */; };
+		BFC1ECA426CFFA8E009B7C34 /* Page.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9E26CFFA8E009B7C34 /* Page.swift */; };
+		BFC1ECA526CFFA8E009B7C34 /* PageServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EC9F26CFFA8E009B7C34 /* PageServer.swift */; };
+		BFC1ECD726CFFA9F009B7C34 /* InnerDictionaryPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECA726CFFA9F009B7C34 /* InnerDictionaryPointer.swift */; };
+		BFC1ECD826CFFA9F009B7C34 /* BitField.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECA826CFFA9F009B7C34 /* BitField.swift */; };
+		BFC1ECD926CFFA9F009B7C34 /* BitEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECA926CFFA9F009B7C34 /* BitEncoder.swift */; };
+		BFC1ECDA26CFFA9F009B7C34 /* StackSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAA26CFFA9F009B7C34 /* StackSegment.swift */; };
+		BFC1ECDB26CFFA9F009B7C34 /* PackedField.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAB26CFFA9F009B7C34 /* PackedField.swift */; };
+		BFC1ECDC26CFFA9F009B7C34 /* PointerHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAC26CFFA9F009B7C34 /* PointerHolder.swift */; };
+		BFC1ECDD26CFFA9F009B7C34 /* MemorySize.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAD26CFFA9F009B7C34 /* MemorySize.swift */; };
+		BFC1ECDE26CFFA9F009B7C34 /* InnerArrayPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAE26CFFA9F009B7C34 /* InnerArrayPointer.swift */; };
+		BFC1ECDF26CFFA9F009B7C34 /* InnerInstancePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECAF26CFFA9F009B7C34 /* InnerInstancePointer.swift */; };
+		BFC1ECE026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift */; };
+		BFC1ECE126CFFA9F009B7C34 /* Timer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB126CFFA9F009B7C34 /* Timer.swift */; };
+		BFC1ECE226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift */; };
+		BFC1ECE326CFFA9F009B7C34 /* Instruction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB326CFFA9F009B7C34 /* Instruction.swift */; };
+		BFC1ECE426CFFA9F009B7C34 /* DataSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB426CFFA9F009B7C34 /* DataSegment.swift */; };
+		BFC1ECE526CFFA9F009B7C34 /* ValueHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB526CFFA9F009B7C34 /* ValueHolder.swift */; };
+		BFC1ECE626CFFA9F009B7C34 /* InnerBlockPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB626CFFA9F009B7C34 /* InnerBlockPointer.swift */; };
+		BFC1ECE726CFFA9F009B7C34 /* InnerClosurePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB726CFFA9F009B7C34 /* InnerClosurePointer.swift */; };
+		BFC1ECE826CFFA9F009B7C34 /* InnerStringPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB826CFFA9F009B7C34 /* InnerStringPointer.swift */; };
+		BFC1ECE926CFFA9F009B7C34 /* InnerListPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECB926CFFA9F009B7C34 /* InnerListPointer.swift */; };
+		BFC1ECEA26CFFA9F009B7C34 /* VirtualMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBA26CFFA9F009B7C34 /* VirtualMachine.swift */; };
+		BFC1ECEB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift */; };
+		BFC1ECEC26CFFA9F009B7C34 /* Thread.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBC26CFFA9F009B7C34 /* Thread.swift */; };
+		BFC1ECED26CFFA9F009B7C34 /* Segment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBD26CFFA9F009B7C34 /* Segment.swift */; };
+		BFC1ECEE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift */; };
+		BFC1ECEF26CFFA9F009B7C34 /* WordPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECBF26CFFA9F009B7C34 /* WordPointer.swift */; };
+		BFC1ECF026CFFA9F009B7C34 /* InnerFunctionPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC026CFFA9F009B7C34 /* InnerFunctionPointer.swift */; };
+		BFC1ECF126CFFA9F009B7C34 /* ExecutionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC126CFFA9F009B7C34 /* ExecutionContext.swift */; };
+		BFC1ECF226CFFA9F009B7C34 /* ObjectPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC226CFFA9F009B7C34 /* ObjectPointer.swift */; };
+		BFC1ECF326CFFA9F009B7C34 /* Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC326CFFA9F009B7C34 /* Header.swift */; };
+		BFC1ECF426CFFA9F009B7C34 /* GeneralPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC426CFFA9F009B7C34 /* GeneralPointer.swift */; };
+		BFC1ECF526CFFA9F009B7C34 /* InnerByteArrayPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC526CFFA9F009B7C34 /* InnerByteArrayPointer.swift */; };
+		BFC1ECF626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift */; };
+		BFC1ECF726CFFA9F009B7C34 /* ManagedSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC726CFFA9F009B7C34 /* ManagedSegment.swift */; };
+		BFC1ECF826CFFA9F009B7C34 /* InnerSlotPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC826CFFA9F009B7C34 /* InnerSlotPointer.swift */; };
+		BFC1ECF926CFFA9F009B7C34 /* Word.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECC926CFFA9F009B7C34 /* Word.swift */; };
+		BFC1ECFA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECCA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift */; };
+		BFC1ECFB26CFFA9F009B7C34 /* InstructionBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECCB26CFFA9F009B7C34 /* InstructionBuffer.swift */; };
+		BFC1ECFC26CFFA9F009B7C34 /* DynamicLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECCC26CFFA9F009B7C34 /* DynamicLibrary.swift */; };
+		BFC1ECFD26CFFA9F009B7C34 /* InnerVectorPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECCD26CFFA9F009B7C34 /* InnerVectorPointer.swift */; };
+		BFC1ECFE26CFFA9F009B7C34 /* StringPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECCE26CFFA9F009B7C34 /* StringPointer.swift */; };
+		BFC1ED0026CFFA9F009B7C34 /* StaticSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD026CFFA9F009B7C34 /* StaticSegment.swift */; };
+		BFC1ED0126CFFA9F009B7C34 /* InnerInstructionArrayPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD126CFFA9F009B7C34 /* InnerInstructionArrayPointer.swift */; };
+		BFC1ED0226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift */; };
+		BFC1ED0326CFFA9F009B7C34 /* InnerClassPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD326CFFA9F009B7C34 /* InnerClassPointer.swift */; };
+		BFC1ED0426CFFA9F009B7C34 /* InnerPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD426CFFA9F009B7C34 /* InnerPointer.swift */; };
+		BFC1ED0526CFFA9F009B7C34 /* InnerMethodInstancePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD526CFFA9F009B7C34 /* InnerMethodInstancePointer.swift */; };
+		BFC1ED0626CFFA9F009B7C34 /* InnerSlotValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ECD626CFFA9F009B7C34 /* InnerSlotValue.swift */; };
+		BFC1ED1626CFFAA7009B7C34 /* MakeTerm.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0826CFFAA7009B7C34 /* MakeTerm.swift */; };
+		BFC1ED1726CFFAA7009B7C34 /* Expression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0926CFFAA7009B7C34 /* Expression.swift */; };
+		BFC1ED1826CFFAA7009B7C34 /* UnaryExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */; };
+		BFC1ED1926CFFAA7009B7C34 /* InvocationExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0B26CFFAA7009B7C34 /* InvocationExpression.swift */; };
+		BFC1ED1A26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0C26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift */; };
+		BFC1ED1B26CFFAA7009B7C34 /* SymbolExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */; };
+		BFC1ED1C26CFFAA7009B7C34 /* SuffixExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0E26CFFAA7009B7C34 /* SuffixExpression.swift */; };
+		BFC1ED1D26CFFAA7009B7C34 /* ArrayAccessExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED0F26CFFAA7009B7C34 /* ArrayAccessExpression.swift */; };
+		BFC1ED1E26CFFAA7009B7C34 /* BinaryExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1026CFFAA7009B7C34 /* BinaryExpression.swift */; };
+		BFC1ED1F26CFFAA7009B7C34 /* AsExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1126CFFAA7009B7C34 /* AsExpression.swift */; };
+		BFC1ED2026CFFAA7009B7C34 /* LocalSlotExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1226CFFAA7009B7C34 /* LocalSlotExpression.swift */; };
+		BFC1ED2126CFFAA7009B7C34 /* AssignmentExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1326CFFAA7009B7C34 /* AssignmentExpression.swift */; };
+		BFC1ED2226CFFAA7009B7C34 /* SlotExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1426CFFAA7009B7C34 /* SlotExpression.swift */; };
+		BFC1ED2326CFFAA7009B7C34 /* LiteralExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED1526CFFAA7009B7C34 /* LiteralExpression.swift */; };
+		BFC1ED3826CFFAB1009B7C34 /* ForkBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2526CFFAB1009B7C34 /* ForkBlock.swift */; };
+		BFC1ED3926CFFAB1009B7C34 /* MethodInstanceBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2626CFFAB1009B7C34 /* MethodInstanceBlock.swift */; };
+		BFC1ED3A26CFFAB1009B7C34 /* BlockExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2726CFFAB1009B7C34 /* BlockExpression.swift */; };
+		BFC1ED3B26CFFAB1009B7C34 /* Block.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2826CFFAB1009B7C34 /* Block.swift */; };
+		BFC1ED3C26CFFAB1009B7C34 /* SelectBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2926CFFAB1009B7C34 /* SelectBlock.swift */; };
+		BFC1ED3D26CFFAB1009B7C34 /* OtherwiseBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2A26CFFAB1009B7C34 /* OtherwiseBlock.swift */; };
+		BFC1ED3E26CFFAB1009B7C34 /* ExpressionBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2B26CFFAB1009B7C34 /* ExpressionBlock.swift */; };
+		BFC1ED3F26CFFAB1009B7C34 /* ForBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2C26CFFAB1009B7C34 /* ForBlock.swift */; };
+		BFC1ED4026CFFAB1009B7C34 /* ElseBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2D26CFFAB1009B7C34 /* ElseBlock.swift */; };
+		BFC1ED4126CFFAB1009B7C34 /* ClosureBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2E26CFFAB1009B7C34 /* ClosureBlock.swift */; };
+		BFC1ED4226CFFAB1009B7C34 /* ReturnBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED2F26CFFAB1009B7C34 /* ReturnBlock.swift */; };
+		BFC1ED4326CFFAB1009B7C34 /* LoopBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3026CFFAB1009B7C34 /* LoopBlock.swift */; };
+		BFC1ED4426CFFAB1009B7C34 /* VirtualReadBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3126CFFAB1009B7C34 /* VirtualReadBlock.swift */; };
+		BFC1ED4526CFFAB1009B7C34 /* WhenBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3226CFFAB1009B7C34 /* WhenBlock.swift */; };
+		BFC1ED4626CFFAB1009B7C34 /* IfBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3326CFFAB1009B7C34 /* IfBlock.swift */; };
+		BFC1ED4726CFFAB1009B7C34 /* LetBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3426CFFAB1009B7C34 /* LetBlock.swift */; };
+		BFC1ED4826CFFAB1009B7C34 /* HandlerBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3526CFFAB1009B7C34 /* HandlerBlock.swift */; };
+		BFC1ED4926CFFAB1009B7C34 /* WhileBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3626CFFAB1009B7C34 /* WhileBlock.swift */; };
+		BFC1ED4A26CFFAB1009B7C34 /* SignalBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED3726CFFAB1009B7C34 /* SignalBlock.swift */; };
+		BFC1ED5E26CFFABA009B7C34 /* Realizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4C26CFFABA009B7C34 /* Realizer.swift */; };
+		BFC1ED5F26CFFABA009B7C34 /* Address.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4D26CFFABA009B7C34 /* Address.swift */; };
+		BFC1ED6026CFFABA009B7C34 /* TokenRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */; };
+		BFC1ED6126CFFABA009B7C34 /* TokenStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */; };
+		BFC1ED6226CFFABA009B7C34 /* ForwardingSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */; };
+		BFC1ED6326CFFABA009B7C34 /* Register.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5126CFFABA009B7C34 /* Register.swift */; };
+		BFC1ED6426CFFABA009B7C34 /* SemanticAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */; };
+		BFC1ED6526CFFABA009B7C34 /* Code3A.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5326CFFABA009B7C34 /* Code3A.swift */; };
+		BFC1ED6626CFFABA009B7C34 /* Optimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */; };
+		BFC1ED6726CFFABA009B7C34 /* SyntaxColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */; };
+		BFC1ED6826CFFABA009B7C34 /* Compiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5626CFFABA009B7C34 /* Compiler.swift */; };
+		BFC1ED6926CFFABA009B7C34 /* CodeGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5726CFFABA009B7C34 /* CodeGenerator.swift */; };
+		BFC1ED6A26CFFABA009B7C34 /* ParseNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5826CFFABA009B7C34 /* ParseNode.swift */; };
+		BFC1ED6B26CFFABA009B7C34 /* AddressAllocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5926CFFABA009B7C34 /* AddressAllocator.swift */; };
+		BFC1ED6C26CFFABA009B7C34 /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5A26CFFABA009B7C34 /* Parser.swift */; };
+		BFC1ED6D26CFFABA009B7C34 /* CompilerPass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5B26CFFABA009B7C34 /* CompilerPass.swift */; };
+		BFC1ED6E26CFFABA009B7C34 /* Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5C26CFFABA009B7C34 /* Token.swift */; };
+		BFC1ED6F26CFFABA009B7C34 /* Argon.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5D26CFFABA009B7C34 /* Argon.swift */; };
+		BFC1ED7426CFFAC0009B7C34 /* NullReportingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7126CFFAC0009B7C34 /* NullReportingContext.swift */; };
+		BFC1ED7526CFFAC0009B7C34 /* ReportingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7226CFFAC0009B7C34 /* ReportingContext.swift */; };
+		BFC1ED7626CFFAC0009B7C34 /* CompilerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7326CFFAC0009B7C34 /* CompilerError.swift */; };
+		BFC1ED7926CFFACD009B7C34 /* Type.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7826CFFACD009B7C34 /* Type.swift */; };
+		BFC1ED8426CFFAD5009B7C34 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7B26CFFAD5009B7C34 /* Location.swift */; };
+		BFC1ED8526CFFAD5009B7C34 /* ArgonDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7C26CFFAD5009B7C34 /* ArgonDate.swift */; };
+		BFC1ED8626CFFAD5009B7C34 /* Stack.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7D26CFFAD5009B7C34 /* Stack.swift */; };
+		BFC1ED8726CFFAD5009B7C34 /* ArgonTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7E26CFFAD5009B7C34 /* ArgonTime.swift */; };
+		BFC1ED8826CFFAD5009B7C34 /* Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7F26CFFAD5009B7C34 /* Name.swift */; };
+		BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */; };
+		BFC1ED8A26CFFAD5009B7C34 /* ArgonDateTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8126CFFAD5009B7C34 /* ArgonDateTime.swift */; };
+		BFC1ED8B26CFFAD5009B7C34 /* NamingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8226CFFAD5009B7C34 /* NamingContext.swift */; };
+		BFC1ED8C26CFFAD5009B7C34 /* SymbolHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */; };
+		BFC1EDD526CFFADC009B7C34 /* Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8E26CFFADC009B7C34 /* Constant.swift */; };
+		BFC1EDD626CFFADC009B7C34 /* ContainerSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8F26CFFADC009B7C34 /* ContainerSymbol.swift */; };
+		BFC1EDD726CFFADC009B7C34 /* Argument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9026CFFADC009B7C34 /* Argument.swift */; };
+		BFC1EDD826CFFADC009B7C34 /* SystemMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9226CFFADC009B7C34 /* SystemMethodInstance.swift */; };
+		BFC1EDD926CFFADC009B7C34 /* Closure.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9326CFFADC009B7C34 /* Closure.swift */; };
+		BFC1EDDA26CFFADC009B7C34 /* DispatchNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9426CFFADC009B7C34 /* DispatchNode.swift */; };
+		BFC1EDDB26CFFADC009B7C34 /* Handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9526CFFADC009B7C34 /* Handler.swift */; };
+		BFC1EDDC26CFFADC009B7C34 /* Method.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9626CFFADC009B7C34 /* Method.swift */; };
+		BFC1EDDD26CFFADC009B7C34 /* MethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9726CFFADC009B7C34 /* MethodInstance.swift */; };
+		BFC1EDDE26CFFADC009B7C34 /* Invokable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9826CFFADC009B7C34 /* Invokable.swift */; };
+		BFC1EDDF26CFFADC009B7C34 /* SystemMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9926CFFADC009B7C34 /* SystemMethod.swift */; };
+		BFC1EDE026CFFADC009B7C34 /* Function.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9A26CFFADC009B7C34 /* Function.swift */; };
+		BFC1EDE126CFFADC009B7C34 /* SymbolType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9B26CFFADC009B7C34 /* SymbolType.swift */; };
+		BFC1EDE226CFFADC009B7C34 /* Parameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9C26CFFADC009B7C34 /* Parameter.swift */; };
+		BFC1EDE326CFFADC009B7C34 /* EnumerationCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9E26CFFADC009B7C34 /* EnumerationCase.swift */; };
+		BFC1EDE426CFFADC009B7C34 /* Enumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9F26CFFADC009B7C34 /* Enumeration.swift */; };
+		BFC1EDE526CFFADC009B7C34 /* Metaclass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA126CFFADC009B7C34 /* Metaclass.swift */; };
+		BFC1EDE626CFFADC009B7C34 /* TaggedPrimitiveClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA226CFFADC009B7C34 /* TaggedPrimitiveClass.swift */; };
+		BFC1EDE726CFFADC009B7C34 /* ClassSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA326CFFADC009B7C34 /* ClassSet.swift */; };
+		BFC1EDE826CFFADC009B7C34 /* ArrayClassInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA426CFFADC009B7C34 /* ArrayClassInstance.swift */; };
+		BFC1EDE926CFFADC009B7C34 /* PrimitiveClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA526CFFADC009B7C34 /* PrimitiveClass.swift */; };
+		BFC1EDEA26CFFADC009B7C34 /* ArrayClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA626CFFADC009B7C34 /* ArrayClass.swift */; };
+		BFC1EDEB26CFFADC009B7C34 /* GenericClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA726CFFADC009B7C34 /* GenericClass.swift */; };
+		BFC1EDEC26CFFADC009B7C34 /* GenericSystemClassInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA826CFFADC009B7C34 /* GenericSystemClassInstance.swift */; };
+		BFC1EDED26CFFADC009B7C34 /* GenericClassInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDA926CFFADC009B7C34 /* GenericClassInstance.swift */; };
+		BFC1EDEE26CFFADC009B7C34 /* ClosureClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAA26CFFADC009B7C34 /* ClosureClass.swift */; };
+		BFC1EDEF26CFFADC009B7C34 /* SystemClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAB26CFFADC009B7C34 /* SystemClass.swift */; };
+		BFC1EDF026CFFADC009B7C34 /* GenericSystemClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAC26CFFADC009B7C34 /* GenericSystemClass.swift */; };
+		BFC1EDF126CFFADC009B7C34 /* Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAD26CFFADC009B7C34 /* Class.swift */; };
+		BFC1EDF226CFFADC009B7C34 /* ForwardReferenceClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAE26CFFADC009B7C34 /* ForwardReferenceClass.swift */; };
+		BFC1EDF326CFFADC009B7C34 /* GenericClassParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDAF26CFFADC009B7C34 /* GenericClassParameter.swift */; };
+		BFC1EDF426CFFADC009B7C34 /* VoidClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB026CFFADC009B7C34 /* VoidClass.swift */; };
+		BFC1EDF526CFFADC009B7C34 /* Displayable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB126CFFADC009B7C34 /* Displayable.swift */; };
+		BFC1EDF626CFFADC009B7C34 /* MethodType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB226CFFADC009B7C34 /* MethodType.swift */; };
+		BFC1EDF726CFFADC009B7C34 /* LocalSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB326CFFADC009B7C34 /* LocalSlot.swift */; };
+		BFC1EDF826CFFADC009B7C34 /* SymbolAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB426CFFADC009B7C34 /* SymbolAttributes.swift */; };
+		BFC1EDF926CFFADC009B7C34 /* ErrorSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB526CFFADC009B7C34 /* ErrorSymbol.swift */; };
+		BFC1EDFA26CFFADC009B7C34 /* SymbolGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB626CFFADC009B7C34 /* SymbolGroup.swift */; };
+		BFC1EDFB26CFFADC009B7C34 /* Interceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB726CFFADC009B7C34 /* Interceptor.swift */; };
+		BFC1EDFC26CFFADC009B7C34 /* TypeParameter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB826CFFADC009B7C34 /* TypeParameter.swift */; };
+		BFC1EDFD26CFFADC009B7C34 /* TypeAlias.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */; };
+		BFC1EDFE26CFFADC009B7C34 /* Initializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBA26CFFADC009B7C34 /* Initializer.swift */; };
+		BFC1EDFF26CFFADC009B7C34 /* NodeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBB26CFFADC009B7C34 /* NodeLocation.swift */; };
+		BFC1EE0026CFFADC009B7C34 /* TypeConstraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */; };
+		BFC1EE0126CFFADC009B7C34 /* ImportedSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBD26CFFADC009B7C34 /* ImportedSymbol.swift */; };
+		BFC1EE0226CFFADC009B7C34 /* TypeCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */; };
+		BFC1EE0326CFFADC009B7C34 /* Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBF26CFFADC009B7C34 /* Import.swift */; };
+		BFC1EE0426CFFADC009B7C34 /* TopModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC126CFFADC009B7C34 /* TopModule.swift */; };
+		BFC1EE0526CFFADC009B7C34 /* SystemModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC226CFFADC009B7C34 /* SystemModule.swift */; };
+		BFC1EE0626CFFADC009B7C34 /* ModuleInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC326CFFADC009B7C34 /* ModuleInstance.swift */; };
+		BFC1EE0726CFFADC009B7C34 /* ArgonModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC426CFFADC009B7C34 /* ArgonModule.swift */; };
+		BFC1EE0826CFFADC009B7C34 /* LibraryModuleInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC526CFFADC009B7C34 /* LibraryModuleInstance.swift */; };
+		BFC1EE0926CFFADC009B7C34 /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC626CFFADC009B7C34 /* Module.swift */; };
+		BFC1EE0A26CFFADC009B7C34 /* LibraryModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC726CFFADC009B7C34 /* LibraryModule.swift */; };
+		BFC1EE0B26CFFADC009B7C34 /* MainModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC826CFFADC009B7C34 /* MainModule.swift */; };
+		BFC1EE0C26CFFADC009B7C34 /* IntegerSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCA26CFFADC009B7C34 /* IntegerSlot.swift */; };
+		BFC1EE0D26CFFADC009B7C34 /* ArraySlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCB26CFFADC009B7C34 /* ArraySlot.swift */; };
+		BFC1EE0E26CFFADC009B7C34 /* Slot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCC26CFFADC009B7C34 /* Slot.swift */; };
+		BFC1EE0F26CFFADC009B7C34 /* StringSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCD26CFFADC009B7C34 /* StringSlot.swift */; };
+		BFC1EE1026CFFADC009B7C34 /* BooleanSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCE26CFFADC009B7C34 /* BooleanSlot.swift */; };
+		BFC1EE1126CFFADC009B7C34 /* ObjectSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDCF26CFFADC009B7C34 /* ObjectSlot.swift */; };
+		BFC1EE1226CFFADC009B7C34 /* HeaderSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDD026CFFADC009B7C34 /* HeaderSlot.swift */; };
+		BFC1EE1326CFFADC009B7C34 /* VirtualSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDD126CFFADC009B7C34 /* VirtualSlot.swift */; };
+		BFC1EE1426CFFADC009B7C34 /* FloatSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDD226CFFADC009B7C34 /* FloatSlot.swift */; };
+		BFC1EE1526CFFADC009B7C34 /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDD326CFFADC009B7C34 /* Node.swift */; };
+		BFC1EE1626CFFADC009B7C34 /* Symbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDD426CFFADC009B7C34 /* Symbol.swift */; };
+		BFC1EE1C26CFFAE7009B7C34 /* NSColor+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE1826CFFAE7009B7C34 /* NSColor+Extensions.swift */; };
+		BFC1EE1D26CFFAE7009B7C34 /* String+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE1926CFFAE7009B7C34 /* String+Extensions.swift */; };
+		BFC1EE1E26CFFAE7009B7C34 /* Optional+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE1A26CFFAE7009B7C34 /* Optional+Extensions.swift */; };
+		BFC1EE1F26CFFAE7009B7C34 /* Dictionary+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE1B26CFFAE7009B7C34 /* Dictionary+Extensions.swift */; };
+		BFC1EE2C26CFFAF6009B7C34 /* ProcessorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2126CFFAF5009B7C34 /* ProcessorView.swift */; };
+		BFC1EE2D26CFFAF6009B7C34 /* TokenMappedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2226CFFAF5009B7C34 /* TokenMappedView.swift */; };
+		BFC1EE2E26CFFAF6009B7C34 /* LineNumberGutter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2326CFFAF5009B7C34 /* LineNumberGutter.swift */; };
+		BFC1EE2F26CFFAF6009B7C34 /* InspectorWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2426CFFAF5009B7C34 /* InspectorWindow.swift */; };
+		BFC1EE3026CFFAF6009B7C34 /* ProjectDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2526CFFAF6009B7C34 /* ProjectDocument.swift */; };
+		BFC1EE3126CFFAF6009B7C34 /* LineAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2626CFFAF6009B7C34 /* LineAnnotation.swift */; };
+		BFC1EE3226CFFAF6009B7C34 /* ClassEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2726CFFAF6009B7C34 /* ClassEditingView.swift */; };
+		BFC1EE3326CFFAF6009B7C34 /* LineNumberTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */; };
+		BFC1EE3426CFFAF6009B7C34 /* SymbolEditingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2926CFFAF6009B7C34 /* SymbolEditingView.swift */; };
+		BFC1EE3526CFFAF6009B7C34 /* ArgonWorxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2A26CFFAF6009B7C34 /* ArgonWorxApp.swift */; };
+		BFC1EE3626CFFAF6009B7C34 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */; };
+		BFC1EE3A26CFFB25009B7C34 /* Basics.argon in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EE3826CFFB25009B7C34 /* Basics.argon */; };
+		BFC1EE3B26CFFB25009B7C34 /* Secondary.argon in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EE3926CFFB25009B7C34 /* Secondary.argon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessorWindowController.swift; sourceTree = "<group>"; };
+		BF86721426D134C000A12B1A /* SlotList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotList.swift; sourceTree = "<group>"; };
+		BF86721826D18ED200A12B1A /* Parent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parent.swift; sourceTree = "<group>"; };
+		BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonBrowserWindowController.swift; sourceTree = "<group>"; };
+		BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonBrowserHierarchyViewController.swift; sourceTree = "<group>"; };
+		BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonBrowserSourceViewController.swift; sourceTree = "<group>"; };
+		BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonBrowserInspectorViewController.swift; sourceTree = "<group>"; };
+		BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnglishWord.swift; sourceTree = "<group>"; };
+		BFA3ADA326CFFD9300F17CF6 /* words.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = words.txt; sourceTree = "<group>"; };
+		BFA3ADA626CFFEE000F17CF6 /* ArgonWorx.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ArgonWorx.entitlements; sourceTree = "<group>"; };
+		BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentsController.swift; sourceTree = "<group>"; };
+		BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryBrowserViewController.swift; sourceTree = "<group>"; };
+		BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorySlotCellView.swift; sourceTree = "<group>"; };
+		BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessorViewController.swift; sourceTree = "<group>"; };
+		BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionCellView.swift; sourceTree = "<group>"; };
+		BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistersViewController.swift; sourceTree = "<group>"; };
 		BFC1EC7E26CFF9E9009B7C34 /* ArgonWorks.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArgonWorks.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		BFC1EC8526CFF9E9009B7C34 /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
+		BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleDocument.swift; sourceTree = "<group>"; };
 		BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BFC1EC8A26CFF9EB009B7C34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		BFC1EC8C26CFF9EB009B7C34 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BFC1EC9526CFFA7C009B7C34 /* Interpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Interpreter.h; sourceTree = "<group>"; };
+		BFC1EC9626CFFA7C009B7C34 /* module.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		BFC1EC9726CFFA7C009B7C34 /* Interpreter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Interpreter.c; sourceTree = "<group>"; };
+		BFC1EC9A26CFFA8E009B7C34 /* ArgonServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonServer.swift; sourceTree = "<group>"; };
+		BFC1EC9B26CFFA8E009B7C34 /* SignalHandler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SignalHandler.c; sourceTree = "<group>"; };
+		BFC1EC9C26CFFA8E009B7C34 /* PersistentDictionary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PersistentDictionary.swift; sourceTree = "<group>"; };
+		BFC1EC9D26CFFA8E009B7C34 /* ObjectHandle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectHandle.swift; sourceTree = "<group>"; };
+		BFC1EC9E26CFFA8E009B7C34 /* Page.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Page.swift; sourceTree = "<group>"; };
+		BFC1EC9F26CFFA8E009B7C34 /* PageServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PageServer.swift; sourceTree = "<group>"; };
+		BFC1ECA726CFFA9F009B7C34 /* InnerDictionaryPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerDictionaryPointer.swift; sourceTree = "<group>"; };
+		BFC1ECA826CFFA9F009B7C34 /* BitField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BitField.swift; sourceTree = "<group>"; };
+		BFC1ECA926CFFA9F009B7C34 /* BitEncoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BitEncoder.swift; sourceTree = "<group>"; };
+		BFC1ECAA26CFFA9F009B7C34 /* StackSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StackSegment.swift; sourceTree = "<group>"; };
+		BFC1ECAB26CFFA9F009B7C34 /* PackedField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PackedField.swift; sourceTree = "<group>"; };
+		BFC1ECAC26CFFA9F009B7C34 /* PointerHolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PointerHolder.swift; sourceTree = "<group>"; };
+		BFC1ECAD26CFFA9F009B7C34 /* MemorySize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemorySize.swift; sourceTree = "<group>"; };
+		BFC1ECAE26CFFA9F009B7C34 /* InnerArrayPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerArrayPointer.swift; sourceTree = "<group>"; };
+		BFC1ECAF26CFFA9F009B7C34 /* InnerInstancePointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerInstancePointer.swift; sourceTree = "<group>"; };
+		BFC1ECB026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerDictionaryBucketPointer.swift; sourceTree = "<group>"; };
+		BFC1ECB126CFFA9F009B7C34 /* Timer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Timer.swift; sourceTree = "<group>"; };
+		BFC1ECB226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerEnumerationCasePointer.swift; sourceTree = "<group>"; };
+		BFC1ECB326CFFA9F009B7C34 /* Instruction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Instruction.swift; sourceTree = "<group>"; };
+		BFC1ECB426CFFA9F009B7C34 /* DataSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataSegment.swift; sourceTree = "<group>"; };
+		BFC1ECB526CFFA9F009B7C34 /* ValueHolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValueHolder.swift; sourceTree = "<group>"; };
+		BFC1ECB626CFFA9F009B7C34 /* InnerBlockPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerBlockPointer.swift; sourceTree = "<group>"; };
+		BFC1ECB726CFFA9F009B7C34 /* InnerClosurePointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerClosurePointer.swift; sourceTree = "<group>"; };
+		BFC1ECB826CFFA9F009B7C34 /* InnerStringPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerStringPointer.swift; sourceTree = "<group>"; };
+		BFC1ECB926CFFA9F009B7C34 /* InnerListPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerListPointer.swift; sourceTree = "<group>"; };
+		BFC1ECBA26CFFA9F009B7C34 /* VirtualMachine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VirtualMachine.swift; sourceTree = "<group>"; };
+		BFC1ECBB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerEnumerationPointer.swift; sourceTree = "<group>"; };
+		BFC1ECBC26CFFA9F009B7C34 /* Thread.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Thread.swift; sourceTree = "<group>"; };
+		BFC1ECBD26CFFA9F009B7C34 /* Segment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Segment.swift; sourceTree = "<group>"; };
+		BFC1ECBE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerStringKeyDictionaryPointer.swift; sourceTree = "<group>"; };
+		BFC1ECBF26CFFA9F009B7C34 /* WordPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WordPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC026CFFA9F009B7C34 /* InnerFunctionPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerFunctionPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC126CFFA9F009B7C34 /* ExecutionContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExecutionContext.swift; sourceTree = "<group>"; };
+		BFC1ECC226CFFA9F009B7C34 /* ObjectPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC326CFFA9F009B7C34 /* Header.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Header.swift; sourceTree = "<group>"; };
+		BFC1ECC426CFFA9F009B7C34 /* GeneralPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneralPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC526CFFA9F009B7C34 /* InnerByteArrayPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerByteArrayPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerPackedInstructionArrayPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC726CFFA9F009B7C34 /* ManagedSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ManagedSegment.swift; sourceTree = "<group>"; };
+		BFC1ECC826CFFA9F009B7C34 /* InnerSlotPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerSlotPointer.swift; sourceTree = "<group>"; };
+		BFC1ECC926CFFA9F009B7C34 /* Word.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Word.swift; sourceTree = "<group>"; };
+		BFC1ECCA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerEnumerationInstancePointer.swift; sourceTree = "<group>"; };
+		BFC1ECCB26CFFA9F009B7C34 /* InstructionBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InstructionBuffer.swift; sourceTree = "<group>"; };
+		BFC1ECCC26CFFA9F009B7C34 /* DynamicLibrary.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DynamicLibrary.swift; sourceTree = "<group>"; };
+		BFC1ECCD26CFFA9F009B7C34 /* InnerVectorPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerVectorPointer.swift; sourceTree = "<group>"; };
+		BFC1ECCE26CFFA9F009B7C34 /* StringPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringPointer.swift; sourceTree = "<group>"; };
+		BFC1ECD026CFFA9F009B7C34 /* StaticSegment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StaticSegment.swift; sourceTree = "<group>"; };
+		BFC1ECD126CFFA9F009B7C34 /* InnerInstructionArrayPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerInstructionArrayPointer.swift; sourceTree = "<group>"; };
+		BFC1ECD226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerInstructionBufferPointer.swift; sourceTree = "<group>"; };
+		BFC1ECD326CFFA9F009B7C34 /* InnerClassPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerClassPointer.swift; sourceTree = "<group>"; };
+		BFC1ECD426CFFA9F009B7C34 /* InnerPointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerPointer.swift; sourceTree = "<group>"; };
+		BFC1ECD526CFFA9F009B7C34 /* InnerMethodInstancePointer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerMethodInstancePointer.swift; sourceTree = "<group>"; };
+		BFC1ECD626CFFA9F009B7C34 /* InnerSlotValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InnerSlotValue.swift; sourceTree = "<group>"; };
+		BFC1ED0826CFFAA7009B7C34 /* MakeTerm.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MakeTerm.swift; sourceTree = "<group>"; };
+		BFC1ED0926CFFAA7009B7C34 /* Expression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Expression.swift; sourceTree = "<group>"; };
+		BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UnaryExpression.swift; sourceTree = "<group>"; };
+		BFC1ED0B26CFFAA7009B7C34 /* InvocationExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InvocationExpression.swift; sourceTree = "<group>"; };
+		BFC1ED0C26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnumerationInstanceExpression.swift; sourceTree = "<group>"; };
+		BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolExpression.swift; sourceTree = "<group>"; };
+		BFC1ED0E26CFFAA7009B7C34 /* SuffixExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SuffixExpression.swift; sourceTree = "<group>"; };
+		BFC1ED0F26CFFAA7009B7C34 /* ArrayAccessExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayAccessExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1026CFFAA7009B7C34 /* BinaryExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BinaryExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1126CFFAA7009B7C34 /* AsExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1226CFFAA7009B7C34 /* LocalSlotExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalSlotExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1326CFFAA7009B7C34 /* AssignmentExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AssignmentExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1426CFFAA7009B7C34 /* SlotExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SlotExpression.swift; sourceTree = "<group>"; };
+		BFC1ED1526CFFAA7009B7C34 /* LiteralExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LiteralExpression.swift; sourceTree = "<group>"; };
+		BFC1ED2526CFFAB1009B7C34 /* ForkBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForkBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2626CFFAB1009B7C34 /* MethodInstanceBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodInstanceBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2726CFFAB1009B7C34 /* BlockExpression.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlockExpression.swift; sourceTree = "<group>"; };
+		BFC1ED2826CFFAB1009B7C34 /* Block.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Block.swift; sourceTree = "<group>"; };
+		BFC1ED2926CFFAB1009B7C34 /* SelectBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2A26CFFAB1009B7C34 /* OtherwiseBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OtherwiseBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2B26CFFAB1009B7C34 /* ExpressionBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExpressionBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2C26CFFAB1009B7C34 /* ForBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2D26CFFAB1009B7C34 /* ElseBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ElseBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2E26CFFAB1009B7C34 /* ClosureBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClosureBlock.swift; sourceTree = "<group>"; };
+		BFC1ED2F26CFFAB1009B7C34 /* ReturnBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReturnBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3026CFFAB1009B7C34 /* LoopBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoopBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3126CFFAB1009B7C34 /* VirtualReadBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VirtualReadBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3226CFFAB1009B7C34 /* WhenBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhenBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3326CFFAB1009B7C34 /* IfBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IfBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3426CFFAB1009B7C34 /* LetBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LetBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3526CFFAB1009B7C34 /* HandlerBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HandlerBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3626CFFAB1009B7C34 /* WhileBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WhileBlock.swift; sourceTree = "<group>"; };
+		BFC1ED3726CFFAB1009B7C34 /* SignalBlock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignalBlock.swift; sourceTree = "<group>"; };
+		BFC1ED4C26CFFABA009B7C34 /* Realizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Realizer.swift; sourceTree = "<group>"; };
+		BFC1ED4D26CFFABA009B7C34 /* Address.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Address.swift; sourceTree = "<group>"; };
+		BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenRenderer.swift; sourceTree = "<group>"; };
+		BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenStream.swift; sourceTree = "<group>"; };
+		BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardingSymbol.swift; sourceTree = "<group>"; };
+		BFC1ED5126CFFABA009B7C34 /* Register.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Register.swift; sourceTree = "<group>"; };
+		BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SemanticAnalyzer.swift; sourceTree = "<group>"; };
+		BFC1ED5326CFFABA009B7C34 /* Code3A.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Code3A.swift; sourceTree = "<group>"; };
+		BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Optimizer.swift; sourceTree = "<group>"; };
+		BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyntaxColorPalette.swift; sourceTree = "<group>"; };
+		BFC1ED5626CFFABA009B7C34 /* Compiler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Compiler.swift; sourceTree = "<group>"; };
+		BFC1ED5726CFFABA009B7C34 /* CodeGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeGenerator.swift; sourceTree = "<group>"; };
+		BFC1ED5826CFFABA009B7C34 /* ParseNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParseNode.swift; sourceTree = "<group>"; };
+		BFC1ED5926CFFABA009B7C34 /* AddressAllocator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddressAllocator.swift; sourceTree = "<group>"; };
+		BFC1ED5A26CFFABA009B7C34 /* Parser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		BFC1ED5B26CFFABA009B7C34 /* CompilerPass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CompilerPass.swift; sourceTree = "<group>"; };
+		BFC1ED5C26CFFABA009B7C34 /* Token.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Token.swift; sourceTree = "<group>"; };
+		BFC1ED5D26CFFABA009B7C34 /* Argon.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Argon.swift; sourceTree = "<group>"; };
+		BFC1ED7126CFFAC0009B7C34 /* NullReportingContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NullReportingContext.swift; sourceTree = "<group>"; };
+		BFC1ED7226CFFAC0009B7C34 /* ReportingContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReportingContext.swift; sourceTree = "<group>"; };
+		BFC1ED7326CFFAC0009B7C34 /* CompilerError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CompilerError.swift; sourceTree = "<group>"; };
+		BFC1ED7826CFFACD009B7C34 /* Type.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Type.swift; sourceTree = "<group>"; };
+		BFC1ED7B26CFFAD5009B7C34 /* Location.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Location.swift; sourceTree = "<group>"; };
+		BFC1ED7C26CFFAD5009B7C34 /* ArgonDate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonDate.swift; sourceTree = "<group>"; };
+		BFC1ED7D26CFFAD5009B7C34 /* Stack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stack.swift; sourceTree = "<group>"; };
+		BFC1ED7E26CFFAD5009B7C34 /* ArgonTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonTime.swift; sourceTree = "<group>"; };
+		BFC1ED7F26CFFAD5009B7C34 /* Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Name.swift; sourceTree = "<group>"; };
+		BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivacyScope.swift; sourceTree = "<group>"; };
+		BFC1ED8126CFFAD5009B7C34 /* ArgonDateTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonDateTime.swift; sourceTree = "<group>"; };
+		BFC1ED8226CFFAD5009B7C34 /* NamingContext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NamingContext.swift; sourceTree = "<group>"; };
+		BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolHolder.swift; sourceTree = "<group>"; };
+		BFC1ED8E26CFFADC009B7C34 /* Constant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
+		BFC1ED8F26CFFADC009B7C34 /* ContainerSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerSymbol.swift; sourceTree = "<group>"; };
+		BFC1ED9026CFFADC009B7C34 /* Argument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Argument.swift; sourceTree = "<group>"; };
+		BFC1ED9226CFFADC009B7C34 /* SystemMethodInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemMethodInstance.swift; sourceTree = "<group>"; };
+		BFC1ED9326CFFADC009B7C34 /* Closure.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Closure.swift; sourceTree = "<group>"; };
+		BFC1ED9426CFFADC009B7C34 /* DispatchNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DispatchNode.swift; sourceTree = "<group>"; };
+		BFC1ED9526CFFADC009B7C34 /* Handler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Handler.swift; sourceTree = "<group>"; };
+		BFC1ED9626CFFADC009B7C34 /* Method.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Method.swift; sourceTree = "<group>"; };
+		BFC1ED9726CFFADC009B7C34 /* MethodInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodInstance.swift; sourceTree = "<group>"; };
+		BFC1ED9826CFFADC009B7C34 /* Invokable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Invokable.swift; sourceTree = "<group>"; };
+		BFC1ED9926CFFADC009B7C34 /* SystemMethod.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemMethod.swift; sourceTree = "<group>"; };
+		BFC1ED9A26CFFADC009B7C34 /* Function.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Function.swift; sourceTree = "<group>"; };
+		BFC1ED9B26CFFADC009B7C34 /* SymbolType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolType.swift; sourceTree = "<group>"; };
+		BFC1ED9C26CFFADC009B7C34 /* Parameter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Parameter.swift; sourceTree = "<group>"; };
+		BFC1ED9E26CFFADC009B7C34 /* EnumerationCase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnumerationCase.swift; sourceTree = "<group>"; };
+		BFC1ED9F26CFFADC009B7C34 /* Enumeration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Enumeration.swift; sourceTree = "<group>"; };
+		BFC1EDA126CFFADC009B7C34 /* Metaclass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Metaclass.swift; sourceTree = "<group>"; };
+		BFC1EDA226CFFADC009B7C34 /* TaggedPrimitiveClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TaggedPrimitiveClass.swift; sourceTree = "<group>"; };
+		BFC1EDA326CFFADC009B7C34 /* ClassSet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClassSet.swift; sourceTree = "<group>"; };
+		BFC1EDA426CFFADC009B7C34 /* ArrayClassInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayClassInstance.swift; sourceTree = "<group>"; };
+		BFC1EDA526CFFADC009B7C34 /* PrimitiveClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrimitiveClass.swift; sourceTree = "<group>"; };
+		BFC1EDA626CFFADC009B7C34 /* ArrayClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArrayClass.swift; sourceTree = "<group>"; };
+		BFC1EDA726CFFADC009B7C34 /* GenericClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericClass.swift; sourceTree = "<group>"; };
+		BFC1EDA826CFFADC009B7C34 /* GenericSystemClassInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericSystemClassInstance.swift; sourceTree = "<group>"; };
+		BFC1EDA926CFFADC009B7C34 /* GenericClassInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericClassInstance.swift; sourceTree = "<group>"; };
+		BFC1EDAA26CFFADC009B7C34 /* ClosureClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClosureClass.swift; sourceTree = "<group>"; };
+		BFC1EDAB26CFFADC009B7C34 /* SystemClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemClass.swift; sourceTree = "<group>"; };
+		BFC1EDAC26CFFADC009B7C34 /* GenericSystemClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericSystemClass.swift; sourceTree = "<group>"; };
+		BFC1EDAD26CFFADC009B7C34 /* Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Class.swift; sourceTree = "<group>"; };
+		BFC1EDAE26CFFADC009B7C34 /* ForwardReferenceClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardReferenceClass.swift; sourceTree = "<group>"; };
+		BFC1EDAF26CFFADC009B7C34 /* GenericClassParameter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GenericClassParameter.swift; sourceTree = "<group>"; };
+		BFC1EDB026CFFADC009B7C34 /* VoidClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VoidClass.swift; sourceTree = "<group>"; };
+		BFC1EDB126CFFADC009B7C34 /* Displayable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Displayable.swift; sourceTree = "<group>"; };
+		BFC1EDB226CFFADC009B7C34 /* MethodType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodType.swift; sourceTree = "<group>"; };
+		BFC1EDB326CFFADC009B7C34 /* LocalSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalSlot.swift; sourceTree = "<group>"; };
+		BFC1EDB426CFFADC009B7C34 /* SymbolAttributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolAttributes.swift; sourceTree = "<group>"; };
+		BFC1EDB526CFFADC009B7C34 /* ErrorSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ErrorSymbol.swift; sourceTree = "<group>"; };
+		BFC1EDB626CFFADC009B7C34 /* SymbolGroup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolGroup.swift; sourceTree = "<group>"; };
+		BFC1EDB726CFFADC009B7C34 /* Interceptor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Interceptor.swift; sourceTree = "<group>"; };
+		BFC1EDB826CFFADC009B7C34 /* TypeParameter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeParameter.swift; sourceTree = "<group>"; };
+		BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeAlias.swift; sourceTree = "<group>"; };
+		BFC1EDBA26CFFADC009B7C34 /* Initializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Initializer.swift; sourceTree = "<group>"; };
+		BFC1EDBB26CFFADC009B7C34 /* NodeLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeLocation.swift; sourceTree = "<group>"; };
+		BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeConstraint.swift; sourceTree = "<group>"; };
+		BFC1EDBD26CFFADC009B7C34 /* ImportedSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImportedSymbol.swift; sourceTree = "<group>"; };
+		BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeCode.swift; sourceTree = "<group>"; };
+		BFC1EDBF26CFFADC009B7C34 /* Import.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Import.swift; sourceTree = "<group>"; };
+		BFC1EDC126CFFADC009B7C34 /* TopModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopModule.swift; sourceTree = "<group>"; };
+		BFC1EDC226CFFADC009B7C34 /* SystemModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SystemModule.swift; sourceTree = "<group>"; };
+		BFC1EDC326CFFADC009B7C34 /* ModuleInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ModuleInstance.swift; sourceTree = "<group>"; };
+		BFC1EDC426CFFADC009B7C34 /* ArgonModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonModule.swift; sourceTree = "<group>"; };
+		BFC1EDC526CFFADC009B7C34 /* LibraryModuleInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryModuleInstance.swift; sourceTree = "<group>"; };
+		BFC1EDC626CFFADC009B7C34 /* Module.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
+		BFC1EDC726CFFADC009B7C34 /* LibraryModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryModule.swift; sourceTree = "<group>"; };
+		BFC1EDC826CFFADC009B7C34 /* MainModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainModule.swift; sourceTree = "<group>"; };
+		BFC1EDCA26CFFADC009B7C34 /* IntegerSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IntegerSlot.swift; sourceTree = "<group>"; };
+		BFC1EDCB26CFFADC009B7C34 /* ArraySlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArraySlot.swift; sourceTree = "<group>"; };
+		BFC1EDCC26CFFADC009B7C34 /* Slot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Slot.swift; sourceTree = "<group>"; };
+		BFC1EDCD26CFFADC009B7C34 /* StringSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringSlot.swift; sourceTree = "<group>"; };
+		BFC1EDCE26CFFADC009B7C34 /* BooleanSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BooleanSlot.swift; sourceTree = "<group>"; };
+		BFC1EDCF26CFFADC009B7C34 /* ObjectSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ObjectSlot.swift; sourceTree = "<group>"; };
+		BFC1EDD026CFFADC009B7C34 /* HeaderSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HeaderSlot.swift; sourceTree = "<group>"; };
+		BFC1EDD126CFFADC009B7C34 /* VirtualSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VirtualSlot.swift; sourceTree = "<group>"; };
+		BFC1EDD226CFFADC009B7C34 /* FloatSlot.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatSlot.swift; sourceTree = "<group>"; };
+		BFC1EDD326CFFADC009B7C34 /* Node.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
+		BFC1EDD426CFFADC009B7C34 /* Symbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Symbol.swift; sourceTree = "<group>"; };
+		BFC1EE1826CFFAE7009B7C34 /* NSColor+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSColor+Extensions.swift"; sourceTree = "<group>"; };
+		BFC1EE1926CFFAE7009B7C34 /* String+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Extensions.swift"; sourceTree = "<group>"; };
+		BFC1EE1A26CFFAE7009B7C34 /* Optional+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Optional+Extensions.swift"; sourceTree = "<group>"; };
+		BFC1EE1B26CFFAE7009B7C34 /* Dictionary+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Dictionary+Extensions.swift"; sourceTree = "<group>"; };
+		BFC1EE2126CFFAF5009B7C34 /* ProcessorView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProcessorView.swift; sourceTree = "<group>"; };
+		BFC1EE2226CFFAF5009B7C34 /* TokenMappedView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenMappedView.swift; sourceTree = "<group>"; };
+		BFC1EE2326CFFAF5009B7C34 /* LineNumberGutter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineNumberGutter.swift; sourceTree = "<group>"; };
+		BFC1EE2426CFFAF5009B7C34 /* InspectorWindow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = InspectorWindow.swift; sourceTree = "<group>"; };
+		BFC1EE2526CFFAF6009B7C34 /* ProjectDocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProjectDocument.swift; sourceTree = "<group>"; };
+		BFC1EE2626CFFAF6009B7C34 /* LineAnnotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineAnnotation.swift; sourceTree = "<group>"; };
+		BFC1EE2726CFFAF6009B7C34 /* ClassEditingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClassEditingView.swift; sourceTree = "<group>"; };
+		BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineNumberTextView.swift; sourceTree = "<group>"; };
+		BFC1EE2926CFFAF6009B7C34 /* SymbolEditingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolEditingView.swift; sourceTree = "<group>"; };
+		BFC1EE2A26CFFAF6009B7C34 /* ArgonWorxApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonWorxApp.swift; sourceTree = "<group>"; };
+		BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BFC1EE3826CFFB25009B7C34 /* Basics.argon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Basics.argon; sourceTree = "<group>"; };
+		BFC1EE3926CFFB25009B7C34 /* Secondary.argon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Secondary.argon; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -35,6 +470,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BFA3ADA126CFFD9300F17CF6 /* Testing */ = {
+			isa = PBXGroup;
+			children = (
+				BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */,
+				BFA3ADA326CFFD9300F17CF6 /* words.txt */,
+			);
+			path = Testing;
+			sourceTree = "<group>";
+		};
 		BFC1EC7526CFF9E9009B7C34 = {
 			isa = PBXGroup;
 			children = (
@@ -54,14 +498,376 @@
 		BFC1EC8026CFF9E9009B7C34 /* ArgonWorks */ = {
 			isa = PBXGroup;
 			children = (
+				BFA3ADA626CFFEE000F17CF6 /* ArgonWorx.entitlements */,
+				BFA3ADA126CFFD9300F17CF6 /* Testing */,
+				BFC1EE3726CFFB07009B7C34 /* Argon Source */,
+				BFC1EC9426CFFA4F009B7C34 /* Interpreter */,
+				BFC1EC9926CFFA8E009B7C34 /* Paged Objects */,
+				BFC1ECA626CFFA9F009B7C34 /* Execution */,
+				BFC1ED0726CFFAA7009B7C34 /* Expressions */,
+				BFC1ED2426CFFAB1009B7C34 /* Blocks */,
+				BFC1ED4B26CFFABA009B7C34 /* Compiler and Phases */,
+				BFC1ED7026CFFAC0009B7C34 /* Error Handling */,
+				BFC1ED7726CFFACD009B7C34 /* Types and Type Inference */,
+				BFC1ED7A26CFFAD5009B7C34 /* Support Classes */,
+				BFC1ED8D26CFFADC009B7C34 /* Symbols */,
+				BFC1EE1726CFFAE7009B7C34 /* SystemExtensions */,
+				BFC1EE2026CFFAF5009B7C34 /* User Interface */,
 				BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */,
 				BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */,
-				BFC1EC8526CFF9E9009B7C34 /* Document.swift */,
+				BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */,
 				BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */,
 				BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */,
 				BFC1EC8C26CFF9EB009B7C34 /* Info.plist */,
+				BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */,
 			);
 			path = ArgonWorks;
+			sourceTree = "<group>";
+		};
+		BFC1EC9426CFFA4F009B7C34 /* Interpreter */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EC9726CFFA7C009B7C34 /* Interpreter.c */,
+				BFC1EC9526CFFA7C009B7C34 /* Interpreter.h */,
+				BFC1EC9626CFFA7C009B7C34 /* module.modulemap */,
+			);
+			path = Interpreter;
+			sourceTree = "<group>";
+		};
+		BFC1EC9926CFFA8E009B7C34 /* Paged Objects */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EC9A26CFFA8E009B7C34 /* ArgonServer.swift */,
+				BFC1EC9B26CFFA8E009B7C34 /* SignalHandler.c */,
+				BFC1EC9C26CFFA8E009B7C34 /* PersistentDictionary.swift */,
+				BFC1EC9D26CFFA8E009B7C34 /* ObjectHandle.swift */,
+				BFC1EC9E26CFFA8E009B7C34 /* Page.swift */,
+				BFC1EC9F26CFFA8E009B7C34 /* PageServer.swift */,
+			);
+			path = "Paged Objects";
+			sourceTree = "<group>";
+		};
+		BFC1ECA626CFFA9F009B7C34 /* Execution */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ECA926CFFA9F009B7C34 /* BitEncoder.swift */,
+				BFC1ECA826CFFA9F009B7C34 /* BitField.swift */,
+				BFC1ECB426CFFA9F009B7C34 /* DataSegment.swift */,
+				BFC1ECCC26CFFA9F009B7C34 /* DynamicLibrary.swift */,
+				BFC1ECC126CFFA9F009B7C34 /* ExecutionContext.swift */,
+				BFC1ECC426CFFA9F009B7C34 /* GeneralPointer.swift */,
+				BFC1ECC326CFFA9F009B7C34 /* Header.swift */,
+				BFC1ECAE26CFFA9F009B7C34 /* InnerArrayPointer.swift */,
+				BFC1ECB626CFFA9F009B7C34 /* InnerBlockPointer.swift */,
+				BFC1ECC526CFFA9F009B7C34 /* InnerByteArrayPointer.swift */,
+				BFC1ECD326CFFA9F009B7C34 /* InnerClassPointer.swift */,
+				BFC1ECB726CFFA9F009B7C34 /* InnerClosurePointer.swift */,
+				BFC1ECB026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift */,
+				BFC1ECA726CFFA9F009B7C34 /* InnerDictionaryPointer.swift */,
+				BFC1ECB226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift */,
+				BFC1ECCA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift */,
+				BFC1ECBB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift */,
+				BFC1ECC026CFFA9F009B7C34 /* InnerFunctionPointer.swift */,
+				BFC1ECAF26CFFA9F009B7C34 /* InnerInstancePointer.swift */,
+				BFC1ECD126CFFA9F009B7C34 /* InnerInstructionArrayPointer.swift */,
+				BFC1ECD226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift */,
+				BFC1ECB926CFFA9F009B7C34 /* InnerListPointer.swift */,
+				BFC1ECD526CFFA9F009B7C34 /* InnerMethodInstancePointer.swift */,
+				BFC1ECC626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift */,
+				BFC1ECD426CFFA9F009B7C34 /* InnerPointer.swift */,
+				BFC1ECC826CFFA9F009B7C34 /* InnerSlotPointer.swift */,
+				BFC1ECD626CFFA9F009B7C34 /* InnerSlotValue.swift */,
+				BFC1ECBE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift */,
+				BFC1ECB826CFFA9F009B7C34 /* InnerStringPointer.swift */,
+				BFC1ECCD26CFFA9F009B7C34 /* InnerVectorPointer.swift */,
+				BFC1ECB326CFFA9F009B7C34 /* Instruction.swift */,
+				BFC1ECCB26CFFA9F009B7C34 /* InstructionBuffer.swift */,
+				BFC1ECC726CFFA9F009B7C34 /* ManagedSegment.swift */,
+				BFC1ECAD26CFFA9F009B7C34 /* MemorySize.swift */,
+				BFC1ECC226CFFA9F009B7C34 /* ObjectPointer.swift */,
+				BFC1ECAB26CFFA9F009B7C34 /* PackedField.swift */,
+				BFC1ECAC26CFFA9F009B7C34 /* PointerHolder.swift */,
+				BFC1ECBD26CFFA9F009B7C34 /* Segment.swift */,
+				BFC1ECAA26CFFA9F009B7C34 /* StackSegment.swift */,
+				BFC1ECD026CFFA9F009B7C34 /* StaticSegment.swift */,
+				BFC1ECCE26CFFA9F009B7C34 /* StringPointer.swift */,
+				BFC1ECBC26CFFA9F009B7C34 /* Thread.swift */,
+				BFC1ECB126CFFA9F009B7C34 /* Timer.swift */,
+				BFC1ECB526CFFA9F009B7C34 /* ValueHolder.swift */,
+				BFC1ECBA26CFFA9F009B7C34 /* VirtualMachine.swift */,
+				BFC1ECC926CFFA9F009B7C34 /* Word.swift */,
+				BFC1ECBF26CFFA9F009B7C34 /* WordPointer.swift */,
+			);
+			path = Execution;
+			sourceTree = "<group>";
+		};
+		BFC1ED0726CFFAA7009B7C34 /* Expressions */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED0F26CFFAA7009B7C34 /* ArrayAccessExpression.swift */,
+				BFC1ED1126CFFAA7009B7C34 /* AsExpression.swift */,
+				BFC1ED1326CFFAA7009B7C34 /* AssignmentExpression.swift */,
+				BFC1ED1026CFFAA7009B7C34 /* BinaryExpression.swift */,
+				BFC1ED0C26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift */,
+				BFC1ED0926CFFAA7009B7C34 /* Expression.swift */,
+				BFC1ED0B26CFFAA7009B7C34 /* InvocationExpression.swift */,
+				BFC1ED1526CFFAA7009B7C34 /* LiteralExpression.swift */,
+				BFC1ED1226CFFAA7009B7C34 /* LocalSlotExpression.swift */,
+				BFC1ED0826CFFAA7009B7C34 /* MakeTerm.swift */,
+				BFC1ED1426CFFAA7009B7C34 /* SlotExpression.swift */,
+				BFC1ED0E26CFFAA7009B7C34 /* SuffixExpression.swift */,
+				BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */,
+				BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */,
+			);
+			path = Expressions;
+			sourceTree = "<group>";
+		};
+		BFC1ED2426CFFAB1009B7C34 /* Blocks */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED2826CFFAB1009B7C34 /* Block.swift */,
+				BFC1ED2726CFFAB1009B7C34 /* BlockExpression.swift */,
+				BFC1ED2E26CFFAB1009B7C34 /* ClosureBlock.swift */,
+				BFC1ED2D26CFFAB1009B7C34 /* ElseBlock.swift */,
+				BFC1ED2B26CFFAB1009B7C34 /* ExpressionBlock.swift */,
+				BFC1ED2C26CFFAB1009B7C34 /* ForBlock.swift */,
+				BFC1ED2526CFFAB1009B7C34 /* ForkBlock.swift */,
+				BFC1ED3526CFFAB1009B7C34 /* HandlerBlock.swift */,
+				BFC1ED3326CFFAB1009B7C34 /* IfBlock.swift */,
+				BFC1ED3426CFFAB1009B7C34 /* LetBlock.swift */,
+				BFC1ED3026CFFAB1009B7C34 /* LoopBlock.swift */,
+				BFC1ED2626CFFAB1009B7C34 /* MethodInstanceBlock.swift */,
+				BFC1ED2A26CFFAB1009B7C34 /* OtherwiseBlock.swift */,
+				BFC1ED2F26CFFAB1009B7C34 /* ReturnBlock.swift */,
+				BFC1ED2926CFFAB1009B7C34 /* SelectBlock.swift */,
+				BFC1ED3726CFFAB1009B7C34 /* SignalBlock.swift */,
+				BFC1ED3126CFFAB1009B7C34 /* VirtualReadBlock.swift */,
+				BFC1ED3226CFFAB1009B7C34 /* WhenBlock.swift */,
+				BFC1ED3626CFFAB1009B7C34 /* WhileBlock.swift */,
+			);
+			path = Blocks;
+			sourceTree = "<group>";
+		};
+		BFC1ED4B26CFFABA009B7C34 /* Compiler and Phases */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED4D26CFFABA009B7C34 /* Address.swift */,
+				BFC1ED5926CFFABA009B7C34 /* AddressAllocator.swift */,
+				BFC1ED5D26CFFABA009B7C34 /* Argon.swift */,
+				BFC1ED5326CFFABA009B7C34 /* Code3A.swift */,
+				BFC1ED5726CFFABA009B7C34 /* CodeGenerator.swift */,
+				BFC1ED5626CFFABA009B7C34 /* Compiler.swift */,
+				BFC1ED5B26CFFABA009B7C34 /* CompilerPass.swift */,
+				BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */,
+				BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */,
+				BFC1ED5826CFFABA009B7C34 /* ParseNode.swift */,
+				BFC1ED5A26CFFABA009B7C34 /* Parser.swift */,
+				BFC1ED4C26CFFABA009B7C34 /* Realizer.swift */,
+				BFC1ED5126CFFABA009B7C34 /* Register.swift */,
+				BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */,
+				BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */,
+				BFC1ED5C26CFFABA009B7C34 /* Token.swift */,
+				BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */,
+				BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */,
+			);
+			path = "Compiler and Phases";
+			sourceTree = "<group>";
+		};
+		BFC1ED7026CFFAC0009B7C34 /* Error Handling */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED7126CFFAC0009B7C34 /* NullReportingContext.swift */,
+				BFC1ED7226CFFAC0009B7C34 /* ReportingContext.swift */,
+				BFC1ED7326CFFAC0009B7C34 /* CompilerError.swift */,
+			);
+			path = "Error Handling";
+			sourceTree = "<group>";
+		};
+		BFC1ED7726CFFACD009B7C34 /* Types and Type Inference */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED7826CFFACD009B7C34 /* Type.swift */,
+			);
+			path = "Types and Type Inference";
+			sourceTree = "<group>";
+		};
+		BFC1ED7A26CFFAD5009B7C34 /* Support Classes */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED7C26CFFAD5009B7C34 /* ArgonDate.swift */,
+				BFC1ED8126CFFAD5009B7C34 /* ArgonDateTime.swift */,
+				BFC1ED7E26CFFAD5009B7C34 /* ArgonTime.swift */,
+				BFC1ED7B26CFFAD5009B7C34 /* Location.swift */,
+				BFC1ED7F26CFFAD5009B7C34 /* Name.swift */,
+				BFC1ED8226CFFAD5009B7C34 /* NamingContext.swift */,
+				BF86721826D18ED200A12B1A /* Parent.swift */,
+				BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */,
+				BFC1ED7D26CFFAD5009B7C34 /* Stack.swift */,
+				BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */,
+			);
+			path = "Support Classes";
+			sourceTree = "<group>";
+		};
+		BFC1ED8D26CFFADC009B7C34 /* Symbols */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED9026CFFADC009B7C34 /* Argument.swift */,
+				BFC1EDA026CFFADC009B7C34 /* Classes */,
+				BFC1ED8E26CFFADC009B7C34 /* Constant.swift */,
+				BFC1ED8F26CFFADC009B7C34 /* ContainerSymbol.swift */,
+				BFC1EDB126CFFADC009B7C34 /* Displayable.swift */,
+				BFC1ED9D26CFFADC009B7C34 /* Enumerations */,
+				BFC1EDB526CFFADC009B7C34 /* ErrorSymbol.swift */,
+				BFC1EDBF26CFFADC009B7C34 /* Import.swift */,
+				BFC1EDBD26CFFADC009B7C34 /* ImportedSymbol.swift */,
+				BFC1EDBA26CFFADC009B7C34 /* Initializer.swift */,
+				BFC1EDB726CFFADC009B7C34 /* Interceptor.swift */,
+				BFC1ED9126CFFADC009B7C34 /* Invokables */,
+				BFC1EDB326CFFADC009B7C34 /* LocalSlot.swift */,
+				BFC1EDB226CFFADC009B7C34 /* MethodType.swift */,
+				BFC1EDC026CFFADC009B7C34 /* Modules */,
+				BFC1EDD326CFFADC009B7C34 /* Node.swift */,
+				BFC1EDBB26CFFADC009B7C34 /* NodeLocation.swift */,
+				BFC1ED9C26CFFADC009B7C34 /* Parameter.swift */,
+				BFC1EDC926CFFADC009B7C34 /* Slots */,
+				BFC1EDD426CFFADC009B7C34 /* Symbol.swift */,
+				BFC1EDB426CFFADC009B7C34 /* SymbolAttributes.swift */,
+				BFC1EDB626CFFADC009B7C34 /* SymbolGroup.swift */,
+				BFC1ED9B26CFFADC009B7C34 /* SymbolType.swift */,
+				BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */,
+				BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */,
+				BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */,
+				BFC1EDB826CFFADC009B7C34 /* TypeParameter.swift */,
+			);
+			path = Symbols;
+			sourceTree = "<group>";
+		};
+		BFC1ED9126CFFADC009B7C34 /* Invokables */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED9326CFFADC009B7C34 /* Closure.swift */,
+				BFC1ED9426CFFADC009B7C34 /* DispatchNode.swift */,
+				BFC1ED9A26CFFADC009B7C34 /* Function.swift */,
+				BFC1ED9526CFFADC009B7C34 /* Handler.swift */,
+				BFC1ED9826CFFADC009B7C34 /* Invokable.swift */,
+				BFC1ED9626CFFADC009B7C34 /* Method.swift */,
+				BFC1ED9726CFFADC009B7C34 /* MethodInstance.swift */,
+				BFC1ED9926CFFADC009B7C34 /* SystemMethod.swift */,
+				BFC1ED9226CFFADC009B7C34 /* SystemMethodInstance.swift */,
+			);
+			path = Invokables;
+			sourceTree = "<group>";
+		};
+		BFC1ED9D26CFFADC009B7C34 /* Enumerations */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1ED9E26CFFADC009B7C34 /* EnumerationCase.swift */,
+				BFC1ED9F26CFFADC009B7C34 /* Enumeration.swift */,
+			);
+			path = Enumerations;
+			sourceTree = "<group>";
+		};
+		BFC1EDA026CFFADC009B7C34 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EDA626CFFADC009B7C34 /* ArrayClass.swift */,
+				BFC1EDA426CFFADC009B7C34 /* ArrayClassInstance.swift */,
+				BFC1EDAD26CFFADC009B7C34 /* Class.swift */,
+				BFC1EDA326CFFADC009B7C34 /* ClassSet.swift */,
+				BFC1EDAA26CFFADC009B7C34 /* ClosureClass.swift */,
+				BFC1EDAE26CFFADC009B7C34 /* ForwardReferenceClass.swift */,
+				BFC1EDA726CFFADC009B7C34 /* GenericClass.swift */,
+				BFC1EDA926CFFADC009B7C34 /* GenericClassInstance.swift */,
+				BFC1EDAF26CFFADC009B7C34 /* GenericClassParameter.swift */,
+				BFC1EDAC26CFFADC009B7C34 /* GenericSystemClass.swift */,
+				BFC1EDA826CFFADC009B7C34 /* GenericSystemClassInstance.swift */,
+				BFC1EDA126CFFADC009B7C34 /* Metaclass.swift */,
+				BFC1EDA526CFFADC009B7C34 /* PrimitiveClass.swift */,
+				BF86721426D134C000A12B1A /* SlotList.swift */,
+				BFC1EDAB26CFFADC009B7C34 /* SystemClass.swift */,
+				BFC1EDA226CFFADC009B7C34 /* TaggedPrimitiveClass.swift */,
+				BFC1EDB026CFFADC009B7C34 /* VoidClass.swift */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		BFC1EDC026CFFADC009B7C34 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EDC426CFFADC009B7C34 /* ArgonModule.swift */,
+				BFC1EDC726CFFADC009B7C34 /* LibraryModule.swift */,
+				BFC1EDC526CFFADC009B7C34 /* LibraryModuleInstance.swift */,
+				BFC1EDC826CFFADC009B7C34 /* MainModule.swift */,
+				BFC1EDC626CFFADC009B7C34 /* Module.swift */,
+				BFC1EDC326CFFADC009B7C34 /* ModuleInstance.swift */,
+				BFC1EDC226CFFADC009B7C34 /* SystemModule.swift */,
+				BFC1EDC126CFFADC009B7C34 /* TopModule.swift */,
+			);
+			path = Modules;
+			sourceTree = "<group>";
+		};
+		BFC1EDC926CFFADC009B7C34 /* Slots */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EDCB26CFFADC009B7C34 /* ArraySlot.swift */,
+				BFC1EDCE26CFFADC009B7C34 /* BooleanSlot.swift */,
+				BFC1EDD226CFFADC009B7C34 /* FloatSlot.swift */,
+				BFC1EDD026CFFADC009B7C34 /* HeaderSlot.swift */,
+				BFC1EDCA26CFFADC009B7C34 /* IntegerSlot.swift */,
+				BFC1EDCF26CFFADC009B7C34 /* ObjectSlot.swift */,
+				BFC1EDCC26CFFADC009B7C34 /* Slot.swift */,
+				BFC1EDCD26CFFADC009B7C34 /* StringSlot.swift */,
+				BFC1EDD126CFFADC009B7C34 /* VirtualSlot.swift */,
+			);
+			path = Slots;
+			sourceTree = "<group>";
+		};
+		BFC1EE1726CFFAE7009B7C34 /* SystemExtensions */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EE1B26CFFAE7009B7C34 /* Dictionary+Extensions.swift */,
+				BFC1EE1826CFFAE7009B7C34 /* NSColor+Extensions.swift */,
+				BFC1EE1A26CFFAE7009B7C34 /* Optional+Extensions.swift */,
+				BFC1EE1926CFFAE7009B7C34 /* String+Extensions.swift */,
+			);
+			path = SystemExtensions;
+			sourceTree = "<group>";
+		};
+		BFC1EE2026CFFAF5009B7C34 /* User Interface */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EE2A26CFFAF6009B7C34 /* ArgonWorxApp.swift */,
+				BFC1EE2726CFFAF6009B7C34 /* ClassEditingView.swift */,
+				BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */,
+				BFC1EE2426CFFAF5009B7C34 /* InspectorWindow.swift */,
+				BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */,
+				BFC1EE2626CFFAF6009B7C34 /* LineAnnotation.swift */,
+				BFC1EE2326CFFAF5009B7C34 /* LineNumberGutter.swift */,
+				BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */,
+				BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */,
+				BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */,
+				BFC1EE2126CFFAF5009B7C34 /* ProcessorView.swift */,
+				BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */,
+				BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */,
+				BFC1EE2526CFFAF6009B7C34 /* ProjectDocument.swift */,
+				BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */,
+				BFC1EE2926CFFAF6009B7C34 /* SymbolEditingView.swift */,
+				BFC1EE2226CFFAF5009B7C34 /* TokenMappedView.swift */,
+				BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */,
+				BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */,
+				BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */,
+				BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */,
+			);
+			path = "User Interface";
+			sourceTree = "<group>";
+		};
+		BFC1EE3726CFFB07009B7C34 /* Argon Source */ = {
+			isa = PBXGroup;
+			children = (
+				BFC1EE3826CFFB25009B7C34 /* Basics.argon */,
+				BFC1EE3926CFFB25009B7C34 /* Secondary.argon */,
+			);
+			path = "Argon Source";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -80,6 +886,8 @@
 			dependencies = (
 			);
 			name = ArgonWorks;
+			packageProductDependencies = (
+			);
 			productName = ArgonWorks;
 			productReference = BFC1EC7E26CFF9E9009B7C34 /* ArgonWorks.app */;
 			productType = "com.apple.product-type.application";
@@ -96,6 +904,7 @@
 				TargetAttributes = {
 					BFC1EC7D26CFF9E9009B7C34 = {
 						CreatedOnToolsVersion = 13.0;
+						LastSwiftMigration = 1300;
 					};
 				};
 			};
@@ -108,6 +917,8 @@
 				Base,
 			);
 			mainGroup = BFC1EC7526CFF9E9009B7C34;
+			packageReferences = (
+			);
 			productRefGroup = BFC1EC7F26CFF9E9009B7C34 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -122,7 +933,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFC1EE3B26CFFB25009B7C34 /* Secondary.argon in Resources */,
+				BFC1EE3A26CFFB25009B7C34 /* Basics.argon in Resources */,
 				BFC1EC8826CFF9EB009B7C34 /* Assets.xcassets in Resources */,
+				BFA3ADA526CFFD9300F17CF6 /* words.txt in Resources */,
 				BFC1EC8B26CFF9EB009B7C34 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -134,9 +948,222 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFC1ED3826CFFAB1009B7C34 /* ForkBlock.swift in Sources */,
+				BFC1ED4526CFFAB1009B7C34 /* WhenBlock.swift in Sources */,
+				BFC1ED4826CFFAB1009B7C34 /* HandlerBlock.swift in Sources */,
+				BFC1ED8C26CFFAD5009B7C34 /* SymbolHolder.swift in Sources */,
+				BFC1EE1026CFFADC009B7C34 /* BooleanSlot.swift in Sources */,
+				BFC1ECF026CFFA9F009B7C34 /* InnerFunctionPointer.swift in Sources */,
+				BFC1ED0526CFFA9F009B7C34 /* InnerMethodInstancePointer.swift in Sources */,
+				BFC1ED1E26CFFAA7009B7C34 /* BinaryExpression.swift in Sources */,
+				BFC1EE3426CFFAF6009B7C34 /* SymbolEditingView.swift in Sources */,
+				BFC1EDFD26CFFADC009B7C34 /* TypeAlias.swift in Sources */,
+				BFC1ECF326CFFA9F009B7C34 /* Header.swift in Sources */,
+				BFA3ADA826D0042300F17CF6 /* DocumentsController.swift in Sources */,
+				BFC1ED3C26CFFAB1009B7C34 /* SelectBlock.swift in Sources */,
+				BFC1ECF926CFFA9F009B7C34 /* Word.swift in Sources */,
+				BFC1EE3326CFFAF6009B7C34 /* LineNumberTextView.swift in Sources */,
+				BFC1ECD726CFFA9F009B7C34 /* InnerDictionaryPointer.swift in Sources */,
+				BFA3ADCC26D008ED00F17CF6 /* MemoryBrowserViewController.swift in Sources */,
+				BFC1EDE426CFFADC009B7C34 /* Enumeration.swift in Sources */,
+				BFC1EDE726CFFADC009B7C34 /* ClassSet.swift in Sources */,
+				BF86721526D134C000A12B1A /* SlotList.swift in Sources */,
+				BFC1EDE626CFFADC009B7C34 /* TaggedPrimitiveClass.swift in Sources */,
+				BFC1ED6826CFFABA009B7C34 /* Compiler.swift in Sources */,
+				BFC1ECEA26CFFA9F009B7C34 /* VirtualMachine.swift in Sources */,
+				BFC1EDEE26CFFADC009B7C34 /* ClosureClass.swift in Sources */,
+				BFC1ED0026CFFA9F009B7C34 /* StaticSegment.swift in Sources */,
+				BFC1ECE426CFFA9F009B7C34 /* DataSegment.swift in Sources */,
+				BFC1ECFE26CFFA9F009B7C34 /* StringPointer.swift in Sources */,
+				BFC1EDF326CFFADC009B7C34 /* GenericClassParameter.swift in Sources */,
+				BFC1ECE626CFFA9F009B7C34 /* InnerBlockPointer.swift in Sources */,
+				BFC1ECEF26CFFA9F009B7C34 /* WordPointer.swift in Sources */,
+				BFC1EDE826CFFADC009B7C34 /* ArrayClassInstance.swift in Sources */,
+				BFC1ED8726CFFAD5009B7C34 /* ArgonTime.swift in Sources */,
+				BFC1ED3A26CFFAB1009B7C34 /* BlockExpression.swift in Sources */,
+				BFC1ED1D26CFFAA7009B7C34 /* ArrayAccessExpression.swift in Sources */,
+				BFC1ED2026CFFAA7009B7C34 /* LocalSlotExpression.swift in Sources */,
+				BFC1ED4A26CFFAB1009B7C34 /* SignalBlock.swift in Sources */,
+				BFC1EE1126CFFADC009B7C34 /* ObjectSlot.swift in Sources */,
+				BFC1ED4226CFFAB1009B7C34 /* ReturnBlock.swift in Sources */,
+				BFC1ED4926CFFAB1009B7C34 /* WhileBlock.swift in Sources */,
+				BFC1ED6F26CFFABA009B7C34 /* Argon.swift in Sources */,
+				BFC1ED4626CFFAB1009B7C34 /* IfBlock.swift in Sources */,
+				BFC1EDF626CFFADC009B7C34 /* MethodType.swift in Sources */,
+				BFC1EDEC26CFFADC009B7C34 /* GenericSystemClassInstance.swift in Sources */,
+				BFC1ED4326CFFAB1009B7C34 /* LoopBlock.swift in Sources */,
+				BFC1EDDE26CFFADC009B7C34 /* Invokable.swift in Sources */,
+				BFC1ECFD26CFFA9F009B7C34 /* InnerVectorPointer.swift in Sources */,
+				BFC1EDD926CFFADC009B7C34 /* Closure.swift in Sources */,
+				BFC1ED6226CFFABA009B7C34 /* ForwardingSymbol.swift in Sources */,
+				BFC1ECA326CFFA8E009B7C34 /* ObjectHandle.swift in Sources */,
+				BFC1ED4426CFFAB1009B7C34 /* VirtualReadBlock.swift in Sources */,
+				BFC1ECFC26CFFA9F009B7C34 /* DynamicLibrary.swift in Sources */,
+				BFC1EE3526CFFAF6009B7C34 /* ArgonWorxApp.swift in Sources */,
+				BFC1EE0426CFFADC009B7C34 /* TopModule.swift in Sources */,
+				BFC1EE2E26CFFAF6009B7C34 /* LineNumberGutter.swift in Sources */,
+				BFC1EDE526CFFADC009B7C34 /* Metaclass.swift in Sources */,
+				BFC1EDDA26CFFADC009B7C34 /* DispatchNode.swift in Sources */,
+				BFC1EE0726CFFADC009B7C34 /* ArgonModule.swift in Sources */,
+				BFC1EDF826CFFADC009B7C34 /* SymbolAttributes.swift in Sources */,
+				BFC1EDFE26CFFADC009B7C34 /* Initializer.swift in Sources */,
+				BFC1ED3926CFFAB1009B7C34 /* MethodInstanceBlock.swift in Sources */,
+				BFC1EE0026CFFADC009B7C34 /* TypeConstraint.swift in Sources */,
+				BFC1ED8A26CFFAD5009B7C34 /* ArgonDateTime.swift in Sources */,
+				BFC1EDFC26CFFADC009B7C34 /* TypeParameter.swift in Sources */,
+				BFC1ED3B26CFFAB1009B7C34 /* Block.swift in Sources */,
+				BFC1ECE026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift in Sources */,
+				BFC1EDF226CFFADC009B7C34 /* ForwardReferenceClass.swift in Sources */,
+				BFC1EDDC26CFFADC009B7C34 /* Method.swift in Sources */,
+				BFC1ECDE26CFFA9F009B7C34 /* InnerArrayPointer.swift in Sources */,
+				BFC1ECA126CFFA8E009B7C34 /* SignalHandler.c in Sources */,
+				BFC1EDF526CFFADC009B7C34 /* Displayable.swift in Sources */,
 				BFC1EC8426CFF9E9009B7C34 /* ViewController.swift in Sources */,
+				BFC1EDE326CFFADC009B7C34 /* EnumerationCase.swift in Sources */,
+				BFC1ECDB26CFFA9F009B7C34 /* PackedField.swift in Sources */,
+				BFC1EE0526CFFADC009B7C34 /* SystemModule.swift in Sources */,
+				BFC1ED4726CFFAB1009B7C34 /* LetBlock.swift in Sources */,
+				BFC1ED1826CFFAA7009B7C34 /* UnaryExpression.swift in Sources */,
+				BFC1EE1D26CFFAE7009B7C34 /* String+Extensions.swift in Sources */,
+				BFC1EDD826CFFADC009B7C34 /* SystemMethodInstance.swift in Sources */,
+				BFC1EDEB26CFFADC009B7C34 /* GenericClass.swift in Sources */,
+				BFC1ED6026CFFABA009B7C34 /* TokenRenderer.swift in Sources */,
+				BFC1EDEF26CFFADC009B7C34 /* SystemClass.swift in Sources */,
+				BFC1ECE726CFFA9F009B7C34 /* InnerClosurePointer.swift in Sources */,
+				BFC1EDE026CFFADC009B7C34 /* Function.swift in Sources */,
+				BFC1EDE926CFFADC009B7C34 /* PrimitiveClass.swift in Sources */,
+				BFC1ED8526CFFAD5009B7C34 /* ArgonDate.swift in Sources */,
+				BFC1ED6626CFFABA009B7C34 /* Optimizer.swift in Sources */,
+				BFC1ECD826CFFA9F009B7C34 /* BitField.swift in Sources */,
+				BFC1ED1B26CFFAA7009B7C34 /* SymbolExpression.swift in Sources */,
+				BFC1ECFB26CFFA9F009B7C34 /* InstructionBuffer.swift in Sources */,
+				BFC1EDEA26CFFADC009B7C34 /* ArrayClass.swift in Sources */,
+				BFC1ECE826CFFA9F009B7C34 /* InnerStringPointer.swift in Sources */,
+				BFC1ECDD26CFFA9F009B7C34 /* MemorySize.swift in Sources */,
+				BFC1ECE526CFFA9F009B7C34 /* ValueHolder.swift in Sources */,
+				BFC1EE0826CFFADC009B7C34 /* LibraryModuleInstance.swift in Sources */,
+				BFC1ECE126CFFA9F009B7C34 /* Timer.swift in Sources */,
+				BFC1ED3E26CFFAB1009B7C34 /* ExpressionBlock.swift in Sources */,
+				BFC1ED8426CFFAD5009B7C34 /* Location.swift in Sources */,
+				BFC1EDED26CFFADC009B7C34 /* GenericClassInstance.swift in Sources */,
+				BFC1ED0426CFFA9F009B7C34 /* InnerPointer.swift in Sources */,
+				BFC1ED0126CFFA9F009B7C34 /* InnerInstructionArrayPointer.swift in Sources */,
+				BFC1EE0B26CFFADC009B7C34 /* MainModule.swift in Sources */,
+				BFC1ED0326CFFA9F009B7C34 /* InnerClassPointer.swift in Sources */,
+				BFC1ED0626CFFA9F009B7C34 /* InnerSlotValue.swift in Sources */,
+				BFC1EE2D26CFFAF6009B7C34 /* TokenMappedView.swift in Sources */,
+				BFC1ED5E26CFFABA009B7C34 /* Realizer.swift in Sources */,
+				BFC1ECF226CFFA9F009B7C34 /* ObjectPointer.swift in Sources */,
+				BFC1ED6326CFFABA009B7C34 /* Register.swift in Sources */,
+				BFC1EE0326CFFADC009B7C34 /* Import.swift in Sources */,
+				BFC1ED7426CFFAC0009B7C34 /* NullReportingContext.swift in Sources */,
+				BFC1EE1C26CFFAE7009B7C34 /* NSColor+Extensions.swift in Sources */,
+				BFC1ED4126CFFAB1009B7C34 /* ClosureBlock.swift in Sources */,
+				BFC1ED3F26CFFAB1009B7C34 /* ForBlock.swift in Sources */,
+				BFC1EDDD26CFFADC009B7C34 /* MethodInstance.swift in Sources */,
+				BFC1EE0C26CFFADC009B7C34 /* IntegerSlot.swift in Sources */,
+				BFC1ECED26CFFA9F009B7C34 /* Segment.swift in Sources */,
+				BF86721F26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift in Sources */,
+				BFC1EDF426CFFADC009B7C34 /* VoidClass.swift in Sources */,
+				BFC1EDE226CFFADC009B7C34 /* Parameter.swift in Sources */,
+				BFC1ECEE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift in Sources */,
+				BFC1EDF126CFFADC009B7C34 /* Class.swift in Sources */,
+				BFC1EE0D26CFFADC009B7C34 /* ArraySlot.swift in Sources */,
+				BFC1EE2F26CFFAF6009B7C34 /* InspectorWindow.swift in Sources */,
+				BFC1ED6726CFFABA009B7C34 /* SyntaxColorPalette.swift in Sources */,
+				BFC1ED6E26CFFABA009B7C34 /* Token.swift in Sources */,
+				BFC1ED5F26CFFABA009B7C34 /* Address.swift in Sources */,
+				BFA3ADD426D0676F00F17CF6 /* RegistersViewController.swift in Sources */,
+				BFC1ED6426CFFABA009B7C34 /* SemanticAnalyzer.swift in Sources */,
+				BFC1ECE226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift in Sources */,
+				BFC1EDDF26CFFADC009B7C34 /* SystemMethod.swift in Sources */,
+				BFC1ED7926CFFACD009B7C34 /* Type.swift in Sources */,
+				BFC1EE1426CFFADC009B7C34 /* FloatSlot.swift in Sources */,
+				BFC1EE2C26CFFAF6009B7C34 /* ProcessorView.swift in Sources */,
+				BFC1EE1226CFFADC009B7C34 /* HeaderSlot.swift in Sources */,
+				BFC1ED6B26CFFABA009B7C34 /* AddressAllocator.swift in Sources */,
+				BF86722126D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift in Sources */,
+				BFC1ED6926CFFABA009B7C34 /* CodeGenerator.swift in Sources */,
 				BFC1EC8226CFF9E9009B7C34 /* AppDelegate.swift in Sources */,
-				BFC1EC8626CFF9E9009B7C34 /* Document.swift in Sources */,
+				BFC1ED6D26CFFABA009B7C34 /* CompilerPass.swift in Sources */,
+				BFC1ED1926CFFAA7009B7C34 /* InvocationExpression.swift in Sources */,
+				BFC1ED8826CFFAD5009B7C34 /* Name.swift in Sources */,
+				BFC1EE3026CFFAF6009B7C34 /* ProjectDocument.swift in Sources */,
+				BFC1EDD626CFFADC009B7C34 /* ContainerSymbol.swift in Sources */,
+				BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */,
+				BFC1ED6C26CFFABA009B7C34 /* Parser.swift in Sources */,
+				BFC1ED1626CFFAA7009B7C34 /* MakeTerm.swift in Sources */,
+				BFC1ED8B26CFFAD5009B7C34 /* NamingContext.swift in Sources */,
+				BFC1ED7526CFFAC0009B7C34 /* ReportingContext.swift in Sources */,
+				BFC1EE3626CFFAF6009B7C34 /* ContentView.swift in Sources */,
+				BFC1ED8626CFFAD5009B7C34 /* Stack.swift in Sources */,
+				BFC1EE3126CFFAF6009B7C34 /* LineAnnotation.swift in Sources */,
+				BFC1EE0126CFFADC009B7C34 /* ImportedSymbol.swift in Sources */,
+				BFC1ECF826CFFA9F009B7C34 /* InnerSlotPointer.swift in Sources */,
+				BFC1ECE926CFFA9F009B7C34 /* InnerListPointer.swift in Sources */,
+				BFC1ECF526CFFA9F009B7C34 /* InnerByteArrayPointer.swift in Sources */,
+				BFA3ADCE26D0195F00F17CF6 /* MemorySlotCellView.swift in Sources */,
+				BF86721926D18ED200A12B1A /* Parent.swift in Sources */,
+				BFC1ED1C26CFFAA7009B7C34 /* SuffixExpression.swift in Sources */,
+				BF86722326D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift in Sources */,
+				BFC1ECD926CFFA9F009B7C34 /* BitEncoder.swift in Sources */,
+				BFC1EDFB26CFFADC009B7C34 /* Interceptor.swift in Sources */,
+				BFC1EDF926CFFADC009B7C34 /* ErrorSymbol.swift in Sources */,
+				BFC1ED6A26CFFABA009B7C34 /* ParseNode.swift in Sources */,
+				BFA3ADD026D04B0200F17CF6 /* ProcessorViewController.swift in Sources */,
+				BFC1ED7626CFFAC0009B7C34 /* CompilerError.swift in Sources */,
+				BFC1ECFA26CFFA9F009B7C34 /* InnerEnumerationInstancePointer.swift in Sources */,
+				BFC1EDE126CFFADC009B7C34 /* SymbolType.swift in Sources */,
+				BFC1EE1626CFFADC009B7C34 /* Symbol.swift in Sources */,
+				BFA3ADD226D0590F00F17CF6 /* InstructionCellView.swift in Sources */,
+				BFC1ED1A26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift in Sources */,
+				BFC1EE1526CFFADC009B7C34 /* Node.swift in Sources */,
+				BFC1EC9826CFFA7C009B7C34 /* Interpreter.c in Sources */,
+				BFC1EDF026CFFADC009B7C34 /* GenericSystemClass.swift in Sources */,
+				BFC1ECF126CFFA9F009B7C34 /* ExecutionContext.swift in Sources */,
+				BFC1ECDA26CFFA9F009B7C34 /* StackSegment.swift in Sources */,
+				BFC1EDF726CFFADC009B7C34 /* LocalSlot.swift in Sources */,
+				BFC1EE3226CFFAF6009B7C34 /* ClassEditingView.swift in Sources */,
+				BFC1ED6126CFFABA009B7C34 /* TokenStream.swift in Sources */,
+				BFC1EE1326CFFADC009B7C34 /* VirtualSlot.swift in Sources */,
+				BFC1ECA426CFFA8E009B7C34 /* Page.swift in Sources */,
+				BFC1EE1E26CFFAE7009B7C34 /* Optional+Extensions.swift in Sources */,
+				BFC1ECF626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift in Sources */,
+				BFC1EE0226CFFADC009B7C34 /* TypeCode.swift in Sources */,
+				BFC1ED2226CFFAA7009B7C34 /* SlotExpression.swift in Sources */,
+				BFC1ECF726CFFA9F009B7C34 /* ManagedSegment.swift in Sources */,
+				BFC1ECF426CFFA9F009B7C34 /* GeneralPointer.swift in Sources */,
+				BFC1ECA026CFFA8E009B7C34 /* ArgonServer.swift in Sources */,
+				BFC1ECA526CFFA8E009B7C34 /* PageServer.swift in Sources */,
+				BF86721326D0EC5300A12B1A /* ProcessorWindowController.swift in Sources */,
+				BFC1EE0A26CFFADC009B7C34 /* LibraryModule.swift in Sources */,
+				BFA3ADA426CFFD9300F17CF6 /* EnglishWord.swift in Sources */,
+				BF86721C26D2AA0100A12B1A /* ArgonBrowserWindowController.swift in Sources */,
+				BFC1EE1F26CFFAE7009B7C34 /* Dictionary+Extensions.swift in Sources */,
+				BFC1EDD726CFFADC009B7C34 /* Argument.swift in Sources */,
+				BFC1ECDC26CFFA9F009B7C34 /* PointerHolder.swift in Sources */,
+				BFC1EDFA26CFFADC009B7C34 /* SymbolGroup.swift in Sources */,
+				BFC1EE0626CFFADC009B7C34 /* ModuleInstance.swift in Sources */,
+				BFC1ED2126CFFAA7009B7C34 /* AssignmentExpression.swift in Sources */,
+				BFC1EE0926CFFADC009B7C34 /* Module.swift in Sources */,
+				BFC1EE0E26CFFADC009B7C34 /* Slot.swift in Sources */,
+				BFC1ECA226CFFA8E009B7C34 /* PersistentDictionary.swift in Sources */,
+				BFC1ED3D26CFFAB1009B7C34 /* OtherwiseBlock.swift in Sources */,
+				BFC1ED4026CFFAB1009B7C34 /* ElseBlock.swift in Sources */,
+				BFC1ED6526CFFABA009B7C34 /* Code3A.swift in Sources */,
+				BFC1EDD526CFFADC009B7C34 /* Constant.swift in Sources */,
+				BFC1ED2326CFFAA7009B7C34 /* LiteralExpression.swift in Sources */,
+				BFC1EC8626CFF9E9009B7C34 /* ModuleDocument.swift in Sources */,
+				BFC1EDFF26CFFADC009B7C34 /* NodeLocation.swift in Sources */,
+				BFC1ED1F26CFFAA7009B7C34 /* AsExpression.swift in Sources */,
+				BFC1ED0226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift in Sources */,
+				BFC1ECE326CFFA9F009B7C34 /* Instruction.swift in Sources */,
+				BFC1EE0F26CFFADC009B7C34 /* StringSlot.swift in Sources */,
+				BFC1ECEB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift in Sources */,
+				BFC1ECDF26CFFA9F009B7C34 /* InnerInstancePointer.swift in Sources */,
+				BFC1EDDB26CFFADC009B7C34 /* Handler.swift in Sources */,
+				BFC1ECEC26CFFA9F009B7C34 /* Thread.swift in Sources */,
+				BFC1ED1726CFFAA7009B7C34 /* Expression.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -187,8 +1214,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Vincent Coetzee (DLH9UBQV34)";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = DLH9UBQV34;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -248,8 +1277,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application: Vincent Coetzee (DLH9UBQV34)";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = DLH9UBQV34;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -274,10 +1305,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2VWYS94M5J;
+				DEVELOPMENT_TEAM = DLH9UBQV34;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
@@ -293,7 +1326,10 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.macsemantics.ArgonWorks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/ArgonWorks/Interpreter";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -303,10 +1339,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 2VWYS94M5J;
+				DEVELOPMENT_TEAM = DLH9UBQV34;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
@@ -322,7 +1360,9 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.macsemantics.ArgonWorks;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/ArgonWorks/Interpreter";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
