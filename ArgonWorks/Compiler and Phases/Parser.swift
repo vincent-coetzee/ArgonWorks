@@ -1433,7 +1433,7 @@ public class Parser: CompilerPass
     private func parseGeneratorExpression() throws -> Expression
         {
         try self.nextToken()
-        let variables = self.parseGenerativeVariables()
+//        let variables = self.parseGenerativeVariables()
         while !self.token.isRightBracket
             {
             try self.nextToken()

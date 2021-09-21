@@ -110,7 +110,7 @@ public class InnerPackedInstructionArrayPointer: InnerPointer,Collection
     @discardableResult
     public func append(_ opcode:Instruction.Opcode,operand1:Instruction.Operand = .none,operand2:Instruction.Operand = .none,result:Instruction.Operand = .none) -> Self
         {
-        self.append(Instruction(opcode,operand1:operand1,operand2:operand2,result:result))
+//        self.append(Instruction(opcode,operand1:operand1,operand2:operand2,result:result))
         return(self)
         }
         

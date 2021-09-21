@@ -25,6 +25,6 @@ public class PersistentSetPage: Page
     public func insert(address:Word)
         {
         let innerPointer = GeneralPointer(address: address,class: self.virtualMachine.argonModule.object)
-        let hashValue = innerPointer.hashValue
+//        let hashValue = innerPointer.hashValue
         }
     }

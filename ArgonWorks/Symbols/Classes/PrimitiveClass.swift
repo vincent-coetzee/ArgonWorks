@@ -71,7 +71,7 @@ public class PrimitiveClass:Class
     public override func realizeSuperclasses(in vm: VirtualMachine)
         {
         super.realizeSuperclasses(in: vm)
-        if self.superclasses.map{$0.label}.contains("Magnitude")
+        if self.superclasses.map({$0.label}).contains("Magnitude")
             {
             print("INDEX OF MAGNITUDE = \(self.superclasses[0].index)")
             print("VM INDEX = \(self.superclasses[0].topModule.virtualMachine.index)")
