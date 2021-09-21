@@ -14,7 +14,7 @@ class ProcessorViewController: NSViewController
     
     private var buffer: InstructionBuffer!
     
-    private let virtualMachine = VirtualMachine(small: true)
+    private let virtualMachine = VirtualMachine.small
     
     override func viewDidLoad()
         {
@@ -28,7 +28,7 @@ class ProcessorViewController: NSViewController
         
     @IBAction func onForwardClicked(_ sender:Any?)
         {
-        let registersViewController = (self.view.window!.windowController as! ProcessorWindowController).registersViewController
+//        let registersViewController = (self.view.window!.windowController as! ProcessorWindowController).registersViewController
         }
     
     }

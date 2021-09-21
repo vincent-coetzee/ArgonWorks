@@ -31,14 +31,15 @@ public class SlotExpression: Expression
         self.slot.setParent(self)
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         let receiverType = self.receiver.resultType
-        if let aClass = receiverType.class,let identifier = (self.slot as? SlotSelectorExpression)?.selector,let aSlot = aClass.layoutSlot(atLabel: identifier)
+        let aClass = receiverType.class
+        if let identifier = (self.slot as? SlotSelectorExpression)?.selector,let aSlot = aClass.layoutSlot(atLabel: identifier)
             {
-            return(.class(aSlot.type))
+            return(aSlot.type)
             }
-        return(.undefined)
+        return(.error(.undefined))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -48,7 +49,7 @@ public class SlotExpression: Expression
         let selector = (self.slot as! SlotSelectorExpression).selector
         if self.receiver.lookupSlot(selector: selector).isNil
             {
-            analyzer.compiler.reportingContext.dispatchError(at: self.declaration, message: "Slot '\(selector)' was not found on the receiver, unable to resolve the slot.")
+            analyzer.compiler.reportingContext.dispatchError(at: self.declaration!, message: "Slot '\(selector)' was not found on the receiver, unable to resolve the slot.")
             }
         }
         

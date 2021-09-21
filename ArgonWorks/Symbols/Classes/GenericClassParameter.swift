@@ -8,7 +8,7 @@
 ///
 ///
 /// A ClassParameter instance can be used whereever a Class instance
-/// would normally be used by it represents a Class that will be placed
+/// would normally be used but it represents a Class that will be placed
 /// whereever the ClassParameter appears when the Class that contains
 /// the ClassParameter is instanciated. In essence then a ClassParameter
 /// is a parameter to a Class definition and takes on a concrete value
@@ -23,6 +23,16 @@ public class GenericClassParameter: Class
         return(super.containedClassParameters.appending(self))
         }
         
+    public init(_ name: Label)
+        {
+        super.init(label: name)
+        }
+        
+    public override init(label name: Label)
+        {
+        super.init(label: name)
+        }
+        
     public static func ==(lhs:GenericClassParameter,rhs:GenericClassParameter) -> Bool
         {
         return(lhs.label == rhs.label)
@@ -33,14 +43,14 @@ public class GenericClassParameter: Class
         return(true)
         }
         
-    public override func instanciate(withClass: Class) -> Class
+    public override func instanciate(withType: Type) -> Type
         {
-        if withClass.isGenericClassParameter
+        if withType.isGenericClassParameter
             {
-            return(withClass)
+            return(withType)
             }
-        let instance = GenericClassParameterInstance(label: self.label,classParameter: self,class: withClass)
-        return(instance)
+        let instance = GenericClassParameterInstance(label: self.label,classParameter: self,type: withType)
+        return(.class(instance))
         }
     }
 
@@ -57,21 +67,21 @@ public class GenericClassParameterInstance: Class
     {
     public static func ==(lhs:GenericClassParameterInstance,rhs:GenericClassParameterInstance) -> Bool
         {
-        return(lhs.theClass == rhs.theClass && lhs.classParameter == rhs.classParameter)
+        return(lhs.theType == rhs.theType && lhs.classParameter == rhs.classParameter)
         }
         
     public override var containsUninstanciatedParameterics: Bool
         {
-        return(theClass.containsUninstanciatedParameterics)
+        return(false)
         }
         
-    private let theClass: Class
+    private let theType: Type
     private let classParameter: GenericClassParameter
     
-    init(label: Label,classParameter: GenericClassParameter,class: Class)
+    init(label: Label,classParameter: GenericClassParameter,type: Type)
         {
         self.classParameter = classParameter
-        self.theClass = `class`
+        self.theType = type
         super.init(label: label)
         }
     }

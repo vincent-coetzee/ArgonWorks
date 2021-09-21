@@ -28,7 +28,7 @@ public class ArrayAccessExpression: Expression
         self.index = index
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         self.array.resultType
         }

@@ -20,9 +20,9 @@ public class Slot:Symbol
         .slot
         }
         
-    public override var type:Class
+    public override var type: Type
         {
-        return(self._type.class)
+        return(self._type ?? .class(VoidClass.voidClass))
         }
         
     public var size:Int
@@ -32,7 +32,7 @@ public class Slot:Symbol
         
     public override var displayName: String
         {
-        "\(self.label)::\(self._type.displayName)"
+        "\(self.label)::\(self._type?.displayString ?? "")"
         }
         
     public override var imageName: String
@@ -52,7 +52,7 @@ public class Slot:Symbol
         
     public var containedClassParameters: Array<GenericClassParameter>
         {
-        return(self._type.containedClassParameters)
+        return([])
         }
         
     public var isArraySlot:Bool
@@ -82,18 +82,18 @@ public class Slot:Symbol
         return(false)
         }
         
-    private var _type:Class
+    private var _type:Type?
     public private(set) var offset:Int = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
     
-    init(label:Label,type:Class)
+    init(label:Label,type:Type?)
         {
         self._type = type
         super.init(label:label)
         }
         
-    required init(labeled:Label,ofType:Class)
+    required init(labeled:Label,ofType:Type)
         {
         self._type = ofType
         super.init(label:labeled)
@@ -114,7 +114,7 @@ public class Slot:Symbol
         
     public override func realize(using realizer: Realizer)
         {
-        self._type.realize(using: realizer)
+        self._type?.realize(using: realizer)
         }
         
     public func setOffset(_ integer:Int)
@@ -141,9 +141,9 @@ public class Slot:Symbol
         self.addresses.append(.absolute(pointer.address))
         assert( self.topModule.argonModule.slot.sizeInBytes == 88)
         pointer.setSlotValue(vm.managedSegment.allocateString(self.label),atKey:"name")
-        pointer.setSlotValue(self._type.memoryAddress,atKey:"slotClass")
+        pointer.setSlotValue(self._type?.memoryAddress ?? 0,atKey:"slotClass")
         pointer.setSlotValue(self.offset,atKey:"offset")
-        pointer.setSlotValue(self._type.typeCode.rawValue,atKey:"typeCode")
+        pointer.setSlotValue(self._type?.typeCode.rawValue ?? 0,atKey:"typeCode")
         self.isMemoryLayoutDone = true
         }
     }

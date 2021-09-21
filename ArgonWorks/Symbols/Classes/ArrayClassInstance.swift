@@ -14,7 +14,7 @@ public class ArrayClassInstance: GenericSystemClassInstance
         return(self.sourceClass.memoryAddress)
         }
         
-    public func elementType() -> Class?
+    public func elementType() -> Type?
         {
         return(self.genericClassParameterInstances[0])
         }
@@ -26,6 +26,6 @@ public class ArrayClassInstance: GenericSystemClassInstance
         
     public override var displayString: String
         {
-        "Array<\(self.genericClassParameterInstances[0].displayName)>"
+        "Array<\(self.genericClassParameterInstances[0].displayString)>"
         }
     }

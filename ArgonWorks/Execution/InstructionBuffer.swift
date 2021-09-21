@@ -12,13 +12,13 @@ public class InstructionBuffer: Collection
     public static func samples(in vm: VirtualMachine) -> InstructionBuffer
         {
         let buffer = InstructionBuffer()
-        .append(.MAKE,.absolute(vm.topModule.argonModule.array.memoryAddress),.integer(1024),.register(.r0))
-        .append(.MOV,.register(.r1),.none,.register(.fp))
+        .append(.MAKE,.absolute(vm.topModule.argonModule.array.memoryAddress),.integer(1024),.register(.R0))
+        .append(.MOV,.register(.r1),.none,.register(.FP))
         .append(.LOAD,.integer(10),.none,.register(.r4))
         .append(.LOAD,.integer(20),.none,.register(.r5))
-        .append(.IADD,.register(.r4),.register(.r5),.register(.r6))
-        .append(.PUSH,.register(.r6))
-        .append(.POP,.none,.none,.register(.r7))
+        .append(.IADD,.register(.r4),.register(.r5),.register(.R6))
+        .append(.PUSH,.register(.R6))
+        .append(.POP,.none,.none,.register(.R7))
         return(buffer)
         }
 
@@ -35,7 +35,6 @@ public class InstructionBuffer: Collection
         
     private var instructions: Array<Instruction> = []
     private var instructionIndex: Int = 0
-    public var localSlots = Slots()
     
     public func triggerFromHere() -> Instruction.LabelMarker
         {

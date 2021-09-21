@@ -18,10 +18,10 @@ public class Compiler
 //        return(newSubject)
 //        }
 
-//    public var tokenRenderer: TokenRenderer
-//        {
-//        return(self.parser?.visualToken ?? TokenRenderer())
-//        }
+    public var tokenRenderer: TokenRenderer
+        {
+        return(self.parser?.visualToken ?? TokenRenderer(systemClassNames: self.systemClassNames))
+        }
         
     public var systemClassNames: Array<String>
         {
@@ -51,6 +51,16 @@ public class Compiler
     
     public func cancelCompletion()
         {
+        }
+        
+    public func parseChunk(_ source:String) throws
+        {
+        if source.isEmpty
+            {
+            return
+            }
+        self.parser = Parser(compiler: self)
+        self.parser!.parseChunk(source)
         }
         
     public func compileChunk(_ source:String)

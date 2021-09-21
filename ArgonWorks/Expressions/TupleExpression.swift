@@ -15,7 +15,7 @@ public class TupleExpression: Expression
         return("TUPLE\(string)")
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         return(.class(Tuple(label: Argon.nextName("1TUPLE"))))
         }

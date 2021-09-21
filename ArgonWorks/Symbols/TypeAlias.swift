@@ -13,9 +13,9 @@ public class TypeAlias:Symbol
         {
         }
         
-    private let _type:Class
+    private let _type:Type
     
-    init(label:Label,type:Class)
+    init(label:Label,type:Type)
         {
         self._type = type
         super.init(label: label)

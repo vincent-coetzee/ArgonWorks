@@ -31,6 +31,14 @@ public class Module:ContainerSymbol
         .module
         }
         
+    public override var children: Array<Symbol>?
+        {
+        let modules = self.symbols.values.filter{$0 is Module}
+        let methods = self.symbols.values.filter{$0 is Method}.sorted{$0.label < $1.label}
+        let groups = self.symbols.values.filter{$0 is SymbolGroup}.sorted{$0.label < $1.label}
+        return(modules + groups + methods)
+        }
+        
     public var classes:Classes
         {
         var classes = Array(self.symbols.valuesByKey.compactMap{$0 as? Class})

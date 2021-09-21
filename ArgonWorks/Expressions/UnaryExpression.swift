@@ -25,7 +25,7 @@ public class UnaryExpression: Expression
         self.rhs.setParent(self)
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         return(self.rhs.resultType)
         }
@@ -47,7 +47,7 @@ public class UnaryExpression: Expression
         switch(self.operation)
             {
             case .sub:
-                if self.resultType == self.topModule.argonModule.integer
+                if self.resultType == self.topModule.argonModule.integer.type
                     {
                     opcode = .INEG
                     }

@@ -35,6 +35,7 @@ public enum SyntaxColor: String
     case lineNumbers
     case background
     case constant
+    case enumeration
     }
     
 public typealias SyntaxColorPalette = Dictionary<String,NSColor>
@@ -45,7 +46,8 @@ extension SyntaxColorPalette
         {
         () -> SyntaxColorPalette in
         var palette = SyntaxColorPalette()
-        palette[SyntaxColor.keyword.rawValue] = NSColor.argonXKeyword
+        palette[SyntaxColor.enumeration.rawValue] = NSColor.argonThemeCyan
+        palette[SyntaxColor.keyword.rawValue] = NSColor.argonNeonPink
         palette[SyntaxColor.text.rawValue] = NSColor.argonXcodePink
         palette[SyntaxColor.name.rawValue] = NSColor.argonXIvory
         palette[SyntaxColor.string.rawValue] = NSColor.argonXBlue
@@ -59,14 +61,14 @@ extension SyntaxColorPalette
         palette[SyntaxColor.systemClass.rawValue] = NSColor.argonXLightBlue
         palette[SyntaxColor.byte.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.character.rawValue] = NSColor.argonXSmoke
-        palette[SyntaxColor.type.rawValue] = NSColor.argonStoneTerrace
-        palette[SyntaxColor.method.rawValue] = NSColor.argonXGreen
+        palette[SyntaxColor.type.rawValue] = NSColor.argonNeonPink
+        palette[SyntaxColor.method.rawValue] = NSColor.argonThemeBlueGreen
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside
         palette[SyntaxColor.path.rawValue] = NSColor.argonXGray
         palette[SyntaxColor.keypath.rawValue] = NSColor.argonXGray
         palette[SyntaxColor.slot.rawValue] = NSColor.argonCoral
-        palette[SyntaxColor.directive.rawValue] = NSColor.argonRed
+        palette[SyntaxColor.directive.rawValue] = NSColor.argonYellow
         palette[SyntaxColor.lineNumbers.rawValue] = NSColor(hex: 0xA0A0A0)
         palette[SyntaxColor.constant.rawValue] = NSColor.argonCheese
         palette[SyntaxColor.background.rawValue] = NSColor.black
@@ -98,6 +100,7 @@ extension SyntaxColorPalette
     public static let typeColor = SyntaxColorPalette.shared[SyntaxColor.type.rawValue]!
     public static let lineNumberColor = SyntaxColorPalette.shared[SyntaxColor.lineNumbers.rawValue]!
     public static let backgroundColor = SyntaxColorPalette.shared[SyntaxColor.background.rawValue]!
+    public static let enumerationColor = SyntaxColorPalette.shared[SyntaxColor.enumeration.rawValue]!
     
     public static let textFont = NSFont(name:"Menlo",size:11)!
     }

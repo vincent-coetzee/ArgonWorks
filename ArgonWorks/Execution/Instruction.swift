@@ -156,7 +156,7 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
         
     public enum Register:Int,Comparable,CaseIterable,Identifiable,Encodable,Decodable,Equatable
         {
-        public static var generalPurposeRegisters = [Self.r0,Self.r1,Self.r2,Self.r3,Self.r4,Self.r5,Self.r6,Self.r7,Self.r8,Self.r9,Self.r10,Self.r11,Self.r12,Self.r13,Self.r14,Self.r15]
+        public static var generalPurposeRegisters = [Self.R0,Self.r1,Self.r2,Self.r3,Self.r4,Self.r5,Self.R6,Self.R7,Self.R8,Self.R9,Self.R10,Self.R11,Self.R12,Self.R13,Self.R14,Self.R15]
         
         public static let bitWidth = 8
         
@@ -165,22 +165,22 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             return(lhs.rawValue < rhs.rawValue)
             }
             
-        case mi = 0     /// This points to the current method instance, ip is realtive to the instruction sequence in this method
-        case ss         /// Points to the current stack segment
-        case sts        /// Points to the fixed or static segment, we could not call it static because static is a reserved word
-        case ms         /// Points to the current managed segment
-        case ds         /// Points to the current data segment
-        case cp         /// The code pointer points to the current method instance being executed
-        case ip         /// the ip points to the sequence of instructions being executed
-        case ii         /// the instruction index, is an index into the sequence of instructions being executed
-        case sp         /// the sp points to the top of the stack
-        case bp         /// the bp points to the base of the current stack frame
-        case fp         /// the fp points to the next available slot in the fixed segment
-        case mp         /// the mp points to the next avaialble slot in the managed segmeng
-        case ep
-        case ret
-        case r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15
-        case fr0,fr1,fr2,fr3,fr4,fr5,fr6,fr7,fr8,fr9,fr10,fr11,fr12,fr13,fr14,fr15
+        case MI = 0     /// This points to the current method instance, ip is realtive to the instruction sequence in this method
+        case SS         /// Points to the current stack segment
+        case STS        /// Points to the fixed or static segment, we could not call it static because static is a reserved word
+        case MS         /// Points to the current managed segment
+        case DS         /// Points to the current data segment
+        case CP         /// The code pointer points to the current method instance being executed
+        case IP         /// the ip points to the sequence of instructions being executed
+        case II         /// the instruction index, is an index into the sequence of instructions being executed
+        case SP         /// the sp points to the top of the stack
+        case BP         /// the bp points to the base of the current stack frame
+        case FP         /// the fp points to the next available slot in the fixed segment
+        case MP         /// the mp points to the next avaialble slot in the managed segmeng
+        case EP
+        case RET
+        case R0,r1,r2,r3,r4,r5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15
+        case fr0,fr1,fr2,fr3,fr4,fr5,fr6,fr7,fr8,fr9,fr10,fr11,fr12,fr13,FR14,FR15
         
         public var displayString: String
             {
@@ -189,7 +189,7 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             
         public var isFloatingPoint: Bool
             {
-            return(self >= .fr0 && self <= .fr15)
+            return(self >= .fr0 && self <= .FR15)
             }
             
         public var id:Int
@@ -310,6 +310,28 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             self = .stack(stack,Argon.Integer(offset))
             }
             
+        public var isNotNone: Bool
+            {
+            switch(self)
+                {
+                case .none:
+                    return(false)
+                default:
+                    return(true)
+                }
+            }
+            
+        public var isAbsolute: Bool
+            {
+            switch(self)
+                {
+                case .absolute:
+                    return(true)
+                default:
+                    return(false)
+                }
+            }
+            
         public var wordValue:Word
             {
             switch(self)
@@ -376,17 +398,6 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                     return(7)
                 case .label:
                     return(8)
-                }
-            }
-            
-        public var isNotNone: Bool
-            {
-            switch(self)
-                {
-                case .none:
-                    return(false)
-                default:
-                    return(true)
                 }
             }
             
@@ -871,11 +882,11 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             ///
             ///
             case .HAND:
-                let current = vm.registers[Instruction.Register.ep.rawValue]
+                let current = vm.registers[Instruction.Register.EP.rawValue]
                 vm.stackSegment.push(current)
                 vm.stackSegment.push(try self.operand1.value(in: vm))
                 vm.stackSegment.push(try self.operand2.value(in: vm))
-                vm.registers[Instruction.Register.ep.rawValue] = vm.stackSegment.stackPointer
+                vm.registers[Instruction.Register.EP.rawValue] = vm.stackSegment.stackPointer
             case .REIN:
                 break
             case .ZERO:

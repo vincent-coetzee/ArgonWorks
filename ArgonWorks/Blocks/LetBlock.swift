@@ -29,7 +29,7 @@ public class LetBlock: Block
         {
         let valueType = self.value.resultType
         let slotType = slot.type
-        if !valueType.isSubclass(of: slotType)
+        if !valueType.isSubtype(of: slotType)
             {
             analyzer.compiler.reportingContext.dispatchError(at: self.location, message: "An instance of class \(valueType) can not be assigned to an instance of \(slotType).")
             }

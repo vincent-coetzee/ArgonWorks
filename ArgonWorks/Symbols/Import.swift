@@ -9,4 +9,11 @@ import Foundation
 
 public class Import:Symbol
     {
+    private let path: String?
+    
+    init(label: Label,path: String?)
+        {
+        self.path = path
+        super.init(label: label)
+        }
     }

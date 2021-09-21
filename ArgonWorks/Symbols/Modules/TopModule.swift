@@ -45,13 +45,20 @@ public class TopModule: SystemModule
         {
         return(self._argonModule)
         }
+        
+    public var userModules: Array<Module>
+        {
+        return(self.symbols.values.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
+        }
     
     private let _argonModule: ArgonModule
+    public let virtualMachine: VirtualMachine!
     
     public init(virtualMachine: VirtualMachine)
         {
+        self.virtualMachine = virtualMachine
         self._argonModule = ArgonModule(virtualMachine: virtualMachine)
-        super.init(label:"")
+        super.init(label:"Root")
         self.addSymbol(self._argonModule)
         }
         

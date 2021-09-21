@@ -36,7 +36,7 @@ public class Symbol:Node,ParseNode
         return(AnyView(EmptyView()))
         }
         
-    public var declaration: Location
+    public var declaration: Location?
         {
         self.locations.declaration
         }
@@ -46,7 +46,7 @@ public class Symbol:Node,ParseNode
         self.label
         }
         
-    public var description: String
+    public override var description: String
         {
         return("\(Swift.type(of:self))(\(self.label))")
         }
@@ -113,7 +113,7 @@ public class Symbol:Node,ParseNode
         
     public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
-        fatalError("Should not have been called")
+//        fatalError("Should not have been called")
         }
         
     public func analyzeSemantics(using: SemanticAnalyzer)

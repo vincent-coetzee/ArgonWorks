@@ -9,9 +9,9 @@ import Foundation
 
 public class EnumerationInstanceExpression: Expression
     {
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(self.enumeration.isNil ? .undefined : .class(self.enumeration!))
+        return(self.enumeration.isNil ? .error(.mismatch) : .enumeration(self.enumeration!))
         }
         
     public override var displayString: String

@@ -40,13 +40,13 @@ public class LocalSlotExpression: Expression
         if slot.type.isGenericClass
             {
             analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
+            analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
             }
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(.class(self.slot.type))
+        return(self.slot.type)
         }
         
     public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws

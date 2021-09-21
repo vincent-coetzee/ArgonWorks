@@ -15,7 +15,7 @@ struct ArgonWorxApp {
     init()
         {
         Thread.initThreads()
-        let small = VirtualMachine(small: true)
+        let small = VirtualMachine.small
         let bottomClass = small.topModule.argonModule.class
         print("CLASS <= TYPE: \(bottomClass.isInclusiveSubclass(of: small.topModule.argonModule.typeClass))")
         print("CLASS <= OBJECT: \(bottomClass.isInclusiveSubclass(of: small.topModule.argonModule.object))")
@@ -24,10 +24,10 @@ struct ArgonWorxApp {
         print("FUNCTION <= BEHAVIOR: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.behavior))")
         print("FUNCTION <= OBJECT: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.object))")
         print("FUNCTION <= MAGNITUDE: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.magnitude))")
-        let instance1 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer),Parameter(label:"B",type: small.topModule.argonModule.boolean),Parameter(label: "C",type: small.topModule.argonModule.typeClass)],returnType: small.topModule.argonModule.integer)
-        let instance2 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer),Parameter(label:"B",type: small.topModule.argonModule.string),Parameter(label: "C",type: small.topModule.argonModule.enumeration)],returnType: small.topModule.argonModule.integer)
-        let instance3 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer),Parameter(label:"B",type: small.topModule.argonModule.collection),Parameter(label: "C",type: small.topModule.argonModule.class)],returnType: small.topModule.argonModule.integer)
-        let instance4 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer),Parameter(label:"B",type: small.topModule.argonModule.array),Parameter(label: "C",type: small.topModule.argonModule.class)],returnType: small.topModule.argonModule.integer)
+        let instance1 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.boolean.type),Parameter(label: "C",type: small.topModule.argonModule.typeClass.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance2 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.string.type),Parameter(label: "C",type: small.topModule.argonModule.enumeration.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance3 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.collection.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance4 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.array.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
         let method = Method(label: "MethodA")
         method.addInstance(instance1)
         method.addInstance(instance2)
@@ -55,7 +55,7 @@ struct ArgonWorxApp {
         let byteArray = InnerByteArrayPointer.with([0,1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1])
         let someBytes = byteArray.bytes
         print(someBytes)
-        let used = VirtualMachine(small: true).managedSegment.spaceUsed
+        let used = VirtualMachine.small.managedSegment.spaceUsed
         let usedK = used.size(inUnits: .kilobytes)
         let usedM = used.size(inUnits: .megabytes)
         print("BYTES USED IN ManagedSegment: \(used.displayString), \(usedK.displayString), \(usedM.displayString)" )
@@ -86,8 +86,7 @@ struct ArgonWorxApp {
         let source = try! String(contentsOf: sourceURL!)
         print(source)
         let compiler = Compiler(virtualMachine: small)
-        let element = compiler.compileChunk(source)
-        print(element)
+        compiler.compileChunk(source)
         let library = DynamicLibrary(path: "/Users/vincent/Desktop/libXenon.dylib")
         let symbol = library.findSymbol("PrintString")
         let stringAddress = InnerStringPointer.allocateString("Can we c this string in c ?", in: small)

@@ -21,9 +21,11 @@ public class Method:Symbol
         }
         
     public var isMain: Bool = false
-    public var returnType: Class = VoidClass.voidClass
+    public var returnType: Type = .class(VoidClass.voidClass)
     public var proxyParameters = Parameters()
     public var dispatchRootNode: DispatchRootNode?
+    public var isGenericMethod = false
+    public var isIntrinsic = false
     
     public private(set) var instances = MethodInstances()
     
@@ -42,6 +44,16 @@ public class Method:Symbol
         .argonPink
         }
         
+    public override var children: Array<Symbol>?
+        {
+        return(self.instances)
+        }
+        
+    public override var isExpandable: Bool
+        {
+        return(self.instances.count > 0)
+        }
+        
     public override func realize(using realizer: Realizer)
         {
         for instance in self.instances
@@ -58,7 +70,7 @@ public class Method:Symbol
             }
         }
         
-    public func instance(_ types:Class...,returnType:Class = VoidClass.voidClass) -> Method
+    public func instance(_ types:Type...,returnType:Type = .class(VoidClass.voidClass)) -> Method
         {
         let instance = MethodInstance(label: self.label)
         var parameters = Parameters()
@@ -99,7 +111,7 @@ public class Method:Symbol
         self.dispatchRootNode = DispatchRootNode.rootNode(for: self.methodSignatures)
         }
         
-    public func dispatch(with classes: Classes) -> MethodInstance?
+    public func dispatch(with classes: Types) -> MethodInstance?
         {
         return(self.dispatchRootNode?.dispatch(with: classes))
         }
@@ -118,11 +130,11 @@ public class Method:Symbol
             return(nil)
             }
         let types = arguments.resultTypes
-        if types.isMisMatched
+        if types.isError
             {
             return(nil)
             }
-        let classes = types.map{$0.class!}
+        let classes = types.map{$0}
         let scores = self.instances.map{$0.dispatchScore(for: classes)}
         var lowest:Int? = nil
         var selectedInstance:MethodInstance?
@@ -154,3 +166,17 @@ public class Method:Symbol
     
 public typealias Methods = Array<Method>
 
+extension Types
+    {
+    public var isError: Bool
+        {
+        for type in self
+            {
+            if type.isError
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+    }

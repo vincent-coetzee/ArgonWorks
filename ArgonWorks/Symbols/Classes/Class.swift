@@ -10,7 +10,7 @@ import AppKit
 import SwiftUI
 import FFI
 
-public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
+public class Class:ContainerSymbol,ObservableObject,Displayable
     {
     public static var classesByAddress = Dictionary<Word,Class>()
     
@@ -181,9 +181,9 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         return(false)
         }
         
-    public override var type:Class
+    public override var type:Type
         {
-        return(self)
+        return(.class(self))
         }
         
     public var isClassClass: Bool
@@ -251,9 +251,14 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         return(self)
         }
     
+    public override var isExpandable: Bool
+        {
+        return(self.children.count > 0)
+        }
+        
     public override var children: Symbols
         {
-        return(self.symbols.values + self.subclasses.sorted{$0.label<$1.label})
+        return(self.subclasses.sorted{$0.label<$1.label})
         }
         
     public var sizeInBytes: Int
@@ -377,13 +382,6 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         newClass.addresses = self.addresses
         newClass.locations = self.locations
         return(newClass)
-        }
-        
-    public func hash(into hasher:inout Hasher)
-        {
-        hasher.combine(self.index)
-        hasher.combine(self.name)
-        hasher.combine(self.label)
         }
         
     public func isSubclass(of superclass:Class) -> Bool
@@ -573,7 +571,12 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         return(super.lookup(label: label))
         }
         
-    public func instanciate(withClass: Class) -> Class
+    public func instanciate(withType: Type) -> Type
+        {
+        fatalError("A non parametric class should not be instanciated")
+        }
+        
+    public func instanciate(withTypes: Types,reportingContext: ReportingContext) -> Type
         {
         fatalError("A non parametric class should not be instanciated")
         }
@@ -621,15 +624,15 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         var offset:Int = 0
         var visitedClasses = Set<Class>()
         visitedClasses.insert(self)
-        var slot:Slot = HeaderSlot(label: "_header",type: self.topModule.argonModule.integer)
+        var slot:Slot = HeaderSlot(label: "_header",type: self.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_magicNumber",type: self.topModule.argonModule.integer)
+        slot = Slot(label: "_magicNumber",type: self.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_classPointer",type: self.topModule.argonModule.address)
+        slot = ObjectSlot(label: "_classPointer",type: self.topModule.argonModule.address.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
@@ -661,15 +664,15 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
         visitedClasses.insert(self)
         print("LAYING OUT CLASS \(self.label) INDIRECTLY")
         inClass.offsetOfClass[self] = offset
-        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: self.topModule.argonModule.integer)
+        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: self.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_\(self.label)MagicNumber",type: self.topModule.argonModule.integer)
+        slot = Slot(label: "_\(self.label)MagicNumber",type: self.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: self.topModule.argonModule.address)
+        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: self.topModule.argonModule.address.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
@@ -745,6 +748,10 @@ public class Class:ContainerSymbol,ObservableObject,Hashable,Displayable
                     symbol.subclasses.append(self)
                     }
                 symbol.realizeSuperclasses(in: vm)
+                }
+            else
+                {
+                print("ERROR could not realize \(reference)")
                 }
             }
         self.superclassReferences = []

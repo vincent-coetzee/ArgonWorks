@@ -63,6 +63,11 @@ public struct Name:CustomStringConvertible,Comparable,Hashable
         return(self.components.map{$0.string}.joined(separator: "\\"))
         }
         
+    public var displayString: String
+        {
+        return(self.components.map{$0.string}.joined(separator: "\\"))
+        }
+        
     public var count: Int
         {
         return(self.components.count)
@@ -139,13 +144,18 @@ public struct Name:CustomStringConvertible,Comparable,Hashable
         
     public init(_ label:Label)
         {
-        var bits = label.components(separatedBy: "\\")
-        var first:Component? = nil
-        if bits.count > 1 && bits[0...1] == ["",""]
+        var input = label
+        var first: Component? = nil
+        if label.hasPrefix("\\\\")
             {
             first = .root
-            bits.removeFirst(2)
+            input = String(input.dropFirst(2))
             }
+        else if label.hasPrefix("\\")
+            {
+            input = String(input.dropFirst())
+            }
+        let bits = input.components(separatedBy: "\\")
         self.components = (first.isNil ? [] : [first!]) + bits.map{Component.piece($0)}
         }
         

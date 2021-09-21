@@ -25,6 +25,11 @@ public class GeneralPointer
         return(pointer)
         }
         
+    public var hashValue: Int
+        {
+        return(intValue(atLabel: "hash"))
+        }
+        
     init(address: Word,class:Class)
         {
         self.theClass = `class`
@@ -68,6 +73,15 @@ public class GeneralPointer
         if let slot = theClass.layoutSlot(atLabel: atLabel)
             {
             return(self.wordPointer?[slot.offset / 8] ?? 0)
+            }
+        fatalError("Attempt to read the value of an invalid slot \(atLabel)")
+        }
+        
+    public func intValue(atLabel: String) -> Int
+        {
+        if let slot = theClass.layoutSlot(atLabel: atLabel)
+            {
+            return(Int(bitPattern: UInt(self.wordPointer?[slot.offset / 8] ?? 0)))
             }
         fatalError("Attempt to read the value of an invalid slot \(atLabel)")
         }

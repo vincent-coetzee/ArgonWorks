@@ -9,13 +9,13 @@ import Foundation
 
 public struct ClassNode
     {
-    public let clazz: Class
+    public let clazz: Type
     public let node: DispatchNode
     }
     
 public class DispatchNode
     {
-    internal let type: Class!
+    internal let type: Type!
     internal let typeDepth: Int
     internal var score: Int = 0
     
@@ -24,7 +24,7 @@ public class DispatchNode
         return(false)
         }
         
-    init(type: Class)
+    init(type: Type)
         {
         self.type = type
         self.typeDepth = type.depth
@@ -41,12 +41,12 @@ public class DispatchNode
         fatalError("")
         }
         
-    internal func child(atType: Class) -> DispatchNode?
+    internal func child(atType: Type) -> DispatchNode?
         {
         return(nil)
         }
         
-    public func dispatch(with classes: Classes) -> MethodInstance?
+    public func dispatch(with classes: Types) -> MethodInstance?
         {
         return(nil)
         }
@@ -56,7 +56,7 @@ public class DispatchChildNode: DispatchNode
     {
     internal var children = Array<DispatchNode>()
     
-    init(type: Class,signature: MethodSignature)
+    init(type: Type,signature: MethodSignature)
         {
         super.init(type: type)
         self.addSignature(signature)
@@ -87,7 +87,7 @@ public class DispatchChildNode: DispatchNode
             }
         }
         
-    internal override func child(atType type: Class) -> DispatchNode?
+    internal override func child(atType type: Type) -> DispatchNode?
         {
         for child in self.children
             {
@@ -99,7 +99,7 @@ public class DispatchChildNode: DispatchNode
         return(nil)
         }
         
-    public override func dispatch(with classes: Classes) -> MethodInstance?
+    public override func dispatch(with classes: Types) -> MethodInstance?
         {
         if classes.isEmpty
             {
@@ -110,7 +110,7 @@ public class DispatchChildNode: DispatchNode
         var lowestScoringNode:DispatchNode? = nil
         for node in self.children
             {
-            if firstClass.isInclusiveSubclass(of: node.type)
+            if firstClass.isSubtype(of: node.type)
                 {
                 node.score = firstClass.depth - node.type.depth
                 if lowestScoringNode.isNil
@@ -128,7 +128,7 @@ public class DispatchChildNode: DispatchNode
             {
             return(nil)
             }
-        return(lowestScoringNode!.dispatch(with: Classes(classes.dropFirst())))
+        return(lowestScoringNode!.dispatch(with: Types(classes.dropFirst())))
         }
 
     }
@@ -169,7 +169,7 @@ public class DirectDispatchRootNode: DispatchRootNode
         super.init()
         }
         
-    public override func dispatch(with classes: Classes) -> MethodInstance?
+    public override func dispatch(with classes: Types) -> MethodInstance?
         {
         return(instance)
         }
@@ -184,13 +184,13 @@ public class DispatchLeafNode: DispatchNode
         return(true)
         }
         
-    public init(type: Class,instance: MethodInstance)
+    public init(type: Type,instance: MethodInstance)
         {
         self.instance = instance
         super.init(type: type)
         }
         
-    public override func dispatch(with classes: Classes) -> MethodInstance?
+    public override func dispatch(with classes: Types) -> MethodInstance?
         {
         return(self.instance)
         }

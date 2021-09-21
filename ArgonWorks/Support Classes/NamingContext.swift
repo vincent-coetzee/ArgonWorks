@@ -14,4 +14,5 @@ public protocol NamingContext
     var primaryContext: NamingContext { get }
     func lookup(name:Name) -> Symbol?
     func lookup(label:Label) -> Symbol?
+    func setSymbol(_ symbol:Symbol,atName: Name)
     }

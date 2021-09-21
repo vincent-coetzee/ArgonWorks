@@ -7,8 +7,8 @@
 
 import Foundation
 import SwiftUI
-
-public class Node:NamingContext,Identifiable,Equatable
+    
+public class Node:NSObject,NamingContext,Identifiable
     {
     public let index: UUID
     public let label: String
@@ -27,14 +27,14 @@ public class Node:NamingContext,Identifiable,Equatable
             }
         }
         
-    public var type: Class
+    public var type: Type
         {
         fatalError("This should have been implemented in a class")
         }
         
     public init(label: String)
         {
-        self.index = UUID()
+        self.index = UUID.newUUID()
         self.label = label
         }
         
@@ -106,11 +106,11 @@ public class Node:NamingContext,Identifiable,Equatable
                 }
             return(nil)
             }
-        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+        if name.count == 1,let symbol = self.lookup(label: name.first)
             {
             return(symbol)
             }
-        if name.count == 1,let symbol = self.lookup(label: name.first)
+        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
             {
             return(symbol)
             }
@@ -126,5 +126,10 @@ public class Node:NamingContext,Identifiable,Equatable
     public func addSymbol(_ symbol:Symbol) -> Symbol
         {
         fatalError("Attempt to addSymbol to a \(Swift.type(of:self))")
+        }
+        
+    public func setSymbol(_ symbol:Symbol,atName: Name)
+        {
+        fatalError("Attempt to addSymbol:AtName to a \(Swift.type(of:self))")
         }
     }

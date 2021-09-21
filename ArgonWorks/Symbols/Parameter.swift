@@ -28,7 +28,7 @@ public class Parameter:Slot,Displayable
     public let isVariadic: Bool
     public var place: Instruction.Operand = .none
     
-    init(label:Label,type:Class,isVisible:Bool = false,isVariadic:Bool = false)
+    init(label:Label,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
         {
         self.isVisible = isVisible
         self.isVariadic = isVariadic
@@ -40,7 +40,7 @@ public class Parameter:Slot,Displayable
         self.place = self.addresses.mostEfficientAddress.operand
         }
         
-    required init(labeled: Label, ofType: Class) {
+    required init(labeled: Label, ofType: Type) {
         fatalError("init(labeled:ofType:) has not been implemented")
     }
 }

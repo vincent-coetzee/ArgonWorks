@@ -15,13 +15,13 @@ public class InvocationExpression: Expression
         return("\(self.name)\(values)")
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         if self.method.isNil
             {
-            return(.undefined)
+            return(.error(.undefined))
             }
-        return(.class(self.method!.returnType))
+        return(self.method!.returnType)
         }
         
     private let name: Name
@@ -77,13 +77,8 @@ public class InvocationExpression: Expression
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.location, message: "Invocation of '\(self.name)' uses \(arguments.count) arguments but the method requires \(self.method!.proxyParameters.count).")
             }
-        let classes = self.arguments.map{$0.value.resultType.class}
-        if classes.hasNils()
-            {
-            analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.location, message: "The types of the arguments to the method '\(self.name)' can not be ascertained so the method can not be dispatched.")
-            }
-        self.methodInstance = method?.dispatch(with: classes.map{$0!})
+        let classes = self.arguments.map{$0.value.resultType}
+        self.methodInstance = method?.dispatch(with: classes.map{$0})
         if self.methodInstance.isNil
             {
             analyzer.cancelCompletion()
@@ -104,7 +99,7 @@ public class InvocationExpression: Expression
         
     public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
         {
-        if self.method.isNil
+        if self.methodInstance.isNil
             {
             return
             }
@@ -113,13 +108,13 @@ public class InvocationExpression: Expression
             try argument.value.emitCode(into: instance,using: using)
             instance.append(.PUSH,argument.value.place, .none, .none)
             }
-        let localCount = instance.localSlots.count
-        instance.append(.PUSH,.register(.bp))
-        instance.append(.MOV,.register(.sp),.none,.register(.bp))
+        let localCount = self.methodInstance!.localSlots.count
+        instance.append(.PUSH,.register(.BP))
+        instance.append(.MOV,.register(.SP),.none,.register(.BP))
         if localCount > 0
             {
             let size = localCount * MemoryLayout<Word>.size
-            instance.append(.ISUB,.register(.sp),.integer(Argon.Integer(size)),.register(.sp))
+            instance.append(.ISUB,.register(.SP),.integer(Argon.Integer(size)),.register(.SP))
             }
         instance.append(.DISP,.absolute(self.method!.memoryAddress))
         }
@@ -143,14 +138,14 @@ public class MethodInvocationExpression: Expression
         self.arguments = arguments
         }
 
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(.class(self.method.returnType))
+        return(self.method.returnType)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        if !self.method.validateInvocation(location: self.declaration,arguments: self.arguments,reportingContext: analyzer.compiler.reportingContext)
+        if !self.method.validateInvocation(location: self.declaration!,arguments: self.arguments,reportingContext: analyzer.compiler.reportingContext)
             {
             return
             }

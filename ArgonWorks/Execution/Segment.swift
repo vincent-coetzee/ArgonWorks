@@ -23,13 +23,13 @@ public class Segment
             switch(self)
                 {
                 case .stack:
-                    return(.ss)
+                    return(.SS)
                 case .static:
-                    return(.sts)
+                    return(.STS)
                 case .managed:
-                    return(.ms)
+                    return(.MS)
                 case .data:
-                    return(.ds)
+                    return(.DS)
                 }
             }
         }
@@ -82,7 +82,20 @@ public class Segment
         {
         fatalError("This should be implemented in a subclass.")
         }
-        
+    ///
+    ///
+    /// Allocate a working object from the segment and return
+    /// the address of that object to the caller. This allocates
+    /// the given number of bytes and also uses the first
+    /// word of the allocation to store an object header
+    /// record. This is needed by the memory manangement algorithm
+    /// to know whether to follow the object or to copy it
+    /// when garbage collection is taking place. Strictly speaking
+    /// this header is only needed by objects allocated in the
+    /// managed segment but is used for all allocations to simplify
+    /// memory management across the various segments.
+    ///
+    ///
     public func allocateObject(sizeInBytes:Int) -> Word
         {
         fatalError("This has not been implemented")

@@ -13,7 +13,7 @@ public enum Parent
     case node(Node)
     case block(Block)
     case expression(Expression)
-    
+
     public var block: Block
         {
         switch(self)
@@ -118,6 +118,21 @@ public enum Parent
                 return(expression.parent.primaryContext)
             case .block(let block):
                 return(block.primaryContext)
+            }
+        }
+        
+    public func setSymbol(_ symbol: Symbol,atName: Name)
+        {
+        switch(self)
+            {
+            case .none:
+                fatalError("This should not happen")
+            case .node(let node):
+                return(node.setSymbol(symbol,atName: atName))
+            case .expression(let expression):
+                return(expression.parent.primaryContext.setSymbol(symbol,atName: atName))
+            case .block(let block):
+                return(block.parent.setSymbol(symbol,atName: atName))
             }
         }
     }

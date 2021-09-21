@@ -11,7 +11,7 @@ class ProcessorWindowController: NSWindowController
     {
     @IBOutlet var registersViewController: RegistersViewController!
     
-    public let virtualMachine = VirtualMachine(small: true)
+    public let virtualMachine = VirtualMachine.small
     
     override func windowDidLoad() {
         super.windowDidLoad()

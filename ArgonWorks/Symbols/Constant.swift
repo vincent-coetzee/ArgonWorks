@@ -13,13 +13,13 @@ public class Constant:Slot
     
     private let value: Expression
     
-    init(label:Label,type:Class,value:Expression)
+    init(label:Label,type:Type,value:Expression)
         {
         self.value = value
         super.init(label: label,type: type)
         }
     
-    required init(labeled: Label, ofType: Class) {
+    required init(labeled: Label, ofType: Type) {
         fatalError("init(labeled:ofType:) has not been implemented")
     }
     
@@ -32,5 +32,18 @@ public class Constant:Slot
         {
         try self.value.emitCode(into: instance,using: using)
         self.place = self.value.place
+        }
+    }
+
+public class SystemConstant: Constant
+    {
+    init(label: Label,type: Type)
+        {
+        let expression = DeferredValueExpression(label,type: type)
+        super.init(label: label,type: type,value: expression)
+        }
+        
+        required init(labeled: Label, ofType: Type) {
+            fatalError("init(labeled:ofType:) has not been implemented")
         }
     }

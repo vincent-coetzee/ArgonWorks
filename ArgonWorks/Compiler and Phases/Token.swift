@@ -8,6 +8,8 @@
 
 import Foundation
 
+public typealias Tokens = Array<Token>
+
 public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifiable
     {
     public static let systemClassNames = ["Object","Array","List","Set","Dictionary","Integer","Float","Boolean","Byte","Character","Pointer","Tuple","String","Symbol","Date","Time","DateTime"]
@@ -229,6 +231,14 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case WHILE
         case WITH
         case WRITE
+        }
+        
+    public enum Directive: String
+        {
+        case none
+        case main
+        case intrinsic
+        case stub
         }
         
     public class Operator:Equatable
@@ -500,7 +510,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-    public var isPath:Bool
+    public var isPathLiteral:Bool
         {
         switch(self)
             {
@@ -555,7 +565,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-    public var path:String
+    public var pathLiteral:String
         {
         switch(self)
             {
@@ -1415,12 +1425,12 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-    public var directive:String
+    public var directive: Directive
         {
         switch(self)
             {
             case .directive(let string,_):
-                return(string)
+                return(Directive(rawValue: string) ?? .none)
             default:
                 fatalError()
             }

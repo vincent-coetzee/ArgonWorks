@@ -15,6 +15,11 @@ public enum Address
     case relative(Instruction.Register,Int)
     case stack(Instruction.Register,Int)
     
+    public var absoluteAddress: Word
+        {
+        return(0)
+        }
+        
     public var isMemoryAddress: Bool
         {
         switch(self)

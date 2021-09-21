@@ -10,9 +10,9 @@ import Foundation
 public class ClosureBlock: Block
     {
     public var parameters = Parameters()
-    public var returnType:Class = VoidClass.voidClass
+    public var returnType:Type = .class(VoidClass.voidClass)
     
-    public func addParameter(label:String,type: Class)
+    public func addParameter(label:String,type: Type)
         {
         let parameter = Parameter(label: label,type: type)
         self.addLocalSlot(parameter)
@@ -33,13 +33,13 @@ public class ClosureBlock: Block
         var stackOffset = MemoryLayout<Word>.size
         for parameter in self.parameters
             {
-            parameter.addresses.append(.stack(.bp,stackOffset))
+            parameter.addresses.append(.stack(.BP,stackOffset))
             stackOffset += MemoryLayout<Word>.size
             }
         stackOffset = -8
         for slot in self.localSlots
             {
-            slot.addresses.append(.stack(.bp,stackOffset))
+            slot.addresses.append(.stack(.BP,stackOffset))
             stackOffset -= MemoryLayout<Word>.size
             }
         for block in self.blocks

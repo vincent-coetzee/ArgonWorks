@@ -78,18 +78,19 @@ public class MethodInstance:Function
         return(false)
         }
         
-    internal private(set) var block: MethodInstanceBlock! = nil
-    public var localSlots = Slots()
+    public var localSlots: Slots
         {
-        didSet
-            {
-            self.buffer.localSlots = self.localSlots
-            }
+        self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
         }
         
+    internal private(set) var block: MethodInstanceBlock! = nil
+    
+    private var localSymbols = Symbols()
     private var _method:Method?
     public let buffer = InstructionBuffer()
     public var instructionsAddress: Word = 0
+    public var isGenericMethod = false
+    public var genericParameters = GenericClassParameters()
     
     public var systemMethod: ArgonWorks.Method
         {
@@ -155,152 +156,152 @@ public class MethodInstance:Function
         
     convenience init(left:String,_ operation:Token.Symbol,right:String,out:String)
         {
-        let leftParm = Parameter(label: "left", type: Class(label: left),isVisible: false)
-        let rightParm = Parameter(label: "right", type: Class(label: right),isVisible: false)
+        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
+        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
         let name = "\(operation)"
         let result = Class(label:out)
         self.init(label: name)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(left:String,_ operation:String,right:String,out:String)
         {
-        let leftParm = Parameter(label: "left", type: Class(label: left),isVisible: false)
-        let rightParm = Parameter(label: "right", type: Class(label: right),isVisible: false)
+        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
+        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
         let name = "\(operation)"
         let result = Class(label:out)
         self.init(label: name)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(left:String,_ operation:String,right:String,out:Class)
         {
-        let leftParm = Parameter(label: "left", type: Class(label: left),isVisible: false)
-        let rightParm = Parameter(label: "right", type: Class(label: right),isVisible: false)
+        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
+        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
         let name = "\(operation)"
         let result = out
         self.init(label: name)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(left:Class,_ operation:Token.Symbol,right:Class,out:Class)
         {
-        let leftParm = Parameter(label: "left", type: left,isVisible: false)
-        let rightParm = Parameter(label: "right", type: right,isVisible: false)
+        let leftParm = Parameter(label: "left", type: .class(left),isVisible: false)
+        let rightParm = Parameter(label: "right", type: .class(right),isVisible: false)
         let name = "\(operation)"
         let result = out
         self.init(label: name)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
    convenience init(left:Class,_ operation: String,right:Class,out:Class)
         {
-        let leftParm = Parameter(label: "left", type: left,isVisible: false)
-        let rightParm = Parameter(label: "right", type: right,isVisible: false)
+        let leftParm = Parameter(label: "left", type: left.type,isVisible: false)
+        let rightParm = Parameter(label: "right", type: right.type,isVisible: false)
         let name = "\(operation)"
         let result = out
         self.init(label: name)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
    convenience init(_ operation: String,arg:Class,out:Class)
         {
-        let rightParm = Parameter(label: "arg", type: arg,isVisible: false)
+        let rightParm = Parameter(label: "arg", type: arg.type,isVisible: false)
         let name = "\(operation)"
         let result = out
         self.init(label: name)
         self.parameters = [rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ op2:String,_ out:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: Class(label:op2),isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
+        let rightParm = Parameter(label: "op2", type: Class(label:op2).type,isVisible: false)
         let result = out
         self.init(label: label)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ out:String)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
         let result = Class(label:out)
         self.init(label: label)
         self.parameters = [leftParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
         self.init(label: label)
         self.parameters = [leftParm]
-        self.returnType = VoidClass.voidClass
+        self.returnType = .class(VoidClass.voidClass)
         }
         
     convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:String,_ out:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: Class(label:op3),isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
+        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
+        let lastParm = Parameter(label: "op3", type: Class(label:op3).type,isVisible: false)
         let result = out
         self.init(label: label)
         self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:Class,_ out:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: op3,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
+        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
+        let lastParm = Parameter(label: "op3", type: op3.type,isVisible: false)
         let result = out
         self.init(label: label)
         self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:String)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
+        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
         let result = Class(label:out)
         self.init(label: label)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
+        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
         let result = out
         self.init(label: label)
         self.parameters = [leftParm,rightParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
     convenience init(_ label:String,_ op1:Class,_ out:Class)
         {
-        let leftParm = Parameter(label: "op1", type: op1,isVisible: false)
+        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
         let result = out
         self.init(label: label)
         self.parameters = [leftParm]
-        self.returnType = result
+        self.returnType = .class(result)
         }
         
-    convenience init(label: Label,parameters: Parameters,returnType:Class? = nil)
+    convenience init(label: Label,parameters: Parameters,returnType:Type? = nil)
         {
         self.init(label: label)
         self.parameters = parameters
-        self.returnType = returnType ?? VoidClass.voidClass
+        self.returnType = returnType ?? .class(VoidClass.voidClass)
         for parameter in parameters
             {
             self.addLocalSlot(parameter)
@@ -309,7 +310,7 @@ public class MethodInstance:Function
         
     public func generic(_ name:String) -> Self
         {
-        self.parameters.append(Parameter(label: name,type: GenericType(label: name)))
+        self.parameters.append(Parameter(label: name,type: GenericType(label: name).type))
         return(self)
         }
         
@@ -328,7 +329,7 @@ public class MethodInstance:Function
         print(";; CODE FOR \(self.label)")
         print(";; \(self.buffer.count) INSTRUCTIONS")
         print(";;")
-        print(";; LINE \(self.declaration.line)")
+        print(";; LINE \(self.declaration!.line)")
         print(";;")
         for instruction in self.buffer
             {
@@ -336,20 +337,27 @@ public class MethodInstance:Function
             }
         }
         
+    public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
+        {
+        for symbol in scope.symbols.values
+            {
+            self.localSymbols.append(symbol)
+            }
+        }
+        
     public func addLocalSlot(_ localSlot:Slot)
         {
-        self.localSlots.append(localSlot)
-        self.localSlots.sort(by: {$0.offset < $1.offset})
+        self.localSymbols.append(localSlot)
         }
         
     public func hasSameReturnType(_ clazz: Class) -> Bool
         {
-        return(self.returnType == clazz)
+        return(self.returnType == Type.class(clazz))
         }
         
     public override func lookup(label: String) -> Symbol?
         {
-        for slot in self.localSlots
+        for slot in self.localSymbols
             {
             if slot.label == label
                 {
@@ -379,13 +387,13 @@ public class MethodInstance:Function
         var stackOffset = MemoryLayout<Word>.size
         for parameter in self.parameters
             {
-            parameter.addresses.append(.stack(.bp,stackOffset))
+            parameter.addresses.append(.stack(.BP,stackOffset))
             stackOffset += MemoryLayout<Word>.size
             }
         stackOffset = 0
-        for slot in self.localSlots
+        for slot in self.localSymbols
             {
-            slot.addresses.append(.stack(.bp,stackOffset))
+            slot.addresses.append(.stack(.BP,stackOffset))
             stackOffset -= MemoryLayout<Word>.size
             }
         try block.emitCode(into: self.buffer,using: generator)
@@ -415,7 +423,7 @@ public class MethodInstance:Function
             }
         for (mine,yours) in zip(self.parameters,input)
             {
-            if !yours.value.resultType.isInclusiveSubclass(of: mine.type)
+            if !yours.value.resultType.isEquivalent(to: mine.type)
                 {
                 return(false)
                 }
@@ -423,14 +431,15 @@ public class MethodInstance:Function
         return(true)
         }
         
-    public func dispatchScore(for classes:Classes) -> Int
+    public func dispatchScore(for classes:Types) -> Int
         {
-        var answer = 0
-        for (mine,theirs) in zip(self.parameters.map{$0.type},classes)
-            {
-            answer  += theirs.depth - mine.depth
-            }
-        return(answer)
+//        var answer = 0
+//        for (mine,theirs) in zip(self.parameters.map{$0.type},classes)
+//            {
+//            answer  += theirs.depth - mine.depth
+//            }
+//        return(answer)
+        return(0)
         }
     }
 

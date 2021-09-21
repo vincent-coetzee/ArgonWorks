@@ -29,7 +29,7 @@ public class ClassInstanciationTerm: Expression
         return("MAKE(\(self.type.displayString),\(string))")
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         return(.class(self.type))
         }
@@ -39,7 +39,7 @@ public class ClassInstanciationTerm: Expression
         if self.type.isGenericClass
             {
             analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration, message: "The class of this MAKE term is an uninstanciated class and can not be used until it is instanciated.")
+            analyzer.dispatchError(at: self.declaration!, message: "The class of this MAKE term is an uninstanciated class and can not be used until it is instanciated.")
             }
         }
         

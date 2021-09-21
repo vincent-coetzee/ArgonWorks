@@ -10,7 +10,7 @@ import Foundation
 public class Enumeration:Class
     {
     private var cases: EnumerationCases = []
-    public var rawType: Class?
+    public var rawType: Type?
     
     public override var isEnumeration: Bool
         {

@@ -55,7 +55,7 @@ public typealias SourceLocations = Array<SourceLocation>
 
 extension SourceLocations
     {
-    public var declaration: Location
+    public var declaration: Location?
         {
         for location in self
             {
@@ -67,6 +67,6 @@ extension SourceLocations
                     break;
                 }
             }
-        fatalError("Called on something that does not have a declaration")
+        return(nil)
         }
     }

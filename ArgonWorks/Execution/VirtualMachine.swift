@@ -8,7 +8,11 @@
 import Foundation
 
 public class VirtualMachine
-    {        
+    {
+    public static let tiny = VirtualMachine(tiny: true)
+    public static let small = VirtualMachine(small: true)
+    public static let standard = VirtualMachine()
+    
     private static let kStandardStackSegmentSize = MemorySize.bytes(10 * 1024 * 1024)
     private static let kStandardStaticSegmentSize = MemorySize.bytes(20 * 1024 * 1024)
     private static let kStandardDataSegmentSize = MemorySize.bytes(40 * 1024 * 1024)
@@ -19,6 +23,11 @@ public class VirtualMachine
     private static let kSmallDataSegmentSize = MemorySize.bytes(10 * 1024 * 1024)
     private static let kSmallManagedSegmentSize = MemorySize.bytes(20 * 1024 * 1024)
     
+    private static let kTinyStackSegmentSize = MemorySize.bytes(1 * 1024 * 1024)
+    private static let kTinyStaticSegmentSize = MemorySize.bytes(2 * 1024 * 1024)
+    private static let kTinyDataSegmentSize = MemorySize.bytes(2 * 1024 * 1024)
+    private static let kTinyManagedSegmentSize = MemorySize.bytes(5 * 1024 * 1024)
+    
     public private(set) var managedSegment = ManagedSegment(size: MemorySize.bytes(100))
     public private(set) var stackSegment = StackSegment(size: MemorySize.bytes(10))
     public private(set) var dataSegment = DataSegment(size: MemorySize.bytes(10))
@@ -26,7 +35,9 @@ public class VirtualMachine
     
     public var registers: Array<Word> = Array(repeating: 0, count: Instruction.Register.allCases.count + 1)
     public var topModule: TopModule!
-    
+    public let pageServer: PageServer!
+    public var symbolTable: SymbolTable!
+    public let index = UUID()
     public var argonModule: ArgonModule
         {
         self.topModule.argonModule
@@ -36,16 +47,18 @@ public class VirtualMachine
         {
         get
             {
-            return(Int(bitPattern: UInt(self.registers[Instruction.Register.ip.rawValue])))
+            return(Int(bitPattern: UInt(self.registers[Instruction.Register.IP.rawValue])))
             }
         set
             {
-            self.registers[Instruction.Register.ip.rawValue] = Word(bitPattern: Int64(newValue))
+            self.registers[Instruction.Register.IP.rawValue] = Word(bitPattern: Int64(newValue))
             }
         }
         
-    init()
+    private init()
         {
+        self.pageServer = nil
+        self.symbolTable = nil
         self.managedSegment = ManagedSegment(size: Self.kStandardManagedSegmentSize)
         self.staticSegment = StaticSegment(size: Self.kStandardStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kStandardStackSegmentSize)
@@ -55,12 +68,14 @@ public class VirtualMachine
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
         self.dataSegment.virtualMachine = self
-        self.topModule = TopModule(virtualMachine: self)
         self.topModule.argonModule.resolve(in: self)
+        self.symbolTable = SymbolTable(virtualMachine: self)
         }
         
-    init(small:Bool)
+    private init(small:Bool)
         {
+        self.pageServer = nil
+        self.symbolTable = nil
         self.managedSegment = ManagedSegment(size: Self.kSmallManagedSegmentSize)
         self.staticSegment = StaticSegment(size: Self.kSmallStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kSmallStackSegmentSize)
@@ -70,8 +85,25 @@ public class VirtualMachine
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
         self.dataSegment.virtualMachine = self
-        self.topModule = TopModule(virtualMachine: self)
         self.topModule.argonModule.resolve(in: self)
+        self.symbolTable = SymbolTable(virtualMachine: self)
+        }
+        
+    private init(tiny:Bool)
+        {
+        self.pageServer = nil
+        self.symbolTable = nil
+        self.managedSegment = ManagedSegment(size: Self.kTinyManagedSegmentSize)
+        self.staticSegment = StaticSegment(size: Self.kTinyStaticSegmentSize)
+        self.stackSegment = StackSegment(size: Self.kTinyStackSegmentSize)
+        self.dataSegment = DataSegment(size: Self.kTinyDataSegmentSize)
+        self.topModule = TopModule(virtualMachine: self)
+        self.managedSegment.virtualMachine = self
+        self.stackSegment.virtualMachine = self
+        self.staticSegment.virtualMachine = self
+        self.dataSegment.virtualMachine = self
+        self.topModule.argonModule.resolve(in: self)
+        self.symbolTable = SymbolTable(virtualMachine: self)
         }
         
     @inlinable
@@ -132,5 +164,30 @@ public class VirtualMachine
     public func setRegister(_ word:Word,atIndex: Instruction.Register)
         {
         self.registers[atIndex.rawValue] = word
+        }
+    }
+    
+public typealias SymbolHandle = Word
+
+public class SymbolTable
+    {
+    private static let kSymbolTablePrime = 10007
+    
+    private var table: Array<String?>
+    
+    init(virtualMachine: VirtualMachine)
+        {
+        self.table = Array<String?>(repeating: nil, count: Self.kSymbolTablePrime)
+        }
+        
+    public func registerSymbol(_ string: String) -> Int
+        {
+        let hash = string.polynomialRollingHash
+        let index = hash % Self.kSymbolTablePrime
+        if self.table[index].isNotNil
+            {
+            fatalError("Symbol Table Failure")
+            }
+        return(index)
         }
     }

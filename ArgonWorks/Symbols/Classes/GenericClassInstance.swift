@@ -11,16 +11,7 @@ public class GenericClassInstance:Class
     {
     public override var containedClassParameters: Array<GenericClassParameter>
         {
-        var parameters = Array<GenericClassParameter>()
-        for slot in self.symbols.values.filter({$0 is Slot}).map({$0 as! Slot})
-            {
-            parameters.append(contentsOf: slot.containedClassParameters)
-            }
-        for parameter in self.genericClassParameterInstances
-            {
-            parameters.append(contentsOf: parameter.containedClassParameters)
-            }
-        return(parameters)
+        return([])
         }
         
     public override var displayString: String
@@ -29,10 +20,10 @@ public class GenericClassInstance:Class
         return("\(self.label)\(string)")
         }
         
-    internal let genericClassParameterInstances: Classes
+    internal let genericClassParameterInstances: Types
     internal let sourceClass:GenericClass
     
-    init(label:Label,sourceClass:GenericClass,genericClassParameterInstances: Classes)
+    init(label:Label,sourceClass:GenericClass,genericClassParameterInstances: Types)
         {
         self.sourceClass = sourceClass
         self.genericClassParameterInstances = genericClassParameterInstances

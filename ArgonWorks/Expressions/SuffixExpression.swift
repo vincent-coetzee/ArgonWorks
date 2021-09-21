@@ -9,7 +9,7 @@ import Foundation
 
 public class SuffixExpression: Expression
     {
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         return(self.expression.resultType)
         }

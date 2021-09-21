@@ -23,9 +23,9 @@ public class SymbolExpression: Expression
         return(false)
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(.class(self.symbol.type))
+        return(self.symbol.type)
         }
         
     private let symbol: Symbol

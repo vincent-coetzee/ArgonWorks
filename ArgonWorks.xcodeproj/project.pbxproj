@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF1D2BF026D5668B00D9EC33 /* HierarchyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */; };
+		BF20EB0126D98EB700163948 /* TemporaryLocalScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */; };
+		BF20EB0326DA38C000163948 /* NameMangler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF20EB0226DA38C000163948 /* NameMangler.swift */; };
+		BF57C9E626D406070016BA84 /* BTreePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57C9E526D406070016BA84 /* BTreePage.swift */; };
+		BF6ECBEC26F8F0E1005B9FCF /* DeferredValueExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */; };
+		BF6ECBF026F90790005B9FCF /* ClassParm.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6ECBEF26F90790005B9FCF /* ClassParm.swift */; };
+		BF74AD2626E0EDDA000F2211 /* PersistentSetPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF74AD2526E0EDDA000F2211 /* PersistentSetPage.swift */; };
 		BF86721326D0EC5300A12B1A /* ProcessorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */; };
 		BF86721526D134C000A12B1A /* SlotList.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721426D134C000A12B1A /* SlotList.swift */; };
 		BF86721926D18ED200A12B1A /* Parent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF86721826D18ED200A12B1A /* Parent.swift */; };
@@ -120,10 +127,8 @@
 		BFC1ED5F26CFFABA009B7C34 /* Address.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4D26CFFABA009B7C34 /* Address.swift */; };
 		BFC1ED6026CFFABA009B7C34 /* TokenRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */; };
 		BFC1ED6126CFFABA009B7C34 /* TokenStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */; };
-		BFC1ED6226CFFABA009B7C34 /* ForwardingSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */; };
 		BFC1ED6326CFFABA009B7C34 /* Register.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5126CFFABA009B7C34 /* Register.swift */; };
 		BFC1ED6426CFFABA009B7C34 /* SemanticAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */; };
-		BFC1ED6526CFFABA009B7C34 /* Code3A.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5326CFFABA009B7C34 /* Code3A.swift */; };
 		BFC1ED6626CFFABA009B7C34 /* Optimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */; };
 		BFC1ED6726CFFABA009B7C34 /* SyntaxColorPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */; };
 		BFC1ED6826CFFABA009B7C34 /* Compiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED5626CFFABA009B7C34 /* Compiler.swift */; };
@@ -230,9 +235,17 @@
 		BFC1EE3626CFFAF6009B7C34 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */; };
 		BFC1EE3A26CFFB25009B7C34 /* Basics.argon in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EE3826CFFB25009B7C34 /* Basics.argon */; };
 		BFC1EE3B26CFFB25009B7C34 /* Secondary.argon in Resources */ = {isa = PBXBuildFile; fileRef = BFC1EE3926CFFB25009B7C34 /* Secondary.argon */; };
+		BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HierarchyCell.xib; sourceTree = "<group>"; };
+		BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryLocalScope.swift; sourceTree = "<group>"; };
+		BF20EB0226DA38C000163948 /* NameMangler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameMangler.swift; sourceTree = "<group>"; };
+		BF57C9E526D406070016BA84 /* BTreePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTreePage.swift; sourceTree = "<group>"; };
+		BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferredValueExpression.swift; sourceTree = "<group>"; };
+		BF6ECBEF26F90790005B9FCF /* ClassParm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassParm.swift; sourceTree = "<group>"; };
+		BF74AD2526E0EDDA000F2211 /* PersistentSetPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentSetPage.swift; sourceTree = "<group>"; };
 		BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessorWindowController.swift; sourceTree = "<group>"; };
 		BF86721426D134C000A12B1A /* SlotList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotList.swift; sourceTree = "<group>"; };
 		BF86721826D18ED200A12B1A /* Parent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parent.swift; sourceTree = "<group>"; };
@@ -242,7 +255,6 @@
 		BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonBrowserInspectorViewController.swift; sourceTree = "<group>"; };
 		BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnglishWord.swift; sourceTree = "<group>"; };
 		BFA3ADA326CFFD9300F17CF6 /* words.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = words.txt; sourceTree = "<group>"; };
-		BFA3ADA626CFFEE000F17CF6 /* ArgonWorx.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ArgonWorx.entitlements; sourceTree = "<group>"; };
 		BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentsController.swift; sourceTree = "<group>"; };
 		BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryBrowserViewController.swift; sourceTree = "<group>"; };
 		BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemorySlotCellView.swift; sourceTree = "<group>"; };
@@ -351,10 +363,8 @@
 		BFC1ED4D26CFFABA009B7C34 /* Address.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Address.swift; sourceTree = "<group>"; };
 		BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenRenderer.swift; sourceTree = "<group>"; };
 		BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TokenStream.swift; sourceTree = "<group>"; };
-		BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForwardingSymbol.swift; sourceTree = "<group>"; };
 		BFC1ED5126CFFABA009B7C34 /* Register.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Register.swift; sourceTree = "<group>"; };
 		BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SemanticAnalyzer.swift; sourceTree = "<group>"; };
-		BFC1ED5326CFFABA009B7C34 /* Code3A.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Code3A.swift; sourceTree = "<group>"; };
 		BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Optimizer.swift; sourceTree = "<group>"; };
 		BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyntaxColorPalette.swift; sourceTree = "<group>"; };
 		BFC1ED5626CFFABA009B7C34 /* Compiler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Compiler.swift; sourceTree = "<group>"; };
@@ -461,6 +471,8 @@
 		BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BFC1EE3826CFFB25009B7C34 /* Basics.argon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Basics.argon; sourceTree = "<group>"; };
 		BFC1EE3926CFFB25009B7C34 /* Secondary.argon */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Secondary.argon; sourceTree = "<group>"; };
+		BFCCAFF626F921E8000B3B74 /* ArgonWorx.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = ArgonWorx.entitlements; sourceTree = "<group>"; };
+		BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -486,6 +498,8 @@
 		BFC1EC7526CFF9E9009B7C34 = {
 			isa = PBXGroup;
 			children = (
+				BFC1EC8C26CFF9EB009B7C34 /* Info.plist */,
+				BFCCAFF626F921E8000B3B74 /* ArgonWorx.entitlements */,
 				BFC1EC8026CFF9E9009B7C34 /* ArgonWorks */,
 				BFC1EC7F26CFF9E9009B7C34 /* Products */,
 			);
@@ -502,28 +516,21 @@
 		BFC1EC8026CFF9E9009B7C34 /* ArgonWorks */ = {
 			isa = PBXGroup;
 			children = (
-				BFA3ADA626CFFEE000F17CF6 /* ArgonWorx.entitlements */,
-				BFA3ADA126CFFD9300F17CF6 /* Testing */,
 				BFC1EE3726CFFB07009B7C34 /* Argon Source */,
-				BFC1EC9426CFFA4F009B7C34 /* Interpreter */,
-				BFC1EC9926CFFA8E009B7C34 /* Paged Objects */,
-				BFC1ECA626CFFA9F009B7C34 /* Execution */,
-				BFC1ED0726CFFAA7009B7C34 /* Expressions */,
 				BFC1ED2426CFFAB1009B7C34 /* Blocks */,
 				BFC1ED4B26CFFABA009B7C34 /* Compiler and Phases */,
 				BFC1ED7026CFFAC0009B7C34 /* Error Handling */,
-				BFC1ED7726CFFACD009B7C34 /* Types and Type Inference */,
+				BFC1ECA626CFFA9F009B7C34 /* Execution */,
+				BFC1ED0726CFFAA7009B7C34 /* Expressions */,
+				BFC1EC9426CFFA4F009B7C34 /* Interpreter */,
+				BFC1EC9926CFFA8E009B7C34 /* Paged Objects */,
 				BFC1ED7A26CFFAD5009B7C34 /* Support Classes */,
 				BFC1ED8D26CFFADC009B7C34 /* Symbols */,
 				BFC1EE1726CFFAE7009B7C34 /* SystemExtensions */,
+				BFA3ADA126CFFD9300F17CF6 /* Testing */,
+				BFC1ED7726CFFACD009B7C34 /* Types and Type Inference */,
 				BFC1EE2026CFFAF5009B7C34 /* User Interface */,
-				BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */,
 				BFC1EC8326CFF9E9009B7C34 /* ViewController.swift */,
-				BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */,
-				BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */,
-				BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */,
-				BFC1EC8C26CFF9EB009B7C34 /* Info.plist */,
-				BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */,
 			);
 			path = ArgonWorks;
 			sourceTree = "<group>";
@@ -547,6 +554,8 @@
 				BFC1EC9D26CFFA8E009B7C34 /* ObjectHandle.swift */,
 				BFC1EC9E26CFFA8E009B7C34 /* Page.swift */,
 				BFC1EC9F26CFFA8E009B7C34 /* PageServer.swift */,
+				BF57C9E526D406070016BA84 /* BTreePage.swift */,
+				BF74AD2526E0EDDA000F2211 /* PersistentSetPage.swift */,
 			);
 			path = "Paged Objects";
 			sourceTree = "<group>";
@@ -623,6 +632,7 @@
 				BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */,
 				BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */,
 				BFB9F74826D2D03F0015B19F /* TupleExpression.swift */,
+				BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */,
 			);
 			path = Expressions;
 			sourceTree = "<group>";
@@ -659,11 +669,9 @@
 				BFC1ED4D26CFFABA009B7C34 /* Address.swift */,
 				BFC1ED5926CFFABA009B7C34 /* AddressAllocator.swift */,
 				BFC1ED5D26CFFABA009B7C34 /* Argon.swift */,
-				BFC1ED5326CFFABA009B7C34 /* Code3A.swift */,
 				BFC1ED5726CFFABA009B7C34 /* CodeGenerator.swift */,
 				BFC1ED5626CFFABA009B7C34 /* Compiler.swift */,
 				BFC1ED5B26CFFABA009B7C34 /* CompilerPass.swift */,
-				BFC1ED5026CFFABA009B7C34 /* ForwardingSymbol.swift */,
 				BFC1ED5426CFFABA009B7C34 /* Optimizer.swift */,
 				BFC1ED5826CFFABA009B7C34 /* ParseNode.swift */,
 				BFC1ED5A26CFFABA009B7C34 /* Parser.swift */,
@@ -671,6 +679,7 @@
 				BFC1ED5126CFFABA009B7C34 /* Register.swift */,
 				BFC1ED5226CFFABA009B7C34 /* SemanticAnalyzer.swift */,
 				BFC1ED5526CFFABA009B7C34 /* SyntaxColorPalette.swift */,
+				BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */,
 				BFC1ED5C26CFFABA009B7C34 /* Token.swift */,
 				BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */,
 				BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */,
@@ -709,6 +718,7 @@
 				BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */,
 				BFC1ED7D26CFFAD5009B7C34 /* Stack.swift */,
 				BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */,
+				BF20EB0226DA38C000163948 /* NameMangler.swift */,
 			);
 			path = "Support Classes";
 			sourceTree = "<group>";
@@ -793,6 +803,7 @@
 				BFC1EDA226CFFADC009B7C34 /* TaggedPrimitiveClass.swift */,
 				BFC1EDB026CFFADC009B7C34 /* VoidClass.swift */,
 				BFB9F74A26D2D0F00015B19F /* Tuple.swift */,
+				BF6ECBEF26F90790005B9FCF /* ClassParm.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -835,6 +846,7 @@
 				BFC1EE1826CFFAE7009B7C34 /* NSColor+Extensions.swift */,
 				BFC1EE1A26CFFAE7009B7C34 /* Optional+Extensions.swift */,
 				BFC1EE1926CFFAE7009B7C34 /* String+Extensions.swift */,
+				BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */,
 			);
 			path = SystemExtensions;
 			sourceTree = "<group>";
@@ -842,9 +854,16 @@
 		BFC1EE2026CFFAF5009B7C34 /* User Interface */ = {
 			isa = PBXGroup;
 			children = (
+				BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */,
+				BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */,
+				BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */,
+				BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */,
+				BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */,
+				BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */,
 				BFC1EE2A26CFFAF6009B7C34 /* ArgonWorxApp.swift */,
 				BFC1EE2726CFFAF6009B7C34 /* ClassEditingView.swift */,
 				BFC1EE2B26CFFAF6009B7C34 /* ContentView.swift */,
+				BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */,
 				BFC1EE2426CFFAF5009B7C34 /* InspectorWindow.swift */,
 				BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */,
 				BFC1EE2626CFFAF6009B7C34 /* LineAnnotation.swift */,
@@ -852,6 +871,7 @@
 				BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */,
 				BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */,
 				BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */,
+				BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */,
 				BFC1EE2126CFFAF5009B7C34 /* ProcessorView.swift */,
 				BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */,
 				BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */,
@@ -859,10 +879,8 @@
 				BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */,
 				BFC1EE2926CFFAF6009B7C34 /* SymbolEditingView.swift */,
 				BFC1EE2226CFFAF5009B7C34 /* TokenMappedView.swift */,
-				BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */,
-				BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */,
-				BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */,
-				BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */,
+				BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */,
+				BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */,
 			);
 			path = "User Interface";
 			sourceTree = "<group>";
@@ -940,6 +958,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BFC1EE3B26CFFB25009B7C34 /* Secondary.argon in Resources */,
+				BF1D2BF026D5668B00D9EC33 /* HierarchyCell.xib in Resources */,
 				BFC1EE3A26CFFB25009B7C34 /* Basics.argon in Resources */,
 				BFC1EC8826CFF9EB009B7C34 /* Assets.xcassets in Resources */,
 				BFA3ADA526CFFD9300F17CF6 /* words.txt in Resources */,
@@ -1001,7 +1020,6 @@
 				BFC1EDDE26CFFADC009B7C34 /* Invokable.swift in Sources */,
 				BFC1ECFD26CFFA9F009B7C34 /* InnerVectorPointer.swift in Sources */,
 				BFC1EDD926CFFADC009B7C34 /* Closure.swift in Sources */,
-				BFC1ED6226CFFABA009B7C34 /* ForwardingSymbol.swift in Sources */,
 				BFC1ECA326CFFA8E009B7C34 /* ObjectHandle.swift in Sources */,
 				BFC1ED4426CFFAB1009B7C34 /* VirtualReadBlock.swift in Sources */,
 				BFC1ECFC26CFFA9F009B7C34 /* DynamicLibrary.swift in Sources */,
@@ -1013,6 +1031,7 @@
 				BFC1EE0726CFFADC009B7C34 /* ArgonModule.swift in Sources */,
 				BFC1EDF826CFFADC009B7C34 /* SymbolAttributes.swift in Sources */,
 				BFC1EDFE26CFFADC009B7C34 /* Initializer.swift in Sources */,
+				BF6ECBF026F90790005B9FCF /* ClassParm.swift in Sources */,
 				BFC1ED3926CFFAB1009B7C34 /* MethodInstanceBlock.swift in Sources */,
 				BFC1EE0026CFFADC009B7C34 /* TypeConstraint.swift in Sources */,
 				BFC1ED8A26CFFAD5009B7C34 /* ArgonDateTime.swift in Sources */,
@@ -1022,6 +1041,8 @@
 				BFC1EDF226CFFADC009B7C34 /* ForwardReferenceClass.swift in Sources */,
 				BFC1EDDC26CFFADC009B7C34 /* Method.swift in Sources */,
 				BFC1ECDE26CFFA9F009B7C34 /* InnerArrayPointer.swift in Sources */,
+				BF20EB0326DA38C000163948 /* NameMangler.swift in Sources */,
+				BF6ECBEC26F8F0E1005B9FCF /* DeferredValueExpression.swift in Sources */,
 				BFC1ECA126CFFA8E009B7C34 /* SignalHandler.c in Sources */,
 				BFC1EDF526CFFADC009B7C34 /* Displayable.swift in Sources */,
 				BFC1EC8426CFF9E9009B7C34 /* ViewController.swift in Sources */,
@@ -1049,6 +1070,7 @@
 				BFC1ECE526CFFA9F009B7C34 /* ValueHolder.swift in Sources */,
 				BFC1EE0826CFFADC009B7C34 /* LibraryModuleInstance.swift in Sources */,
 				BFC1ECE126CFFA9F009B7C34 /* Timer.swift in Sources */,
+				BF20EB0126D98EB700163948 /* TemporaryLocalScope.swift in Sources */,
 				BFC1ED3E26CFFAB1009B7C34 /* ExpressionBlock.swift in Sources */,
 				BFC1ED8426CFFAD5009B7C34 /* Location.swift in Sources */,
 				BFC1EDED26CFFADC009B7C34 /* GenericClassInstance.swift in Sources */,
@@ -1074,12 +1096,14 @@
 				BFC1EDE226CFFADC009B7C34 /* Parameter.swift in Sources */,
 				BFC1ECEE26CFFA9F009B7C34 /* InnerStringKeyDictionaryPointer.swift in Sources */,
 				BFC1EDF126CFFADC009B7C34 /* Class.swift in Sources */,
+				BF74AD2626E0EDDA000F2211 /* PersistentSetPage.swift in Sources */,
 				BFC1EE0D26CFFADC009B7C34 /* ArraySlot.swift in Sources */,
 				BFC1EE2F26CFFAF6009B7C34 /* InspectorWindow.swift in Sources */,
 				BFC1ED6726CFFABA009B7C34 /* SyntaxColorPalette.swift in Sources */,
 				BFC1ED6E26CFFABA009B7C34 /* Token.swift in Sources */,
 				BFC1ED5F26CFFABA009B7C34 /* Address.swift in Sources */,
 				BFA3ADD426D0676F00F17CF6 /* RegistersViewController.swift in Sources */,
+				BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */,
 				BFC1ED6426CFFABA009B7C34 /* SemanticAnalyzer.swift in Sources */,
 				BFC1ECE226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift in Sources */,
 				BFC1EDDF26CFFADC009B7C34 /* SystemMethod.swift in Sources */,
@@ -1145,6 +1169,7 @@
 				BFC1ECA526CFFA8E009B7C34 /* PageServer.swift in Sources */,
 				BF86721326D0EC5300A12B1A /* ProcessorWindowController.swift in Sources */,
 				BFC1EE0A26CFFADC009B7C34 /* LibraryModule.swift in Sources */,
+				BF57C9E626D406070016BA84 /* BTreePage.swift in Sources */,
 				BFA3ADA426CFFD9300F17CF6 /* EnglishWord.swift in Sources */,
 				BF86721C26D2AA0100A12B1A /* ArgonBrowserWindowController.swift in Sources */,
 				BFC1EE1F26CFFAE7009B7C34 /* Dictionary+Extensions.swift in Sources */,
@@ -1158,7 +1183,6 @@
 				BFC1ECA226CFFA8E009B7C34 /* PersistentDictionary.swift in Sources */,
 				BFC1ED3D26CFFAB1009B7C34 /* OtherwiseBlock.swift in Sources */,
 				BFC1ED4026CFFAB1009B7C34 /* ElseBlock.swift in Sources */,
-				BFC1ED6526CFFABA009B7C34 /* Code3A.swift in Sources */,
 				BFC1EDD526CFFADC009B7C34 /* Constant.swift in Sources */,
 				BFC1ED2326CFFAA7009B7C34 /* LiteralExpression.swift in Sources */,
 				BFC1EC8626CFF9E9009B7C34 /* ModuleDocument.swift in Sources */,
@@ -1314,7 +1338,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_ENTITLEMENTS = "${PROJECT}/ArgonWorx.entitlements";
+				CODE_SIGN_IDENTITY = "Developer ID Application: Vincent Coetzee (DLH9UBQV34)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1323,7 +1348,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ArgonWorks/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -1348,7 +1373,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_ENTITLEMENTS = "${PROJECT}/ArgonWorx.entitlements";
+				CODE_SIGN_IDENTITY = "Developer ID Application: Vincent Coetzee (DLH9UBQV34)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -1357,7 +1383,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ArgonWorks/Info.plist;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;

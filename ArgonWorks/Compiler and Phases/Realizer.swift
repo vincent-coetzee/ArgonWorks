@@ -11,6 +11,7 @@ public class Realizer: CompilerPass
     {
     public let compiler:Compiler
     public var wasCancelled = false
+    public var realizedSymbols = Symbols()
     
     @discardableResult
     public static func realize(_ parseNode:ParseNode,in compiler:Compiler) -> Bool
@@ -31,6 +32,16 @@ public class Realizer: CompilerPass
     public func cancelCompletion()
         {
         self.wasCancelled = true
+        }
+    
+    public func hasRealizedSymbol(_ symbol: Symbol) -> Bool
+        {
+        return(self.realizedSymbols.contains(symbol))
+        }
+        
+    public func markSymbolAsRealized(_ symbol: Symbol)
+        {
+        self.realizedSymbols.append(symbol)
         }
         
     private func realize(_ parseNode:ParseNode) -> Bool

@@ -19,32 +19,17 @@ public class ContainerSymbol:Symbol
     
     public override var isExpandable: Bool
         {
-        return(true)
+        return(self.symbols.values.count > 0)
+        }
+        
+    public override var childCount: Int
+        {
+        return(self.children!.count)
         }
         
     public override var children: Symbols?
         {
-        guard self._children.isNil else
-            {
-            return(self._children)
-            }
-        if self.symbols.isEmpty
-            {
-            return(nil)
-            }
-        var visibleSymbols = Symbols()
-        let allSymbols = self.symbols.values + ((self as? Class).isNotNil ? (self as! Class).subclasses : [])
-        for symbol in allSymbols
-            {
-            if !(symbol is Class)
-                {
-                visibleSymbols.append(symbol)
-                }
-            }
-        visibleSymbols += self.classesWithNotDirectlyContainedSuperclasses
-        visibleSymbols = visibleSymbols.sorted{$0.label<$1.label}
-        self._children = visibleSymbols
-        return(self._children)
+        return(self.symbols.values.sorted{$0.label < $1.label})
         }
         
     public var classesWithNotDirectlyContainedSuperclasses:Classes
@@ -78,6 +63,21 @@ public class ContainerSymbol:Symbol
         return(self.parent.lookup(label: label))
         }
         
+    public override func setSymbol(_ symbol:Symbol,atName: Name)
+        {
+        if atName.isRooted
+            {
+            self.primaryContext.setSymbol(symbol,atName: atName.withoutFirst)
+            return
+            }
+        else if atName.count == 1
+            {
+            self.symbols[atName.last] = symbol
+            return
+            }
+        self.lookup(label: atName.first)?.setSymbol(symbol,atName: atName.withoutFirst)
+        }
+        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         for node in self.symbols.valuesByKey
@@ -88,13 +88,18 @@ public class ContainerSymbol:Symbol
         
     public override func realize(using realizer: Realizer)
         {
+        guard !realizer.hasRealizedSymbol(self) else
+            {
+            return
+            }
+        realizer.markSymbolAsRealized(self)
         for child in self.symbols.valuesByKey
             {
-            if child is MethodInstance
+            if !realizer.hasRealizedSymbol(child)
                 {
-                print("junk")
+                realizer.markSymbolAsRealized(child)
+                child.realize(using: realizer)
                 }
-            child.realize(using: realizer)
             }
         }
         

@@ -30,7 +30,7 @@ public class ForwardReferenceClass: Class
         self.theClass = aContext.lookup(name: self.localName) as? Class
         if self.theClass.isNil
             {
-            NullReportingContext.shared.dispatchError(at: self.declaration, message: "The forward reference to class '\(self.localName)' could not be resolved.")
+            NullReportingContext.shared.dispatchError(at: self.declaration!, message: "The forward reference to class '\(self.localName)' could not be resolved.")
             }
         }
         
@@ -41,7 +41,7 @@ public class ForwardReferenceClass: Class
         if self.theClass.isNil
             {
             realizer.cancelCompletion()
-            realizer.dispatchError(at: self.declaration, message: "The forward reference to class '\(self.localName)' could not be resolved.")
+            realizer.dispatchError(at: self.declaration!, message: "The forward reference to class '\(self.localName)' could not be resolved.")
             }
         }
         

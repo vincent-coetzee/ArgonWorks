@@ -202,7 +202,7 @@ public class BinaryExpression: Expression
         return("\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)")
         }
         
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         let left = self.lhs.resultType
         let right = self.rhs.resultType
@@ -217,11 +217,7 @@ public class BinaryExpression: Expression
             case .rightBrocket:
                 fallthrough
             case .rightBrocketEquals:
-                if left.isClass && right.isClass
-                    {
-                    return(.class(self.topModule.argonModule.boolean))
-                    }
-                return(left + right)
+                return(.class(self.topModule.argonModule.boolean))
             default:
                 return(left + right)
             }
@@ -234,7 +230,7 @@ public class BinaryExpression: Expression
         if left.isNotClass || right.isNotClass
             {
             analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration, message: "The type of this expression can not be ascertained.")
+            analyzer.dispatchError(at: self.declaration!, message: "The type of this expression can not be ascertained.")
             return
             }
         switch(self.operation)
@@ -247,7 +243,7 @@ public class BinaryExpression: Expression
                     break
                     }
                 analyzer.cancelCompletion()
-                analyzer.dispatchError(at: self.declaration,message: "Invalid argument types for \(self.operation).")
+                analyzer.dispatchError(at: self.declaration!,message: "Invalid argument types for \(self.operation).")
             case .leftBrocket:
                 fallthrough
             case .leftBrocketEquals:
@@ -261,7 +257,7 @@ public class BinaryExpression: Expression
                     {
                     break
                     }
-                if left.isEnumerationClass && right.isEnumerationClass
+                if left.isEnumeration && right.isEnumeration
                     {
                     break
                     }
@@ -270,7 +266,7 @@ public class BinaryExpression: Expression
                     break
                     }
                 analyzer.cancelCompletion()
-                analyzer.dispatchError(at: self.declaration,message: "The types on the left side and right side of this expression do not match.")
+                analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
                 return
         default:
             if left == right
@@ -278,7 +274,7 @@ public class BinaryExpression: Expression
                 break
                 }
             analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration,message: "The types on the left side and right side of this expression do not match.")
+            analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
             }
         }
         
@@ -318,7 +314,7 @@ public class BinaryExpression: Expression
         switch(self.operation)
             {
             case .add:
-                if self.resultType == self.topModule.argonModule.float
+                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
                     {
                     opcode = .FADD
                     }
@@ -327,7 +323,7 @@ public class BinaryExpression: Expression
                     opcode = .IADD
                     }
             case .sub:
-                if self.resultType == self.topModule.argonModule.float
+                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
                     {
                     opcode = .FSUB
                     }
@@ -336,7 +332,7 @@ public class BinaryExpression: Expression
                     opcode = .ISUB
                     }
             case .mul:
-                if self.resultType == self.topModule.argonModule.float
+                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
                     {
                     opcode = .FMUL
                     }
@@ -345,7 +341,7 @@ public class BinaryExpression: Expression
                     opcode = .IMUL
                     }
             case .div:
-                if self.resultType == self.topModule.argonModule.float
+                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
                     {
                     opcode = .FDIV
                     }
@@ -354,7 +350,7 @@ public class BinaryExpression: Expression
                     opcode = .IDIV
                     }
             case .modulus:
-                if self.resultType == self.topModule.argonModule.float
+                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
                     {
                     opcode = .FMOD
                     }
@@ -378,11 +374,11 @@ public class BinaryExpression: Expression
                 if self.resultType.isNotClass
                     {
                     print(self.rhs.displayString)
-                    generator.dispatchError(at: self.declaration, message: "The type of this expression is not defined.")
+                    generator.dispatchError(at: self.declaration!, message: "The type of this expression is not defined.")
                     generator.cancelCompletion()
                     break
                     }
-                if self.resultType.class!.isPrimitiveClass
+                if self.resultType.isPrimitiveClass
                     {
                     opcode = .CMPW
                     }

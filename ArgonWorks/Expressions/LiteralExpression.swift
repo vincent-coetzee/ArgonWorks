@@ -21,6 +21,7 @@ public indirect enum Literal
     case enumeration(Enumeration)
     case enumerationCase(EnumerationCase)
     case method(Method)
+    case constant(Constant)
     }
 
 public class LiteralExpression: Expression
@@ -141,34 +142,36 @@ public class LiteralExpression: Expression
         
     private let literal:Literal
 
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
         switch(self.literal)
             {
             case .nil:
-                return(.class(self.topModule.argonModule.nilClass))
+                return(self.topModule.argonModule.nilClass.type)
             case .integer:
-                return(.class(self.topModule.argonModule.integer))
+                return(self.topModule.argonModule.integer.type)
             case .float:
-                return(.class(self.topModule.argonModule.float))
+                return(self.topModule.argonModule.float.type)
             case .string:
-                return(.class(self.topModule.argonModule.string))
+                return(self.topModule.argonModule.string.type)
             case .boolean:
-                return(.class(self.topModule.argonModule.boolean))
+                return(self.topModule.argonModule.boolean.type)
             case .symbol:
-                return(.class(self.topModule.argonModule.symbol))
+                return(self.topModule.argonModule.symbol.type)
             case .array:
-                return(.class(self.topModule.argonModule.array))
+                return(self.topModule.argonModule.array.type)
             case .class:
-                return(.class(self.topModule.argonModule.class))
+                return(self.topModule.argonModule.class.type)
             case .module:
-                return(.class(self.topModule.argonModule.module))
+                return(self.topModule.argonModule.module.type)
             case .enumeration:
-                return(.class(self.topModule.argonModule.enumeration))
+                return(self.topModule.argonModule.enumeration.type)
             case .enumerationCase:
-                return(.class(self.topModule.argonModule.enumerationCase))
+                return(self.topModule.argonModule.enumerationCase.type)
             case .method:
-                return(.class(self.topModule.argonModule.method))
+                return(self.topModule.argonModule.method.type)
+            case .constant(let constant):
+                return(constant.type)
             }
         }
 
@@ -194,7 +197,7 @@ public class LiteralExpression: Expression
                 if aClass.isGenericClass
                     {
                     analyzer.cancelCompletion()
-                    analyzer.dispatchError(at: self.declaration, message: "This class literal is an uninstanciated class and must be instanciated before it can be used.")
+                    analyzer.dispatchError(at: self.declaration!, message: "This class literal is an uninstanciated class and must be instanciated before it can be used.")
                     }
             default:
                 break
@@ -291,6 +294,8 @@ public class LiteralExpression: Expression
                 instance.append(.LOAD,.absolute(enumerationCase.memoryAddress),.none,.register(register))
             case .method(let method):
                 instance.append(.LOAD,.absolute(method.memoryAddress),.none,.register(register))
+            case .constant(let constant):
+                instance.append(.LOAD,.absolute(constant.memoryAddress),.none,.register(register))
             }
         self._place = .register(register)
         }

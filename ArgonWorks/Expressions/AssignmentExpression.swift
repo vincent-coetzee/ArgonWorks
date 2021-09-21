@@ -13,9 +13,9 @@ public class AssignmentExpression: Expression
     private let lhs: Expression
     private let operation: Token.Operator
     
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(.undefined)
+        return(.error(.undefined))
         }
         
     init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)

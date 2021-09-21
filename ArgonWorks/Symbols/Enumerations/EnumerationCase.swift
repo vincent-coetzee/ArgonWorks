@@ -9,9 +9,9 @@ import Foundation
 
 public class EnumerationCase:Symbol
     {
-    public override var type: Class
+    public override var type: Type
         {
-        return(self.enumeration)
+        return(self.enumeration.type)
         }
         
     public override var typeCode:TypeCode
@@ -19,13 +19,13 @@ public class EnumerationCase:Symbol
         .enumerationCase
         }
         
-    public let associatedTypes: Classes
+    public let associatedTypes: Types
     public let symbol: Argon.Symbol
     public var rawValue: LiteralExpression?
     public var caseSizeInBytes:Int = 0
     public weak var enumeration: Enumeration!
     
-    init(symbol: Argon.Symbol,types: Classes,enumeration: Enumeration)
+    init(symbol: Argon.Symbol,types: Types,enumeration: Enumeration)
         {
         self.enumeration = enumeration
         self.symbol = symbol

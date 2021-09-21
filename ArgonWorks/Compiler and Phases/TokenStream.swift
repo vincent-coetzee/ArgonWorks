@@ -48,6 +48,7 @@ public class TokenStream:Equatable
 //    private var keyValueCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_:"))
 //    private var typeParameterCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._"))
     private var identifierCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-?"))
+    private var nameCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "\\_-?"))
     private var identifierStartCharacters = NSCharacterSet.letters.union(CharacterSet(charactersIn: "_$"))
     private var pathCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_/."))
     private let alphanumerics = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
@@ -230,6 +231,7 @@ public class TokenStream:Equatable
         characterOffset -= 2
         }
     
+    @discardableResult
     private func eatSpace() -> String
         {
         var space = ""
@@ -298,14 +300,9 @@ public class TokenStream:Equatable
         return(text)
         }
         
-    private func scanInvisible() -> Token?
+    private func scanInvisible()
         {
-        let space = self.eatSpace()
-        if !space.isEmpty
-            {
-            return(Token.invisible(space,self.sourceLocation()))
-            }
-        return(nil)
+        self.eatSpace()
         }
         
     private func scanComment() -> Token
@@ -383,10 +380,10 @@ public class TokenStream:Equatable
             return(tokenStack.removeFirst())
             }
         tokenStart = characterOffset
-        if let invisible = self.scanInvisible()
-            {
-            return(invisible)
-            }
+        self.scanInvisible()
+//            {
+//            return(invisible)
+//            }
         ///
         ///
         /// Check to see if this is that odd case of a "</" occurring, handle
@@ -632,7 +629,8 @@ public class TokenStream:Equatable
         var space = ""
         while newline.contains(self.currentChar) && !atEnd
             {
-            space += self.nextChar()
+            space += self.currentChar
+            self.nextChar()
             }
         return(space)
         }
@@ -643,7 +641,8 @@ public class TokenStream:Equatable
         var space:String = ""
         while whitespace.contains(self.currentChar) && !self.atEnd
             {
-            space += self.nextChar()
+            space += self.currentChar
+            self.nextChar()
             }
         return(space)
         }
@@ -810,13 +809,13 @@ public class TokenStream:Equatable
         
     private func scanName(with:String) -> Token
         {
-        self.currentString = with
+        self.currentString = ""
         repeat
             {
             self.currentString.append(String(self.currentChar))
             self.nextChar()
             }
-        while self.identifierCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
+        while self.nameCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
         if self.keywords.contains(self.currentString)
             {
             return(.keyword(Token.Keyword(rawValue:self.currentString)!,self.sourceLocation()))

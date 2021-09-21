@@ -9,6 +9,11 @@ import Foundation
 
 public class SymbolGroup:ContainerSymbol
     {
+    public override var imageName: String
+        {
+        "IconGroup"
+        }
+        
     ///
     ///
     /// Essentially make a SymbolGroup transparent so that

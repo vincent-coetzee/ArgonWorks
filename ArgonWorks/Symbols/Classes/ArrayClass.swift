@@ -21,10 +21,10 @@ public class ArrayClass:GenericSystemClass
         return(true)
         }
         
-    public func withElement(_ type:Class) -> ArrayClassInstance
+    public func withElement(_ type: Type) -> ArrayClassInstance
         {
         let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withClass: type)
+        let concreteClass = parameter.instanciate(withType: type)
         let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
         Self.allInstances.append(instance)
         return(instance)
@@ -33,7 +33,7 @@ public class ArrayClass:GenericSystemClass
    public override func of(_ type:Class) -> ArrayClassInstance
         {
         let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withClass: type)
+        let concreteClass = parameter.instanciate(withType: type.type)
         let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
         instance.slotClassType = self.slotClassType
         Self.allInstances.append(instance)

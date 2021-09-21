@@ -6,145 +6,187 @@
 //
 
 import Foundation
-
-public typealias Strings = Array<String>
-private typealias Children = Array<BTreeNode?>
-public typealias StringHandles = Array<StringHandle?>
-public typealias PageAddress = Int
-
-private class BTreeKeyValue
-    {
-    public var key: String?
-    private let keyHandle: ObjectHandle
-    private let valueHandle: ObjectHandle?
-    private var pageAddress: Word?
-    private var page: BTreeNode?
-    
-    init(key: String,value: ObjectHandle,pageAddress: Word)
-        {
-        self.key = key
-        self.valueHandle = value
-        self.pageAddress = pageAddress
-        self.keyHandle = 0
-        }
-        
-    init(key: ObjectHandle,value: ObjectHandle?,pageAddress: Word?)
-        {
-        self.keyHandle = key
-        self.valueHandle = value
-        self.pageAddress = pageAddress
-        }
-        
-//    public func isLessThan(key: String) -> Bool
-//        {
-//        /// load key if not loaded and cache it so it
-//        /// can be reused
-//        }
 //
-//    public func isEqualTo(key: String) -> Bool
+//public typealias Strings = Array<String>
+//private typealias Children = Array<BTreeNode?>
+//public typealias StringHandles = Array<StringHandle?>
+//public typealias PageAddress = Int
+//
+//public class BTreeKeyValue
+//    {
+//    public var key: String?
+//    private let keyHandle: ObjectHandle
+//    private let valueHandle: ObjectHandle?
+//    private var pageAddress: Word?
+//    private var page: BTreeNode?
+//    
+//    init(key: String,value: ObjectHandle,pageAddress: Word)
 //        {
-//        /// load key if not loaded and cache it so it
-//        /// can be reused
+//        self.key = key
+//        self.valueHandle = value
+//        self.pageAddress = pageAddress
+//        self.keyHandle = 0
 //        }
-        
-    public func traverse()
-        {
-        self.page?.traverse()
-        }
-        
-    internal func loadPage()
-        {
-        }
-        
-    internal func search(key: String) -> BTreeKeyValue?
-        {
-        return(self.page?.search(key: key))
-        }
-    }
-    
-private class BTreeNode
-    {
-    private static let kDegreeOffset = 88
-    private static let kisLeafOffset = 96
-    private static let kKeyCountOffset = 104
-    
-    private static let kKeysPerPage = 500
-    
-    internal var keyValues = Array<BTreeKeyValue?>(repeating: nil, count: BTreeNode.kKeysPerPage)
-    internal var keyCount: Int = 0
-    private var isLeaf: Bool = false
-    private var degree: Int = 0
-    private var page: Page
-
-    init(page: Page)
-        {
-        self.page = page
-        self.degree = self.page.intValue(atOffset: Self.kDegreeOffset)
-        self.isLeaf = self.page.intValue(atOffset: Self.kisLeafOffset) == 1
-        self.keyCount = self.page.intValue(atOffset: Self.kKeyCountOffset)
-        }
-
-    init(degree: Int,isLeaf: Bool,page:Page)
-        {
-        self.isLeaf = isLeaf
-        self.degree = degree
-        self.keyCount = 0
-        self.page = page
-        self.page.setValue(self.degree,atOffset: Self.kDegreeOffset)
-        self.page.setValue(self.isLeaf ? 1 : 0,atOffset: Self.kisLeafOffset)
-        self.page.setValue(self.keyCount,atOffset: Self.kKeyCountOffset)
-        }
-        
-    private func binarySearchKeys(for: String) -> BTreeKeyValue?
-        {
-        return(nil)
-        }
-        
-    public func search(key: String) -> BTreeKeyValue?
-        {
-        var index = 0
-        while index < self.keyCount && key > self.keyValues[index]!.key!
-            {
-            index += 1
-            }
-        if self.keyValues[index]!.key! == key
-            {
-            return(self.keyValues[index])
-            }
-        if self.isLeaf
-            {
-            return(nil)
-            }
-        return(self.keyValues[index]?.search(key: key))
-        }
-        
-    public func traverse()
-        {
-        var index = 0
-        while index < self.keyCount
-            {
-            if !self.isLeaf
-                {
-                self.keyValues[index]?.traverse()
-                }
-            index += 1
-            }
-        if !self.isLeaf
-            {
-            self.keyValues[index]?.traverse()
-            }
-        }
-        
-    public func insertNonFull(key: String,value: Word)
-        {
-        }
-        
-    public func splitChild(index: Int,newNode: BTreeNode)
-        {
-        }
-    }
-    
-    
+//        
+//    init(key: ObjectHandle,value: ObjectHandle?,pageAddress: Word?)
+//        {
+//        self.keyHandle = key
+//        self.valueHandle = value
+//        self.pageAddress = pageAddress
+//        }
+//        
+////    public func isLessThan(key: String) -> Bool
+////        {
+////        /// load key if not loaded and cache it so it
+////        /// can be reused
+////        }
+////
+////    public func isEqualTo(key: String) -> Bool
+////        {
+////        /// load key if not loaded and cache it so it
+////        /// can be reused
+////        }
+//        
+//    public func traverse()
+//        {
+//        self.page?.traverse()
+//        }
+//        
+//    internal func loadPage()
+//        {
+//        }
+//        
+//    internal func search(key: String) -> BTreeKeyValue?
+//        {
+//        return(self.page?.search(key: key))
+//        }
+//    }
+//    
+//public class BTreeNode
+//    {
+//    private static let kDegreeOffset = 88
+//    private static let kisLeafOffset = 96
+//    private static let kKeyCountOffset = 104
+//    
+//    private static let kKeysPerPage = 500
+//    
+//    internal var keyValues = Array<BTreeKeyValue?>(repeating: nil, count: BTreeNode.kKeysPerPage)
+//    internal var keyCount: Int = 0
+//    private var isLeaf: Bool = false
+//    private var degree: Int = 0
+//
+////    init(page: Page)
+////        {
+////        self.page = page
+////        self.degree = self.page.intValue(atOffset: Self.kDegreeOffset)
+////        self.isLeaf = self.page.intValue(atOffset: Self.kisLeafOffset) == 1
+////        self.keyCount = self.page.intValue(atOffset: Self.kKeyCountOffset)
+////        }
+//
+//    init(degree: Int,isLeaf: Bool)
+//        {
+//        self.isLeaf = isLeaf
+//        self.degree = degree
+//        self.keyCount = 0
+//        }
+//        
+//    private func binarySearchKeys(for: String) -> BTreeKeyValue?
+//        {
+//        return(nil)
+//        }
+//        
+//    public func search(key: String) -> BTreeKeyValue?
+//        {
+//        var index = 0
+//        while index < self.keyCount && key > self.keyValues[index]!.key!
+//            {
+//            index += 1
+//            }
+//        if index < self.keyCount && key == self.keyValues[index]!.key!
+//            {
+//            return(self.keyValues[index])
+//            }
+//        if self.isLeaf
+//            {
+//            return(nil)
+//            }
+//        return(self.keyValues[index]?.search(key: key))
+//        }
+//        
+//    public func traverse()
+//        {
+//        var index = 0
+//        while index < self.keyCount
+//            {
+//            if !self.isLeaf
+//                {
+//                self.keyValues[index]?.traverse()
+//                }
+//            index += 1
+//            }
+//        if !self.isLeaf
+//            {
+//            self.keyValues[index]?.traverse()
+//            }
+//        }
+//        
+//    public func insert(key: String,value: Word,at index: Int)
+//        {
+//        for item in stride(from: self.keyCount - 1,through: index + 1,by: 1)
+//            {
+//            self.keyValues[item] = self.keyValues[item - 1]
+//            }
+//        self.keyValues[index] = BTreeKeyValue(key: key,value: value,pageAddress: 0)
+//        }
+//        
+//    public func insert(key: String,value: Word)
+//        {
+//        var index = 0
+//        while self.keyValues[index]!.key! < key && index < self.keyCount
+//            {
+//            index += 1
+//            }
+//        if self.isLeaf
+//            {
+//            self.insert(key: key,value: value,at: index)
+//            }
+//        else
+//            {
+//            if self.
+//            }
+//        }
+//        
+//    public func splitChild(index: Int,newNode: BTreeNode)
+//        {
+//        }
+//    }
+//    
+//public class BTree
+//    {
+//    private var root: BTreeNode?
+//    private let degree: Int
+//    
+//    init(degree: Int)
+//        {
+//        self.degree = degree
+//        }
+//        
+//    public func search(key: String) -> BTreeKeyValue?
+//        {
+//        return(self.root?.search(key: key))
+//        }
+//        
+//    public func insert(key: String,value: Word)
+//        {
+//        if self.root.isNil
+//            {
+//            self.root = BTreeNode(degree: self.degree,isLeaf: true)
+//            }
+//        self.root?.insert(key: key,value: value)
+//        }
+//    }
+//    
+//    
 //private class BTree
 //    {
 //    private var root: BTreeNode?

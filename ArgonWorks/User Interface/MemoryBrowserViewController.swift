@@ -9,7 +9,8 @@ import Cocoa
 
 public class MemorySlotItem
     {
-    internal static let itemFont = NSFont(name: "Menlo",size: 11)!
+    internal static let itemFont = NSFont(name: "Menlo",size: 10)!
+    internal static let smallItemFont = NSFont(name: "Menlo",size: 8)!
     public let word: Word
     public let address: Word
     public var line: NSAttributedString
@@ -98,14 +99,14 @@ public class MemoryObjectItem: MemorySlotItem
             if index == 1
                 {
                 let mutableString = NSMutableAttributedString(attributedString: self.children![index].line)
-                mutableString.append(NSAttributedString(string:" \(theClass!.label)",attributes: [.font: Self.itemFont,.foregroundColor: NSColor.argonThemeOrange]))
+                mutableString.append(NSAttributedString(string:" \(theClass!.label)",attributes: [.font: Self.itemFont,.foregroundColor: NSColor.argonThemePink]))
                 self.children![index].line = mutableString
                 }
             if slot.isStringSlot
                 {
                 let string = InnerStringPointer(address: self.children![index].word).string
                 let mutableString = NSMutableAttributedString(attributedString: self.children![index].line)
-                mutableString.append(NSAttributedString(string: " \(string)",attributes: [.font: Self.itemFont,.foregroundColor: NSColor.argonThemeOrange]))
+                mutableString.append(NSAttributedString(string: " \(string)",attributes: [.font: Self.itemFont,.foregroundColor: NSColor.argonThemePink]))
                 self.children![index].line = mutableString
                 }
             if slot.isArraySlot
@@ -186,8 +187,9 @@ public class MemoryArrayItem: MemorySlotItem
         self.children = []
         for index in 0..<pointer.count
             {
-            let aWord = pointer[index]
-            self.children!.append(MemorySlotItem(address: aWord,word: aWord))
+            let address = pointer[index]
+            let aWord = WordPointer(address: address)![0]
+            self.children!.append(MemoryObjectItem(address: address,word: aWord))
             }
         }
         
@@ -205,12 +207,13 @@ class MemoryBrowserViewController: NSViewController
     {
     @IBOutlet var outliner: NSOutlineView!
     
-    private var virtualMachine = VirtualMachine()
+    private var virtualMachine = VirtualMachine.small
     private var memorySlots = Array<MemorySlotItem>()
     
     override func viewDidLoad()
         {
         super.viewDidLoad()
+                NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.view.window)
         let startAddress = self.virtualMachine.managedSegment.startOffset
         let endAddress = self.virtualMachine.managedSegment.endOffset
         var address = startAddress
@@ -225,7 +228,24 @@ class MemoryBrowserViewController: NSViewController
             }
         self.outliner.reloadData()
         }
-    
+        
+    public override func viewDidAppear()
+        {
+        super.viewDidAppear()
+        if let rectObject = RectObject(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+            {
+            self.view.window?.setFrame(rectObject.rect, display: true, animate: true)
+            }
+        }
+        
+    @IBAction func windowResizedNotification(_ notification:NSNotification)
+        {
+        if let frame = self.view.window?.frame
+            {
+            let rectObject = RectObject(frame)
+            rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+            }
+        }
     }
     
 extension MemoryBrowserViewController: NSOutlineViewDataSource

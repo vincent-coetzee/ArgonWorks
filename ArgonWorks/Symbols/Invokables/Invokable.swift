@@ -11,7 +11,7 @@ public class Invokable: Symbol
     {
     internal var cName: String
     internal var parameters: Parameters
-    public var returnType: Class = VoidClass.voidClass
+    public var returnType: Type = .class(VoidClass.voidClass)
     public var library:DynamicLibrary = .emptyLibrary
     
     override init(label:Label)
@@ -32,7 +32,7 @@ public class SingleParameterInvokable: Symbol
     private var parameter: Parameter
     private var result: Parameter
     
-    public static func with(label:Label,parameters parms: Parameters,returnType: Class) -> Array<SingleParameterInvokable>
+    public static func with(label:Label,parameters parms: Parameters,returnType: Type) -> Array<SingleParameterInvokable>
         {
         let extra = Parameter(label:"returnType",type: returnType)
         let parameters = parms + [extra]

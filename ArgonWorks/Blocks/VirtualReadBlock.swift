@@ -13,4 +13,5 @@ public class VirtualReadBlock: Block
 
 public class VirtualWriteBlock: Block
     {
+    public var newValueLabel: String? = nil
     }

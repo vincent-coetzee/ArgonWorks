@@ -11,6 +11,8 @@ class ArgonBrowserHierarchyViewController: NSViewController
     {
     @IBOutlet var outliner: NSOutlineView!
     
+    private var controller: ArgonBrowserWindowController?
+    
     override func viewDidLoad()
         {
         super.viewDidLoad()
@@ -19,7 +21,12 @@ class ArgonBrowserHierarchyViewController: NSViewController
     
     public override func viewDidAppear()
         {
-        let controller = self.view.window!.windowController as! ArgonBrowserWindowController
-        controller.outliner = self.outliner
+        self.controller = (self.view.window!.windowController as! ArgonBrowserWindowController)
+        self.controller?.outliner = self.outliner
+        }
+        
+    @IBAction func onOpenDocument(_ sender:Any?)
+        {
+        self.controller?.fugglyBuggly(nil)
         }
     }

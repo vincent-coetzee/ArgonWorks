@@ -53,7 +53,7 @@ public class SelectBlock: Block
         
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        let aClass = self.value.resultType.class!
+        let aClass = self.value.resultType
         try self.value.emitCode(into: buffer,using: generator)
         var linksToBottom = Array<Instruction.LabelMarker>()
         var fromCompare:Instruction.LabelMarker?

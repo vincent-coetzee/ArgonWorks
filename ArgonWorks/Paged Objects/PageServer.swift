@@ -16,7 +16,7 @@ public class PageServer
     private static let kPageBitCount = 14
     private static let kMaximumPageCount =  (1 << kPageBitCount) - 1
     
-    public static func initializeStore(pageCount: Int)
+    public static func initializeStore(virtualMachine: VirtualMachine,pageCount: Int)
         {
         let fileHandle = fopen(Self.kStorePath,"wb+")
         var lastPageOffset = Word(0)
@@ -27,7 +27,7 @@ public class PageServer
                 {
                 nextPageOffset = 0
                 }
-            let page = Page(lastPageOffset: lastPageOffset, nextPageOffset: nextPageOffset)
+            let page = Page(virtualMachine: virtualMachine,lastPageOffset: lastPageOffset, nextPageOffset: nextPageOffset)
             page.writeToFile(fileHandle,atIndex: index)
             lastPageOffset += Word(Page.kPageSizeInBytes)
             nextPageOffset += Word(Page.kPageSizeInBytes)
@@ -40,14 +40,12 @@ public class PageServer
         return(PageServer())
         }
         
-    private var busyStartPage = Page()
-    private var freeStartPage = Page()
     private var nextPageOffset = 512 * Page.kPageSizeInBytes
     private var fileHandle: UnsafeMutablePointer<FILE>?
+    private var virtualMachine: VirtualMachine!
+    
     init()
         {
-        self.busyStartPage = Page.blankPage
-        self.freeStartPage = Page.blankPage
         }
         
     public func findOrMakePage() -> Page
@@ -56,7 +54,7 @@ public class PageServer
             {
             return(page)
             }
-        let page = Page(lastPageOffset: Word(self.nextPageOffset - Page.kPageSizeInBytes), nextPageOffset: Word(self.nextPageOffset + Page.kPageSizeInBytes))
+        let page = Page(virtualMachine: self.virtualMachine,lastPageOffset: Word(self.nextPageOffset - Page.kPageSizeInBytes), nextPageOffset: Word(self.nextPageOffset + Page.kPageSizeInBytes))
         self.nextPageOffset += Page.kPageSizeInBytes
         page.writeToFile(self.fileHandle!)
         return(page)
@@ -79,9 +77,14 @@ public class PageServer
         {
         }
         
+    public func allocateString(_ string: String) -> Address
+        {
+        fatalError()
+        }
+        
     public func loadPage(fileOffset: Int) -> Page
         {
-        Page()
+        fatalError()
         }
         
     public func loadPage(index: Word) -> Word?
@@ -89,5 +92,7 @@ public class PageServer
         return(nil)
         }
         
-
+    public func load(into: Page,atOffset: Int)
+        {
+        }
     }

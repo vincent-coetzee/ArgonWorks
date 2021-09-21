@@ -38,12 +38,12 @@ public class Expression: NSObject
         {
         }
         
-    public func cast(into: Class) -> Expression
+    public func cast(into: Type) -> Expression
         {
         return(AsExpression(self,into: into))
         }
         
-    public var declaration: Location
+    public var declaration: Location?
         {
         return(self.locations.declaration)
         }
@@ -68,9 +68,9 @@ public class Expression: NSObject
         return(false)
         }
         
-    public var resultType: TypeResult
+    public var resultType: Type
         {
-        .undefined
+        .error(.mismatch)
         }
     
     public var isEnumerationCaseExpression: Bool

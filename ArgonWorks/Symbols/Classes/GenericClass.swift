@@ -94,29 +94,29 @@ public class GenericClass:Class
    public func of(_ type:Class) -> GenericClassInstance
         {
         let classParameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = classParameter.instanciate(withClass: type)
+        let concreteClass = classParameter.instanciate(withType: type.type)
         let instance = GenericClassInstance(label: Argon.nextName("_PARAMCLASS"), sourceClass: self, genericClassParameterInstances: [concreteClass])
         self.instances.append(instance)
         return(instance)
         }
         
-    public func instanciate(withTypes types: Classes,reportingContext: ReportingContext) -> GenericClassInstance
+    public override func instanciate(withTypes types: Types,reportingContext: ReportingContext) -> Type
         {
         if self.genericClassParameters.count != types.count
             {
-            reportingContext.dispatchError(at: self.declaration, message: "The given number of generic parameters does not match the number required by the class '\(self.label)'.")
-            return(GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: []))
+            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters does not match the number required by the class '\(self.label)'.")
+            return(.class(GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: [])))
             }
-        let typeMappings:[Class] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withClass: $0.0)}
+        let typeMappings:[Type] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withType: $0.0)}
         for instance in self.instances
             {
             if instance.genericClassParameterInstances == typeMappings
                 {
-                return(instance)
+                return(.class(instance))
                 }
             }
         let classInstance = GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: typeMappings)
         self.instances.append(classInstance)
-        return(classInstance)
+        return(.class(classInstance))
         }
     }

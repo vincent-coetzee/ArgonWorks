@@ -9,15 +9,15 @@ import Foundation
 
 public class AsExpression: Expression
     {
-    public override var resultType: TypeResult
+    public override var resultType: Type
         {
-        return(.class(into))
+        return(into)
         }
         
     private let lhs: Expression
-    private let into: Class
+    private let into: Type
     
-    init(_ lhs:Expression,into: Class)
+    init(_ lhs:Expression,into: Type)
         {
         self.lhs = lhs
         self.into = into
@@ -38,7 +38,7 @@ public class AsExpression: Expression
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.lhs.analyzeSemantics(using: analyzer)
-        self.into.analyzeSemantics(using: analyzer)
+//        self.into.analyzeSemantics(using: analyzer)
         }
         
     public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws

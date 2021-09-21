@@ -31,7 +31,7 @@ public class Block:NSObject,NamingContext
         return(false)
         }
         
-    public var declaration: Location
+    public var declaration: Location?
         {
         self.locations.declaration
         }
@@ -42,7 +42,7 @@ public class Block:NSObject,NamingContext
     internal var source: String?
     public let index:UUID
     public private(set) var parent: Parent = .none
-    
+        
     public var methodInstance: MethodInstance
         {
         return(self.parent.block.methodInstance)
@@ -64,6 +64,11 @@ public class Block:NSObject,NamingContext
         return(symbol)
         }
     
+    public func setSymbol(_ symbol: Symbol,atName: Name)
+        {
+        self.parent.setSymbol(symbol,atName: atName)
+        }
+        
     override init()
         {
         self.index = UUID()
@@ -187,7 +192,7 @@ public class Block:NSObject,NamingContext
         
     public func dump(depth: Int)
         {
-        let padding = String(repeating: "\t", count: depth)
+//        let padding = String(repeating: "\t", count: depth)
         for block in self.blocks
             {
             block.dump(depth: depth+1)

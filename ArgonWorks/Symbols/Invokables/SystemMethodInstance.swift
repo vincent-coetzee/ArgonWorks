@@ -28,9 +28,9 @@ public class LibraryMethodInstance: SystemMethodInstance
     public var rawFunctionName: String
         {
         var name = "M"
-        let names = self.parameters.map{$0.type.mangledCode}.joined(separator: "P")
+        let names = self.parameters.map{$0.type.label}.joined(separator: "P")
         name += "P" + names
-        name += self.returnType.mangledCode
+        name += self.returnType.label
         return(name)
         }
         

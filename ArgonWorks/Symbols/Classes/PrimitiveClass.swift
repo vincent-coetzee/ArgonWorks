@@ -55,7 +55,7 @@ public class PrimitiveClass:Class
         self.primitiveType = primitiveType
         super.init(label: label)
         }
-    
+        
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -65,6 +65,16 @@ public class PrimitiveClass:Class
         if self.primitiveType == .string
             {
             super.layoutObjectSlots()
+            }
+        }
+        
+    public override func realizeSuperclasses(in vm: VirtualMachine)
+        {
+        super.realizeSuperclasses(in: vm)
+        if self.superclasses.map{$0.label}.contains("Magnitude")
+            {
+            print("INDEX OF MAGNITUDE = \(self.superclasses[0].index)")
+            print("VM INDEX = \(self.superclasses[0].topModule.virtualMachine.index)")
             }
         }
         
