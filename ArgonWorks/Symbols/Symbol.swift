@@ -11,6 +11,11 @@ import SwiftUI
 
 public class Symbol:Node,ParseNode
     {
+    public var defaultColor: NSColor
+        {
+        NSColor.argonZomp
+        }
+    
     public var isEnumeration: Bool
         {
         return(false)
@@ -99,7 +104,7 @@ public class Symbol:Node,ParseNode
             }
         }
         
-    public func realizeSuperclasses(in vm: VirtualMachine)
+    public func realizeSuperclasses()
         {
         }
         
@@ -133,6 +138,17 @@ public class Symbol:Node,ParseNode
         self.addresses.append(.absolute(0))
         }
     
+    public required init?(coder: NSCoder)
+        {
+        self.isMemoryLayoutDone = coder.decodeBool(forKey: "isMemoryLayoutDone")
+        self.isSlotLayoutDone = coder.decodeBool(forKey: "isSlotLayoutDone")
+        self.locations = coder.decodeObject(forKey: "locations") as! SourceLocations
+        self.privacyScope = PrivacyScope(rawValue: coder.decodeObject(forKey: "privacyScope") as! String)!
+        self.addresses = coder.decodeObject(forKey: "addresses") as! Addresses
+        self.source = coder.decodeObject(forKey: "source") as? String
+        super.init(coder: coder)
+        }
+        
     public func child(atIndex: Int) -> Symbol
         {
         return(self.children![atIndex])
@@ -148,7 +164,7 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
-    public func layoutInMemory(in vm: VirtualMachine)
+    public func layoutInMemory()
         {
         self.isMemoryLayoutDone = true
         }
@@ -169,6 +185,10 @@ public class Symbol:Node,ParseNode
     public func superclass(_ string: String) -> Class
         {
         fatalError("This should have been overridden")
+        }
+        
+    public func removeObject(taggedWith: Int)
+        {
         }
         
     public func addReference(_ location:Location)

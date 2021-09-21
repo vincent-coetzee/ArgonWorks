@@ -213,7 +213,7 @@ class MemoryBrowserViewController: NSViewController
     override func viewDidLoad()
         {
         super.viewDidLoad()
-                NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.view.window)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.view.window)
         let startAddress = self.virtualMachine.managedSegment.startOffset
         let endAddress = self.virtualMachine.managedSegment.endOffset
         var address = startAddress
@@ -232,7 +232,7 @@ class MemoryBrowserViewController: NSViewController
     public override func viewDidAppear()
         {
         super.viewDidAppear()
-        if let rectObject = RectObject(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+        if let rectObject = RectObject(forKey: UserDefaultsKey.memoryWindowRectangle.rawValue,on: UserDefaults.standard)
             {
             self.view.window?.setFrame(rectObject.rect, display: true, animate: true)
             }
@@ -243,7 +243,7 @@ class MemoryBrowserViewController: NSViewController
         if let frame = self.view.window?.frame
             {
             let rectObject = RectObject(frame)
-            rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+            rectObject.setValue(forKey: UserDefaultsKey.memoryWindowRectangle.rawValue,on: UserDefaults.standard)
             }
         }
     }

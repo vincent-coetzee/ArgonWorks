@@ -18,7 +18,7 @@ public class AddressAllocator: CompilerPass
         
     public var virtualMachine: VirtualMachine
         {
-        return(self.compiler.virtualMachine)
+        fatalError("Virtual Machine needed")
         }
         
     public let compiler: Compiler

@@ -40,28 +40,28 @@ public class SystemModule: Module
         return(nil)
         }
         
-    internal override func layout(in vm: VirtualMachine)
+    internal override func layout()
         {
         self.layoutSlots()
         for aModule in self.symbols.valuesByKey.compactMap({$0 as? SystemModule})
             {
-            aModule.layout(in: vm)
+            aModule.layout()
             }
-        self.layoutInMemory(in: vm)
+        self.layoutInMemory()
         }
         
-    internal func resolveReferences(in vm: VirtualMachine)
+    internal func resolveReferences()
         {
         for symbol in self.symbols.valuesByKey
             {
             if let aClass = symbol as? Class
                 {
-                aClass.realizeSuperclasses(in: vm)
+                aClass.realizeSuperclasses()
                 }
             else if let aModule = symbol as? SystemModule
                 {
                 print("RESOLVING MODULE \(aModule.label)")
-                aModule.resolveReferences(in: vm)
+                aModule.resolveReferences()
                 }
             }
         }

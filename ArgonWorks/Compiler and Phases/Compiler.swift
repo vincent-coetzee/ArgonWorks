@@ -25,7 +25,7 @@ public class Compiler
         
     public var systemClassNames: Array<String>
         {
-        self.virtualMachine.argonModule.classes.map{$0.label}
+        TopModule.shared.argonModule.classes.map{$0.label}
         }
     
     internal private(set) var namingContext: NamingContext
@@ -34,14 +34,12 @@ public class Compiler
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
     internal var topModule: TopModule
-    internal var virtualMachine: VirtualMachine
+    internal var currentTag = Int.random(in: 0..<Int.max)
     
-    init(virtualMachine: VirtualMachine)
+    init()
         {
-        self.virtualMachine = virtualMachine
-        let module = TopModule(virtualMachine: virtualMachine)
-        self.topModule = module
-        self.namingContext = module
+        self.topModule = TopModule.shared
+        self.namingContext = TopModule.shared
         }
         
     public var reportingContext:ReportingContext
@@ -63,11 +61,12 @@ public class Compiler
         self.parser!.parseChunk(source)
         }
         
-    public func compileChunk(_ source:String)
+    @discardableResult
+    public func compileChunk(_ source:String) -> ParseNode?
         {
         if source.isEmpty
             {
-            return
+            return(nil)
             }
         self.parser = Parser(compiler: self)
         self.lastChunk = parser!.parseChunk(source)!
@@ -80,6 +79,8 @@ public class Compiler
             Optimizer.optimize(chunk,in:self)
             let module = self.namingContext.primaryContext as! TopModule
             module.dumpMethods()
+            return(chunk)
             }
+        return(nil)
         }
     }

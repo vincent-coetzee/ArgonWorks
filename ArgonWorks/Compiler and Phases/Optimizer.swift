@@ -20,7 +20,7 @@ public class Optimizer: CompilerPass
         
     public var virtualMachine: VirtualMachine
         {
-        return(self.compiler.virtualMachine)
+        fatalError("Virtal Machine access needed")
         }
         
     public init(compiler: Compiler)

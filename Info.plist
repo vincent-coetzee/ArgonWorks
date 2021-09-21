@@ -5,14 +5,36 @@
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>argonm</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>ModuleIcon</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>com.macsemantics.argon.module</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Argon Module File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>ARGM</string>
+			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.example.plain-text</string>
+				<string>com.macsemantics.argon.module</string>
 			</array>
+			<key>LSTypeIsPackage</key>
+			<integer>0</integer>
 			<key>NSDocumentClass</key>
-			<string>$(PRODUCT_MODULE_NAME).Document</string>
+			<string>$(PRODUCT_MODULE_NAME).ModuleDocument</string>
 		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
@@ -78,7 +100,7 @@
 				<string>com.apple.package</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Argon Project</string>
+			<string>Argon Project File</string>
 			<key>UTTypeIconFile</key>
 			<string>ProjectIcon</string>
 			<key>UTTypeIcons</key>
@@ -108,7 +130,7 @@
 				<string>com.apple.package</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Argon Store</string>
+			<string>Argon Store File</string>
 			<key>UTTypeIconFile</key>
 			<string>StoreIcon</string>
 			<key>UTTypeIcons</key>
@@ -133,7 +155,7 @@
 				<string>public.data</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Argon Object</string>
+			<string>Argon Object File</string>
 			<key>UTTypeIconFile</key>
 			<string>ObjectIcon</string>
 			<key>UTTypeIcons</key>
@@ -149,6 +171,31 @@
 				<key>public.mime-type</key>
 				<array>
 					<string>com.macsemantics.argon.object</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Argon Symbols File</string>
+			<key>UTTypeIconFile</key>
+			<string>SymbolsIcon</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>com.macsemantics.argon.symbols</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>argonb</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>com.macsemantics.argon.symbols</string>
 				</array>
 			</dict>
 		</dict>

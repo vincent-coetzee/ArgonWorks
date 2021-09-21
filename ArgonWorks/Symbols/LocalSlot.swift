@@ -21,6 +21,10 @@ public class LocalSlot:Slot
         fatalError("init(labeled:ofType:) has not been implemented")
     }
     
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public override var typeCode:TypeCode
         {
         .localSlot

@@ -39,4 +39,8 @@ public class SystemClass:Class
         super.init(label:label)
         self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
         }
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

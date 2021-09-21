@@ -33,10 +33,14 @@ public class EnumerationCase:Symbol
         super.init(label: symbol)
         self.calculateSizeInBytes()
         }
-        
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     private func calculateSizeInBytes()
         {
-        let size = self.enumeration.topModule.argonModule.enumerationCase.localAndInheritedSlots.count * MemoryLayout<Word>.size
+        let size = TopModule.shared.argonModule.enumerationCase.localAndInheritedSlots.count * MemoryLayout<Word>.size
         let typesSize = self.associatedTypes.count * MemoryLayout<Word>.size
         self.caseSizeInBytes = size + typesSize + MemoryLayout<Word>.size * 4
         }

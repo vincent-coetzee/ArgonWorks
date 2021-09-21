@@ -8,20 +8,29 @@
 import Foundation
 
 fileprivate var _GeneratingSystemUUIDS = false
-fileprivate var _UUIDIndex = 1
+fileprivate var _UUIDIndex = 10
 
-public func startGeneratingSystemUUIDs()
-    {
-    _GeneratingSystemUUIDS = true
-    }
-    
-public func stopGeneratingSystemUUIDs()
-    {
-    _GeneratingSystemUUIDS = false
-    }
+
     
 extension UUID
     {
+    public static func startSystemUUIDs()
+        {
+        _GeneratingSystemUUIDS = true
+        }
+    
+    public static func stopSystemUUIDs()
+        {
+        _GeneratingSystemUUIDS = false
+        }
+    
+    init(index: Int)
+        {
+        let bottomString = String(format: "%012X",index)
+        let string = "00000000-0000-0000-0000-" + bottomString
+        self.init(uuidString: string)!
+        }
+        
     public static func newUUID() -> UUID
         {
         if _GeneratingSystemUUIDS
@@ -30,7 +39,8 @@ extension UUID
             let index = _UUIDIndex
             _UUIDIndex += 1
             let bottomString = String(format: "%012X",index)
-            return(UUID(uuidString: "00000000-0000-0000" + bottomString)!)
+            let string = "00000000-0000-0000-0000-" + bottomString
+            return(UUID(uuidString: string)!)
             }
         else
             {

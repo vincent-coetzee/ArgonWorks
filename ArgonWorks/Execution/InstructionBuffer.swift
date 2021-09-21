@@ -36,6 +36,21 @@ public class InstructionBuffer: Collection
     private var instructions: Array<Instruction> = []
     private var instructionIndex: Int = 0
     
+    init?(coder: NSCoder)
+        {
+        self.instructions = coder.decodeObject(forKey: "instructions") as! Array<Instruction>
+        self.instructionIndex = 0
+        }
+        
+    init()
+        {
+        }
+        
+    public func encode(with coder: NSCoder)
+        {
+        coder.encode(self.instructions,forKey: "instructions")
+        }
+        
     public func triggerFromHere() -> Instruction.LabelMarker
         {
         return(Instruction.LabelMarker(from: self.instructions[self.instructionIndex - 1], useTrigger: true))

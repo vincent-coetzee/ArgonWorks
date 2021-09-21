@@ -90,7 +90,11 @@ public class GenericClass:Class
         self.genericClassParameters = parameters.map{GenericClassParameter(label: $0)}
         self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
         }
-        
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
    public func of(_ type:Class) -> GenericClassInstance
         {
         let classParameter = GenericClassParameter(label: "ELEMENT")

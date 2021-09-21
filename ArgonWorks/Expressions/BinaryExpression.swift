@@ -217,7 +217,7 @@ public class BinaryExpression: Expression
             case .rightBrocket:
                 fallthrough
             case .rightBrocketEquals:
-                return(.class(self.topModule.argonModule.boolean))
+                return(.class(TopModule.shared.argonModule.boolean))
             default:
                 return(left + right)
             }
@@ -314,7 +314,7 @@ public class BinaryExpression: Expression
         switch(self.operation)
             {
             case .add:
-                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
+                if self.resultType == TopModule.shared.argonModule.float.type
                     {
                     opcode = .FADD
                     }
@@ -323,7 +323,7 @@ public class BinaryExpression: Expression
                     opcode = .IADD
                     }
             case .sub:
-                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
+                if self.resultType == TopModule.shared.argonModule.float.type
                     {
                     opcode = .FSUB
                     }
@@ -332,7 +332,7 @@ public class BinaryExpression: Expression
                     opcode = .ISUB
                     }
             case .mul:
-                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
+                if self.resultType == TopModule.shared.argonModule.float.type
                     {
                     opcode = .FMUL
                     }
@@ -341,7 +341,7 @@ public class BinaryExpression: Expression
                     opcode = .IMUL
                     }
             case .div:
-                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
+                if self.resultType == TopModule.shared.argonModule.float.type
                     {
                     opcode = .FDIV
                     }
@@ -350,7 +350,7 @@ public class BinaryExpression: Expression
                     opcode = .IDIV
                     }
             case .modulus:
-                if self.resultType == generator.virtualMachine.topModule.argonModule.float.type
+                if self.resultType == TopModule.shared.argonModule.float.type
                     {
                     opcode = .FMOD
                     }

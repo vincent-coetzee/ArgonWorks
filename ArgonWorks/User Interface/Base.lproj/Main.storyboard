@@ -825,7 +825,7 @@
                                     <size key="minSize" width="30" height="25"/>
                                     <size key="maxSize" width="30" height="25"/>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="FD332320-7612-4907-B50E-9FE1F742E063" label="Object" paletteLabel="Object" tag="-1" image="cube" catalog="system" bordered="YES" id="DxZ-FL-D4t">
+                                <toolbarItem implicitItemIdentifier="FD332320-7612-4907-B50E-9FE1F742E063" label="Symbols" paletteLabel="Symbols" tag="-1" image="cube" catalog="system" bordered="YES" id="DxZ-FL-D4t">
                                     <size key="minSize" width="28" height="25"/>
                                     <size key="maxSize" width="28" height="25"/>
                                 </toolbarItem>
@@ -1048,7 +1048,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <outlineView verticalHuggingPriority="750" ambiguous="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" multipleSelection="NO" autosaveColumns="NO" rowHeight="18" headerView="TDE-hA-T38" viewBased="YES" indentationPerLevel="15" outlineTableColumn="SHa-pG-au0" id="jwE-Mh-f3a">
-                                            <rect key="frame" x="0.0" y="0.0" width="789" height="159"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="790" height="159"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <size key="intercellSpacing" width="17" height="0.0"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -1108,7 +1108,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <tableHeaderView key="headerView" wantsLayer="YES" id="TDE-hA-T38">
-                                    <rect key="frame" x="0.0" y="0.0" width="789" height="28"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="790" height="28"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </tableHeaderView>
                             </scrollView>

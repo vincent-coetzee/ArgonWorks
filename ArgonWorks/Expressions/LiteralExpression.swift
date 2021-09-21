@@ -147,29 +147,29 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .nil:
-                return(self.topModule.argonModule.nilClass.type)
+                return(TopModule.shared.argonModule.nilClass.type)
             case .integer:
-                return(self.topModule.argonModule.integer.type)
+                return(TopModule.shared.argonModule.integer.type)
             case .float:
-                return(self.topModule.argonModule.float.type)
+                return(TopModule.shared.argonModule.float.type)
             case .string:
-                return(self.topModule.argonModule.string.type)
+                return(TopModule.shared.argonModule.string.type)
             case .boolean:
-                return(self.topModule.argonModule.boolean.type)
+                return(TopModule.shared.argonModule.boolean.type)
             case .symbol:
-                return(self.topModule.argonModule.symbol.type)
+                return(TopModule.shared.argonModule.symbol.type)
             case .array:
-                return(self.topModule.argonModule.array.type)
+                return(TopModule.shared.argonModule.array.type)
             case .class:
-                return(self.topModule.argonModule.class.type)
+                return(TopModule.shared.argonModule.class.type)
             case .module:
-                return(self.topModule.argonModule.module.type)
+                return(TopModule.shared.argonModule.module.type)
             case .enumeration:
-                return(self.topModule.argonModule.enumeration.type)
+                return(TopModule.shared.argonModule.enumeration.type)
             case .enumerationCase:
-                return(self.topModule.argonModule.enumerationCase.type)
+                return(TopModule.shared.argonModule.enumerationCase.type)
             case .method:
-                return(self.topModule.argonModule.method.type)
+                return(TopModule.shared.argonModule.method.type)
             case .constant(let constant):
                 return(constant.type)
             }
@@ -275,27 +275,25 @@ public class LiteralExpression: Expression
             case .float(let float):
                 instance.append(.LOAD,.float(float),.none,.register(register))
             case .string(let string):
-                let address = generator.virtualMachine.managedSegment.allocateString(string)
-                instance.append(.LOAD,.absolute(address),.none,.register(register))
+                instance.append(.LOAD,.relocation(.string(string)),.none,.register(register))
             case .boolean(let boolean):
                 instance.append(.LOAD,.integer(boolean == .trueValue ? 1 : 0))
             case .symbol(let string):
-                let address = generator.virtualMachine.managedSegment.allocateString(string)
-                instance.append(.LOAD,.absolute(address),.none,.register(register))
+                instance.append(.LOAD,.relocation(.symbol(string)),.none,.register(register))
             case .array:
                 fatalError()
             case .class(let aClass):
-                instance.append(.LOAD,.absolute(aClass.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.class(aClass)),.none,.register(register))
             case .module(let module):
-                instance.append(.LOAD,.absolute(module.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.module(module)),.none,.register(register))
             case .enumeration(let enumeration):
-                instance.append(.LOAD,.absolute(enumeration.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.enumeration(enumeration)),.none,.register(register))
             case .enumerationCase(let enumerationCase):
-                instance.append(.LOAD,.absolute(enumerationCase.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.enumerationCase(enumerationCase)),.none,.register(register))
             case .method(let method):
-                instance.append(.LOAD,.absolute(method.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.method(method)),.none,.register(register))
             case .constant(let constant):
-                instance.append(.LOAD,.absolute(constant.memoryAddress),.none,.register(register))
+                instance.append(.LOAD,.relocation(.constant(constant)),.none,.register(register))
             }
         self._place = .register(register)
         }

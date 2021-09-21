@@ -35,7 +35,7 @@ public protocol BitCodable
     func encode(in:BitEncoder)
     }
     
-public class Instruction:Identifiable,Encodable,Decodable,Equatable
+public class Instruction:Identifiable
     {
     public static let opcodeField = PackedField<Instruction.Opcode>(offset: 0, width: 8)
     public static let operand1KindField = PackedField<Word>(offset:8,width:4)
@@ -198,7 +198,19 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             }
         }
         
-    public enum Opcode:Int,Encodable,Decodable
+    public enum LiteralValue:Equatable
+        {
+        case string(String)
+        case symbol(String)
+        case `class`(Class)
+        case module(Module)
+        case enumeration(Enumeration)
+        case enumerationCase(EnumerationCase)
+        case method(Method)
+        case constant(Constant)
+        }
+        
+    public enum Opcode:Int
         {
         public static let bitWidth = 8
         
@@ -226,7 +238,7 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             }
         }
         
-    public enum Operand:Encodable,Decodable,Equatable
+    public enum Operand:Equatable
         {
         ///
         ///
@@ -234,6 +246,14 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
         ///
         ///
         case none
+        ///
+        ///
+        /// A relocation reference contains an item which must be relocated. This item will
+        /// be written out to the literals section of the object file when the object
+        /// file containing this instruction is written out.
+        ///
+        ///
+        case relocation(LiteralValue)
         ///
         ///
         /// A register is a register is a register
@@ -338,6 +358,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                 {
                 case .none:
                     return(0)
+                case .relocation:
+                    return(0)
                 case .register:
                     return(0)
                 case .float(let float):
@@ -360,6 +382,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
+                    return(0)
+                case .relocation:
                     return(0)
                 case .register(let register):
                     return(register.rawValue)
@@ -398,6 +422,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                     return(7)
                 case .label:
                     return(8)
+                case .relocation:
+                    return(9)
                 }
             }
             
@@ -434,6 +460,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                 case .label(let integer):
                     let label = integer >= 0 ? "+" : ""
                     return("IP \(label) \(integer)")
+                case .relocation(let value):
+                    return("REL \(value)")
                 }
             }
             
@@ -442,6 +470,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
+                    throw(ExecutionErrorType.invalidFloatOperand)
+                case .relocation:
                     throw(ExecutionErrorType.invalidFloatOperand)
                 case .register(let register):
                     if !register.isFloatingPoint
@@ -473,7 +503,9 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
-                    throw(ExecutionErrorType.invalidFloatOperand)
+                    throw(ExecutionErrorType.invalidWordOperand)
+                case .relocation:
+                    throw(ExecutionErrorType.invalidWordOperand)
                 case .register(let register):
                     return(vm.registers[register.rawValue].withoutTag)
                 case .float:
@@ -492,7 +524,7 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                     return(pointer?.pointee.withoutTag ?? 0)
                 case .label(let integer):
                     return(Word(bitPattern: integer))
-                    
+
                 }
             }
             
@@ -501,6 +533,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
+                    throw(ExecutionErrorType.invalidWordOperand)
+                case .relocation:
                     throw(ExecutionErrorType.invalidWordOperand)
                 case .register(let register):
                     return(vm.registers[register.rawValue].withoutTag)
@@ -528,7 +562,9 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
-                    throw(ExecutionErrorType.invalidFloatOperand)
+                    throw(ExecutionErrorType.invalidWordOperand)
+                case .relocation:
+                    throw(ExecutionErrorType.invalidWordOperand)
                 case .register(let register):
                     return(Int64(bitPattern: UInt64(vm.registers[register.rawValue])))
                 case .float:
@@ -555,6 +591,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
+                    throw(ExecutionErrorType.invalidIntegerOperand)
+                case .relocation:
                     throw(ExecutionErrorType.invalidIntegerOperand)
                 case .register(let register):
                     vm.registers[register.rawValue] = UInt64(bitPattern: value)
@@ -583,6 +621,8 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
                 {
                 case .none:
                     throw(ExecutionErrorType.invalidWordOperand)
+                case .relocation:
+                    throw(ExecutionErrorType.invalidWordOperand)
                 case .register(let register):
                     vm.setRegister(value,atIndex: register)
                 case .float:
@@ -609,7 +649,9 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
             switch(self)
                 {
                 case .none:
-                    throw(ExecutionErrorType.invalidIntegerOperand)
+                    throw(ExecutionErrorType.invalidFloatOperand)
+                case .relocation:
+                    throw(ExecutionErrorType.invalidFloatOperand)
                 case .register(let register):
                     if !register.isFloatingPoint
                         {
@@ -696,6 +738,24 @@ public class Instruction:Identifiable,Encodable,Decodable,Equatable
         self.operand2 = Self.operand(kindField: Self.operand2KindField, registerField: Self.operand2RegisterField,index: 2,words: words)
         self.result = Self.operand(kindField: Self.resultKindField, registerField: Self.resultRegisterField,index: 3,words: words)
         self.lineNumber = Int(Self.lineNumberField.value(in: words[0]))
+        }
+        
+    public init?(coder: NSCoder)
+        {
+        self.opcode = Opcode(rawValue: coder.decodeInteger(forKey: "opcode"))!
+        self.operand1 = coder.decodeOperand(forKey: "operand1")!
+        self.operand2 = coder.decodeOperand(forKey: "operand2")!
+        self.result = coder.decodeOperand(forKey: "result")!
+        self.lineNumber = coder.decodeInteger(forKey: "lineNumber")
+        }
+        
+    public func encode(with coder: NSCoder)
+        {
+        coder.encode(self.opcode.rawValue,forKey: "opcode")
+        coder.encode(self.operand1,forKey: "operand1")
+        coder.encode(self.operand2,forKey: "operand2")
+        coder.encode(self.result,forKey: "result")
+        coder.encode(self.lineNumber,forKey: "lineNumber")
         }
         
     private static func operand(kindField: PackedField<Word>,registerField: PackedField<Register>,index:Int,words:[Word]) -> Operand

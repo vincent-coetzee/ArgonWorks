@@ -99,6 +99,15 @@ public class Slot:Symbol
         super.init(label:labeled)
         }
 
+    public required init?(coder: NSCoder)
+        {
+        self._type = coder.decodeObject(forKey: "type") as? Type
+        self.offset = coder.decodeInteger(forKey: "offset")
+        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
+        self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
+        super.init(coder: coder)
+        }
+        
     public func deepCopy() -> Slot
         {
         let newSlot = Slot(label: self.label,type: self._type)

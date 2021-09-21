@@ -32,7 +32,11 @@ public class GenericClassParameter: Class
         {
         super.init(label: name)
         }
-        
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public static func ==(lhs:GenericClassParameter,rhs:GenericClassParameter) -> Bool
         {
         return(lhs.label == rhs.label)
@@ -84,6 +88,12 @@ public class GenericClassParameterInstance: Class
         self.theType = type
         super.init(label: label)
         }
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+
     }
 
 public typealias GenericClassParameters = Array<GenericClassParameter>

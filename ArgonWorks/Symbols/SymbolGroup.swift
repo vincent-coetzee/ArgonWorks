@@ -5,10 +5,15 @@
 //  Created by Vincent Coetzee on 18/7/21.
 //
 
-import Foundation
+import AppKit
 
 public class SymbolGroup:ContainerSymbol
     {
+    public override var defaultColor: NSColor
+        {
+        NSColor.argonXCornflower
+        }
+        
     public override var imageName: String
         {
         "IconGroup"

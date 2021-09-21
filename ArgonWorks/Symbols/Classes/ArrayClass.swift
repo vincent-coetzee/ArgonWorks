@@ -39,9 +39,4 @@ public class ArrayClass:GenericSystemClass
         Self.allInstances.append(instance)
         return(instance)
         }
-        
-    public override func layoutInMemory(in vm: VirtualMachine)
-        {
-        super.layoutInMemory(in: vm)
-        }
     }

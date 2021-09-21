@@ -42,7 +42,7 @@ struct ArgonWorxApp {
         let innerPointer = InnerStringPointer(address: string2)
         print(innerPointer.string)
         let theClass = small.topModule.argonModule.class
-        theClass.layoutInMemory(in: small)
+        theClass.layoutInMemory()
         let address = theClass.memoryAddress
         theClass.rawDumpFromAddress(address)
         let class1Pointer = InnerClassPointer(address: small.topModule.argonModule.array.memoryAddress)
@@ -85,7 +85,7 @@ struct ArgonWorxApp {
         let sourceURL = Bundle.main.url(forResource: "Basics", withExtension: "argon")
         let source = try! String(contentsOf: sourceURL!)
         print(source)
-        let compiler = Compiler(virtualMachine: small)
+        let compiler = Compiler()
         compiler.compileChunk(source)
         let library = DynamicLibrary(path: "/Users/vincent/Desktop/libXenon.dylib")
         let symbol = library.findSymbol("PrintString")

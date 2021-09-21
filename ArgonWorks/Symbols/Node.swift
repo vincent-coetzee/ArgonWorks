@@ -8,9 +8,10 @@
 import Foundation
 import SwiftUI
     
-public class Node:NSObject,NamingContext,Identifiable
+public class Node:NSObject,NamingContext,Identifiable,NSCoding
     {
-    public let index: UUID
+    public var tag: Int = 0
+    public var index: UUID
     public let label: String
     public private(set) var parent: Parent = .none
     private var locations = NodeLocations()
@@ -36,6 +37,18 @@ public class Node:NSObject,NamingContext,Identifiable
         {
         self.index = UUID.newUUID()
         self.label = label
+        }
+        
+    required public init?(coder: NSCoder)
+        {
+        self.index = coder.decodeObject(forKey: "index") as! UUID
+        self.label = coder.decodeObject(forKey: "label") as! Label
+        self.parent = coder.decodeObject(forKey: "parent") as! Parent
+        self.locations = coder.decodeObject(forKey: "locations") as! NodeLocations
+        }
+        
+    public func encode(with coder:NSCoder)
+        {
         }
         
     public var name: Name

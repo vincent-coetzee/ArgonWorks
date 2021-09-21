@@ -43,11 +43,9 @@ public class RegisterFile
     private var file: Array<Register>
     private var available: Array<Register>
     private var unavailable: Array<Register>
-    private let virtualMachine: VirtualMachine
     
-    init(virtualMachine: VirtualMachine)
+    init()
         {
-        self.virtualMachine = virtualMachine
         self.unavailable = []
         self.file = []
         self.available = []
@@ -97,7 +95,7 @@ public class RegisterFile
         
     private func spillRegister(_ register:Register,inBuffer: InstructionBuffer) -> Instruction.Register
         {
-        let address = self.virtualMachine.dataSegment.allocateAddress(sizeInBytes: 8)
+        let address = Address.absolute(0)
         for slot in register.slots
             {
             slot.addresses.append(address)

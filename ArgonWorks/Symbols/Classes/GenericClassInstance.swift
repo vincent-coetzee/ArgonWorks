@@ -29,4 +29,10 @@ public class GenericClassInstance:Class
         self.genericClassParameterInstances = genericClassParameterInstances
         super.init(label:label)
         }
+        
+
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }

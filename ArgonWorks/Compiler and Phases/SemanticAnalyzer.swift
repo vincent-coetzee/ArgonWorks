@@ -21,7 +21,7 @@ public class SemanticAnalyzer: CompilerPass
         
     public var virtualMachine: VirtualMachine
         {
-        return(self.compiler.virtualMachine)
+        fatalError("Virtual Machine needed")
         }
         
     init(compiler: Compiler)

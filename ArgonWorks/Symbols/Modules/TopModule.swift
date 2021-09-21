@@ -31,40 +31,50 @@ public class TopModule: SystemModule
         return(self)
         }
         
-    public override var topModule: TopModule
+    public var moduleRoot: Module
         {
-        self
+        let modules = self.symbols.values.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
+        return(ModuleHolder(TopModule(modules)))
         }
+
+    public static let shared = TopModule()
         
     public override var name: Name
         {
         return(Name(rooted:true))
         }
         
-    public var argonModule: ArgonModule
-        {
-        return(self._argonModule)
-        }
+    public let argonModule = ArgonModule()
         
     public var userModules: Array<Module>
         {
         return(self.symbols.values.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
         }
     
-    private let _argonModule: ArgonModule
-    public let virtualMachine: VirtualMachine!
-    
-    public init(virtualMachine: VirtualMachine)
+    init()
         {
-        self.virtualMachine = virtualMachine
-        self._argonModule = ArgonModule(virtualMachine: virtualMachine)
-        super.init(label:"Root")
-        self.addSymbol(self._argonModule)
+        super.init(label: "Root")
+        self.index = UUID(index: 0)
+        self.addSymbol(self.argonModule)
         }
         
-    public func resolveReferences(virtualMachine: VirtualMachine)
+    init(_ array:Array<Module>)
         {
-        self._argonModule.resolve(in: virtualMachine)
+        super.init(label: "Root")
+        for item in array
+            {
+            self.symbols[item.label] = item
+            }
+        self.index = UUID(index: 0)
+        }
+        
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public override func resolveReferences()
+        {
+        self.argonModule.resolveReferences()
         }
         
     public override func lookup(name:Name) -> Symbol?

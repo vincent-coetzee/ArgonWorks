@@ -114,10 +114,10 @@ public class Module:ContainerSymbol
         return(false)
         }
         
-    internal func layout(in vm: VirtualMachine)
+    internal func layout()
         {
         self.layoutSlots()
-        self.layoutInMemory(in: vm)
+        self.layoutInMemory()
         }
         
     internal func layoutSlots()

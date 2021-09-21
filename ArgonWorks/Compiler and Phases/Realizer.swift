@@ -21,7 +21,7 @@ public class Realizer: CompilerPass
         
     public var virtualMachine: VirtualMachine
         {
-        return(self.compiler.virtualMachine)
+        fatalError("Virtual Machine access needed")
         }
         
     init(compiler: Compiler)

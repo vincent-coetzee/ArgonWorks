@@ -64,16 +64,6 @@ public enum Context: Equatable
         
 public class Parser: CompilerPass
     {
-    public var topModule: TopModule
-        {
-        return(self.compiler.topModule)
-        }
-        
-    public var virtualMachine: VirtualMachine
-        {
-        return(self.compiler.virtualMachine)
-        }
-        
     private var tokens = Array<Token>()
     private var tokenIndex = 0
     internal private(set) var token:Token = .none
@@ -86,6 +76,7 @@ public class Parser: CompilerPass
     internal var visualToken:TokenRenderer
     private var source: String?
     public var wasCancelled = false
+    public var currentTag = 0
     
     public static func parseChunk(_ source:String,in compiler:Compiler) -> ParseNode?
         {
@@ -94,6 +85,7 @@ public class Parser: CompilerPass
         
     init(compiler:Compiler)
         {
+        self.currentTag = compiler.currentTag
         self.compiler = compiler
         self.namingContext = compiler.namingContext
         self.visualToken = TokenRenderer(systemClassNames: compiler.systemClassNames)
@@ -347,6 +339,7 @@ public class Parser: CompilerPass
         try self.nextToken()
         let label = try self.parseLabel()
         let module = MainModule(label: label)
+        module.tag = self.currentTag
         self.currentContext.addSymbol(module)
         try self.parseModule(into: module)
         self.node = module
@@ -393,6 +386,7 @@ public class Parser: CompilerPass
         else if module.isNil
             {
             module = Module(label: name.last)
+            module?.tag = self.currentTag
             isNew = true
             }
         if isNew
@@ -473,16 +467,19 @@ public class Parser: CompilerPass
                                     return(try self.parseConstant())
                             case .SCOPED:
                                     let scoped = try self.parseScopedSlot()
+                                    scoped.tag = self.currentTag
                                     module.addSymbol(scoped)
                                     return(scoped)
                             case .ENUMERATION:
                                     return(try self.parseEnumeration())
                             case .SLOT:
                                     let slot = try self.parseSlot()
+                                    slot.tag = self.currentTag
                                     module.addSymbol(slot)
                                     return(slot)
                             case .INTERCEPTOR:
                                     let interceptor = try self.parseInterceptor()
+                                    interceptor.tag = self.currentTag
                                     module.addSymbol(interceptor)
                                     return(interceptor)
                             default:
@@ -523,7 +520,7 @@ public class Parser: CompilerPass
         
     private func parseScopedSlot() throws -> ScopedSlot
         {
-        return(ScopedSlot(label:"Slot",type: self.topModule.argonModule.integer.type))
+        return(ScopedSlot(label:"Slot",type: TopModule.shared.argonModule.integer.type))
         }
         
     private func parseHashString() throws -> String
@@ -546,7 +543,8 @@ public class Parser: CompilerPass
         let location = self.token.location
         let label = try self.parseLabel()
         let enumeration = Enumeration(label: label)
-        enumeration.rawType = self.topModule.argonModule.integer.type
+        enumeration.rawType = TopModule.shared.argonModule.integer.type
+        enumeration.tag = self.currentTag
         self.currentContext.addSymbol(enumeration)
         self.pushContext(enumeration)
         enumeration.addDeclaration(location)
@@ -566,10 +564,11 @@ public class Parser: CompilerPass
             }
         self.popContext()
         self.stopClip(into:enumeration)
-        let methodInstance = MethodInstance(label: "_\(label)",parameters: [Parameter(label: "symbol", type: self.compiler.virtualMachine.argonModule.symbol.type, isVisible: false, isVariadic: false)],returnType: .enumeration(enumeration))
+        let methodInstance = MethodInstance(label: "_\(label)",parameters: [Parameter(label: "symbol", type: TopModule.shared.argonModule.symbol.type, isVisible: false, isVariadic: false)],returnType: .enumeration(enumeration))
         methodInstance.addDeclaration(location)
         let method = Method(label: "_\(label)")
         method.addDeclaration(location)
+        method.tag = self.currentTag
         self.currentContext.addSymbol(method)
         method.addInstance(methodInstance)
         return(enumeration)
@@ -623,6 +622,7 @@ public class Parser: CompilerPass
                 }
             }
         let aCase = EnumerationCase(symbol: name,types: types,enumeration: enumeration)
+        aCase.tag = self.currentTag
         enumeration.addSymbol(aCase)
         aCase.addDeclaration(location)
         if self.token.isAssign
@@ -769,6 +769,7 @@ public class Parser: CompilerPass
                 self.dispatchError("Class \(label) can not be half instanciated, either all of the class parameters must be classes or none of them.")
                 }
             }
+        aClass.tag = self.currentTag
         aClass.addDeclaration(location)
         self.currentContext.addSymbol(aClass)
         self.pushContext(aClass)
@@ -797,11 +798,13 @@ public class Parser: CompilerPass
                 if self.token.isSlot
                     {
                     let slot = try self.parseSlot()
+                    slot.tag = self.currentTag
                     aClass.addSymbol(slot)
                     }
                 else if self.token.isClass
                     {
                     let slot = try self.parseClassSlot()
+                    slot.tag = self.currentTag
                     aClass.metaclass?.addSymbol(slot)
                     }
                 }
@@ -835,6 +838,7 @@ public class Parser: CompilerPass
         let value = try self.parseExpression()
         let constant = Constant(label: label,type: type,value: value)
         constant.addDeclaration(location)
+        constant.tag = self.currentTag
         self.currentContext.addSymbol(constant)
         return(constant)
         }
@@ -1159,6 +1163,7 @@ public class Parser: CompilerPass
             method!.isIntrinsic = directive == .intrinsic
             method!.isGenericMethod = isGenericMethod
             method!.addDeclaration(location)
+            method?.tag = self.currentTag
             self.currentContext.addSymbol(method!)
             if instance != nil
                 {
@@ -2129,6 +2134,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             function.returnType = try self.parseType()
             }
+        function.tag = self.currentTag
         self.currentContext.addSymbol(function)
         return(function)
         }
@@ -2148,6 +2154,7 @@ public class Parser: CompilerPass
         let type = try self.parseType()
         let alias = TypeAlias(label: label,type: type)
         alias.addDeclaration(location)
+        alias.tag = self.currentTag
         self.currentContext.addSymbol(alias)
         return(alias)
         }
@@ -2191,7 +2198,7 @@ public class Parser: CompilerPass
                     self.dispatchError("The name of an induction variable to contain the symbol this handler is receiving was expected but \(self.token) was found.")
                     }
                 name = self.token.isIdentifier ? self.token.identifier : "VariableName"
-                handler.addParameter(label: name,type: self.topModule.argonModule.symbol.type)
+                handler.addParameter(label: name,type: TopModule.shared.argonModule.symbol.type)
                 try self.nextToken()
                 }
             try self.parseBlock(into: handler)

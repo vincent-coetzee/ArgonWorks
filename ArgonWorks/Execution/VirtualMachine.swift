@@ -63,12 +63,11 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kStandardStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kStandardStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kStandardDataSegmentSize)
-        self.topModule = TopModule(virtualMachine: self)
+        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
         self.dataSegment.virtualMachine = self
-        self.topModule.argonModule.resolve(in: self)
         self.symbolTable = SymbolTable(virtualMachine: self)
         }
         
@@ -80,12 +79,11 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kSmallStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kSmallStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kSmallDataSegmentSize)
-        self.topModule = TopModule(virtualMachine: self)
+        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
         self.dataSegment.virtualMachine = self
-        self.topModule.argonModule.resolve(in: self)
         self.symbolTable = SymbolTable(virtualMachine: self)
         }
         
@@ -97,12 +95,11 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kTinyStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kTinyStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kTinyDataSegmentSize)
-        self.topModule = TopModule(virtualMachine: self)
+        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
         self.dataSegment.virtualMachine = self
-        self.topModule.argonModule.resolve(in: self)
         self.symbolTable = SymbolTable(virtualMachine: self)
         }
         

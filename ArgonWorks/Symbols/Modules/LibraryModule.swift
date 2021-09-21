@@ -21,4 +21,10 @@ public class LibraryModule: Module
         self.path = path
         super.init(label: label)
         }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.path = coder.decodeString(forKey: "path")!
+        super.init(coder: coder)
+        }
     }

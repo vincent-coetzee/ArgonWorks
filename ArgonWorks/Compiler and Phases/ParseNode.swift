@@ -14,7 +14,7 @@ public protocol ParseNode
     var privacyScope: PrivacyScope? { get set }
     func emitCode(using: CodeGenerator) throws
     func realize(using: Realizer)
-    func realizeSuperclasses(in vm: VirtualMachine)
+    func realizeSuperclasses()
     func analyzeSemantics(using: SemanticAnalyzer)
     func allocateAddresses(using: AddressAllocator)
     }

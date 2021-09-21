@@ -12,6 +12,7 @@ internal enum UserDefaultsKey: String
     {
     case currentSourceFileURL
     case browserWindowRectangle
+    case memoryWindowRectangle
     }
     
 internal class RectObject
@@ -114,7 +115,7 @@ class ArgonBrowserWindowController: NSWindowController
     override func windowDidLoad()
         {
         super.windowDidLoad()
-        self.compiler = Compiler(virtualMachine: self.small)
+        self.compiler = Compiler()
         if let rectObject = RectObject(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
             {
             self.window?.setFrame(rectObject.rect, display: true, animate: true)
@@ -123,7 +124,7 @@ class ArgonBrowserWindowController: NSWindowController
         
     private func initOutliner()
         {
-        self.symbols = [small.argonModule.object,small.topModule]
+        self.symbols = [TopModule.shared.argonModule.object,TopModule.shared,TopModule.shared.moduleRoot]
         self.outliner.indentationPerLevel = 20
         self.outliner.dataSource = self
         self.outliner.delegate = self
@@ -150,7 +151,7 @@ class ArgonBrowserWindowController: NSWindowController
             }
         }
         
-    @IBAction public func notification(_ event:NSNotification)
+    @IBAction public func sourceChangedNotification(_ event:NSNotification)
         {
         do
             {
@@ -172,7 +173,7 @@ class ArgonBrowserWindowController: NSWindowController
         self.sourceEditor.gutterBackgroundColor = NSColor.black
         self.sourceEditor.backgroundColor = NSColor.black
         self.sourceEditor.gutterForegroundColor = NSColor.lightGray
-        NotificationCenter.default.addObserver(self, selector: #selector(notification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
+        NotificationCenter.default.addObserver(self, selector: #selector(sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
         NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
         self.sourceEditor.isAutomaticQuoteSubstitutionEnabled = false
         self.sourceEditor.isAutomaticDashSubstitutionEnabled = false
@@ -187,6 +188,11 @@ class ArgonBrowserWindowController: NSWindowController
                 {
                 item.target = self
                 item.action = #selector(ArgonBrowserWindowController.fugglyBuggly(_:))
+                }
+            if item.label == "Compile"
+                {
+                item.target = self
+                item.action = #selector(ArgonBrowserWindowController.onCompile(_:))
                 }
             if item.label == "Save"
                 {
@@ -203,6 +209,11 @@ class ArgonBrowserWindowController: NSWindowController
                 item.target = self
                 item.action = #selector(ArgonBrowserWindowController.onEmitObject(_:))
                 }
+            if item.label == "Symbols"
+                {
+                item.target = self
+                item.action = #selector(ArgonBrowserWindowController.onEmitSymbols(_:))
+                }
             }
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
         if let aString = urlString,
@@ -212,7 +223,7 @@ class ArgonBrowserWindowController: NSWindowController
             self.currentSourceFileURL = url
             let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
             self.sourceEditor.textStorage?.setAttributedString(mutableString)
-            self.compiler = Compiler(virtualMachine: self.small)
+            self.compiler = Compiler()
             self.compiler.compileChunk(string)
             self.sourceEditor.textStorage?.beginEditing()
             for (range,attributes) in self.compiler.tokenRenderer.attributes
@@ -269,11 +280,52 @@ class ArgonBrowserWindowController: NSWindowController
             }
         }
         
+    @IBAction func onEmitSymbols(_ sender:Any?)
+        {
+        do
+            {
+            var url = self.currentSourceFileURL
+            url?.deletePathExtension()
+            url?.appendPathExtension("argonb")
+            if let theUrl = url
+                {
+                let source = self.sourceEditor.string
+                self.compiler = Compiler()
+                if let chunk = self.compiler.compileChunk(source)
+                    {
+                    let data = try NSKeyedArchiver.archivedData(withRootObject: chunk, requiringSecureCoding: false)
+                    try data.write(to: theUrl)
+                    }
+                }
+            }
+        catch let error
+            {
+            print(error)
+            }
+        }
+        
+    @IBAction func onCompile(_ sender: Any?)
+        {
+        TopModule.shared.removeObject(taggedWith: self.compiler.currentTag)
+        let source = self.sourceEditor.string
+        let compiler = Compiler()
+        TopModule.shared.argonModule.object.resetHierarchy()
+        TopModule.shared.argonModule.realizeSuperclasses()
+        if let chunk = compiler.compileChunk(source)
+            {
+            if let module = chunk as? Module
+                {
+                module.realizeSuperclasses()
+                self.outliner.reloadData()
+                }
+            }
+        }
+        
     @IBAction func onNewEditor(_ sender:Any?)
         {
         let mutableString = NSMutableAttributedString(string: "",attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
         self.sourceEditor.textStorage?.setAttributedString(mutableString)
-        self.compiler = Compiler(virtualMachine: self.small)
+        self.compiler = Compiler()
         }
         
     @IBAction func fugglyBuggly(_ sender:Any?)
@@ -291,7 +343,7 @@ class ArgonBrowserWindowController: NSWindowController
                 self.currentSourceFileURL = url
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.sourceEditor.textStorage?.setAttributedString(mutableString)
-                self.compiler = Compiler(virtualMachine: self.small)
+                self.compiler = Compiler()
                 self.compiler.compileChunk(string)
                 self.sourceEditor.textStorage?.beginEditing()
                 for (range,attributes) in self.compiler.tokenRenderer.attributes
@@ -372,24 +424,11 @@ extension ArgonBrowserWindowController:NSOutlineViewDelegate
         {
         let view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "HierarchyCell"), owner: nil) as! NSTableCellView
         let anItem = item as! Symbol
-        var color = NSColor.controlAccentColor
-        if anItem is Module
-            {
-            color = NSColor.argonNeonOrange
-            }
-        else if anItem is SymbolGroup
-            {
-            color = NSColor.argonCoral
-            }
-        else if anItem is Method || anItem is MethodInstance
-            {
-            color = NSColor.argonZomp
-            }
         view.textField?.font = NSFont.systemFont(ofSize: 10)
         view.textField?.stringValue = anItem.label
         view.imageView?.image = NSImage(named: anItem.imageName)!
         view.imageView?.image?.isTemplate = true
-        view.imageView?.contentTintColor = color
+        view.imageView?.contentTintColor = anItem.defaultColor
         view.textField?.textColor = NSColor.controlTextColor
         return(view)
         }

@@ -49,6 +49,24 @@ public class ContainerSymbol:Symbol
         return(classes)
         }
         
+    public required init?(coder: NSCoder)
+        {
+        self.symbols = coder.decodeObject(forKey: "symbols") as! SymbolDictionary
+        self._children = coder.decodeObject(forKey: "_children") as? Symbols
+        super.init(coder: coder)
+        }
+        
+    public override init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.symbols,forKey: "symbols")
+        coder.encode(self._children,forKey: "_children")
+        }
     ///
     ///
     /// Support for naming context
@@ -111,11 +129,11 @@ public class ContainerSymbol:Symbol
             }
         }
         
-    public override func realizeSuperclasses(in vm: VirtualMachine)
+    public override func realizeSuperclasses()
         {
         for element in self.symbols.valuesByKey
             {
-            element.realizeSuperclasses(in: vm)
+            element.realizeSuperclasses()
             }
         }
         
@@ -134,5 +152,17 @@ public class ContainerSymbol:Symbol
             self.addSymbol(symbol)
             }
         return(self)
+        }
+        
+    public override func removeObject(taggedWith: Int)
+        {
+        for element in self.symbols.values
+            {
+            element.removeObject(taggedWith: taggedWith)
+            if element.tag == taggedWith
+                {
+                self.symbols[element.label] = nil
+                }
+            }
         }
     }

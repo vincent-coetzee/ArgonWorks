@@ -85,6 +85,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
+    public override var defaultColor: NSColor
+        {
+        NSColor.controlAccentColor
+        }
+    
     public var innerClassPointer: InnerClassPointer
         {
         return(InnerClassPointer(address: self.memoryAddress))
@@ -328,7 +333,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     internal var magicNumber:Int
     internal var slotClassType:Slot.Type = Slot.self
     internal var isMemoryPreallocated = false
-    internal var header = Header(0)
+//    internal var header = Header(0)
     internal var hasBytes = false
     internal var _metaclass: Metaclass?
     internal var mangledCode: Label
@@ -346,6 +351,24 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.layoutSlots.parent = self
         }
         
+    public required init?(coder: NSCoder)
+        {
+        self.superclassReferences = []
+        self.subclasses = coder.decodeObject(forKey: "subclasses") as! Classes
+        self.superclasses = coder.decodeObject(forKey: "superclasses") as! Classes
+        self.layoutSlots = coder.decodeObject(forKey: "layoutSlots") as! SlotList
+        self.magicNumber = coder.decodeInteger(forKey: "magicNumber")
+        self.slotClassType = Slot.self
+        self.isMemoryPreallocated = false
+        self.hasBytes = coder.decodeBool(forKey: "hasBytes")
+        self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
+        self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
+        self.offsetOfClass = coder.decodeObject(forKey: "offsetOfClass") as! Dictionary<Class,Int>
+        self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
+        self.depth = coder.decodeInteger(forKey: "depth")
+        super.init(coder: coder)
+        }
+
     ///
     ///
     /// Create a deepCopy of the receiver, this is used
@@ -371,7 +394,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass.magicNumber = self.magicNumber
         newClass.slotClassType = self.slotClassType
         newClass.isMemoryPreallocated = false
-        newClass.header = self.header
+//        newClass.header = self.header
         newClass.hasBytes = self.hasBytes
         newClass._metaclass = self._metaclass
         newClass.mangledCode = self.mangledCode
@@ -465,76 +488,76 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     /// THIS MERELY COPIES THIS CLASS INFORMATION INTO Argon RTTI format.
     ///
     ///
-    public override func layoutInMemory(in vm: VirtualMachine)
+    public override func layoutInMemory()
         {
-        guard !self.isMemoryLayoutDone else
-            {
-            return
-            }
-        if !self.isMemoryPreallocated
-            {
-            let anAddress = vm.managedSegment.allocateObject(sizeInBytes: self.internalClass.sizeInBytes)
-            self.addresses.append(.absolute(anAddress))
-            }
-        else if self.memoryAddress == 0
-            {
-            fatalError("Memory was preallocated but is nil")
-            }
-        var array = Words()
-        for superclass in self.superclasses
-            {
-            superclass.layoutInMemory(in: vm)
-            array.append(superclass.memoryAddress)
-            }
-        let pointer = InnerClassPointer(address: self.memoryAddress)
-        if !self.isMetaclassClass
-            {
-            self.metaclass?.layoutInMemory(in: vm)
-            pointer.setClass(self.topModule.argonModule.class)
-            }
-        pointer.setName(self.label,in: vm)
-        let slotsArray = InnerArrayPointer.allocate(arraySize: self.layoutSlots.count, elementClass: vm.argonModule.slot,in: vm)
-        pointer.slots = slotsArray
-        for slot in self.layoutSlots.slots.sorted(by: {$0.offset < $1.offset})
-            {
-            slot.layoutSymbol(in: vm)
-            slotsArray.append(slot.memoryAddress)
-            }
-        pointer.extraSizeInBytes = 0
-        pointer.instanceSizeInBytes = self.sizeInBytes
-        pointer.setSlotValue(self.hasBytes,atKey: "hasBytes")
-        pointer.setSlotValue(false,atKey: "isValue")
-        let superclassArray = InnerArrayPointer.allocate(arraySize: self.superclasses.count,elementClass: vm.argonModule.class,in: vm)
-        for aClass in self.superclasses
-            {
-            superclassArray.append(aClass.memoryAddress)
-            }
-        pointer.setSlotValue(superclassArray.address,atKey:"superclasses")
-        pointer.magicNumber = self.magicNumber
-        for superclass in self.superclasses
-            {
-            pointer.assignSystemSlots(from: superclass)
-            }
-        self.depth = self.hierarchicalDepth
-        self.isMemoryLayoutDone = true
-        Self.classesByAddress[self.memoryAddress] = self
-        print("LAID OUT CLASS \(self.label) AT ADDRESS \(self.memoryAddress.addressString)")
-        print("CLASS \(self.label) MAGIC NUMBER IS \(self.magicNumber)")
+//        guard !self.isMemoryLayoutDone else
+//            {
+//            return
+//            }
+//        if !self.isMemoryPreallocated
+//            {
+//            let anAddress = vm.managedSegment.allocateObject(sizeInBytes: self.internalClass.sizeInBytes)
+//            self.addresses.append(.absolute(anAddress))
+//            }
+//        else if self.memoryAddress == 0
+//            {
+//            fatalError("Memory was preallocated but is nil")
+//            }
+//        var array = Words()
+//        for superclass in self.superclasses
+//            {
+//            superclass.layoutInMemory(in: vm)
+//            array.append(superclass.memoryAddress)
+//            }
+//        let pointer = InnerClassPointer(address: self.memoryAddress)
+//        if !self.isMetaclassClass
+//            {
+//            self.metaclass?.layoutInMemory(in: vm)
+//            pointer.setClass(self.topModule.argonModule.class)
+//            }
+//        pointer.setName(self.label,in: vm)
+//        let slotsArray = InnerArrayPointer.allocate(arraySize: self.layoutSlots.count, elementClass: vm.argonModule.slot,in: vm)
+//        pointer.slots = slotsArray
+//        for slot in self.layoutSlots.slots.sorted(by: {$0.offset < $1.offset})
+//            {
+//            slot.layoutSymbol(in: vm)
+//            slotsArray.append(slot.memoryAddress)
+//            }
+//        pointer.extraSizeInBytes = 0
+//        pointer.instanceSizeInBytes = self.sizeInBytes
+//        pointer.setSlotValue(self.hasBytes,atKey: "hasBytes")
+//        pointer.setSlotValue(false,atKey: "isValue")
+//        let superclassArray = InnerArrayPointer.allocate(arraySize: self.superclasses.count,elementClass: vm.argonModule.class,in: vm)
+//        for aClass in self.superclasses
+//            {
+//            superclassArray.append(aClass.memoryAddress)
+//            }
+//        pointer.setSlotValue(superclassArray.address,atKey:"superclasses")
+//        pointer.magicNumber = self.magicNumber
+//        for superclass in self.superclasses
+//            {
+//            pointer.assignSystemSlots(from: superclass)
+//            }
+//        self.depth = self.hierarchicalDepth
+//        self.isMemoryLayoutDone = true
+//        Self.classesByAddress[self.memoryAddress] = self
+//        print("LAID OUT CLASS \(self.label) AT ADDRESS \(self.memoryAddress.addressString)")
+//        print("CLASS \(self.label) MAGIC NUMBER IS \(self.magicNumber)")
         }
         
-    public func preallocateMemory(size:Int,in vm: VirtualMachine)
+    public func preallocateMemory(size:Int)
         {
-        guard !self.isMemoryPreallocated else
-            {
-            return
-            }
-        self.isMemoryPreallocated = true
-        let address = vm.managedSegment.allocateObject(sizeInBytes: size)
-        self.addresses.append(.absolute(address))
-        InnerInstancePointer(address: self.memoryAddress).setClass(self.topModule.argonModule.class)
-//        ObjectPointer(address: self.memoryAddress).setWord(self.topModule.argonModule.class.memoryAddress,atSlot:"_classPointer")
-        let header = Header(WordPointer(address:self.memoryAddress)!.word(atByteOffset: 0))
-        assert(header.sizeInWords == size / 8,"ALLOCATED SIZE DOES NOT EQUAL 512")
+//        guard !self.isMemoryPreallocated else
+//            {
+//            return
+//            }
+//        self.isMemoryPreallocated = true
+//        let address = vm.managedSegment.allocateObject(sizeInBytes: size)
+//        self.addresses.append(.absolute(address))
+//        InnerInstancePointer(address: self.memoryAddress).setClass(self.topModule.argonModule.class)
+////        ObjectPointer(address: self.memoryAddress).setWord(self.topModule.argonModule.class.memoryAddress,atSlot:"_classPointer")
+//        let header = Header(WordPointer(address:self.memoryAddress)!.word(atByteOffset: 0))
+//        assert(header.sizeInWords == size / 8,"ALLOCATED SIZE DOES NOT EQUAL 512")
         }
         
     private func layoutSlot(atOffset: Int) -> Slot?
@@ -624,15 +647,15 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         var offset:Int = 0
         var visitedClasses = Set<Class>()
         visitedClasses.insert(self)
-        var slot:Slot = HeaderSlot(label: "_header",type: self.topModule.argonModule.integer.type)
+        var slot:Slot = HeaderSlot(label: "_header",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_magicNumber",type: self.topModule.argonModule.integer.type)
+        slot = Slot(label: "_magicNumber",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_classPointer",type: self.topModule.argonModule.address.type)
+        slot = ObjectSlot(label: "_classPointer",type: TopModule.shared.argonModule.address.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
@@ -664,15 +687,15 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         visitedClasses.insert(self)
         print("LAYING OUT CLASS \(self.label) INDIRECTLY")
         inClass.offsetOfClass[self] = offset
-        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: self.topModule.argonModule.integer.type)
+        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_\(self.label)MagicNumber",type: self.topModule.argonModule.integer.type)
+        slot = Slot(label: "_\(self.label)MagicNumber",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: self.topModule.argonModule.address.type)
+        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: TopModule.shared.argonModule.address.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
@@ -728,7 +751,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         }
         
-    public override func realizeSuperclasses(in vm: VirtualMachine)
+    public override func realizeSuperclasses()
         {
         guard !self.hasBeenRealized else
             {
@@ -736,7 +759,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         for reference in self.superclassReferences
             {
-            reference.realizeClass(in: vm)
+            reference.realizeClass()
             if let symbol = reference.theClass
                 {
                 if !self.superclasses.contains(symbol)
@@ -747,19 +770,29 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                     {
                     symbol.subclasses.append(self)
                     }
-                symbol.realizeSuperclasses(in: vm)
+                symbol.realizeSuperclasses()
                 }
             else
                 {
                 print("ERROR could not realize \(reference)")
                 }
             }
-        self.superclassReferences = []
         for aClass in self.superclasses
             {
             _ = aClass.metaclass
             }
         self.hasBeenRealized = true
+        }
+        
+    public func resetHierarchy()
+        {
+        self.hasBeenRealized = false
+        self.superclasses = []
+        for subclass in self.subclasses
+            {
+            subclass.resetHierarchy()
+            }
+        self.subclasses = []
         }
         
     @discardableResult

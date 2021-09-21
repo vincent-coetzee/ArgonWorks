@@ -87,11 +87,21 @@ public class MethodInstance:Function
     
     private var localSymbols = Symbols()
     private var _method:Method?
-    public let buffer = InstructionBuffer()
+    public let buffer:InstructionBuffer
     public var instructionsAddress: Word = 0
     public var isGenericMethod = false
     public var genericParameters = GenericClassParameters()
     
+    public required init?(coder: NSCoder)
+        {
+        self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
+        self._method = coder.decodeObject(forKey: "method") as? Method
+        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
+        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
+        self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
+        super.init(coder: coder)
+        }
+        
     public var systemMethod: ArgonWorks.Method
         {
         if self._method.isNotNil
@@ -142,6 +152,7 @@ public class MethodInstance:Function
         
     override init(label:Label)
         {
+        self.buffer = InstructionBuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -149,6 +160,7 @@ public class MethodInstance:Function
         
     public init(_ label:Label)
         {
+        self.buffer = InstructionBuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)

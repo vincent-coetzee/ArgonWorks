@@ -19,14 +19,18 @@ public class ForwardReferenceClass: Class
         self.context = context
         super.init(label: name.last)
         }
-        
+    
+    required public override init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public override func allocateAddresses(using allocator:AddressAllocator)
         {
         }
         
-    public func realizeClass(in vm:VirtualMachine)
+    public func realizeClass()
         {
-        let aContext = self.context.isNil ? Context.node(vm.topModule.argonModule) : self.context!
+        let aContext = self.context.isNil ? Context.node(TopModule.shared.argonModule) : self.context!
         self.theClass = aContext.lookup(name: self.localName) as? Class
         if self.theClass.isNil
             {

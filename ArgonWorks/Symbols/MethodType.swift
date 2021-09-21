@@ -33,4 +33,10 @@ public class MethodType: Class
         self.returnType = returnType
         super.init(label: label)
         }
+        
+
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
+}

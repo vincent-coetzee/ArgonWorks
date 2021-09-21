@@ -29,6 +29,33 @@ public class Method:Symbol
     
     public private(set) var instances = MethodInstances()
     
+    public required init?(coder: NSCoder)
+        {
+        self.isMain = coder.decodeBool(forKey: "isMain")
+        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
+        self.proxyParameters = coder.decodeObject(forKey: "proxyParameters") as! Parameters
+        self.isGenericMethod = coder.decodeBool(forKey: "isGenericMethod")
+        self.isIntrinsic = coder.decodeBool(forKey: "isIntrinsic")
+        self.instances = coder.decodeObject(forKey: "instances") as! MethodInstances
+        super.init(coder: coder)
+        }
+        
+    public override init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.isMain,forKey: "isMain")
+        coder.encode(self.returnType,forKey: "returnType")
+        coder.encode(self.proxyParameters,forKey: "proxyParameters")
+        coder.encode(self.isGenericMethod,forKey: "isGenericMethod")
+        coder.encode(self.isIntrinsic,forKey: "isIntrinsic")
+        coder.encode(self.instances,forKey: "instances")
+        }
+        
     public class func method(label:String) -> Method
         {
         return(Method(label:label))

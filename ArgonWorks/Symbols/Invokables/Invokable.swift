@@ -5,7 +5,7 @@
 //  Created by Vincent Coetzee on 9/8/21.
 //
 
-import Foundation
+import AppKit
 
 public class Invokable: Symbol
     {
@@ -14,11 +14,34 @@ public class Invokable: Symbol
     public var returnType: Type = .class(VoidClass.voidClass)
     public var library:DynamicLibrary = .emptyLibrary
     
+    public override var defaultColor: NSColor
+        {
+        NSColor.argonSeaGreen
+        }
+    
+    public required init?(coder: NSCoder)
+        {
+        self.cName = coder.decodeString(forKey: "cName")!
+        self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
+        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
+        self.library = coder.decodeObject(forKey: "library") as! DynamicLibrary
+        super.init(coder: coder)
+        }
+        
     override init(label:Label)
         {
         self.cName = ""
         self.parameters = Parameters()
         super.init(label: label)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.cName,forKey: "cName")
+        coder.encode(self.parameters,forKey: "parameters")
+        coder.encode(self.returnType,forKey: "returnType")
+        coder.encode(self.library,forKey: "library")
         }
         
     public func curried() -> Array<SingleParameterInvokable>
@@ -52,7 +75,11 @@ public class SingleParameterInvokable: Symbol
         self.result = result
         super.init(label: label)
         }
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
+}
 
 extension Array where Element == Parameter
     {

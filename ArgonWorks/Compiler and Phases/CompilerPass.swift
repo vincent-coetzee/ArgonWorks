@@ -9,7 +9,6 @@ import Foundation
 
 public protocol CompilerPass
     {
-    var virtualMachine: VirtualMachine { get }
     var compiler: Compiler { get }
     func dispatchError(at: Location,message: String)
     func cancelCompletion()

@@ -277,21 +277,26 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Instruction") as! Class)
         }
 
-    public init(virtualMachine: VirtualMachine)
+    public init()
         {
-        startGeneratingSystemUUIDs()
+        UUID.startSystemUUIDs()
         super.init(label: "Argon")
+        self.index = UUID(index: 1)
         self.initTypes()
         self.initBaseMethods()
         self.initSlots()
         self.initConstants()
-        stopGeneratingSystemUUIDs()
+        UUID.stopSystemUUIDs()
         }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
         
-    public func resolve(in vm: VirtualMachine)
+    public override func resolveReferences()
         {
-        self.resolveReferences(in: vm)
-        self.layout(in: vm)
+        super.resolveReferences()
+        self.layout()
         }
         
     private func initTypes()
@@ -497,7 +502,7 @@ public class ArgonModule: SystemModule
     /// complex dependencies.
     ///
     ///
-    internal override func layout(in virtualMachine: VirtualMachine)
+    internal override func layout()
         {
         print("LAYING OUT SLOTS")
         self.layoutSlots()
@@ -514,15 +519,15 @@ public class ArgonModule: SystemModule
         let classes = self.classes
         for aClass in classes
             {
-            aClass.preallocateMemory(size: InnerPointer.kClassSizeInBytes,in: virtualMachine)
+            aClass.preallocateMemory(size: InnerPointer.kClassSizeInBytes)
             }
         for aClass in classes
             {
-            aClass.layoutInMemory(in: virtualMachine)
+            aClass.layoutInMemory()
             }
         for instance in self.methodInstances
             {
-            instance.layoutInMemory(in: virtualMachine)
+            instance.layoutInMemory()
             }
         print("LAID OUT MEMORY")
         }

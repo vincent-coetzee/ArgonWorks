@@ -16,7 +16,7 @@ public class CodeGenerator: CompilerPass
     
     public var virtualMachine: VirtualMachine
         {
-        return(self.compiler.virtualMachine)
+        fatalError("Virtual Machine needed")
         }
         
     @discardableResult
@@ -29,7 +29,7 @@ public class CodeGenerator: CompilerPass
     public init(compiler: Compiler)
         {
         self.compiler = compiler
-        self.registerFile = RegisterFile(virtualMachine: compiler.virtualMachine)
+        self.registerFile = RegisterFile()
         }
         
     public func cancelCompletion()
