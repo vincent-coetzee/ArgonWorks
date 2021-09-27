@@ -9,9 +9,9 @@ import Foundation
 
 public class Parameter:Slot,Displayable
     {
-    public var displayString: String
+    public override var displayString: String
         {
-        return("\(self.tag)::\(type.label)")
+        return("\(self.label)::\(type.label)")
         }
         
     public override var typeCode:TypeCode
@@ -44,9 +44,19 @@ public class Parameter:Slot,Displayable
         fatalError("init(labeled:ofType:) has not been implemented")
     }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    public required init?(coder: NSCoder)
+        {
+        self.isVisible = coder.decodeBool(forKey: "isVisible")
+        self.isVariadic = coder.decodeBool(forKey: "isVariadic")
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.isVisible,forKey: "isVisible")
+        coder.encode(self.isVariadic,forKey: "isVariadic")
+        }
 }
 
 public typealias Parameters = Array<Parameter>

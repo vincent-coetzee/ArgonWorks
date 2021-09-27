@@ -11,6 +11,16 @@ public class ArrayClass:GenericSystemClass
     {
     private static var allInstances = Array<ArrayClassInstance>()
     
+    public override var mangledName: String
+        {
+        fatalError()
+        }
+        
+    public override var nativeCType: NativeCType
+        {
+        return(NativeCType.arrayPointerType)
+        }
+        
     public override var internalClass: Class
         {
         return(self.topModule.argonModule.generic)

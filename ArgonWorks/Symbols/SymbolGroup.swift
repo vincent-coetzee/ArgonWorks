@@ -27,11 +27,14 @@ public class SymbolGroup:ContainerSymbol
     /// 
     public override func lookup(label:String) -> Symbol?
         {
-        if let symbol = self.symbols[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
-        for element in self.symbols.values
+        for element in self.symbols
             {
             if let symbol = element.lookup(label: label)
                 {
@@ -39,6 +42,11 @@ public class SymbolGroup:ContainerSymbol
                 }
             }
         return(nil)
+        }
+        
+    public override var isSystemContainer: Bool
+        {
+        return(true)
         }
         
     public override func lookup(name:Name) -> Symbol?
@@ -63,7 +71,7 @@ public class SymbolGroup:ContainerSymbol
             {
             return(symbol)
             }
-        for element in self.symbols.values
+        for element in self.symbols.filter{$0.isSystemContainer}
             {
             if let symbol = element.lookup(name:name)
                 {
@@ -75,7 +83,7 @@ public class SymbolGroup:ContainerSymbol
         
     public override func directlyContains(symbol:Symbol) -> Bool
         {
-        for aSymbol in self.symbols.values
+        for aSymbol in self.symbols
             {
             if aSymbol.id == symbol.id
                 {

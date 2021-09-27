@@ -9,6 +9,12 @@ import Foundation
 
 public class GenericClassInstance:Class
     {
+    public override var mangledName: String
+        {
+        let typeNames = "<" + self.genericClassParameterInstances.map{$0.mangledName}.joined(separator: ",") + ">"
+        return("\(self.label)\(typeNames)")
+        }
+        
     public override var containedClassParameters: Array<GenericClassParameter>
         {
         return([])

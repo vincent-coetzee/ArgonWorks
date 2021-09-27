@@ -22,6 +22,20 @@ public class SlotExpression: Expression
     private let receiver: Expression
     private let slot: Expression
     
+    required init?(coder: NSCoder)
+        {
+        self.receiver = coder.decodeObject(forKey: "receiver") as!Expression
+        self.slot = coder.decodeObject(forKey: "slot") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.slot,forKey: "slot")
+        coder.encode(self.receiver,forKey: "receiver")
+        }
+        
     init(_ receiver: Expression,slot: Expression)
         {
         self.receiver = receiver
@@ -84,5 +98,18 @@ public class SlotSelectorExpression: Expression
     init(selector: String)
         {
         self.selector = selector
+        super.init()
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        self.selector = coder.decodeObject(forKey: "selector") as! String
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.selector,forKey: "selector")
         }
     }

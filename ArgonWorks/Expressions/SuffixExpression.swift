@@ -19,12 +19,26 @@ public class SuffixExpression: Expression
         return("\(self.expression.displayString) \(self.operation)")
         }
         
-    public let operation: Token.Operator
+    public let operationName: String
     public let expression: Expression
     
+    required init?(coder: NSCoder)
+        {
+        self.operationName = coder.decodeObject(forKey: "operationName") as!String
+        self.expression = coder.decodeObject(forKey: "expression") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.expression,forKey: "expression")
+        coder.encode(self.operationName,forKey: "operationName")
+        }
+        
     init(_ expression:Expression,_ operation:Token.Operator)
         {
-        self.operation = operation
+        self.operationName = operation.name
         self.expression = expression
         super.init()
         self.expression.setParent(self)
@@ -43,7 +57,7 @@ public class SuffixExpression: Expression
     public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
         {
         try self.expression.emitCode(into: instance,using: using)
-        switch(self.operation.name)
+        switch(self.operationName)
             {
             case "++":
                 instance.append(.INC,self.expression.place,.none,self.expression.place)

@@ -16,14 +16,16 @@ public enum Context: Equatable
     {
     case block(Block)
     case node(Node)
-    
+
     public func addSymbol(_ symbol:Symbol)
         {
         switch(self)
             {
             case .node(let node):
+                Transaction.recordAddSymbol(symbol, to: .node(node))
                 node.addSymbol(symbol)
             case .block(let block):
+                Transaction.recordAddSymbol(symbol, to: .block(block))
                 block.addSymbol(symbol)
             }
         }
@@ -89,12 +91,10 @@ public class Parser: CompilerPass
         self.compiler = compiler
         self.namingContext = compiler.namingContext
         self.visualToken = TokenRenderer(systemClassNames: compiler.systemClassNames)
+        self.reportingContext = compiler.reportingContext
         }
         
-    public var reportingContext:ReportingContext
-        {
-        return(NullReportingContext.shared)
-        }
+    public var reportingContext:ReportingContext = NullReportingContext.shared
         
     public func cancelCompletion()
         {
@@ -391,7 +391,7 @@ public class Parser: CompilerPass
             }
         if isNew
             {
-            self.currentContext.setSymbol(module!,atName: name)
+            self.currentContext.addSymbol(module!)
             module?.addDeclaration(location)
             }
         else
@@ -1915,7 +1915,7 @@ public class Parser: CompilerPass
         try self.nextToken()
         let value = try self.parseExpression()
         value.setParent(block)
-        let localSlot = LocalSlot(label: someVariable.last, type: type,value: Expression())
+        let localSlot = LocalSlot(label: someVariable.last, type: type,value: value)
         block.addLocalSlot(localSlot)
         let statement = LetBlock(name: someVariable,slot:localSlot,location: self.token.location,namingContext: block,value: value)
         statement.addDeclaration(location)
@@ -2117,13 +2117,13 @@ public class Parser: CompilerPass
         try self.nextToken()
         let location = self.token.location
         self.visualToken.kind = .function
-        let name = try self.parseLabel()
         let cName = try self.parseParentheses
             {
             () throws -> String in
             let string = try self.parseLabel()
             return(string)
             }
+        let name = try self.parseLabel()
         let parameters = try self.parseParameters()
         let function = Function(label: name)
         function.addDeclaration(location)

@@ -10,9 +10,14 @@ import AppKit
     
 public class Module:ContainerSymbol
     {
+    public override var isModule: Bool
+        {
+        return(true)
+        }
+        
     public override func emitCode(using generator: CodeGenerator) throws
         {
-        for symbol in self.symbols.valuesByKey
+        for symbol in self.symbols
             {
             try symbol.emitCode(using: generator)
             }
@@ -20,7 +25,7 @@ public class Module:ContainerSymbol
 
     public override func realize(using realizer: Realizer)
         {
-        for symbol in self.symbols.valuesByKey
+        for symbol in self.symbols
             {
             symbol.realize(using: realizer)
             }
@@ -33,16 +38,16 @@ public class Module:ContainerSymbol
         
     public override var children: Array<Symbol>?
         {
-        let modules = self.symbols.values.filter{$0 is Module}
-        let methods = self.symbols.values.filter{$0 is Method}.sorted{$0.label < $1.label}
-        let groups = self.symbols.values.filter{$0 is SymbolGroup}.sorted{$0.label < $1.label}
+        let modules = self.symbols.filter{$0 is Module}
+        let methods = self.symbols.filter{$0 is Method}.sorted{$0.label < $1.label}
+        let groups = self.symbols.filter{$0 is SymbolGroup}.sorted{$0.label < $1.label}
         return(modules + groups + methods)
         }
         
     public var classes:Classes
         {
-        var classes = Array(self.symbols.valuesByKey.compactMap{$0 as? Class})
-        classes += self.symbols.valuesByKey.compactMap{($0 as? Module)?.classes}.flatMap{$0}
+        var classes = Array(self.symbols.compactMap{$0 as? Class})
+        classes += self.symbols.compactMap{($0 as? Module)?.classes}.flatMap{$0}
         return(classes)
         }
         
@@ -53,14 +58,9 @@ public class Module:ContainerSymbol
         
     public var methods:Methods
         {
-        var methods = Array(self.symbols.valuesByKey.compactMap{$0 as? Method})
-        methods += self.symbols.valuesByKey.compactMap{($0 as? Module)?.methods}.flatMap{$0}
+        var methods = Array(self.symbols.compactMap{$0 as? Method})
+        methods += self.symbols.compactMap{($0 as? Module)?.methods}.flatMap{$0}
         return(methods)
-        }
-        
-    public var isSystemModule: Bool
-        {
-        return(false)
         }
 
     public override var imageName: String
@@ -75,11 +75,11 @@ public class Module:ContainerSymbol
         
     public func dumpMethods()
         {
-        for method in self.symbols.valuesByKey.flatMap({$0 as? Method})
+        for method in self.symbols.flatMap({$0 as? Method})
             {
             method.dump()
             }
-        for module in self.symbols.valuesByKey.compactMap({$0 as? Module})
+        for module in self.symbols.compactMap({$0 as? Module})
             {
             module.dumpMethods()
             }
@@ -87,7 +87,7 @@ public class Module:ContainerSymbol
         
     public func lookupSlot(label: String) -> Slot?
         {
-        for symbol in self.symbols.valuesByKey
+        for symbol in self.symbols where symbol.label == label
             {
             if let slot = symbol as? Slot
                 {
@@ -104,7 +104,7 @@ public class Module:ContainerSymbol
         
     public override func directlyContains(symbol:Symbol) -> Bool
         {
-        for aSymbol in self.symbols.valuesByKey
+        for aSymbol in self.symbols
             {
             if aSymbol.id == symbol.id
                 {

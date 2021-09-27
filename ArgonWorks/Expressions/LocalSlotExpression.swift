@@ -26,9 +26,22 @@ public class LocalSlotExpression: Expression
     
     private let slot: Slot
     
+    required init?(coder: NSCoder)
+        {
+        self.slot = coder.decodeObject(forKey: "slot") as! Slot
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.slot,forKey:"slot")
+        }
+        
     init(slot: Slot)
         {
         self.slot = slot
+        super.init()
         }
         
     public override func realize(using realizer:Realizer)

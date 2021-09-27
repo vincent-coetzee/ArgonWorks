@@ -156,7 +156,7 @@ public class Instruction:Identifiable
         
     public enum Register:Int,Comparable,CaseIterable,Identifiable,Encodable,Decodable,Equatable
         {
-        public static var generalPurposeRegisters = [Self.R0,Self.r1,Self.r2,Self.r3,Self.r4,Self.r5,Self.R6,Self.R7,Self.R8,Self.R9,Self.R10,Self.R11,Self.R12,Self.R13,Self.R14,Self.R15]
+        public static var generalPurposeRegisters = [Self.R0,Self.R1,Self.R2,Self.R3,Self.R4,Self.R5,Self.R6,Self.R7,Self.R8,Self.R9,Self.R10,Self.R11,Self.R12,Self.R13,Self.R14,Self.R15]
         
         public static let bitWidth = 8
         
@@ -179,8 +179,8 @@ public class Instruction:Identifiable
         case MP         /// the mp points to the next avaialble slot in the managed segmeng
         case EP
         case RET
-        case R0,r1,r2,r3,r4,r5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15
-        case fr0,fr1,fr2,fr3,fr4,fr5,fr6,fr7,fr8,fr9,fr10,fr11,fr12,fr13,FR14,FR15
+        case R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15
+        case FR0,FR1,FR2,FR3,FR4,FR5,FR6,FR7,FR8,FR9,FR10,FR11,FR12,FR13,FR14,FR15
         
         public var displayString: String
             {
@@ -189,7 +189,7 @@ public class Instruction:Identifiable
             
         public var isFloatingPoint: Bool
             {
-            return(self >= .fr0 && self <= .FR15)
+            return(self >= .FR0 && self <= .FR15)
             }
             
         public var id:Int
@@ -208,6 +208,7 @@ public class Instruction:Identifiable
         case enumerationCase(EnumerationCase)
         case method(Method)
         case constant(Constant)
+        case relocation(Int)
         }
         
     public enum Opcode:Int
@@ -328,6 +329,28 @@ public class Instruction:Identifiable
         init(stack: Register,_ offset: Int)
             {
             self = .stack(stack,Argon.Integer(offset))
+            }
+            
+        public var isRelocation: Bool
+            {
+            switch(self)
+                {
+                case .relocation:
+                    return(true)
+                default:
+                    return(false)
+                }
+            }
+            
+        public var relocationTarget: LiteralValue?
+            {
+            switch(self)
+                {
+                case .relocation(let literal):
+                    return(literal)
+                default:
+                    return(nil)
+                }
             }
             
         public var isNotNone: Bool

@@ -24,9 +24,14 @@ public class ModuleHolder: Module
         return(self.module.symbols.count > 0)
         }
         
+    public override func children(forChildType type: ChildType) -> Array<Symbol>
+        {
+        return(self.children)
+        }
+        
     public override var children: Array<Symbol>
         {
-        let kids = self.module.symbols.values.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias }.sorted{$0.label < $1.label}
+        let kids = self.module.symbols.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label < $1.label}
         let values = kids.map{ElementHolder($0)}
         return(values)
         }
@@ -41,6 +46,17 @@ public class ModuleHolder: Module
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
+        }
+        
+    public override func invert(cell: HierarchyCellView)
+        {
+        super.invert(cell: cell)
+        self.module.invert(cell: cell)
+        }
+        
+    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        self.module.configure(cell: cell,foregroundColor: foregroundColor.isNil ? self.defaultColor : foregroundColor!)
         }
     }
 
@@ -59,15 +75,25 @@ public class ElementHolder: Symbol
         
     public override var isExpandable: Bool
         {
-        return(self.symbol.isExpandable && self.symbol.children?.count ?? 0 > 0)
+        return((self.symbol.isModule && (self.symbol as! Module).symbols.count > 0) || self.symbol.isEnumeration)
+        }
+        
+    public override func children(forChildType type: ChildType) -> Array<Symbol>
+        {
+        return(self.children)
         }
         
     public override var children: Array<Symbol>
         {
-        if self.symbol is ContainerSymbol
+        if self.symbol.isEnumeration
+            {
+            let items = (self.symbol as! Enumeration).children.map{ElementHolder($0)}
+            return(items)
+            }
+        else if self.symbol is ContainerSymbol
             {
             let container = self.symbol as! ContainerSymbol
-            let kids = container.symbols.values.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias }.sorted{$0.label<$1.label}
+            let kids = container.symbols.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label<$1.label}
             var values = kids.map{ElementHolder($0)}
             if self.symbol.isClass
                 {
@@ -78,7 +104,7 @@ public class ElementHolder: Symbol
         return([])
         }
         
-    private let symbol: Symbol
+    internal let symbol: Symbol
     
     init(_ symbol: Symbol)
         {
@@ -89,4 +115,14 @@ public class ElementHolder: Symbol
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public override func invert(cell: HierarchyCellView)
+        {
+        self.symbol.invert(cell: cell)
+        }
+        
+    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        self.symbol.configure(cell: cell,foregroundColor: foregroundColor.isNil ? self.defaultColor : foregroundColor!)
+        }
 }

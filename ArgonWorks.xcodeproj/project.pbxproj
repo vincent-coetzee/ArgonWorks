@@ -7,11 +7,27 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BF0B023126FF405200C35851 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B023026FF405200C35851 /* Palette.swift */; };
+		BF0B023326FF526A00C35851 /* Outliner.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B023226FF526A00C35851 /* Outliner.swift */; };
+		BF0B023526FF8C3E00C35851 /* LayoutFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B023426FF8C3E00C35851 /* LayoutFrame.swift */; };
+		BF0B023726FFED4400C35851 /* SymbolFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B023626FFED4400C35851 /* SymbolFilter.swift */; };
+		BF0B0239270003B300C35851 /* HierarchyRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B0238270003B300C35851 /* HierarchyRowView.swift */; };
+		BF0B023B270008DD00C35851 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0B023A270008DD00C35851 /* HeaderView.swift */; };
 		BF1A1BF826FA783F00B7967F /* ModuleHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1A1BF726FA783F00B7967F /* ModuleHolder.swift */; };
 		BF1D2BF026D5668B00D9EC33 /* HierarchyCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */; };
 		BF20EB0126D98EB700163948 /* TemporaryLocalScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */; };
 		BF20EB0326DA38C000163948 /* NameMangler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF20EB0226DA38C000163948 /* NameMangler.swift */; };
+		BF26584226FBAEA20089D193 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF26584126FBAEA20089D193 /* BrowserView.swift */; };
+		BF27F7EC26FB17DE00A3B95D /* HierarchyCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27F7EB26FB17DE00A3B95D /* HierarchyCellView.swift */; };
+		BF27F7F226FB4AC500A3B95D /* SymbolBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27F7F126FB4AC500A3B95D /* SymbolBrowserView.swift */; };
+		BF3CB5DC26FB6828008DE031 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3CB5DB26FB6828008DE031 /* Layout.swift */; };
 		BF57C9E626D406070016BA84 /* BTreePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57C9E526D406070016BA84 /* BTreePage.swift */; };
+		BF60DFC02701E1C000734AC3 /* Transaction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFBF2701E1C000734AC3 /* Transaction.swift */; };
+		BF60DFC22701F17700734AC3 /* Capsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC12701F17700734AC3 /* Capsule.swift */; };
+		BF60DFC427023E3600734AC3 /* NativeCType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC327023E3600734AC3 /* NativeCType.swift */; };
+		BF60DFC62702633D00734AC3 /* NSImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */; };
+		BF60DFC82702733300734AC3 /* CompilationEventCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF60DFC72702733300734AC3 /* CompilationEventCellView.xib */; };
+		BF60DFCA2702745200734AC3 /* CompilationEventCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC92702745200734AC3 /* CompilationEventCellView.swift */; };
 		BF6ECBEC26F8F0E1005B9FCF /* DeferredValueExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */; };
 		BF6ECBF026F90790005B9FCF /* ClassParm.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6ECBEF26F90790005B9FCF /* ClassParm.swift */; };
 		BF74AD2626E0EDDA000F2211 /* PersistentSetPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF74AD2526E0EDDA000F2211 /* PersistentSetPage.swift */; };
@@ -236,15 +252,32 @@
 		BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */; };
 		BFCCAFFD26F98264000B3B74 /* TypeInferencer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFC26F98264000B3B74 /* TypeInferencer.swift */; };
 		BFCCAFFF26F9893C000B3B74 /* NSCoder+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFE26F9893C000B3B74 /* NSCoder+Extensions.swift */; };
-		BFCCB00126F98D93000B3B74 /* ObjectFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCB00026F98D93000B3B74 /* ObjectFile.swift */; };
+		BFCE12C7270018B700DCB8A2 /* NSView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCE12C6270018B700DCB8A2 /* NSView+Extensions.swift */; };
+		BFCE12C927008EEA00DCB8A2 /* ObjectFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCE12C827008EEA00DCB8A2 /* ObjectFile.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BF0B023026FF405200C35851 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		BF0B023226FF526A00C35851 /* Outliner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Outliner.swift; sourceTree = "<group>"; };
+		BF0B023426FF8C3E00C35851 /* LayoutFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutFrame.swift; sourceTree = "<group>"; };
+		BF0B023626FFED4400C35851 /* SymbolFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolFilter.swift; sourceTree = "<group>"; };
+		BF0B0238270003B300C35851 /* HierarchyRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HierarchyRowView.swift; sourceTree = "<group>"; };
+		BF0B023A270008DD00C35851 /* HeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
 		BF1A1BF726FA783F00B7967F /* ModuleHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleHolder.swift; sourceTree = "<group>"; };
 		BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = HierarchyCell.xib; sourceTree = "<group>"; };
 		BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryLocalScope.swift; sourceTree = "<group>"; };
 		BF20EB0226DA38C000163948 /* NameMangler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NameMangler.swift; sourceTree = "<group>"; };
+		BF26584126FBAEA20089D193 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
+		BF27F7EB26FB17DE00A3B95D /* HierarchyCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HierarchyCellView.swift; sourceTree = "<group>"; };
+		BF27F7F126FB4AC500A3B95D /* SymbolBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolBrowserView.swift; sourceTree = "<group>"; };
+		BF3CB5DB26FB6828008DE031 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
 		BF57C9E526D406070016BA84 /* BTreePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTreePage.swift; sourceTree = "<group>"; };
+		BF60DFBF2701E1C000734AC3 /* Transaction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transaction.swift; sourceTree = "<group>"; };
+		BF60DFC12701F17700734AC3 /* Capsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capsule.swift; sourceTree = "<group>"; };
+		BF60DFC327023E3600734AC3 /* NativeCType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCType.swift; sourceTree = "<group>"; };
+		BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSImage+Extensions.swift"; sourceTree = "<group>"; };
+		BF60DFC72702733300734AC3 /* CompilationEventCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = CompilationEventCellView.xib; sourceTree = "<group>"; };
+		BF60DFC92702745200734AC3 /* CompilationEventCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompilationEventCellView.swift; sourceTree = "<group>"; };
 		BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferredValueExpression.swift; sourceTree = "<group>"; };
 		BF6ECBEF26F90790005B9FCF /* ClassParm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassParm.swift; sourceTree = "<group>"; };
 		BF74AD2526E0EDDA000F2211 /* PersistentSetPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistentSetPage.swift; sourceTree = "<group>"; };
@@ -474,7 +507,8 @@
 		BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+Extensions.swift"; sourceTree = "<group>"; };
 		BFCCAFFC26F98264000B3B74 /* TypeInferencer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeInferencer.swift; sourceTree = "<group>"; };
 		BFCCAFFE26F9893C000B3B74 /* NSCoder+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSCoder+Extensions.swift"; sourceTree = "<group>"; };
-		BFCCB00026F98D93000B3B74 /* ObjectFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFile.swift; sourceTree = "<group>"; };
+		BFCE12C6270018B700DCB8A2 /* NSView+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSView+Extensions.swift"; sourceTree = "<group>"; };
+		BFCE12C827008EEA00DCB8A2 /* ObjectFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectFile.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -623,6 +657,7 @@
 				BFC1ED1126CFFAA7009B7C34 /* AsExpression.swift */,
 				BFC1ED1326CFFAA7009B7C34 /* AssignmentExpression.swift */,
 				BFC1ED1026CFFAA7009B7C34 /* BinaryExpression.swift */,
+				BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */,
 				BFC1ED0C26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift */,
 				BFC1ED0926CFFAA7009B7C34 /* Expression.swift */,
 				BFC1ED0B26CFFAA7009B7C34 /* InvocationExpression.swift */,
@@ -632,9 +667,8 @@
 				BFC1ED1426CFFAA7009B7C34 /* SlotExpression.swift */,
 				BFC1ED0E26CFFAA7009B7C34 /* SuffixExpression.swift */,
 				BFC1ED0D26CFFAA7009B7C34 /* SymbolExpression.swift */,
-				BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */,
 				BFB9F74826D2D03F0015B19F /* TupleExpression.swift */,
-				BF6ECBEB26F8F0E1005B9FCF /* DeferredValueExpression.swift */,
+				BFC1ED0A26CFFAA7009B7C34 /* UnaryExpression.swift */,
 			);
 			path = Expressions;
 			sourceTree = "<group>";
@@ -685,6 +719,7 @@
 				BFC1ED5C26CFFABA009B7C34 /* Token.swift */,
 				BFC1ED4E26CFFABA009B7C34 /* TokenRenderer.swift */,
 				BFC1ED4F26CFFABA009B7C34 /* TokenStream.swift */,
+				BFCE12C827008EEA00DCB8A2 /* ObjectFile.swift */,
 			);
 			path = "Compiler and Phases";
 			sourceTree = "<group>";
@@ -716,13 +751,14 @@
 				BFC1ED7E26CFFAD5009B7C34 /* ArgonTime.swift */,
 				BFC1ED7B26CFFAD5009B7C34 /* Location.swift */,
 				BFC1ED7F26CFFAD5009B7C34 /* Name.swift */,
+				BF20EB0226DA38C000163948 /* NameMangler.swift */,
 				BFC1ED8226CFFAD5009B7C34 /* NamingContext.swift */,
 				BF86721826D18ED200A12B1A /* Parent.swift */,
 				BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */,
 				BFC1ED7D26CFFAD5009B7C34 /* Stack.swift */,
 				BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */,
-				BF20EB0226DA38C000163948 /* NameMangler.swift */,
-				BFCCB00026F98D93000B3B74 /* ObjectFile.swift */,
+				BF60DFBF2701E1C000734AC3 /* Transaction.swift */,
+				BF60DFC327023E3600734AC3 /* NativeCType.swift */,
 			);
 			path = "Support Classes";
 			sourceTree = "<group>";
@@ -824,6 +860,7 @@
 				BFC1EDC226CFFADC009B7C34 /* SystemModule.swift */,
 				BFC1EDC126CFFADC009B7C34 /* TopModule.swift */,
 				BF1A1BF726FA783F00B7967F /* ModuleHolder.swift */,
+				BF0B023626FFED4400C35851 /* SymbolFilter.swift */,
 			);
 			path = Modules;
 			sourceTree = "<group>";
@@ -853,6 +890,8 @@
 				BFC1EE1926CFFAE7009B7C34 /* String+Extensions.swift */,
 				BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */,
 				BFCCAFFE26F9893C000B3B74 /* NSCoder+Extensions.swift */,
+				BFCE12C6270018B700DCB8A2 /* NSView+Extensions.swift */,
+				BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */,
 			);
 			path = SystemExtensions;
 			sourceTree = "<group>";
@@ -860,30 +899,42 @@
 		BFC1EE2026CFFAF5009B7C34 /* User Interface */ = {
 			isa = PBXGroup;
 			children = (
-				BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */,
 				BFC1EC8126CFF9E9009B7C34 /* AppDelegate.swift */,
 				BF86721E26D2ADA900A12B1A /* ArgonBrowserHierarchyViewController.swift */,
 				BF86722226D2AE0600A12B1A /* ArgonBrowserInspectorViewController.swift */,
 				BF86722026D2ADE600A12B1A /* ArgonBrowserSourceViewController.swift */,
 				BF86721A26D2AA0100A12B1A /* ArgonBrowserWindowController.swift */,
 				BFC1EE2A26CFFAF6009B7C34 /* ArgonWorxApp.swift */,
+				BFC1EC8726CFF9EB009B7C34 /* Assets.xcassets */,
+				BF26584126FBAEA20089D193 /* BrowserView.swift */,
+				BF60DFC12701F17700734AC3 /* Capsule.swift */,
 				BFC1EE2726CFFAF6009B7C34 /* ClassEditingView.swift */,
 				BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */,
+				BF0B023A270008DD00C35851 /* HeaderView.swift */,
+				BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */,
+				BF27F7EB26FB17DE00A3B95D /* HierarchyCellView.swift */,
+				BF0B0238270003B300C35851 /* HierarchyRowView.swift */,
 				BFA3ADD126D0590F00F17CF6 /* InstructionCellView.swift */,
+				BF3CB5DB26FB6828008DE031 /* Layout.swift */,
+				BF0B023426FF8C3E00C35851 /* LayoutFrame.swift */,
 				BFC1EE2626CFFAF6009B7C34 /* LineAnnotation.swift */,
 				BFC1EE2326CFFAF5009B7C34 /* LineNumberGutter.swift */,
 				BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */,
+				BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */,
 				BFA3ADCB26D008ED00F17CF6 /* MemoryBrowserViewController.swift */,
 				BFA3ADCD26D0195F00F17CF6 /* MemorySlotCellView.swift */,
 				BFC1EC8526CFF9E9009B7C34 /* ModuleDocument.swift */,
+				BF0B023226FF526A00C35851 /* Outliner.swift */,
+				BF0B023026FF405200C35851 /* Palette.swift */,
 				BFA3ADCF26D04B0200F17CF6 /* ProcessorViewController.swift */,
 				BF86721226D0EC5300A12B1A /* ProcessorWindowController.swift */,
 				BFC1EE2526CFFAF6009B7C34 /* ProjectDocument.swift */,
 				BFA3ADD326D0676F00F17CF6 /* RegistersViewController.swift */,
+				BF27F7F126FB4AC500A3B95D /* SymbolBrowserView.swift */,
 				BFC1EE2926CFFAF6009B7C34 /* SymbolEditingView.swift */,
 				BFC1EE2226CFFAF5009B7C34 /* TokenMappedView.swift */,
-				BF1D2BEF26D5668B00D9EC33 /* HierarchyCell.xib */,
-				BFC1EC8926CFF9EB009B7C34 /* Main.storyboard */,
+				BF60DFC72702733300734AC3 /* CompilationEventCellView.xib */,
+				BF60DFC92702745200734AC3 /* CompilationEventCellView.swift */,
 			);
 			path = "User Interface";
 			sourceTree = "<group>";
@@ -963,6 +1014,7 @@
 				BFC1EE3B26CFFB25009B7C34 /* Secondary.argon in Resources */,
 				BF1D2BF026D5668B00D9EC33 /* HierarchyCell.xib in Resources */,
 				BFC1EE3A26CFFB25009B7C34 /* Basics.argon in Resources */,
+				BF60DFC82702733300734AC3 /* CompilationEventCellView.xib in Resources */,
 				BFC1EC8826CFF9EB009B7C34 /* Assets.xcassets in Resources */,
 				BFA3ADA526CFFD9300F17CF6 /* words.txt in Resources */,
 				BFC1EC8B26CFF9EB009B7C34 /* Main.storyboard in Resources */,
@@ -994,6 +1046,7 @@
 				BFC1ECD726CFFA9F009B7C34 /* InnerDictionaryPointer.swift in Sources */,
 				BFA3ADCC26D008ED00F17CF6 /* MemoryBrowserViewController.swift in Sources */,
 				BFC1EDE426CFFADC009B7C34 /* Enumeration.swift in Sources */,
+				BF60DFC02701E1C000734AC3 /* Transaction.swift in Sources */,
 				BFC1EDE726CFFADC009B7C34 /* ClassSet.swift in Sources */,
 				BF86721526D134C000A12B1A /* SlotList.swift in Sources */,
 				BFC1EDE626CFFADC009B7C34 /* TaggedPrimitiveClass.swift in Sources */,
@@ -1043,6 +1096,7 @@
 				BFC1ECE026CFFA9F009B7C34 /* InnerDictionaryBucketPointer.swift in Sources */,
 				BFC1EDF226CFFADC009B7C34 /* ForwardReferenceClass.swift in Sources */,
 				BFC1EDDC26CFFADC009B7C34 /* Method.swift in Sources */,
+				BF60DFC62702633D00734AC3 /* NSImage+Extensions.swift in Sources */,
 				BFC1ECDE26CFFA9F009B7C34 /* InnerArrayPointer.swift in Sources */,
 				BF20EB0326DA38C000163948 /* NameMangler.swift in Sources */,
 				BF6ECBEC26F8F0E1005B9FCF /* DeferredValueExpression.swift in Sources */,
@@ -1060,15 +1114,18 @@
 				BF1A1BF826FA783F00B7967F /* ModuleHolder.swift in Sources */,
 				BFC1ED6026CFFABA009B7C34 /* TokenRenderer.swift in Sources */,
 				BFC1EDEF26CFFADC009B7C34 /* SystemClass.swift in Sources */,
+				BF26584226FBAEA20089D193 /* BrowserView.swift in Sources */,
 				BFC1ECE726CFFA9F009B7C34 /* InnerClosurePointer.swift in Sources */,
 				BFC1EDE026CFFADC009B7C34 /* Function.swift in Sources */,
 				BFC1EDE926CFFADC009B7C34 /* PrimitiveClass.swift in Sources */,
 				BFC1ED8526CFFAD5009B7C34 /* ArgonDate.swift in Sources */,
 				BFC1ED6626CFFABA009B7C34 /* Optimizer.swift in Sources */,
+				BF3CB5DC26FB6828008DE031 /* Layout.swift in Sources */,
 				BFC1ECD826CFFA9F009B7C34 /* BitField.swift in Sources */,
 				BFC1ED1B26CFFAA7009B7C34 /* SymbolExpression.swift in Sources */,
 				BFC1ECFB26CFFA9F009B7C34 /* InstructionBuffer.swift in Sources */,
 				BFC1EDEA26CFFADC009B7C34 /* ArrayClass.swift in Sources */,
+				BF0B023326FF526A00C35851 /* Outliner.swift in Sources */,
 				BFCCAFFF26F9893C000B3B74 /* NSCoder+Extensions.swift in Sources */,
 				BFC1ECE826CFFA9F009B7C34 /* InnerStringPointer.swift in Sources */,
 				BFC1ECDD26CFFA9F009B7C34 /* MemorySize.swift in Sources */,
@@ -1104,7 +1161,10 @@
 				BF74AD2626E0EDDA000F2211 /* PersistentSetPage.swift in Sources */,
 				BFC1EE0D26CFFADC009B7C34 /* ArraySlot.swift in Sources */,
 				BFC1ED6726CFFABA009B7C34 /* SyntaxColorPalette.swift in Sources */,
+				BF60DFCA2702745200734AC3 /* CompilationEventCellView.swift in Sources */,
 				BFC1ED6E26CFFABA009B7C34 /* Token.swift in Sources */,
+				BF0B023526FF8C3E00C35851 /* LayoutFrame.swift in Sources */,
+				BF0B023126FF405200C35851 /* Palette.swift in Sources */,
 				BFC1ED5F26CFFABA009B7C34 /* Address.swift in Sources */,
 				BFA3ADD426D0676F00F17CF6 /* RegistersViewController.swift in Sources */,
 				BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */,
@@ -1112,6 +1172,7 @@
 				BFC1ECE226CFFA9F009B7C34 /* InnerEnumerationCasePointer.swift in Sources */,
 				BFC1EDDF26CFFADC009B7C34 /* SystemMethod.swift in Sources */,
 				BFC1ED7926CFFACD009B7C34 /* Type.swift in Sources */,
+				BF60DFC427023E3600734AC3 /* NativeCType.swift in Sources */,
 				BFC1EE1426CFFADC009B7C34 /* FloatSlot.swift in Sources */,
 				BFC1EE1226CFFADC009B7C34 /* HeaderSlot.swift in Sources */,
 				BFC1ED6B26CFFABA009B7C34 /* AddressAllocator.swift in Sources */,
@@ -1121,13 +1182,16 @@
 				BFC1ED6D26CFFABA009B7C34 /* CompilerPass.swift in Sources */,
 				BFC1ED1926CFFAA7009B7C34 /* InvocationExpression.swift in Sources */,
 				BFC1ED8826CFFAD5009B7C34 /* Name.swift in Sources */,
+				BFCE12C927008EEA00DCB8A2 /* ObjectFile.swift in Sources */,
 				BFC1EE3026CFFAF6009B7C34 /* ProjectDocument.swift in Sources */,
 				BFC1EDD626CFFADC009B7C34 /* ContainerSymbol.swift in Sources */,
 				BFB9F74B26D2D0F00015B19F /* Tuple.swift in Sources */,
+				BF0B023726FFED4400C35851 /* SymbolFilter.swift in Sources */,
 				BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */,
 				BFC1ED6C26CFFABA009B7C34 /* Parser.swift in Sources */,
 				BFC1ED1626CFFAA7009B7C34 /* MakeTerm.swift in Sources */,
 				BFC1ED8B26CFFAD5009B7C34 /* NamingContext.swift in Sources */,
+				BF60DFC22701F17700734AC3 /* Capsule.swift in Sources */,
 				BFC1ED7526CFFAC0009B7C34 /* ReportingContext.swift in Sources */,
 				BFC1ED8626CFFAD5009B7C34 /* Stack.swift in Sources */,
 				BFC1EE3126CFFAF6009B7C34 /* LineAnnotation.swift in Sources */,
@@ -1151,6 +1215,7 @@
 				BFB9F74926D2D03F0015B19F /* TupleExpression.swift in Sources */,
 				BFA3ADD226D0590F00F17CF6 /* InstructionCellView.swift in Sources */,
 				BFC1ED1A26CFFAA7009B7C34 /* EnumerationInstanceExpression.swift in Sources */,
+				BF0B023B270008DD00C35851 /* HeaderView.swift in Sources */,
 				BFC1EE1526CFFADC009B7C34 /* Node.swift in Sources */,
 				BFC1EC9826CFFA7C009B7C34 /* Interpreter.c in Sources */,
 				BFCCAFFD26F98264000B3B74 /* TypeInferencer.swift in Sources */,
@@ -1159,15 +1224,19 @@
 				BFC1ECDA26CFFA9F009B7C34 /* StackSegment.swift in Sources */,
 				BFC1EDF726CFFADC009B7C34 /* LocalSlot.swift in Sources */,
 				BFC1EE3226CFFAF6009B7C34 /* ClassEditingView.swift in Sources */,
+				BF0B0239270003B300C35851 /* HierarchyRowView.swift in Sources */,
 				BFC1ED6126CFFABA009B7C34 /* TokenStream.swift in Sources */,
+				BF27F7EC26FB17DE00A3B95D /* HierarchyCellView.swift in Sources */,
 				BFC1EE1326CFFADC009B7C34 /* VirtualSlot.swift in Sources */,
 				BFC1ECA426CFFA8E009B7C34 /* Page.swift in Sources */,
+				BF27F7F226FB4AC500A3B95D /* SymbolBrowserView.swift in Sources */,
 				BFC1EE1E26CFFAE7009B7C34 /* Optional+Extensions.swift in Sources */,
 				BFC1ECF626CFFA9F009B7C34 /* InnerPackedInstructionArrayPointer.swift in Sources */,
 				BFC1EE0226CFFADC009B7C34 /* TypeCode.swift in Sources */,
 				BFC1ED2226CFFAA7009B7C34 /* SlotExpression.swift in Sources */,
 				BFC1ECF726CFFA9F009B7C34 /* ManagedSegment.swift in Sources */,
 				BFC1ECF426CFFA9F009B7C34 /* GeneralPointer.swift in Sources */,
+				BFCE12C7270018B700DCB8A2 /* NSView+Extensions.swift in Sources */,
 				BFC1ECA026CFFA8E009B7C34 /* ArgonServer.swift in Sources */,
 				BFC1ECA526CFFA8E009B7C34 /* PageServer.swift in Sources */,
 				BF86721326D0EC5300A12B1A /* ProcessorWindowController.swift in Sources */,
@@ -1194,7 +1263,6 @@
 				BFC1ED0226CFFA9F009B7C34 /* InnerInstructionBufferPointer.swift in Sources */,
 				BFC1ECE326CFFA9F009B7C34 /* Instruction.swift in Sources */,
 				BFC1EE0F26CFFADC009B7C34 /* StringSlot.swift in Sources */,
-				BFCCB00126F98D93000B3B74 /* ObjectFile.swift in Sources */,
 				BFC1ECEB26CFFA9F009B7C34 /* InnerEnumerationPointer.swift in Sources */,
 				BFC1ECDF26CFFA9F009B7C34 /* InnerInstancePointer.swift in Sources */,
 				BFC1EDDB26CFFADC009B7C34 /* Handler.swift in Sources */,

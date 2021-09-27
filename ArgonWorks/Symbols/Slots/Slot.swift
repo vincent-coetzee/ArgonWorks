@@ -30,7 +30,7 @@ public class Slot:Symbol
         return(MemoryLayout<Word>.size)
         }
         
-    public override var displayName: String
+    public override var displayString: String
         {
         "\(self.label)::\(self._type?.displayString ?? "")"
         }
@@ -87,6 +87,7 @@ public class Slot:Symbol
     public var initialValue: Expression? = nil
     public var isClassSlot = false
     
+
     init(label:Label,type:Type?)
         {
         self._type = type
@@ -103,9 +104,17 @@ public class Slot:Symbol
         {
         self._type = coder.decodeObject(forKey: "type") as? Type
         self.offset = coder.decodeInteger(forKey: "offset")
-        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
+//        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
         super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self._type,forKey: "_type")
+        coder.encode(self.offset,forKey: "offset")
+        coder.encode(self.isClassSlot,forKey: "isClassSlot")
         }
         
     public func deepCopy() -> Slot

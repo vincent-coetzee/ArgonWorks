@@ -12,6 +12,20 @@ public class ClassInstanciationTerm: Expression
     private let type: Class
     private let arguments: Arguments
     
+    required init?(coder: NSCoder)
+        {
+        self.type = coder.decodeObject(forKey: "type") as! Class
+        self.arguments = coder.decodeObject(forKey: "arguments") as! Arguments
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.type,forKey: "type")
+        coder.encode(self.arguments,forKey: "arguments")
+        }
+        
     public init(type: Class,arguments: Arguments)
         {
         self.type = type

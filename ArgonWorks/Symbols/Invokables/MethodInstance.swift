@@ -96,10 +96,19 @@ public class MethodInstance:Function
         {
         self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self._method = coder.decodeObject(forKey: "method") as? Method
-        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
-        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
+        self.buffer = InstructionHoldingBuffer()
+//        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
+//        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
         super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.localSymbols,forKey: "localSymbols")
+        coder.encode(self.method,forKey: "method")
+        coder.encode(self.genericParameters,forKey: "genericParameters")
         }
         
     public var systemMethod: ArgonWorks.Method
@@ -152,7 +161,7 @@ public class MethodInstance:Function
         
     override init(label:Label)
         {
-        self.buffer = InstructionBuffer()
+        self.buffer = InstructionHoldingBuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -160,7 +169,7 @@ public class MethodInstance:Function
         
     public init(_ label:Label)
         {
-        self.buffer = InstructionBuffer()
+        self.buffer = InstructionHoldingBuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -343,7 +352,7 @@ public class MethodInstance:Function
         print(";;")
         print(";; LINE \(self.declaration!.line)")
         print(";;")
-        for instruction in self.buffer
+        for instruction in self.buffer.instructions
             {
             print(instruction.displayString)
             }
@@ -351,7 +360,7 @@ public class MethodInstance:Function
         
     public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
         {
-        for symbol in scope.symbols.values
+        for symbol in scope.symbols
             {
             self.localSymbols.append(symbol)
             }
@@ -386,7 +395,7 @@ public class MethodInstance:Function
             return
             }
         let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
-        for instruction in self.buffer
+        for instruction in self.buffer.instructions
             {
             pointer.append(instruction)
             }

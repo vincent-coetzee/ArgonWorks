@@ -32,6 +32,26 @@ public class InvocationExpression: Expression
     private let location: Location
     private var methodInstance: MethodInstance?
     
+    required init?(coder: NSCoder)
+        {
+        self.name = Name()
+        self.context = .block(Block())
+        self.reportingContext = NullReportingContext()
+        self.arguments = []
+        self.method = coder.decodeObject(forKey: "method") as? Method
+        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
+        self.location = Location(coder: coder)
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.method,forKey: "method")
+        coder.encode(self.methodInstance,forKey: "methodInstance")
+        self.location.encode(with: coder)
+        }
+        
     init(name:Name,arguments:Arguments,location:Location,context:Context,reportingContext: ReportingContext)
         {
         self.name = name
@@ -52,7 +72,7 @@ public class InvocationExpression: Expression
             {
             argument.value.realize(using: realizer)
             }
-        if self.name == Name("print")
+        if self.name == Name("append")
             {
             print("halt")
             }
@@ -109,14 +129,14 @@ public class InvocationExpression: Expression
             instance.append(.PUSH,argument.value.place, .none, .none)
             }
         let localCount = self.methodInstance!.localSlots.count
-        instance.append(.PUSH,.register(.BP))
+        instance.append(.PUSH,.register(.BP),.none,.none)
         instance.append(.MOV,.register(.SP),.none,.register(.BP))
         if localCount > 0
             {
             let size = localCount * MemoryLayout<Word>.size
             instance.append(.ISUB,.register(.SP),.integer(Argon.Integer(size)),.register(.SP))
             }
-        instance.append(.DISP,.absolute(self.method!.memoryAddress))
+        instance.append(.DISP,.absolute(self.method!.memoryAddress),.none,.none)
         }
     }
 
@@ -136,8 +156,22 @@ public class MethodInvocationExpression: Expression
         {
         self.method = method
         self.arguments = arguments
+        super.init()
         }
-
+        
+    required init?(coder: NSCoder)
+        {
+        self.method = coder.decodeObject(forKey: "method") as! Method
+        self.arguments = []
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.method,forKey: "method")
+        }
+        
     public override var resultType: Type
         {
         return(self.method.returnType)

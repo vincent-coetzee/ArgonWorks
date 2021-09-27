@@ -20,6 +20,10 @@ public class LetBlock: Block
         self.slot = slot
         self.name = name
         self.value = value
+        if Swift.type(of: self.value) == Expression.self
+            {
+            print("halt")
+            }
         self.location = location
         self.namingContext = namingContext
         super.init()
@@ -35,7 +39,10 @@ public class LetBlock: Block
             }
         }
         
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
+        try self.value.emitCode(into: buffer, using: generator)
+        let place = self.value.place
+        buffer.append(.STORE,place,.none,self.slot.addresses.mostEfficientAddress.operand)
         }
     }

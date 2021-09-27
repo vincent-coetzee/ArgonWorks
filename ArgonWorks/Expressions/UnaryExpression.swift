@@ -14,15 +14,29 @@ public class UnaryExpression: Expression
         return("\(self.operation)\(self.rhs.displayString)")
         }
         
-    private let operation: Token.Symbol
+    private let operationName: String
     private let rhs: Expression
     
     init(_ operation:Token.Symbol,_ rhs:Expression)
         {
-        self.operation = operation
+        self.operationName = operation.rawValue
         self.rhs = rhs
         super.init()
         self.rhs.setParent(self)
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        self.operationName = coder.decodeObject(forKey: "operationName") as!String
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.rhs,forKey: "rhs")
+        coder.encode(self.operationName,forKey: "operationName")
         }
         
     public override var resultType: Type
@@ -44,9 +58,9 @@ public class UnaryExpression: Expression
         {
         try self.rhs.emitCode(into: instance, using: using)
         var opcode:Instruction.Opcode = .NOP
-        switch(self.operation)
+        switch(self.operationName)
             {
-            case .sub:
+            case "sub":
                 if self.resultType == self.topModule.argonModule.integer.type
                     {
                     opcode = .INEG
@@ -55,9 +69,9 @@ public class UnaryExpression: Expression
                     {
                     opcode = .FNEG
                     }
-            case .bitNot:
+            case "bitNot":
                 opcode = .IBITNOT
-            case .not:
+            case "not":
                 opcode = .NOT
             default:
                 break

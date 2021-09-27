@@ -14,12 +14,12 @@ public class ContainerSymbol:Symbol
         return(true)
         }
         
-    internal var symbols = SymbolDictionary()
+    internal var symbols = Symbols()
     private var _children: Symbols?
     
     public override var isExpandable: Bool
         {
-        return(self.symbols.values.count > 0)
+        return(self.symbols.count > 0)
         }
         
     public override var childCount: Int
@@ -29,14 +29,14 @@ public class ContainerSymbol:Symbol
         
     public override var children: Symbols?
         {
-        return(self.symbols.values.sorted{$0.label < $1.label})
+        return(self.symbols.sorted{$0.label < $1.label})
         }
         
     public var classesWithNotDirectlyContainedSuperclasses:Classes
         {
-        var classes = self.symbols.values.filter{$0 is Class}.map{$0 as! Class}
+        var classes = self.symbols.filter{$0 is Class}.map{$0 as! Class}
         classes = classes.filter{$0.superclasses.isEmpty}
-        for aClass in self.symbols.values.filter({$0 is Class}).map({$0 as! Class})
+        for aClass in self.symbols.filter({$0 is Class}).map({$0 as! Class})
             {
             for superclass in aClass.superclasses
                 {
@@ -51,7 +51,7 @@ public class ContainerSymbol:Symbol
         
     public required init?(coder: NSCoder)
         {
-        self.symbols = coder.decodeObject(forKey: "symbols") as! SymbolDictionary
+        self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
         self._children = coder.decodeObject(forKey: "_children") as? Symbols
         super.init(coder: coder)
         }
@@ -74,31 +74,29 @@ public class ContainerSymbol:Symbol
     ///
     public override func lookup(label:String) -> Symbol?
         {
-        if let symbol = self.symbols[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
         return(self.parent.lookup(label: label))
         }
         
+    public override func removeSymbol(_ symbol: Symbol)
+        {
+        self.symbols.removeAll(where: {$0.index == symbol.index})
+        }
+        
     public override func setSymbol(_ symbol:Symbol,atName: Name)
         {
-        if atName.isRooted
-            {
-            self.primaryContext.setSymbol(symbol,atName: atName.withoutFirst)
-            return
-            }
-        else if atName.count == 1
-            {
-            self.symbols[atName.last] = symbol
-            return
-            }
-        self.lookup(label: atName.first)?.setSymbol(symbol,atName: atName.withoutFirst)
+        fatalError()
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        for node in self.symbols.valuesByKey
+        for node in self.symbols
             {
             node.analyzeSemantics(using: analyzer)
             }
@@ -111,7 +109,7 @@ public class ContainerSymbol:Symbol
             return
             }
         realizer.markSymbolAsRealized(self)
-        for child in self.symbols.valuesByKey
+        for child in self.symbols
             {
             if !realizer.hasRealizedSymbol(child)
                 {
@@ -123,7 +121,7 @@ public class ContainerSymbol:Symbol
         
     public override func emitCode(using generator: CodeGenerator) throws
         {
-        for symbol in self.symbols.valuesByKey
+        for symbol in self.symbols
             {
             try symbol.emitCode(using: generator)
             }
@@ -131,7 +129,7 @@ public class ContainerSymbol:Symbol
         
     public override func realizeSuperclasses()
         {
-        for element in self.symbols.valuesByKey
+        for element in self.symbols
             {
             element.realizeSuperclasses()
             }
@@ -140,7 +138,7 @@ public class ContainerSymbol:Symbol
     @discardableResult
     public override func addSymbol(_ symbol:Symbol) -> Symbol
         {
-        self.symbols[symbol.label] = symbol
+        self.symbols.append(symbol)
         symbol.setParent(self)
         return(symbol)
         }
@@ -156,12 +154,29 @@ public class ContainerSymbol:Symbol
         
     public override func removeObject(taggedWith: Int)
         {
-        for element in self.symbols.values
+        for element in self.symbols
             {
             element.removeObject(taggedWith: taggedWith)
             if element.tag == taggedWith
                 {
-                self.symbols[element.label] = nil
+                self.symbols.removeAll(where: {$0.index == element.index})
+                }
+            }
+        }
+        
+    public override func printContents(_ offset: String = "")
+        {
+        var indent = offset
+        let typeName = Swift.type(of: self)
+        print("\(indent)\(typeName): \(self.label)")
+        if self.symbols.count > 0
+            {
+            indent += "\t"
+            print("\(indent)\(self.symbols.count) symbols")
+            print("\(indent)============================================")
+            for element in self.symbols
+                {
+                element.printContents(indent)
                 }
             }
         }

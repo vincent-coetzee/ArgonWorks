@@ -64,6 +64,12 @@ public class Block:NSObject,NamingContext
         return(symbol)
         }
     
+    @discardableResult
+    public func removeSymbol(_ symbol: Symbol) -> Symbol
+        {
+        fatalError("Attempt to remove a symbol n a block")
+        }
+        
     public func setSymbol(_ symbol: Symbol,atName: Name)
         {
         self.parent.setSymbol(symbol,atName: atName)

@@ -21,5 +21,20 @@ public class DeferredValueExpression: Expression
         {
         self.name = name
         self.type = type
+        super.init()
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        self.name = coder.decodeObject(forKey: "name") as! String
+        self.type = coder.decodeObject(forKey: "type") as! Type
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.name,forKey: "name")
+        coder.encode(self.type,forKey: "type")
         }
     }

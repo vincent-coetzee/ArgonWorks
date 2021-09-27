@@ -9,6 +9,12 @@ import Foundation
 
 public class ArrayClassInstance: GenericSystemClassInstance
     {
+    public override var mangledName: String
+        {
+        let type = self.genericClassParameterInstances.first!
+        return("[\(type.mangledName)]")
+        }
+        
     public override var memoryAddress: Word
         {
         return(self.sourceClass.memoryAddress)

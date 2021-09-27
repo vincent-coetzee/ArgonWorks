@@ -33,7 +33,7 @@ public class TopModule: SystemModule
         
     public var moduleRoot: Module
         {
-        let modules = self.symbols.values.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
+        let modules = self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
         return(ModuleHolder(TopModule(modules)))
         }
 
@@ -48,7 +48,7 @@ public class TopModule: SystemModule
         
     public var userModules: Array<Module>
         {
-        return(self.symbols.values.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
+        return(self.symbols.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
         }
     
     init()
@@ -61,10 +61,7 @@ public class TopModule: SystemModule
     init(_ array:Array<Module>)
         {
         super.init(label: "Root")
-        for item in array
-            {
-            self.symbols[item.label] = item
-            }
+        self.symbols.append(contentsOf: array)
         self.index = UUID(index: 0)
         }
         
@@ -98,6 +95,13 @@ public class TopModule: SystemModule
         if name.count == 1,let symbol = self.lookup(label: name.first)
             {
             return(symbol)
+            }
+        for module in self.symbols.filter({$0.isSystemModule})
+            {
+            if let symbol = module.lookup(name: name)
+                {
+                return(symbol)
+                }
             }
         return(nil)
         }

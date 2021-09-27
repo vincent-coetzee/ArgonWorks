@@ -27,7 +27,7 @@ public class GenericClass:Class
     public override var containedClassParameters: Array<GenericClassParameter>
         {
         var parameters = Array<GenericClassParameter>()
-        for slot in self.symbols.values.filter({$0 is Slot}).map({$0 as! Slot})
+        for slot in self.symbols.filter({$0 is Slot}).map({$0 as! Slot})
             {
             parameters.append(contentsOf: slot.containedClassParameters)
             }

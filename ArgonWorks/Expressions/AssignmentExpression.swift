@@ -11,8 +11,24 @@ public class AssignmentExpression: Expression
     {
     private let rhs: Expression
     private let lhs: Expression
-    private let operation: Token.Operator
+    private var operationName: String = ""
     
+    public required init?(coder: NSCoder)
+        {
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
+        self.operationName = coder.decodeObject(forKey: "operationName") as! String
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.rhs,forKey: "rhs")
+        coder.encode(self.lhs,forKey: "lhs")
+        coder.encode(self.operationName,forKey: "operationName")
+        }
+        
     public override var resultType: Type
         {
         return(.error(.undefined))
@@ -22,7 +38,7 @@ public class AssignmentExpression: Expression
         {
         self.rhs = rhs
         self.lhs = lhs
-        self.operation = operation
+        self.operationName = operation.name
         super.init()
         }
         

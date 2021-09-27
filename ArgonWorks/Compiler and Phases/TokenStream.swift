@@ -208,7 +208,11 @@ public class TokenStream:Equatable
             {
             index = source.index(after: index)
             }
-        return(source.unicodeScalars[index])
+        if index < source.endIndex
+            {
+            return(source.unicodeScalars[index])
+            }
+        return(UnicodeScalar(" "))
         }
         
     public func rewindChar()

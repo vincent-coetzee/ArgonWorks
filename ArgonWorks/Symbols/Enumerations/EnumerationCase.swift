@@ -5,13 +5,18 @@
 //  Created by Vincent Coetzee on 3/7/21.
 //
 
-import Foundation
+import AppKit
 
 public class EnumerationCase:Symbol
     {
     public override var type: Type
         {
         return(self.enumeration.type)
+        }
+        
+    public override var imageName: String
+        {
+        return("IconSlot")
         }
         
     public override var typeCode:TypeCode
@@ -34,10 +39,34 @@ public class EnumerationCase:Symbol
         self.calculateSizeInBytes()
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    public required init?(coder: NSCoder)
+        {
+        self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
+        self.symbol = coder.decodeObject(forKey: "symbol") as! Argon.Symbol
+        self.rawValue = coder.decodeObject(forKey: "rawValue") as! LiteralExpression
+        self.associatedTypes = coder.decodeObject(forKey: "associatedTypes") as! Types
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.enumeration,forKey: "enumeration")
+        coder.encode(self.symbol,forKey: "symbol")
+        coder.encode(self.rawValue,forKey: "rawValue")
+        coder.encode(self.associatedTypes,forKey: "associatedTypes")
+        }
     
+    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        super.configure(cell: cell)
+        if associatedTypes.count > 0
+            {
+            let names = associatedTypes.map{$0.label}.joined(separator: ",")
+            cell.trailer.stringValue = "(\(names))"
+            }
+        }
+        
     private func calculateSizeInBytes()
         {
         let size = TopModule.shared.argonModule.enumerationCase.localAndInheritedSlots.count * MemoryLayout<Word>.size

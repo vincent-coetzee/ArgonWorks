@@ -9,10 +9,11 @@ import Cocoa
 
 class ArgonBrowserInspectorViewController: NSViewController
     {
+    @IBOutlet var listView: NSTableView!
+    
     override func viewDidLoad()
         {
         super.viewDidLoad()
-        // Do view setup here.
         }
     
     public override func viewDidAppear()

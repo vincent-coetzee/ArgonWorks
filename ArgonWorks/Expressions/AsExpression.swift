@@ -17,6 +17,20 @@ public class AsExpression: Expression
     private let lhs: Expression
     private let into: Type
     
+    public required init?(coder: NSCoder)
+        {
+        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
+        self.into = coder.decodeObject(forKey: "into") as! Type
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.lhs,forKey: "lhs")
+        coder.encode(self.into,forKey: "into")
+        }
+        
     init(_ lhs:Expression,into: Type)
         {
         self.lhs = lhs

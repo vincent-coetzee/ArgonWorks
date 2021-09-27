@@ -42,10 +42,7 @@ public class Compiler
         self.namingContext = TopModule.shared
         }
         
-    public var reportingContext:ReportingContext
-        {
-        return(NullReportingContext.shared)
-        }
+    public var reportingContext:ReportingContext = NullReportingContext.shared
     
     public func cancelCompletion()
         {
@@ -57,6 +54,8 @@ public class Compiler
             {
             return
             }
+        Transaction.abort()
+        Transaction.begin()
         self.parser = Parser(compiler: self)
         self.parser!.parseChunk(source)
         }

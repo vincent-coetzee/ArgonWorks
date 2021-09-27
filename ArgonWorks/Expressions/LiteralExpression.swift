@@ -22,6 +22,87 @@ public indirect enum Literal
     case enumerationCase(EnumerationCase)
     case method(Method)
     case constant(Constant)
+    
+    init(coder: NSCoder)
+        {
+        let kind = coder.decodeInteger(forKey: "kind")
+        switch(kind)
+            {
+            case 1:
+                self = .nil
+            case 2:
+                self = .integer(Argon.Integer(coder.decodeInteger(forKey: "integer")))
+            case 3:
+                self = .float(Argon.Float(coder.decodeDouble(forKey: "float")))
+            case 4:
+                self = .string(coder.decodeObject(forKey: "string") as! String)
+            case 5:
+                self = .boolean(coder.decodeBool(forKey: "boolean") ? .trueValue : .falseValue)
+            case 6:
+                self = .symbol(coder.decodeObject(forKey: "symbol") as! Argon.Symbol)
+            case 7:
+                self = .array(coder.decodeObject(forKey: "array") as! Array<Literal>)
+            case 8:
+                self = .class(coder.decodeObject(forKey: "class") as! Class)
+            case 9:
+                self = .module(coder.decodeObject(forKey: "module") as! Module)
+            case 10:
+                self = .enumeration(coder.decodeObject(forKey: "enumeration") as! Enumeration)
+            case 11:
+                self = .enumerationCase(coder.decodeObject(forKey: "enumerationCase") as! EnumerationCase)
+            case 12:
+                self = .method(coder.decodeObject(forKey: "method") as! Method)
+            case 13:
+                self = .constant(coder.decodeObject(forKey: "constant") as! Constant)
+            default:
+                self = .nil
+            }
+        }
+        
+    public func encode(with coder:NSCoder)
+        {
+        switch(self)
+            {
+            case .nil:
+                coder.encode(1,forKey:"kind")
+            case .integer(let integer):
+                coder.encode(2,forKey:"kind")
+                coder.encode(integer,forKey:"integer")
+            case .float(let float):
+                coder.encode(3,forKey:"kind")
+                coder.encode(float,forKey:"float")
+            case .string(let string):
+                coder.encode(4,forKey:"kind")
+                coder.encode(string,forKey:"string")
+            case .boolean(let boolean):
+                coder.encode(5,forKey:"kind")
+                coder.encode(boolean,forKey:"boolean")
+            case .symbol(let symbol):
+                coder.encode(6,forKey:"kind")
+                coder.encode(symbol,forKey:"symbol")
+            case .array(let array):
+                coder.encode(7,forKey:"kind")
+                coder.encode(array,forKey:"array")
+            case .class(let aClass):
+                coder.encode(8,forKey:"kind")
+                coder.encode(aClass,forKey:"class")
+            case .module(let module):
+                coder.encode(9,forKey:"kind")
+                coder.encode(module,forKey:"module")
+            case .enumeration(let enumeration):
+                coder.encode(10,forKey:"kind")
+                coder.encode(enumeration,forKey:"enumeration")
+            case .method(let method):
+                coder.encode(11,forKey:"kind")
+                coder.encode(method,forKey:"method")
+            case .constant(let constant):
+                coder.encode(12,forKey:"kind")
+                coder.encode(constant,forKey:"constant")
+            case .enumerationCase(let aCase):
+                coder.encode(13,forKey:"kind")
+                coder.encode(aCase,forKey:"enumerationCasee")
+            }
+        }
     }
 
 public class LiteralExpression: Expression
@@ -182,6 +263,18 @@ public class LiteralExpression: Expression
         super.init()
         }
         
+    required init?(coder: NSCoder)
+        {
+        self.literal = Literal(coder: coder)
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        self.literal.encode(with: coder)
+        }
+        
     public override func dump(depth: Int)
         {
         let padding = String(repeating: "\t", count: depth)
@@ -277,7 +370,7 @@ public class LiteralExpression: Expression
             case .string(let string):
                 instance.append(.LOAD,.relocation(.string(string)),.none,.register(register))
             case .boolean(let boolean):
-                instance.append(.LOAD,.integer(boolean == .trueValue ? 1 : 0))
+                instance.append(.LOAD,.integer(boolean == .trueValue ? 1 : 0),.none,.none)
             case .symbol(let string):
                 instance.append(.LOAD,.relocation(.symbol(string)),.none,.register(register))
             case .array:

@@ -471,6 +471,7 @@ public class ArgonModule: SystemModule
         ioGroup.addSymbol(LibraryMethodInstance("nextPutTime",self.stream,self.time,self.void).libraryMethod)
         let arrays = SymbolGroup(label: "Arrays")
         self.addSymbol(arrays)
+        arrays.addSymbol(LibraryMethodInstance("append",self.array,"TYPE").libraryMethod)
         arrays.addSymbol(LibraryMethodInstance("at",self.array,self.integer,"TYPE").libraryMethod)
         arrays.addSymbol(LibraryMethodInstance("atPut",self.array,self.integer,"TYPE",self.void).libraryMethod)
         arrays.addSymbol(LibraryMethodInstance("atPutAll",self.array,self.integer,self.array,self.void).libraryMethod)

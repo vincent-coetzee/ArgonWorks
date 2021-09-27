@@ -33,10 +33,6 @@ public class Expression: NSObject
         {
         return(SlotExpression(self,slot: index))
         }
-
-    public func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
-        {
-        }
         
     public func cast(into: Type) -> Expression
         {
@@ -92,6 +88,21 @@ public class Expression: NSObject
     public var _place: Instruction.Operand = .none
     public var parent: Parent = .none
     
+    public override init()
+        {
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.parent = Parent(coder: coder)!
+        super.init()
+        }
+
+    public func encode(with coder:NSCoder)
+        {
+        self.parent.encode(with: coder)
+        }
+        
     public func addDeclaration(_ location:Location)
         {
         self.locations.append(.declaration(location))
@@ -117,6 +128,12 @@ public class Expression: NSObject
         
     public func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
+        }
+        
+
+    public func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
+        {
+//        fatalError("This should have been implemented")
         }
         
     public func setParent(_ block: Block)

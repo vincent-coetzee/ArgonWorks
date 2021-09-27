@@ -30,9 +30,22 @@ public class SymbolExpression: Expression
         
     private let symbol: Symbol
     
+    required init?(coder: NSCoder)
+        {
+        self.symbol = coder.decodeObject(forKey: "symbol") as! Symbol
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.symbol,forKey: "symbol")
+        }
+        
     init(symbol: Symbol)
         {
         self.symbol = symbol
+        super.init()
         }
         
     public override func realize(using realizer: Realizer)

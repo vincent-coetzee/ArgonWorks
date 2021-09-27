@@ -65,8 +65,8 @@ extension SyntaxColorPalette
         palette[SyntaxColor.method.rawValue] = NSColor.argonThemeBlueGreen
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside
-        palette[SyntaxColor.path.rawValue] = NSColor.argonXGray
-        palette[SyntaxColor.keypath.rawValue] = NSColor.argonXGray
+        palette[SyntaxColor.path.rawValue] = NSColor.argonZomp
+        palette[SyntaxColor.keypath.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.slot.rawValue] = NSColor.argonCoral
         palette[SyntaxColor.directive.rawValue] = NSColor.argonYellow
         palette[SyntaxColor.lineNumbers.rawValue] = NSColor(hex: 0xA0A0A0)

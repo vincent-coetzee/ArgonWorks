@@ -28,9 +28,16 @@ public class TypeAlias:Symbol
     
     public required init?(coder: NSCoder)
         {
-        fatalError("init(coder:) has not been implemented")
+        self._type = coder.decodeObject(forKey: "_type") as! Type
+        super.init(coder: coder)
         }
-    
+        
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self._type,forKey: "_type")
+        }
+        
     public override var typeCode:TypeCode
         {
         .typeAlias

@@ -7,16 +7,32 @@
 
 import Foundation
 
-public class InstructionBuffer: Collection
+public protocol InstructionBuffer
+    {
+    var count: Int { get }
+    var instructions: Array<Instruction> { get }
+    @discardableResult
+    func append(line:Int,_ opcode:Instruction.Opcode,_ operand1:Instruction.Operand,_ operand2:Instruction.Operand,_ result:Instruction.Operand) -> Self
+    @discardableResult
+    func append(_ opcode:Instruction.Opcode,_ operand1:Instruction.Operand,_ operand2:Instruction.Operand,_ result:Instruction.Operand) -> Self
+    func fromHere(_ marker:Instruction.LabelMarker) throws -> Argon.Integer
+    func fromHere() -> Instruction.LabelMarker
+    func toHere() -> Instruction.LabelMarker
+    func toHere(_ marker:Instruction.LabelMarker) throws -> Argon.Integer
+    func triggerFromHere() -> Instruction.LabelMarker
+    func triggerToHere() -> Instruction.LabelMarker
+    }
+    
+public class InstructionHoldingBuffer: Collection,InstructionBuffer
     {
     public static func samples(in vm: VirtualMachine) -> InstructionBuffer
         {
-        let buffer = InstructionBuffer()
+        let buffer = InstructionHoldingBuffer()
         .append(.MAKE,.absolute(vm.topModule.argonModule.array.memoryAddress),.integer(1024),.register(.R0))
-        .append(.MOV,.register(.r1),.none,.register(.FP))
-        .append(.LOAD,.integer(10),.none,.register(.r4))
-        .append(.LOAD,.integer(20),.none,.register(.r5))
-        .append(.IADD,.register(.r4),.register(.r5),.register(.R6))
+        .append(.MOV,.register(.R1),.none,.register(.FP))
+        .append(.LOAD,.integer(10),.none,.register(.R4))
+        .append(.LOAD,.integer(20),.none,.register(.R5))
+        .append(.IADD,.register(.R4),.register(.R5),.register(.R6))
         .append(.PUSH,.register(.R6))
         .append(.POP,.none,.none,.register(.R7))
         return(buffer)
@@ -33,7 +49,7 @@ public class InstructionBuffer: Collection
         return(self.instructions.endIndex)
         }
         
-    private var instructions: Array<Instruction> = []
+    public var instructions: Array<Instruction> = []
     private var instructionIndex: Int = 0
     
     init?(coder: NSCoder)
@@ -92,6 +108,17 @@ public class InstructionBuffer: Collection
     public func append(_ opcode:Instruction.Opcode,_ operand1:Instruction.Operand = .none,_ operand2:Instruction.Operand = .none,_ result:Instruction.Operand = .none) -> Self
         {
         let instruction = Instruction(opcode,operand1: operand1,operand2: operand2,result: result,lineNumber: self.instructionIndex)
+        instruction.lineNumber = 0
+        self.instructions.append(instruction)
+        self.instructionIndex += 1
+        return(self)
+        }
+        
+    @discardableResult
+    public func append(line:Int,_ opcode:Instruction.Opcode,_ operand1:Instruction.Operand = .none,_ operand2:Instruction.Operand = .none,_ result:Instruction.Operand = .none) -> Self
+        {
+        let instruction = Instruction(opcode,operand1: operand1,operand2: operand2,result: result,lineNumber: self.instructionIndex)
+        instruction.lineNumber = line
         self.instructions.append(instruction)
         self.instructionIndex += 1
         return(self)

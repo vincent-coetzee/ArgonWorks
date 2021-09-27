@@ -106,7 +106,12 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return([])
         }
         
-    public var displayString: String
+    public var nativeCType: NativeCType
+        {
+        return(NativeCPointer(target: NativeCType(type: "\(self.label)")))
+        }
+        
+    public override var displayString: String
         {
         if self.parametricClasses.isNil || self.parametricClasses!.count == 0
             {
@@ -251,6 +256,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         .argonLime
         }
         
+    public var mangledName: String
+        {
+        return(self.label)
+        }
+        
     public var `class`: Class
         {
         return(self)
@@ -289,7 +299,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public var localSlots: Slots
         {
-        return(self.symbols.values.compactMap{$0 as? Slot}.sorted{$0.label < $1.label})
+        return(self.symbols.compactMap{$0 as? Slot}.sorted{$0.label < $1.label})
         }
         
     public var localSystemSlots: Slots
@@ -369,6 +379,21 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         super.init(coder: coder)
         }
 
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.subclasses,forKey: "subclasses")
+        coder.encode(self.superclasses,forKey: "superclasses")
+        coder.encode(self.layoutSlots,forKey: "layoutSlots")
+        coder.encode(self.magicNumber,forKey: "magicNumber")
+        coder.encode(self.hasBytes,forKey: "hasbytes")
+        coder.encode(self._metaclass,forKey: "_metaclass")
+        coder.encode(self.mangledCode,forKey: "mangledCode")
+        coder.encode(self.offsetOfClass,forKey: "offsetOfClass")
+        coder.encode(self.hasBeenRealized,forKey: "hasBeenRealized")
+        coder.encode(self.depth,forKey: "depth")
+        }
+        
     ///
     ///
     /// Create a deepCopy of the receiver, this is used
@@ -427,6 +452,23 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                 }
             }
         return(false)
+        }
+        
+    public override func printContents(_ offset: String = "")
+        {
+        var indent = offset
+        let typeName = Swift.type(of: self)
+        print("\(indent)\(typeName): \(self.label)")
+        if self.symbols.count > 0
+            {
+            indent += "\t"
+            print("\(indent)\(self.symbols.count) symbols")
+            print("\(indent)============================================")
+            for element in self.symbols
+                {
+                element.printContents(indent)
+                }
+            }
         }
         
     public func mcode(_ code:String) -> Class

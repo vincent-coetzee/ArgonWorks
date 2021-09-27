@@ -9,6 +9,64 @@ import Foundation
 
 public class PrimitiveClass:Class
     {
+    public override var mangledName: String
+        {
+        switch(self.primitiveType)
+            {
+            case .boolean:
+                return("b")
+            case .character:
+                return("c")
+            case .integer:
+                return("i")
+            case .uInteger:
+                return("u")
+           case .float:
+                return("f")
+            case .date:
+                return("d")
+            case .time:
+                return("t")
+            case .dateTime:
+                return("a")
+            case .byte:
+                return("y")
+            case .string:
+                return("s")
+            default:
+                return("error")
+            }
+        }
+        
+    public override var nativeCType: NativeCType
+        {
+        switch(self.primitiveType)
+            {
+            case .boolean:
+                return(NativeCType.booleanType)
+            case .character:
+                return(NativeCType.characterType)
+            case .integer:
+                return(NativeCType.longLongType)
+            case .uInteger:
+                return(NativeCType.unsignedLongLongType)
+           case .float:
+                return(NativeCType.doubleType)
+            case .date:
+                return(NativeCType.unsignedLongLongType)
+            case .time:
+                return(NativeCType.unsignedLongLongType)
+            case .dateTime:
+                return(NativeCType.unsignedLongLongType)
+            case .byte:
+                return(NativeCType.unsignedCharType)
+            case .string:
+                return(NativeCType.stringType)
+            default:
+                fatalError()
+            }
+        }
+        
     public override var isPrimitiveClass: Bool
         {
         return(true)
@@ -67,6 +125,12 @@ public class PrimitiveClass:Class
             {
             super.layoutObjectSlots()
             }
+        }
+        
+    public override func printContents(_ indent: String = "")
+        {
+        let typeName = Swift.type(of: self)
+        print("\(indent)\(typeName): \(self.label)")
         }
         
     public override func printLayout()

@@ -9,6 +9,12 @@ import Foundation
 
 public class LibraryModule: Module
     {
+    public var functions: Array<Function>
+        {
+        let functions = self.symbols.filter{$0 is Function}.map{$0 as! Function}
+        return(functions)
+        }
+        
     public override var typeCode:TypeCode
         {
         .libraryModule

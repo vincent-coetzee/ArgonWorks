@@ -19,7 +19,6 @@ class ProcessorViewController: NSViewController
     override func viewDidLoad()
         {
         super.viewDidLoad()
-        self.buffer = InstructionBuffer.samples(in: self.virtualMachine)
         }
         
     @IBAction func onLoadMethodClicked(_ sender:Any?)
@@ -47,7 +46,6 @@ extension ProcessorViewController: NSTableViewDelegate
     public func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
         {
         let view = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "InstructionCellView"), owner: nil) as! InstructionCellView
-        view.instruction = buffer[row]
         return(view)
         } 
     }

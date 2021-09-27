@@ -26,7 +26,22 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var isSystemModule: Bool
+        {
+        return(false)
+        }
+        
+    public var isSystemContainer: Bool
+        {
+        return(false)
+        }
+        
     public var isClass: Bool
+        {
+        return(false)
+        }
+        
+    public var isModule: Bool
         {
         return(false)
         }
@@ -46,7 +61,7 @@ public class Symbol:Node,ParseNode
         self.locations.declaration
         }
         
-    public var displayName: String
+    public var displayString: String
         {
         self.label
         }
@@ -140,18 +155,83 @@ public class Symbol:Node,ParseNode
     
     public required init?(coder: NSCoder)
         {
-        self.isMemoryLayoutDone = coder.decodeBool(forKey: "isMemoryLayoutDone")
-        self.isSlotLayoutDone = coder.decodeBool(forKey: "isSlotLayoutDone")
-        self.locations = coder.decodeObject(forKey: "locations") as! SourceLocations
         self.privacyScope = PrivacyScope(rawValue: coder.decodeObject(forKey: "privacyScope") as! String)!
-        self.addresses = coder.decodeObject(forKey: "addresses") as! Addresses
         self.source = coder.decodeObject(forKey: "source") as? String
         super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.privacyScope?.rawValue,forKey: "privacyScope")
+        coder.encode(self.source,forKey: "source")
+        }
+        
+    public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        cell.text.stringValue = self.displayString
+        let image = NSImage(named: self.imageName)!
+        image.isTemplate = true
+        cell.icon.image = image
+        cell.icon.contentTintColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+        }
+
+    public func invert(cell: HierarchyCellView)
+        {
+        let image = NSImage(named: self.imageName)!.image(withTintColor: NSColor.black)
+        cell.icon.image = image
+        cell.icon.contentTintColor = NSColor.black
+        cell.icon.isHighlighted = false
+        cell.text.textColor = NSColor.black
         }
         
     public func child(atIndex: Int) -> Symbol
         {
         return(self.children![atIndex])
+        }
+        
+    public override func removeSymbol(_ symbol: Symbol)
+        {
+        }
+        
+    public func childCount(forChildType type: ChildType) -> Int
+        {
+        let kids = self.children(forChildType: type)
+        return(kids.count)
+        }
+        
+    public func printContents(_ indent: String = "")
+        {
+        let typeName = Swift.type(of: self)
+        print("\(indent)\(typeName): \(self.label)")
+        }
+            
+    public func isExpandable(forChildType type: ChildType) -> Bool
+        {
+        return(self.isExpandable && self.childCount(forChildType: type) > 0)
+        }
+        
+    public func children(forChildType type: ChildType) -> Array<Symbol>
+        {
+        let allKids = self.children ?? []
+        if type == .class
+            {
+            return(allKids.filter{$0 is Class || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+            }
+        else if type == .method
+            {
+            return(allKids.filter{$0 is Method || $0 is MethodInstance || $0 is Module || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+            }
+        else
+            {
+            return(allKids.map{ElementHolder($0)}.sorted{$0.label < $1.label})
+            }
+        }
+        
+    public func child(forChildType type: ChildType,atIndex: Int) -> Symbol
+        {
+        return(self.children(forChildType: type)[atIndex])
         }
         
     public var isGroup: Bool
@@ -199,3 +279,4 @@ public class Symbol:Node,ParseNode
 
 public typealias SymbolDictionary = Dictionary<Label,Symbol>
 public typealias Symbols = Array<Symbol>
+

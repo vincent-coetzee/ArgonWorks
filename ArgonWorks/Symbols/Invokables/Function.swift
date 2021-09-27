@@ -9,8 +9,19 @@ import Foundation
 import FFI
 import Interpreter
 
-public class Function:Invokable
-    {        
+public class Function:Invokable,Displayable
+    {
+    public override var displayString: String
+        {
+        let parms = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
+        return(self.label + parms + " -> " + self.returnType.displayString)
+        }
+        
+    public override var imageName: String
+        {
+        "IconFunction"
+        }
+        
     public func call(withArguments: Words) -> Word?
         {
         let argTypes:UnsafeMutablePointer<ffi_type>? = UnsafeMutablePointer<ffi_type>.allocate(capacity: self.parameters.count)

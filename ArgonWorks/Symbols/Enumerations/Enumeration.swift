@@ -5,16 +5,31 @@
 //  Created by Vincent Coetzee on 4/10/21.
 //
 
-import Foundation
+import AppKit
 
 public class Enumeration:Class
     {
     private var cases: EnumerationCases = []
     public var rawType: Type?
     
+    public override init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
     public override var isEnumeration: Bool
         {
         return(true)
+        }
+        
+    public override var imageName: String
+        {
+        return("IconEnumeration")
+        }
+        
+    public override var children: Array<Symbol>
+        {
+        return(self.cases)
         }
         
     public override var typeCode:TypeCode
@@ -44,6 +59,20 @@ public class Enumeration:Class
                 }
             }
         return(self.parent.lookup(label: label))
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.rawType = coder.decodeObject(forKey: "rawType") as? Type
+        self.cases = coder.decodeObject(forKey: "cases") as! Array<EnumerationCase>
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.rawType,forKey: "rawType")
+        coder.encode(self.cases,forKey: "cases")
         }
         
     public override func layoutInMemory()

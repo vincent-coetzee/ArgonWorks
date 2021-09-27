@@ -141,6 +141,11 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         fatalError("Attempt to addSymbol to a \(Swift.type(of:self))")
         }
         
+    public func removeSymbol(_ symbol:Symbol)
+        {
+        fatalError("Attempt to removeSymbol in a \(Swift.type(of:self))")
+        }
+        
     public func setSymbol(_ symbol:Symbol,atName: Name)
         {
         fatalError("Attempt to addSymbol:AtName to a \(Swift.type(of:self))")

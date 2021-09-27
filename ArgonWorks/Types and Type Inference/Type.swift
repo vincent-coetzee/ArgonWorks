@@ -61,16 +61,48 @@ public indirect enum Type: Equatable
         {
         switch(self)
             {
+            case .error:
+                return("error")
             case .class(let aClass):
-                return("TYPE(class: \(aClass.label))")
-            case .enumeration(let aClass):
-                return("TYPE(enumeration: \(aClass.label))")
+                return(aClass.displayString)
+            case .enumeration(let enumeration):
+                return(enumeration.displayString)
             case .method(let label,_,_):
-                return("TYPE(method: \(label))")
-            case .methodApplication(let aClass):
-                return("TYPE(application: \(aClass.label))")
+                return(label)
             default:
-                return("")
+                return("somthings wrong")
+            }
+        }
+        
+    public var nativeCType: NativeCType
+        {
+        switch(self)
+            {
+            case .class(let aClass):
+                return(aClass.nativeCType)
+            case .enumeration(let enumeration):
+                return(enumeration.nativeCType)
+            default:
+                fatalError("somthings wrong")
+            }
+        }
+        
+    public var mangledName: String
+        {
+        switch(self)
+            {
+            case .error:
+                return("error")
+            case .class(let aClass):
+                return(aClass.mangledName)
+            case .enumeration(let enumeration):
+                return(enumeration.label)
+            case .method:
+                fatalError()
+            case .methodApplication:
+                fatalError()
+            case .forwardReference:
+                fatalError()
             }
         }
         

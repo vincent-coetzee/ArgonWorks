@@ -22,10 +22,25 @@ public class ArrayAccessExpression: Expression
     private let array:Expression
     private let index:Expression
     
+    public required init?(coder: NSCoder)
+        {
+        self.array = coder.decodeObject(forKey: "array") as! Expression
+        self.index = coder.decodeObject(forKey: "index") as! Expression
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.array,forKey: "array")
+        coder.encode(self.index,forKey: "indexx")
+        }
+        
     init(array:Expression,index:Expression)
         {
         self.array = array
         self.index = index
+        super.init()
         }
         
     public override var resultType: Type

@@ -79,28 +79,51 @@ extension UserDefaults
         }
     }
     
-class ArgonBrowserWindowController: NSWindowController
+internal enum CompilationEvent
+    {
+    case none
+    case warning(Location,String)
+    case error(Location,String)
+    }
+    
+class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext,NSTableViewDataSource,NSTableViewDelegate
     {
     @IBOutlet var toolbar: NSToolbar!
+
+    internal var classBrowser: NSOutlineView!
+    internal var methodBrowser: NSOutlineView!
     
-    private var symbols: Array<Symbol> = []
-    private let small = VirtualMachine.small
-    private var compiler: Compiler! = nil
-    private var currentSourceFileURL:URL? = nil
-    
-    public var outliner: NSOutlineView!
+    internal var objectBrowser: NSOutlineView!
         {
         didSet
             {
-            self.initOutliner()
+            self.initObjectBrowser()
             }
         }
-        
+    
+    private var errorListView: NSTableView!
+    
+    internal var symbolList1: SymbolList!
+    internal var symbolList2: SymbolList!
+    internal var symbolList3: SymbolList!
+    
+    private var symbols: Array<Symbol> = []
+    private var compiler: Compiler! = nil
+    private var currentSourceFileURL:URL? = nil
+    private var compilationEvents: Array<CompilationEvent> = []
+    private var forwarderView: ForwarderView?
+    private var firstFrame: NSRect? = nil
+    
+    public var capsules: Dictionary<URL,Capsule> = [:]
+    public var currentCapsule: Capsule?
+    public var selectedFont: NSFont?
+    
     public var sourceEditor: LineNumberTextView!
         {
         didSet
             {
             self.initSourceEditor()
+            self.initFontManagement()
             }
         }
         
@@ -112,27 +135,74 @@ class ArgonBrowserWindowController: NSWindowController
             }
         }
     
+    public func windowWillResize(_ window: NSWindow,to size: NSSize) -> NSSize
+        {
+        if self.firstFrame.isNil
+            {
+            if let rectObject = RectObject(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+                {
+                let rect = rectObject.rect
+                self.firstFrame = rect
+                }
+            }
+        var frame = self.window!.frame
+        frame.size = size
+        let rectObject = RectObject(frame)
+        rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+        return(size)
+        }
+        
     override func windowDidLoad()
         {
         super.windowDidLoad()
         self.compiler = Compiler()
-        if let rectObject = RectObject(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
-            {
-            self.window?.setFrame(rectObject.rect, display: true, animate: true)
-            }
+        self.window?.setFrame(self.firstFrame!, display: true, animate: true)
+        let frame = self.firstFrame!
+        let rectObject = RectObject(frame)
+        rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+        self.window!.styleMask = [.resizable, .titled, .closable]
+        NotificationCenter.default.addObserver(self, selector: #selector(sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
+        NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
+        self.window!.delegate = self
+        self.toolbar.validateVisibleItems()
+        }
+    
+    private func initObjectBrowser()
+        {
+        let menu = NSMenu()
+        menu.insertItem(withTitle: "Generate Library Stub", action: #selector(generateLibraryStub(_:)), keyEquivalent: "G", at: 0)
+        self.objectBrowser.menu = menu
+        NSColorPanel.shared.setTarget(self)
+        NSColorPanel.shared.setAction(#selector(onColorSelected(_:)))
         }
         
-    private func initOutliner()
+    @objc func onColorSelected(_ sender: Any?)
         {
-        self.symbols = [TopModule.shared.argonModule.object,TopModule.shared,TopModule.shared.moduleRoot]
-        self.outliner.indentationPerLevel = 20
-        self.outliner.dataSource = self
-        self.outliner.delegate = self
-        self.outliner.rowHeight = 16
-        self.outliner.intercellSpacing = NSSize(width: 0,height: 0)
-        let nib = NSNib(nibNamed: "HierarchyCell", bundle: nil)
-        self.outliner.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "HierarchyCell"))
-        self.outliner.reloadData()
+        self.symbolList3.foregroundColor = NSColorPanel.shared.color
+        }
+        
+    @objc func generateLibraryStub(_ sender: Any?)
+        {
+        let path = "/Users/vincent/Desktop/Library.c"
+        let selectedRow = self.objectBrowser.selectedRow
+        let selectedItem = objectBrowser.item(atRow: selectedRow)
+        if let elementHolder = selectedItem as? ElementHolder,let library = elementHolder.symbol as? LibraryModule
+            {
+            let mangler = NameMangler()
+            let file = fopen(path,"wt")
+            for function in library.functions
+                {
+                let name = mangler.mangle(function)
+                var string = "\t\(function.returnType.nativeCType.displayString) \(name)" + "("
+                let strings = function.parameters.map{"\($0.type.nativeCType.displayString) \($0.label)"}.joined(separator: ",") + ")"
+                string += strings
+                string += "\n"
+                string += "\t{\n\t}\n\n"
+                fputs(string,file)
+                }
+            fflush(file)
+            fclose(file)
+            }
         }
         
     @IBAction public func save(_ sender: Any?)
@@ -155,6 +225,7 @@ class ArgonBrowserWindowController: NSWindowController
         {
         do
             {
+            Transaction.abort()
             try self.compiler.parseChunk(self.sourceEditor.textStorage?.string ?? "")
             }
         catch
@@ -168,51 +239,111 @@ class ArgonBrowserWindowController: NSWindowController
         self.sourceEditor.textStorage?.endEditing()
         }
         
+    private func initFontManagement()
+        {
+        NSFontManager.shared.target = self
+        NSFontManager.shared.action = #selector(onFontChanged(_:))
+        if let font = self.sourceEditor.textStorage?.font
+            {
+            NSFontManager.shared.setSelectedFont(font,isMultiple: false)
+            }
+        }
+        
+    @objc func onFontChanged(_ sender:Any?)
+        {
+        if let selectedFont = self.sourceEditor.textStorage?.font
+            {
+            let newFont = NSFontManager.shared.convert(selectedFont)
+            self.sourceEditor.textStorage?.font = newFont
+            self.selectedFont = newFont
+            }
+        }
+        
+    public func dispatchWarning(at: Location, message: String)
+        {
+        self.compilationEvents.append(.warning(at,message))
+        self.errorListView.reloadData()
+        }
+    
+    public func dispatchError(at: Location, message: String)
+        {
+        self.compilationEvents.append(.error(at,message))
+        self.errorListView.reloadData()
+        }
+    
+    private func resetReporting()
+        {
+        self.compilationEvents = []
+        }
+        
+    public func numberOfRows(in tableView: NSTableView) -> Int
+        {
+        return(self.compilationEvents.count)
+        }
+        
+    @objc func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
+        {
+        if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventCellView"),owner: nil) as? CompilationEventCellView
+            {
+            cell.event = self.compilationEvents[row]
+            return(cell)
+            }
+        return(nil)
+        }
+
     private func initSourceEditor()
         {
+        self.forwarderView = ForwarderView(controller: self)
         self.sourceEditor.gutterBackgroundColor = NSColor.black
         self.sourceEditor.backgroundColor = NSColor.black
         self.sourceEditor.gutterForegroundColor = NSColor.lightGray
-        NotificationCenter.default.addObserver(self, selector: #selector(sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
         self.sourceEditor.isAutomaticQuoteSubstitutionEnabled = false
         self.sourceEditor.isAutomaticDashSubstitutionEnabled = false
         self.sourceEditor.isAutomaticTextReplacementEnabled = false
-        for item in self.toolbar.visibleItems!
-            {
-            item.isEnabled = true
-            }
+        self.toolbar.delegate = self
         for item in self.toolbar.items
             {
             if item.label == "Open"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.fugglyBuggly(_:))
+                item.target = self.forwarderView!
+                item.action = #selector(ForwarderView.onOpenFile(_:))
+                item.isEnabled = true
                 }
-            if item.label == "Compile"
+            else if item.label == "Compile"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.onCompile(_:))
+                item.target = self.forwarderView!
+                item.action = #selector(ForwarderView.onCompileFile(_:))
+                item.isEnabled = true
                 }
-            if item.label == "Save"
+            else if item.label == "Save"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.onSaveEditor(_:))
+                item.target = self.forwarderView!
+                item.action = #selector(ForwarderView.onSaveFile(_:))
+                item.isEnabled = true
                 }
-            if item.label == "New"
+            else if item.label == "Fonts"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.onNewEditor(_:))
+//                item.target = self.forwarderView!
+//                item.action = #selector(ForwarderView.onSaveFile(_:))
+                item.isEnabled = true
                 }
-            if item.label == "Object"
+            else if item.label == "New"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.onEmitObject(_:))
+                item.target = self.forwarderView!
+                item.action = #selector(ForwarderView.onNewEditor(_:))
+                item.isEnabled = true
                 }
-            if item.label == "Symbols"
+//            else if item.label == "Object"
+//                {
+//                item.target = self.forwarderView!
+//                item.action = #selector(ForwarderView.onSaveObject(_:))
+//                item.isEnabled = true
+//                }
+            else if item.label == "Symbols"
                 {
-                item.target = self
-                item.action = #selector(ArgonBrowserWindowController.onEmitSymbols(_:))
+                item.target = self.forwarderView!
+                item.action = #selector(ForwarderView.onSaveSymbols(_:))
+                item.isEnabled = true
                 }
             }
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
@@ -224,6 +355,8 @@ class ArgonBrowserWindowController: NSWindowController
             let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
             self.sourceEditor.textStorage?.setAttributedString(mutableString)
             self.compiler = Compiler()
+            self.resetReporting()
+            self.compiler.reportingContext = self
             self.compiler.compileChunk(string)
             self.sourceEditor.textStorage?.beginEditing()
             for (range,attributes) in self.compiler.tokenRenderer.attributes
@@ -243,6 +376,11 @@ class ArgonBrowserWindowController: NSWindowController
         
     private func initInspector()
         {
+        self.errorListView = inspectorController.listView
+        self.errorListView.delegate = self
+        self.errorListView.dataSource = self
+        let nib = NSNib(nibNamed: "CompilationEventCellView", bundle: nil)
+        self.errorListView.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventCellView"))
         }
         
     public func validateToolbarItem(item:NSToolbarItem) -> Bool
@@ -250,7 +388,7 @@ class ArgonBrowserWindowController: NSWindowController
         return(true)
         }
         
-    @IBAction func onSaveEditor(_ sender:Any?)
+    @IBAction func onSaveFile(_ sender:Any?)
         {
         let text = self.sourceEditor.textStorage!.string
         if self.currentSourceFileURL.isNotNil
@@ -280,13 +418,25 @@ class ArgonBrowserWindowController: NSWindowController
             }
         }
         
-    @IBAction func onEmitSymbols(_ sender:Any?)
+    @IBAction func onSaveSymbols(_ sender:Any?)
         {
         do
             {
             var url = self.currentSourceFileURL
             url?.deletePathExtension()
             url?.appendPathExtension("argonb")
+            var path = url!.path
+            var file = fopen(path,"wb")
+            fputs("STRING",file)
+            fflush(file)
+            fclose(file)
+            url?.deletePathExtension()
+            url?.appendPathExtension("argono")
+            path = url!.path
+            file = fopen(path,"wb")
+            fputs("STRING",file)
+            fflush(file)
+            fclose(file)
             if let theUrl = url
                 {
                 let source = self.sourceEditor.string
@@ -304,19 +454,25 @@ class ArgonBrowserWindowController: NSWindowController
             }
         }
         
-    @IBAction func onCompile(_ sender: Any?)
+    @IBAction func onCompileFile(_ sender: Any?)
         {
-        TopModule.shared.removeObject(taggedWith: self.compiler.currentTag)
         let source = self.sourceEditor.string
         let compiler = Compiler()
-        TopModule.shared.argonModule.object.resetHierarchy()
-        TopModule.shared.argonModule.realizeSuperclasses()
+        self.resetReporting()
+        compiler.reportingContext = self
+        Transaction.abort()
         if let chunk = compiler.compileChunk(source)
             {
+            let transaction = Transaction.current.copy()
+            Transaction.commit()
+            TopModule.shared.printContents()
+            self.currentCapsule?.with(source: source, product: chunk, transaction: transaction)
             if let module = chunk as? Module
                 {
                 module.realizeSuperclasses()
-                self.outliner.reloadData()
+                self.symbolList1.symbols = [TopModule.shared.argonModule.object]
+                self.symbolList2.symbols = [TopModule.shared]
+                self.symbolList3.symbols = [TopModule.shared.moduleRoot]
                 }
             }
         }
@@ -325,10 +481,12 @@ class ArgonBrowserWindowController: NSWindowController
         {
         let mutableString = NSMutableAttributedString(string: "",attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
         self.sourceEditor.textStorage?.setAttributedString(mutableString)
+        Transaction.abort()
         self.compiler = Compiler()
+        self.currentSourceFileURL = nil
         }
         
-    @IBAction func fugglyBuggly(_ sender:Any?)
+    @IBAction func onOpenFile(_ sender:Any?)
         {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [UTType("com.macsemantics.argon.source")!]
@@ -352,92 +510,50 @@ class ArgonBrowserWindowController: NSWindowController
                     }
                 self.sourceEditor.textStorage?.endEditing()
                 UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
-                }
-            }
-        }
-        
-    @IBAction public func onEmitObject(_ sender:Any?)
-        {
-        }
-        
-    @IBAction public func onOpenDocument(_ sender:Any?)
-        {
-        let panel = NSOpenPanel()
-        panel.allowedContentTypes = [UTType("com.macsemantics.argon.source")!]
-        panel.canChooseFiles = true
-        panel.prompt = "Open"
-        panel.message = "Select an Argon source file to be opened in the Argon source editor."
-        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
-        if panel.runModal() == .OK
-            {
-            if let url = panel.url,let string = try? String(contentsOf: url)
-                {
-                self.sourceEditor.string = string
-                self.currentSourceFileURL = url
+                let capsule = Capsule(path: url)
+                self.capsules[capsule.path] = capsule
+                self.currentCapsule = capsule
                 }
             }
         }
     }
 
-extension ArgonBrowserWindowController: NSOutlineViewDataSource
+public class ForwarderView: NSView
     {
-    public func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int
+    private var controller: ArgonBrowserWindowController
+    
+    init(controller: ArgonBrowserWindowController)
         {
-        if item == nil
-            {
-            return(self.symbols.count)
-            }
-        else
-            {
-            let symbol = item as! Symbol
-            return(symbol.childCount)
-            }
-        }
-
-    func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any
-        {
-        if item.isNil
-            {
-            return(self.symbols[index])
-            }
-        else if let symbol = item as? Symbol
-            {
-            return(symbol.child(atIndex: index))
-            }
-        fatalError()
-        }
-
-    func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool
-        {
-        let symbol = item as! Symbol
-        return(symbol.isExpandable)
-        }
-    }
-
-extension ArgonBrowserWindowController:NSOutlineViewDelegate
-    {
-    public func outlineViewSelectionDidChange(_ notification: Notification)
-        {
+        self.controller = controller
+        super.init(frame: .zero)
         }
         
-    public func outlineView(_ outlineView: NSOutlineView,viewFor tableColumn: NSTableColumn?,item: Any) -> NSView?
-        {
-        let view = outlineView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "HierarchyCell"), owner: nil) as! NSTableCellView
-        let anItem = item as! Symbol
-        view.textField?.font = NSFont.systemFont(ofSize: 10)
-        view.textField?.stringValue = anItem.label
-        view.imageView?.image = NSImage(named: anItem.imageName)!
-        view.imageView?.image?.isTemplate = true
-        view.imageView?.contentTintColor = anItem.defaultColor
-        view.textField?.textColor = NSColor.controlTextColor
-        return(view)
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
         }
         
-//    public func outlineView(_ outlineView: NSOutlineView,rowViewForItem anItem: Any) -> NSTableRowView?
-//        {
-//        let view = RowView(selectionColor: ArgonPalette.shared.kModuleColor)
-//        return(view)
-//        }
+    @IBAction func onOpenFile(_ sender: Any?)
+        {
+        self.controller.onOpenFile(sender)
+        }
+        
+    @IBAction func onSaveFile(_ sender: Any?)
+        {
+        self.controller.onSaveFile(sender)
+        }
+        
+    @IBAction func onCompileFile(_ sender: Any?)
+        {
+        self.controller.onCompileFile(sender)
+        }
+        
+    @IBAction func onSaveSymbols(_ sender: Any?)
+        {
+        self.controller.onSaveSymbols(sender)
+        }
+
+    @IBAction func onNewEditor(_ sender: Any?)
+        {
+        self.controller.onNewEditor(sender)
+        }
     }
-
-

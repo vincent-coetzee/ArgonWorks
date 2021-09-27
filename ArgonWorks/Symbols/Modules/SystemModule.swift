@@ -19,16 +19,24 @@ public class SystemModule: Module
         return(true)
         }
         
+    public override var isSystemContainer: Bool
+        {
+        return(true)
+        }
+        
     public var subModules: Modules
         {
-        return(self.symbols.valuesByKey.compactMap{$0 as? SystemModule})
+        return(self.symbols.compactMap{$0 as? SystemModule})
         }
         
     public override func lookup(label: Label) -> Symbol?
         {
-        if let value = self.symbols[label]
+        for symbol in self.symbols where symbol.label == label
             {
-            return(value)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
         for module in self.subModules
             {
@@ -40,10 +48,42 @@ public class SystemModule: Module
         return(nil)
         }
         
+    public override func lookup(name:Name) -> Symbol?
+        {
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        if name.isRooted
+            {
+            if let context = self.primaryContext.lookup(label: name.first)
+                {
+                return(context.lookup(name: name.withoutFirst))
+                }
+            return(nil)
+            }
+        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+            {
+            return(symbol)
+            }
+        if name.count == 1,let symbol = self.lookup(label: name.first)
+            {
+            return(symbol)
+            }
+        for module in self.symbols.filter({$0.isSystemContainer})
+            {
+            if let symbol = module.lookup(name: name)
+                {
+                return(symbol)
+                }
+            }
+        return(nil)
+        }
+        
     internal override func layout()
         {
         self.layoutSlots()
-        for aModule in self.symbols.valuesByKey.compactMap({$0 as? SystemModule})
+        for aModule in self.symbols.compactMap({$0 as? SystemModule})
             {
             aModule.layout()
             }
@@ -52,7 +92,7 @@ public class SystemModule: Module
         
     internal func resolveReferences()
         {
-        for symbol in self.symbols.valuesByKey
+        for symbol in self.symbols
             {
             if let aClass = symbol as? Class
                 {

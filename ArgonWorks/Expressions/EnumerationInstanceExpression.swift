@@ -29,12 +29,31 @@ public class EnumerationInstanceExpression: Expression
     public let associatedValues: Array<Expression>?
     public let caseLabel: String
     
+    required init?(coder: NSCoder)
+        {
+        self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
+        self.theCase = coder.decodeObject(forKey:"theClass") as? EnumerationCase
+        self.associatedValues = coder.decodeObject(forKey:"associatedValues") as? Array<Expression>
+        self.caseLabel = coder.decodeObject(forKey:"caseLabel") as! String
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.enumeration,forKey: "enumeration")
+        coder.encode(self.theCase,forKey: "theCase")
+        coder.encode(self.associatedValues,forKey: "associatedValues")
+        coder.encode(self.caseLabel,forKey: "caseLabel")
+        }
+        
     init(caseLabel: String,enumeration: Enumeration?,enumerationCase aCase: EnumerationCase?,associatedValues: Array<Expression>?)
         {
         self.caseLabel = caseLabel
         self.enumeration = enumeration
         self.theCase = aCase
         self.associatedValues = associatedValues
+        super.init()
         }
         
     public override func realize(using realizer: Realizer)

@@ -284,20 +284,20 @@ public class BinaryExpression: Expression
         self.rhs.realize(using: realizer)
         }
         
-    init(coder: NSCoder)
+    required init?(coder: NSCoder)
         {
         self.operation = coder.decodeObject(forKey: "operation") as! Token.Symbol
         self.lhs = coder.decodeObject(forKey:"lhs") as! Expression
         self.rhs = coder.decodeObject(forKey:"rhs") as! Expression
+        super.init(coder: coder)
         }
         
-    public func encode(with coder: NSCoder)
+    public override func encode(with coder: NSCoder)
         {
         coder.encode(self.operation,forKey: "operation")
         coder.encode(self.lhs,forKey: "lhs")
         coder.encode(self.rhs,forKey: "rhs")
         }
-        
         
     public override func dump(depth: Int)
         {
