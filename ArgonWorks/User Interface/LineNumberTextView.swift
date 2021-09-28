@@ -30,6 +30,22 @@ import Cocoa
 /// A NSTextView with a line number gutter attached to it.
 public class LineNumberTextView: NSTextView {
 
+    /// Holds a layer which has been used to highlight the currently selected line / or not
+    private var selectedLineLayer = CALayer()
+    /// Holds the color to be used when highlighting a selected line
+    public var selectionHighlightColor = NSColor.argonSizzlingRed
+        {
+        didSet
+            {
+            let newColor = selectionHighlightColor.withAlpha(0.4)
+            self.selectedLineLayer.backgroundColor = newColor.cgColor
+            }
+        }
+    /// Holds the click count for highlighting the line, odd click count
+    /// shows the line, even click counts hide the line.
+    private var downClickCount = 0
+    /// Holds the selected line number
+    private var selectedLineNumber = 0
     /// Holds the attached line number gutter.
     private var lineNumberGutter: LineNumberGutter?
 
@@ -79,6 +95,9 @@ public class LineNumberTextView: NSTextView {
             fatalError("Unwrapping the text views scroll view failed!")
         }
 
+        self.wantsLayer = true
+        self.selectedLineLayer.isHidden = true
+        self.layer?.addSublayer(self.selectedLineLayer)
         if let gutterBG = self.gutterBackgroundColor,
            let gutterFG = self.gutterForegroundColor {
             self.lineNumberGutter = LineNumberGutter(withTextView: self, foregroundColor: gutterFG, backgroundColor: gutterBG)
@@ -101,6 +120,9 @@ public class LineNumberTextView: NSTextView {
             fatalError("Unwrapping the text views scroll view failed!")
         }
 
+        self.wantsLayer = true
+        self.selectedLineLayer.isHidden = true
+        self.layer?.addSublayer(self.selectedLineLayer)
         if let gutterBG = self.gutterBackgroundColor,
            let gutterFG = self.gutterForegroundColor {
             self.lineNumberGutter = LineNumberGutter(withTextView: self, foregroundColor: gutterFG, backgroundColor: gutterBG)
@@ -130,4 +152,32 @@ public class LineNumberTextView: NSTextView {
             lineNumberGutter.needsDisplay = true
         }
     }
+
+    public override func mouseDown(with event: NSEvent)
+        {
+        var line: Int = 0
+        var rect: NSRect = .zero
+        let point = self.convert(event.locationInWindow,from: nil)
+        self.lineNumberGutter!.find(lineNumber: &line, andRectangle: &rect, forPoint: point)
+        var actualLineNumber = 0
+        let lineHeight = self.lineNumberGutter!.lineHeight
+        var frame = rect
+        if line == 0 ///  actually the last line
+            {
+            actualLineNumber = self.lineNumberGutter!.totalLineCount
+            let offset = lineHeight * CGFloat(actualLineNumber)
+            frame = NSRect(x:0,y:offset,width: self.bounds.width,height: lineHeight)
+            }
+        else
+            {
+            actualLineNumber = line - 1
+            }
+        frame.origin.y = frame.minY - lineHeight
+        self.selectedLineNumber = actualLineNumber
+        self.downClickCount += 1
+        self.selectedLineLayer.frame = frame
+        self.selectedLineLayer.isHidden = self.downClickCount % 2 == 1
+        super.mouseDown(with: event)
+        }
 }
+

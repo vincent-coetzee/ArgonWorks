@@ -1202,12 +1202,11 @@ public class Parser: CompilerPass
         let location = self.token.location
         let lhs = try self.parseAsExpression()
         lhs.addDeclaration(location)
-        if self.token.isEquals
+        if self.token.isAssign
             {
-            let symbol = self.token.symbol
             try self.nextToken()
             let rhs = try self.parseAsExpression()
-            return(lhs.operation(symbol,rhs))
+            return(AssignmentExpression(lhs,Token.Operator("="),rhs))
             }
         print("PARSED EXPRESSION:")
         print(lhs.displayString)

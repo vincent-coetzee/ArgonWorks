@@ -1115,44 +1115,45 @@
                         <rect key="frame" x="0.0" y="0.0" width="360" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <scrollView fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5sY-5j-Rbe">
-                                <rect key="frame" x="0.0" y="0.0" width="360" height="164"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <clipView key="contentView" drawsBackground="NO" id="eO8-sO-c0n">
-                                    <rect key="frame" x="0.0" y="0.0" width="360" height="164"/>
+                            <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ypx-cp-y69">
+                                <rect key="frame" x="0.0" y="0.0" width="360" height="300"/>
+                                <clipView key="contentView" drawsBackground="NO" id="jnK-ey-uPa">
+                                    <rect key="frame" x="0.0" y="0.0" width="360" height="300"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textView importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="dnF-fY-a08" customClass="LineNumberTextView" customModule="ArgonWorks" customModuleProvider="target">
-                                            <rect key="frame" x="0.0" y="0.0" width="360" height="164"/>
+                                        <textView importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="Wy9-W8-INE" customClass="LineNumberTextView" customModule="ArgonWorks" customModuleProvider="target">
+                                            <rect key="frame" x="0.0" y="0.0" width="360" height="300"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="360" height="164"/>
+                                            <size key="minSize" width="360" height="300"/>
                                             <size key="maxSize" width="360" height="10000000"/>
                                             <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
                                     </subviews>
                                 </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Q1k-JU-04M">
+                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="jaE-jt-IEW">
                                     <rect key="frame" x="-100" y="-100" width="240" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="7HT-EI-J4I">
-                                    <rect key="frame" x="344" y="0.0" width="16" height="164"/>
+                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="fsn-nY-rOQ">
+                                    <rect key="frame" x="344" y="0.0" width="16" height="300"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
-                            <browser verticalHuggingPriority="750" fixedFrame="YES" allowsExpansionToolTips="YES" enabled="YES" hasHorizontalScroller="YES" allowsEmptySelection="YES" defaultColumnWidth="100" minColumnWidth="100" titled="YES" separatesColumns="YES" allowsTypeSelect="YES" columnResizingType="auto" translatesAutoresizingMaskIntoConstraints="NO" id="U8c-KD-BC5">
-                                <rect key="frame" x="0.0" y="156" width="360" height="166"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                            </browser>
                         </subviews>
+                        <constraints>
+                            <constraint firstItem="Ypx-cp-y69" firstAttribute="trailing" secondItem="5tn-91-wig" secondAttribute="trailing" id="53C-BE-39D"/>
+                            <constraint firstItem="Ypx-cp-y69" firstAttribute="top" secondItem="fum-Pk-Tem" secondAttribute="top" id="IJl-Ix-swm"/>
+                            <constraint firstItem="Ypx-cp-y69" firstAttribute="leading" secondItem="5tn-91-wig" secondAttribute="leading" id="LMA-dM-Qmu"/>
+                            <constraint firstItem="Ypx-cp-y69" firstAttribute="bottom" secondItem="5tn-91-wig" secondAttribute="bottom" id="Rxx-d0-yYF"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="5tn-91-wig"/>
                         <viewLayoutGuide key="layoutMargins" id="PSX-sT-oNL"/>
                     </view>
                     <connections>
-                        <outlet property="browser" destination="U8c-KD-BC5" id="pOv-n2-5IR"/>
-                        <outlet property="sourceEditor" destination="dnF-fY-a08" id="rUn-3v-b49"/>
+                        <outlet property="sourceEditor" destination="Wy9-W8-INE" id="ehj-b9-bZB"/>
+                        <outlet property="sourceScroller" destination="Ypx-cp-y69" id="xIy-ux-sO3"/>
                     </connections>
                 </viewController>
                 <customObject id="C7m-e4-b28" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

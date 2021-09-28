@@ -56,7 +56,7 @@ public class HierarchySymbolWrapper
         {
         if self.isGroup
             {
-            return("IconEmpty")
+            return("IconGroup")
             }
         else
             {
@@ -93,18 +93,18 @@ public class HierarchySymbolWrapper
         {
         if self.isGroup
             {
-            return(NSColor.argonStoneTerrace)
+            return(Palette.shared.sunnyScheme.mid)
             }
         else
             {
             let symbol = self.symbols.first!
             if symbol.isSystemSymbol
                 {
-                return(NSColor.argonSalmonPink)
+                return(Palette.shared.sunnyScheme.light)
                 }
             else if (symbol is Module || symbol is SymbolGroup) && self.children.count == 0
                 {
-                return(NSColor.argonPink)
+                return(Palette.shared.sunnyScheme.dark)
                 }
             return(symbol.defaultColor)
             }
@@ -142,7 +142,7 @@ public class HierarchySymbolWrapper
                 let kids = symbol.allChildren.filter{self.type.matchesSymbol($0)}
                 if kids.count == 0
                     {
-                    newColor = NSColor.argonSizzlingRed
+                    newColor = NSColor.argonPapayaWhip
                     }
                 }
             }

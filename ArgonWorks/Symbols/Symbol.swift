@@ -13,7 +13,7 @@ public class Symbol:Node,ParseNode
     {
     public var defaultColor: NSColor
         {
-        NSColor.argonZomp
+        Palette.shared.sunnyScheme.mid
         }
     
     public var isEnumeration: Bool

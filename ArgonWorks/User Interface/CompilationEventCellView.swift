@@ -23,12 +23,14 @@ class CompilationEventCellView: NSTableCellView
                     let stop = location.tokenStop - lineStart
                     self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
                     self.detailView.stringValue = "Warning: \(text)"
+                    self.iconView.image = NSImage(named:"AnnotationWarning")!
                 case .error(let location,let text):
                     let lineStart = location.lineStart
                     let start = location.tokenStart - lineStart
                     let stop = location.tokenStop - lineStart
                     self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
                     self.detailView.stringValue = "Error: \(text)"
+                    self.iconView.image = NSImage(named:"AnnotationError")!
                 }
             }
         }
@@ -49,6 +51,7 @@ class CompilationEventCellView: NSTableCellView
             }
         }
         
+    @IBOutlet var iconView: NSImageView!
     @IBOutlet var lineNumberView: NSTextField!
     @IBOutlet var detailView: NSTextField!
     }

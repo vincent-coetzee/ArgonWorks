@@ -236,18 +236,40 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     public func dispatchWarning(at: Location, message: String)
         {
         self.compilationEvents.append(.warning(at,message))
-        self.errorListView.reloadData()
+        self.errorListView?.reloadData()
         }
     
     public func dispatchError(at: Location, message: String)
         {
         self.compilationEvents.append(.error(at,message))
-        self.errorListView.reloadData()
+        self.errorListView?.reloadData()
+        self.refreshSourceAnnotations()
         }
     
     private func resetReporting()
         {
         self.compilationEvents = []
+        self.errorListView?.reloadData()
+        self.sourceEditor.removeAllAnnotations()
+        }
+        
+    public func refreshSourceAnnotations()
+        {
+        self.sourceEditor.removeAllAnnotations()
+        for event in self.compilationEvents
+            {
+            switch(event)
+                {
+                case .warning(let location,_):
+                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "AnnotationWarning")!)
+                    self.sourceEditor.addAnnotation(annotation)
+                case .error(let location,_):
+                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "AnnotationError")!)
+                    self.sourceEditor.addAnnotation(annotation)
+                default:
+                    break
+                }
+            }
         }
         
     public func numberOfRows(in tableView: NSTableView) -> Int
@@ -265,6 +287,11 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         return(nil)
         }
 
+    @objc func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView?
+        {
+        return(HierarchyRowView(selectionColor: NSColor.argonAnnotationOrange))
+        }
+        
     private func initSourceEditor()
         {
         self.forwarderView = ForwarderView(controller: self)
@@ -274,6 +301,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.sourceEditor.isAutomaticQuoteSubstitutionEnabled = false
         self.sourceEditor.isAutomaticDashSubstitutionEnabled = false
         self.sourceEditor.isAutomaticTextReplacementEnabled = false
+        self.sourceEditor.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
         self.toolbar.delegate = self
         for item in self.toolbar.items
             {
@@ -355,6 +383,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.errorListView.dataSource = self
         let nib = NSNib(nibNamed: "CompilationEventCellView", bundle: nil)
         self.errorListView.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventCellView"))
+        self.errorListView?.reloadData()
         }
         
     public func validateToolbarItem(item:NSToolbarItem) -> Bool

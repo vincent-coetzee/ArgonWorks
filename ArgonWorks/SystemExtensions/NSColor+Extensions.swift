@@ -50,6 +50,7 @@ extension NSColor
     public static let argonSexyPink = NSColor(red: 255.0/255.0,green: 63/255.0,blue:131/255.0,alpha:1)
     public static let argonLightBlack = NSColor(red: 45.0/255.0,green: 45.0/255.0,blue: 45.0/255.0,alpha:1)
     public static let argonLightWhite = NSColor(red: 195.0/255.0,green: 195.0/255.0,blue: 195.0/255.0,alpha:1)
+    public static let argonAnnotationOrange = NSColor(red: 236.0/255.0,green: 111.0/255.0,blue: 45.0/255.0,alpha:1)
     public static let argonXGreen = NSColor(hex: 0x80BD04)
     public static let argonXOrange = NSColor(hex: 0xFD8F3F)
     public static let argonXBlue = NSColor(hex: 0x00C3AF)
@@ -72,6 +73,29 @@ extension NSColor
     public static let argonThemeCyan = NSColor(hex: 0x00C3AF)
     public static let argonThemeBlue = NSColor(hex: 0x0095B6)
     public static let argonThemePink = NSColor(hex: 0xFF007B)
+    
+    public static let argonDarkPurple = NSColor(hex: 0x331832)
+    public static let argonRuby = NSColor(hex: 0xD81E5B)
+    public static let argonTartOrange = NSColor(hex: 0xF0544F)
+    public static let argonOpal = NSColor(hex: 0xC6D8D3)
+    public static let argonPapayaWhip = NSColor(hex: 0xFF007B)
+    
+    public static let argonJet = NSColor(hex: 0x343330)
+    public static let argonRifleGreen = NSColor(hex: 0x45462A)
+    public static let argonBrown = NSColor(hex: 0x7E5920)
+    public static let argonFulvous = NSColor(hex: 0xDC851F)
+    public static let argonYellowOrange = NSColor(hex: 0xFFA737)
+    
+    public static let argonSizzlingRed2 = NSColor(hex: 0xFF595E)
+    public static let argonSunglow = NSColor(hex: 0xFFCA3A)
+    public static let argonYellowGreen2 = NSColor(hex: 0x8AC926)
+    public static let argonGreenBlueCrayola = NSColor(hex: 0x1982C4)
+    public static let argonRoyalPurple = NSColor(hex: 0x6A4C93)
+    
+    public static let argonQuinacridoneMagenta = NSColor(hex: 0x8F2D56)
+    public static let argonCaledonGreen = NSColor(hex: 0x218380)
+    public static let argonBrightYellowCrayola = NSColor(hex: 0xFBB13C)
+    public static let argonSkyBlueCrayola = NSColor(hex: 0x73D2DE)
     
     public var swiftUIColor: Color
         {

@@ -68,9 +68,9 @@ public class Module:ContainerSymbol
         "IconTest"
         }
         
-    public override var symbolColor: NSColor
+    public override var defaultColor: NSColor
         {
-        .argonNeonOrange
+        Palette.shared.sunnyScheme.darkest
         }
         
     public func dumpMethods()

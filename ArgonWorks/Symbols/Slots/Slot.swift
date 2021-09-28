@@ -40,9 +40,9 @@ public class Slot:Symbol
         "IconSlot"
         }
         
-    public override var symbolColor: NSColor
+    public override var defaultColor: NSColor
         {
-        .argonCoral
+        Palette.shared.sunnyScheme.dark
         }
         
     public override var weight: Int

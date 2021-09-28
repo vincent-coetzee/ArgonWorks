@@ -69,8 +69,7 @@ extension ArgonHierarchyBrowserViewController: NSOutlineViewDelegate,NSOutlineVi
     @objc public func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView?
         {
         let symbol = item as! HierarchySymbolWrapper
-        let color = symbol.isSystemSymbol ? NSColor.argonCoral : NSColor.argonStoneTerrace
-        let row = HierarchyRowView(selectionColor: color)
+        let row = HierarchyRowView(selectionColor: symbol.defaultColor)
         return(row)
         }
         

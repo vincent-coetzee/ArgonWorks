@@ -21,9 +21,19 @@ public class ClassTypeValue: TypeValue
         }
     }
 
+public class EnumerationTypeValue: TypeValue
+    {
+    private let theEnumeration: Enumeration
+    
+    init(enumeration: Enumeration)
+        {
+        self.theEnumeration = enumeration
+        }
+    }
+    
 public class VariableTypeValue: TypeValue
     {
-    private let name: String
+    internal let name: String
     
     init(name: String)
         {
@@ -47,6 +57,8 @@ public class ApplyTypeValue: TypeValue
 
 public typealias Environment = Dictionary<String,TypeValue>
 
+public typealias Substitution = Dictionary<String,TypeValue>
+
 public indirect enum TypeExpression
     {
     case integer
@@ -64,6 +76,29 @@ public indirect enum TypeExpression
     
 public struct TypeInferencer
     {
+//    public func applySubstitution(_ substitution: Substitution,toType type: TypeValue) -> TypeValue
+//        {
+//        if type is ClassTypeValue || type is EnumerationTypeValue
+//            {
+//            return(type)
+//            }
+//        else if type is VariableTypeValue
+//            {
+//            let aType = type as! VariableTypeValue
+//            if substitution[aType.name].isNotNil
+//                {
+//                return(substitution[aType.name]!)
+//                }
+//            else
+//                {
+//                return(type)
+//                }
+//            }
+//        else if type is ApplyTypeValue
+//            {
+//            }
+//        }
+        
     public func infer(_ expression: TypeExpression,environment: Environment) -> TypeValue
         {
         switch(expression)

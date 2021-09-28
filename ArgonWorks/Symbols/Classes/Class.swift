@@ -87,7 +87,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override var defaultColor: NSColor
         {
-        NSColor.controlAccentColor
+        Palette.shared.sunnyScheme.light
         }
     
     public var innerClassPointer: InnerClassPointer
@@ -288,7 +288,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override var childName: (String,String)
         {
-        return(("subclass","subclasses"))
+        return(("item","items"))
         }
         
     public var sizeInWords: Int
@@ -305,11 +305,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         else if count == 1
             {
-            text = "1 subclass"
+            text = "1 item"
             }
         else
             {
-            text = "\(count) subclasses"
+            text = "\(count) items"
             }
         leaderCell.textField?.stringValue = text
         }
