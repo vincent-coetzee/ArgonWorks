@@ -13,7 +13,7 @@ public class SymbolGroup:ContainerSymbol
         {
         NSColor.argonXCornflower
         }
-        
+
     public override var imageName: String
         {
         "IconGroup"
@@ -49,6 +49,25 @@ public class SymbolGroup:ContainerSymbol
         return(true)
         }
         
+    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+        {
+        let count = self.symbols.count
+        var text = ""
+        if count == 0
+            {
+            text = ""
+            }
+        else if count == 1
+            {
+            text = "1 child"
+            }
+        else
+            {
+            text = "\(count) children"
+            }
+        leaderCell.textField?.stringValue = text
+        }
+        
     public override func lookup(name:Name) -> Symbol?
         {
         if name.isEmpty
@@ -81,6 +100,11 @@ public class SymbolGroup:ContainerSymbol
         return(nil)
         }
         
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(true)
+        }
+        
     public override func directlyContains(symbol:Symbol) -> Bool
         {
         for aSymbol in self.symbols
@@ -95,5 +119,19 @@ public class SymbolGroup:ContainerSymbol
                 }
             }
         return(false)
+        }
+    }
+
+public class SystemSymbolGroup: SymbolGroup
+    {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
+    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        let color =  foregroundColor.isNil ? Palette.shared.hierarchyBrowserSystemClassColor : foregroundColor!
+        super.configure(cell: cell,foregroundColor: color)
         }
     }

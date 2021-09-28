@@ -27,6 +27,16 @@ public class ContainerSymbol:Symbol
         return(self.children!.count)
         }
         
+    public override var isSymbolContainer: Bool
+        {
+        return(true)
+        }
+        
+    public override var allChildren: Symbols
+        {
+        return(self.symbols)
+        }
+        
     public override var children: Symbols?
         {
         return(self.symbols.sorted{$0.label < $1.label})

@@ -78,6 +78,12 @@ public class MethodInstance:Function
         return(false)
         }
         
+    public override var displayString: String
+        {
+        let parmString = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
+        return("\(self.label) \(parmString) -> \(self.returnType.displayString)")
+        }
+        
     public var localSlots: Slots
         {
         self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})

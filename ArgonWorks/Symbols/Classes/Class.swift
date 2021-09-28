@@ -126,6 +126,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
+    public override var allChildren: Symbols
+        {
+        return(self.localSlots.sorted{$0.label<$1.label} + self.subclasses.sorted{$0.label<$1.label})
+        }
+        
     public var internalClass: Class
         {
         return(self.topModule.argonModule.class)
@@ -281,9 +286,32 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.layoutSlots.count * MemoryLayout<UInt64>.size
         }
         
+    public override var childName: (String,String)
+        {
+        return(("subclass","subclasses"))
+        }
+        
     public var sizeInWords: Int
         {
         self.sizeInBytes / MemoryLayout<Word>.size
+        }
+        
+    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+        {
+        let count = self.subclasses.count
+        var text = ""
+        if count == 0
+            {
+            }
+        else if count == 1
+            {
+            text = "1 subclass"
+            }
+        else
+            {
+            text = "\(count) subclasses"
+            }
+        leaderCell.textField?.stringValue = text
         }
         
     public var localAndInheritedSlots: Slots
@@ -435,6 +463,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public func isSubclass(of superclass:Class) -> Bool
         {
         return(superclass.isSuperclass(of: self))
+        }
+        
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(ofType == .class)
         }
         
     public func isInclusiveSubclass(of someClass:Class) -> Bool

@@ -48,6 +48,11 @@ public class Invokable: Symbol
         {
         return(SingleParameterInvokable.with(label: self.label, parameters: self.parameters, returnType: self.returnType))
         }
+        
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(ofType == .method)
+        }
     }
     
 public class SingleParameterInvokable: Symbol

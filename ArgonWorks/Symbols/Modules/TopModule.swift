@@ -37,6 +37,11 @@ public class TopModule: SystemModule
         return(ModuleHolder(TopModule(modules)))
         }
 
+    public var allModules: Symbols
+        {
+        return(self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label})
+        }
+        
     public static let shared = TopModule()
         
     public override var name: Name

@@ -62,7 +62,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         }
         
     @IBAction
-    public func openNewProcessorBrowser(_ sender:Any?)
+    public func openProcessorBrowser(_ sender:Any?)
         {
         let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ProcessorWindowController") as? NSWindowController else
@@ -73,7 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         }
         
     @IBAction
-    public func openNewMemoryBrowser(_ sender:Any?)
+    public func openMemoryBrowser(_ sender:Any?)
         {
         let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "MemoryWindowController") as? NSWindowController else
@@ -84,10 +84,21 @@ class AppDelegate: NSObject, NSApplicationDelegate
         }
         
     @IBAction
-    public func openNewArgonBrowser(_ sender:Any?)
+    public func openArgonBrowser(_ sender:Any?)
         {
         let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonBrowserWindowController") as? NSWindowController else
+            {
+            return
+            }
+        controller.showWindow(self)
+        }
+        
+    @IBAction
+    public func openHierarchyBrowser(_ sender:Any?)
+        {
+        let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonHierarchyController") as? NSWindowController else
             {
             return
             }

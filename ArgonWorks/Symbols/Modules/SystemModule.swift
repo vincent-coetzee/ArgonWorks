@@ -9,6 +9,11 @@ import Foundation
 
 public class SystemModule: Module
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var typeCode:TypeCode
         {
         .systemModule

@@ -12,6 +12,7 @@ public class HierarchyCellView: NSTableCellView
     @IBOutlet var icon: NSImageView!
     @IBOutlet var text: NSTextField!
     @IBOutlet var trailer: NSTextField!
+    @IBOutlet var ender: NSTextField!
     
     public var symbol: Symbol?
         {

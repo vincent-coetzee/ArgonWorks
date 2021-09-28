@@ -21,6 +21,16 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var isSymbolContainer: Bool
+        {
+        return(false)
+        }
+        
+    public var isSystemSymbol: Bool
+        {
+        return(false)
+        }
+        
     public var isClassParameter: Bool
         {
         return(false)
@@ -34,6 +44,11 @@ public class Symbol:Node,ParseNode
     public var isSystemContainer: Bool
         {
         return(false)
+        }
+        
+    public var childName: (String,String)
+        {
+        return(("item","items"))
         }
         
     public var isClass: Bool
@@ -104,6 +119,11 @@ public class Symbol:Node,ParseNode
     public var children:Symbols?
         {
         return(nil)
+        }
+ 
+    public var allChildren: Symbols
+        {
+        return([])
         }
         
     public var weight: Int
@@ -186,6 +206,16 @@ public class Symbol:Node,ParseNode
         cell.text.textColor = NSColor.black
         }
         
+    public func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+        {
+        leaderCell.textField?.stringValue = ""
+        }
+        
+    public func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(false)
+        }
+        
     public func child(atIndex: Int) -> Symbol
         {
         return(self.children![atIndex])
@@ -194,7 +224,7 @@ public class Symbol:Node,ParseNode
     public override func removeSymbol(_ symbol: Symbol)
         {
         }
-        
+    
     public func childCount(forChildType type: ChildType) -> Int
         {
         let kids = self.children(forChildType: type)

@@ -28,8 +28,8 @@
                     </constraints>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="sgt-Zv-11z"/>
                 </imageView>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bVh-b7-139">
-                    <rect key="frame" x="48" y="0.0" width="31" height="13"/>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bVh-b7-139">
+                    <rect key="frame" x="49" y="0.0" width="31" height="13"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Label" id="Uwf-Ms-t2b">
                         <font key="font" metaFont="system" size="10"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -53,7 +53,7 @@
                 <outlet property="textField" destination="T0f-54-Vpx" id="Rng-RR-KEI"/>
                 <outlet property="trailer" destination="bVh-b7-139" id="JWD-1c-kZo"/>
             </connections>
-            <point key="canvasLocation" x="125" y="11.5"/>
+            <point key="canvasLocation" x="257" y="3.5"/>
         </customView>
     </objects>
 </document>

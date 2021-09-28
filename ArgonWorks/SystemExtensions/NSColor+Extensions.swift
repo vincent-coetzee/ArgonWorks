@@ -65,6 +65,7 @@ extension NSColor
     public static let argonXLightBlue = NSColor(hex: 0x009586)
     public static let argonXIdentifier = NSColor(hex: 0x80BD04)
     
+    public static let argonHeaderGray = NSColor(red: 38.0/255.0,green: 40.0/255.0,blue: 42.0/255.0,alpha: 1)
     public static let argonThemeBlueGreen = NSColor(hex: 0x009063)
     public static let argonThemeOrange = NSColor(hex: 0xFD8F3F)
     public static let argonThemeGreen = NSColor(hex: 0x80BD04)

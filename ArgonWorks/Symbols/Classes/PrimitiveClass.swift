@@ -96,6 +96,11 @@ public class PrimitiveClass:Class
         case mutableString
         }
         
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var isStringClass: Bool
         {
         return(self.primitiveType == .string)

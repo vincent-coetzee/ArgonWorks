@@ -9,6 +9,11 @@ import Foundation
 
 public class SystemMethodInstance:MethodInstance
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var isSystemMethodInstance: Bool
         {
         return(true)

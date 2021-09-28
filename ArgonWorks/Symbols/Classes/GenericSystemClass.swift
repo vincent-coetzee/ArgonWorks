@@ -9,6 +9,11 @@ import Foundation
 
 public class GenericSystemClass:GenericClass
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var isSystemClass: Bool
         {
         return(true)

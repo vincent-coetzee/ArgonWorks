@@ -9,6 +9,11 @@ import Foundation
 
 public class ArrayClass:GenericSystemClass
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     private static var allInstances = Array<ArrayClassInstance>()
     
     public override var mangledName: String

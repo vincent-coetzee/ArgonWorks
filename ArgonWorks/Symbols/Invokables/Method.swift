@@ -76,6 +76,11 @@ public class Method:Symbol
         return(self.instances)
         }
         
+    public override var allChildren: Array<Symbol>
+        {
+        return(self.instances)
+        }
+        
     public override var isExpandable: Bool
         {
         return(self.instances.count > 0)

@@ -9,6 +9,11 @@ import Foundation
 
 public class Constant:Slot
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public var place: Instruction.Operand = .none
     
     private let value: Expression
@@ -35,6 +40,11 @@ public class Constant:Slot
         coder.encode(self.value,forKey: "value")
         }
     
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(ofType == .constant)
+        }
+        
     public override var typeCode:TypeCode
         {
         .constant

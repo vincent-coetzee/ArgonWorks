@@ -85,6 +85,29 @@ public class Module:ContainerSymbol
             }
         }
         
+    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+        {
+        let count = self.symbols.count
+        var text = ""
+        if count == 0
+            {
+            }
+        else if count == 1
+            {
+            text = "1 child"
+            }
+        else
+            {
+            text = "\(count) children"
+            }
+        leaderCell.textField?.stringValue = text
+        }
+        
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(true)
+        }
+        
     public func lookupSlot(label: String) -> Slot?
         {
         for symbol in self.symbols where symbol.label == label

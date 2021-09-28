@@ -32,6 +32,11 @@ public class Enumeration:Class
         return(self.cases)
         }
         
+    public override var childName: (String,String)
+        {
+        return(("case","cases"))
+        }
+        
     public override var typeCode:TypeCode
         {
         .enumeration
@@ -47,6 +52,11 @@ public class Enumeration:Class
             return(self)
             }
         fatalError("Attempt to add a symbol of type \(Swift.type(of: symbol)) to the enumeration called \(self.label)")
+        }
+        
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(ofType == .enumeration)
         }
         
     public override func lookup(label: String) -> Symbol?

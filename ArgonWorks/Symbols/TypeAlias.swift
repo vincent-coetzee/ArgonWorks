@@ -42,4 +42,9 @@ public class TypeAlias:Symbol
         {
         .typeAlias
         }
+        
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(ofType == .type)
+        }
     }

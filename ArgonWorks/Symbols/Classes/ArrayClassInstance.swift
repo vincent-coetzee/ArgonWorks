@@ -9,6 +9,11 @@ import Foundation
 
 public class ArrayClassInstance: GenericSystemClassInstance
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var mangledName: String
         {
         let type = self.genericClassParameterInstances.first!

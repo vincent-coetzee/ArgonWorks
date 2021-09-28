@@ -20,13 +20,13 @@ class CompilationEventCellView: NSTableCellView
                 case .warning(let location,let text):
                     let lineStart = location.lineStart
                     let start = location.tokenStart - lineStart
-                    let stop = location.tokenStart - lineStart
+                    let stop = location.tokenStop - lineStart
                     self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
                     self.detailView.stringValue = "Warning: \(text)"
                 case .error(let location,let text):
                     let lineStart = location.lineStart
                     let start = location.tokenStart - lineStart
-                    let stop = location.tokenStart - lineStart
+                    let stop = location.tokenStop - lineStart
                     self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
                     self.detailView.stringValue = "Error: \(text)"
                 }
