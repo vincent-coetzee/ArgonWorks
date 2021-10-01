@@ -27,7 +27,7 @@ public class DeferredValueExpression: Expression
     required init?(coder: NSCoder)
         {
         self.name = coder.decodeObject(forKey: "name") as! String
-        self.type = coder.decodeObject(forKey: "type") as! Type
+        self.type = coder.decodeType(forKey: "type")!
         super.init(coder: coder)
         }
         
@@ -35,6 +35,6 @@ public class DeferredValueExpression: Expression
         {
         super.encode(with: coder)
         coder.encode(self.name,forKey: "name")
-        coder.encode(self.type,forKey: "type")
+        coder.encodeType(self.type,forKey: "type")
         }
     }

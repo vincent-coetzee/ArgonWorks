@@ -85,7 +85,7 @@ public class HeaderView: NSView,Pane
     public override func layout()
         {
         let frame = self.bounds
-        let size = (NSAttributedString(string: self.label.stringValue,attributes: [.font: self.label.font])).size()
+        let size = (NSAttributedString(string: self.label.stringValue,attributes: [.font: self.label.font!])).size()
         let y = (frame.size.height - frame.size.height) / 2.0 + 4.5
         self.label.frame = NSRect(x: 5,y: y,width: frame.size.width, height: size.height)
         }

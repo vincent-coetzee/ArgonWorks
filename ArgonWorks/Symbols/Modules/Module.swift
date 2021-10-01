@@ -70,8 +70,9 @@ public class Module:ContainerSymbol
         
     public override var defaultColor: NSColor
         {
-        Palette.shared.sunnyScheme.darkest
+        Palette.shared.moduleColor
         }
+        
         
     public func dumpMethods()
         {
@@ -83,6 +84,22 @@ public class Module:ContainerSymbol
             {
             module.dumpMethods()
             }
+        }
+        
+    public override func lookup(index: UUID) -> Symbol?
+        {
+        for symbol in self.symbols
+            {
+            if symbol.index == index
+                {
+                return(symbol)
+                }
+            if let found = symbol.lookup(index: index)
+                {
+                return(found)
+                }
+            }
+        return(nil)
         }
         
     public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)

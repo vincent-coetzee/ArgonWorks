@@ -16,7 +16,11 @@ public class Enumeration:Class
         {
         super.init(label: label)
         }
-        
+    
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public override var isEnumeration: Bool
         {
         return(true)
@@ -71,17 +75,10 @@ public class Enumeration:Class
         return(self.parent.lookup(label: label))
         }
         
-    public required init?(coder: NSCoder)
-        {
-        self.rawType = coder.decodeObject(forKey: "rawType") as? Type
-        self.cases = coder.decodeObject(forKey: "cases") as! Array<EnumerationCase>
-        super.init(coder: coder)
-        }
-
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.rawType,forKey: "rawType")
+        coder.encodeType(self.rawType,forKey: "rawType")
         coder.encode(self.cases,forKey: "cases")
         }
         

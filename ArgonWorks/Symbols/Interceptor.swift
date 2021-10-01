@@ -21,4 +21,6 @@ public class Interceptor: Symbol
         {
         fatalError("init(coder:) has not been implemented")
         }
-}
+        
+ 
+    }

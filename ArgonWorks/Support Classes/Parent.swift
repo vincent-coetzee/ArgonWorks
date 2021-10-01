@@ -14,48 +14,11 @@ public enum Parent
     case block(Block)
     case expression(Expression)
 
-    public init?(coder: NSCoder)
-        {
-        let kind = coder.decodeInteger(forKey: "kind")
-        switch(kind)
-            {
-            case 1:
-                self = .none
-            case 2:
-                self = .node(coder.decodeObject() as! Node)
-            case 3:
-                self = .block(coder.decodeObject() as! Block)
-            case 4:
-                self = .expression(coder.decodeObject() as! Expression)
-            default:
-                break
-            }
-        self.init()
-        }
-        
     public init()
         {
         self = .none
         }
 
-    public func encode(with coder:NSCoder)
-        {
-        switch(self)
-            {
-            case .none:
-                coder.encode(1,forKey:"kind")
-            case .node(let node):
-                coder.encode(2,forKey:"kind")
-                coder.encode(node)
-            case .block(let block):
-                coder.encode(3,forKey:"kind")
-                coder.encode(block)
-            case .expression(let block):
-                coder.encode(4,forKey:"kind")
-                coder.encode(block)
-            }
-        }
-        
     public var block: Block
         {
         switch(self)

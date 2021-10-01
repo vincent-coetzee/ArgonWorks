@@ -33,10 +33,11 @@ public class GenericClassParameter: Class
         super.init(label: name)
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+    public required init?(coder: NSCoder)
+        {
+        super.init(coder: coder)
+        }
+        
     public static func ==(lhs:GenericClassParameter,rhs:GenericClassParameter) -> Bool
         {
         return(lhs.label == rhs.label)
@@ -69,6 +70,12 @@ public class GenericClassParameter: Class
 ///
 public class GenericClassParameterInstance: Class
     {
+    private enum CodingKeys: String, CodingKey
+        {
+        case theType
+        case classParameter
+        }
+        
     public static func ==(lhs:GenericClassParameterInstance,rhs:GenericClassParameterInstance) -> Bool
         {
         return(lhs.theType == rhs.theType && lhs.classParameter == rhs.classParameter)
@@ -89,11 +96,19 @@ public class GenericClassParameterInstance: Class
         super.init(label: label)
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-
+    required init?(coder: NSCoder)
+        {
+        self.theType = coder.decodeType(forKey: "theType")!
+        self.classParameter = coder.decodeObject(forKey: "classParameter") as! GenericClassParameter
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.classParameter,forKey: "classParameter")
+        coder.encodeType(self.theType,forKey: "theType")
+        super.encode(with: coder)
+        }
     }
 
 public typealias GenericClassParameters = Array<GenericClassParameter>

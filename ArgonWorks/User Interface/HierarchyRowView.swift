@@ -9,17 +9,26 @@ import Cocoa
 
 class HierarchyRowView: NSTableRowView
     {
-   private let selectionColor:NSColor
+    public var selectionColor: NSColor?
     public var indent:CGFloat = 0
     public var drawsLines = false
     public var lineColor = NSColor.white
+    private let symbol: HierarchySymbolWrapper?
     
-    init(selectionColor:NSColor)
+    init(symbol: HierarchySymbolWrapper)
         {
-        self.selectionColor = selectionColor
+        self.symbol = symbol
+        selectionColor = nil
         super.init(frame: .zero)
         }
     
+    init(selectionColor: NSColor)
+        {
+        self.selectionColor = selectionColor
+        self.symbol = nil
+        super.init(frame: .zero)
+        }
+        
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -29,7 +38,14 @@ class HierarchyRowView: NSTableRowView
         if self.selectionHighlightStyle != .none
             {
             let selectionRect = self.bounds
-            self.selectionColor.setFill()
+            if symbol.isNil
+                {
+                self.selectionColor!.setFill()
+                }
+            else
+                {
+                self.symbol!.selectionColor.setFill()
+                }
             let selectionPath = NSBezierPath.init(roundedRect: selectionRect, xRadius: 0, yRadius: 0)
             selectionPath.fill()
             }

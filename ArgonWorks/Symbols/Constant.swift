@@ -34,6 +34,8 @@ public class Constant:Slot
         super.init(coder: coder)
         }
 
+ 
+        
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
@@ -72,4 +74,6 @@ public class SystemConstant: Constant
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+ 
 }

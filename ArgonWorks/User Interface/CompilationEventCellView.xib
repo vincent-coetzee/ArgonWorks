@@ -13,16 +13,16 @@
             <rect key="frame" x="0.0" y="0.0" width="797" height="18"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="41V-8T-JzS">
-                    <rect key="frame" x="27" y="3" width="50" height="15"/>
-                    <textFieldCell key="cell" lineBreakMode="clipping" title="100,000" id="y6B-TP-S6g">
-                        <font key="font" metaFont="cellTitle"/>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="41V-8T-JzS">
+                    <rect key="frame" x="29" y="1" width="121" height="14"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="100,000" id="y6B-TP-S6g">
+                        <font key="font" size="12" name="SFMono-Regular"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="eyB-sY-DTL">
-                    <rect key="frame" x="85" y="3" width="736" height="15"/>
+                    <rect key="frame" x="154" y="1" width="674" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" title="Event Details" id="rRU-1y-b6o">
                         <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -36,21 +36,21 @@
             </subviews>
             <constraints>
                 <constraint firstItem="PQ9-wK-1do" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="7" id="7wC-69-dFO"/>
-                <constraint firstItem="eyB-sY-DTL" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="BLl-cq-44a"/>
-                <constraint firstAttribute="trailing" secondItem="eyB-sY-DTL" secondAttribute="trailing" constant="-22" id="JlS-RT-qPw"/>
-                <constraint firstItem="41V-8T-JzS" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="29" id="KRd-j4-n3H"/>
-                <constraint firstItem="41V-8T-JzS" firstAttribute="leading" secondItem="PQ9-wK-1do" secondAttribute="trailing" constant="6" id="LJR-a0-38T"/>
-                <constraint firstItem="41V-8T-JzS" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="MDd-60-VGH"/>
+                <constraint firstItem="eyB-sY-DTL" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="2" id="BLl-cq-44a"/>
+                <constraint firstAttribute="trailing" secondItem="eyB-sY-DTL" secondAttribute="trailing" constant="-29" id="JlS-RT-qPw"/>
+                <constraint firstItem="41V-8T-JzS" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="31" id="KRd-j4-n3H"/>
+                <constraint firstItem="41V-8T-JzS" firstAttribute="leading" secondItem="PQ9-wK-1do" secondAttribute="trailing" constant="8" id="LJR-a0-38T"/>
+                <constraint firstItem="41V-8T-JzS" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="3" id="MDd-60-VGH"/>
                 <constraint firstItem="PQ9-wK-1do" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="Wu5-tC-MCW"/>
                 <constraint firstAttribute="bottom" secondItem="PQ9-wK-1do" secondAttribute="bottom" id="YWp-Re-0Na"/>
-                <constraint firstItem="eyB-sY-DTL" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="87" id="vhb-Ru-z0A"/>
+                <constraint firstItem="eyB-sY-DTL" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="156" id="vhb-Ru-z0A"/>
             </constraints>
             <connections>
                 <outlet property="detailView" destination="eyB-sY-DTL" id="iOo-qP-0eB"/>
                 <outlet property="iconView" destination="PQ9-wK-1do" id="wUb-IP-ZoQ"/>
                 <outlet property="lineNumberView" destination="41V-8T-JzS" id="nPJ-CI-NN5"/>
             </connections>
-            <point key="canvasLocation" x="317" y="10"/>
+            <point key="canvasLocation" x="316.5" y="10"/>
         </customView>
     </objects>
 </document>

@@ -21,5 +21,10 @@ public class WhenBlock: Block
         self.condition = condition
         super.init()
         }
+        
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
+        }
     }
     

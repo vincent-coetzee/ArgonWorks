@@ -21,6 +21,11 @@ public class LoopBlock: Block
         super.init()
         }
         
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
+        }
+        
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         for expression in startExpressions

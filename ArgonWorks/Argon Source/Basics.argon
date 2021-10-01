@@ -270,8 +270,8 @@ MAIN MODULE Basics
         
 MODULE Secondary(/Users/vincent/Desktop/libXenon.dylib)
     {
-    FUNCTION printString(PrintString)(string::String) -> Void
-    FUNCTION countArrayElements(CountArrayElements)(array::Array<String>) -> Integer
-    FUNCTION elementAtKey(ElementAtKey)(dictionary::Dictionary<String,Object>) -> Integer
+    FUNCTION(PrintString) printString(string::String) -> Void
+    FUNCTION(CountArrayElements) countArrayElements(array::Array<String>) -> Integer
+    FUNCTION(ElementAtKey) elementAtKey(dictionary::Dictionary<String,Object>) -> Integer
     }
     }

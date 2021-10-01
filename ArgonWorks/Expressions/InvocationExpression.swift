@@ -40,7 +40,7 @@ public class InvocationExpression: Expression
         self.arguments = []
         self.method = coder.decodeObject(forKey: "method") as? Method
         self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
-        self.location = Location(coder: coder)
+        self.location = coder.decodeLocation(forKey: "location")
         super.init(coder: coder)
         }
         
@@ -49,7 +49,7 @@ public class InvocationExpression: Expression
         super.encode(with: coder)
         coder.encode(self.method,forKey: "method")
         coder.encode(self.methodInstance,forKey: "methodInstance")
-        self.location.encode(with: coder)
+        coder.encodeLocation(location,forKey: "location")
         }
         
     init(name:Name,arguments:Arguments,location:Location,context:Context,reportingContext: ReportingContext)
@@ -65,6 +65,8 @@ public class InvocationExpression: Expression
             argument.value.setParent(self)
             }
         }
+        
+ 
         
     public override func realize(using realizer:Realizer)
         {
@@ -165,6 +167,8 @@ public class MethodInvocationExpression: Expression
         self.arguments = []
         super.init(coder: coder)
         }
+        
+ 
         
     public override func encode(with coder: NSCoder)
         {

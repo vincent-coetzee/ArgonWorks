@@ -62,6 +62,21 @@ public class GenericClass:Class
         super.init(label: label)
         }
         
+    required init?(coder: NSCoder)
+        {
+        print("DECODE GenericClass")
+        self.genericClassParameters = coder.decodeObject(forKey: "genericClassParameters") as! Array<Class>
+        self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClassInstance>
+        self._typeCode = .array
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(instances,forKey: "instances")
+        coder.encode(genericClassParameters,forKey: "genericClassParameters")
+        super.encode(with: coder)
+        }
     ///
     ///
     /// Don't mess with the names of this method or the next one because they are here solely
@@ -91,10 +106,8 @@ public class GenericClass:Class
         self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+ 
+        
    public func of(_ type:Class) -> GenericClassInstance
         {
         let classParameter = GenericClassParameter(label: "ELEMENT")

@@ -20,6 +20,11 @@ public class Method:Symbol
         return(false)
         }
         
+    public override var defaultColor: NSColor
+        {
+        Palette.shared.methodColor
+        }
+        
     public var isMain: Bool = false
     public var returnType: Type = .class(VoidClass.voidClass)
     public var proxyParameters = Parameters()
@@ -32,7 +37,7 @@ public class Method:Symbol
     public required init?(coder: NSCoder)
         {
         self.isMain = coder.decodeBool(forKey: "isMain")
-        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
+        self.returnType = coder.decodeType(forKey: "returnType")!
         self.proxyParameters = coder.decodeObject(forKey: "proxyParameters") as! Parameters
         self.isGenericMethod = coder.decodeBool(forKey: "isGenericMethod")
         self.isIntrinsic = coder.decodeBool(forKey: "isIntrinsic")
@@ -47,9 +52,10 @@ public class Method:Symbol
         
     public override func encode(with coder: NSCoder)
         {
+        print("ENCODE METHOD \(self.label)")
         super.encode(with: coder)
         coder.encode(self.isMain,forKey: "isMain")
-        coder.encode(self.returnType,forKey: "returnType")
+        coder.encodeType(self.returnType,forKey: "returnType")
         coder.encode(self.proxyParameters,forKey: "proxyParameters")
         coder.encode(self.isGenericMethod,forKey: "isGenericMethod")
         coder.encode(self.isIntrinsic,forKey: "isIntrinsic")

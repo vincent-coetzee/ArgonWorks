@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum PrivacyScope:String,Codable
+public enum PrivacyScope:String
     {
     case exported = "EXPORTED"
     case `public` = "PUBLIC"

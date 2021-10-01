@@ -18,6 +18,11 @@ public class ExpressionBlock: Block
         super.init()
         }
         
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
+        }
+        
     public override func realize(using realizer:Realizer)
         {
         super.realize(using: realizer)

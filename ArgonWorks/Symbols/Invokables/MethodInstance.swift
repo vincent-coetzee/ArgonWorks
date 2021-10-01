@@ -111,6 +111,7 @@ public class MethodInstance:Function
 
     public override func encode(with coder:NSCoder)
         {
+        print("ENCODE METHOD INSTANCE \(self.label)")
         super.encode(with: coder)
         coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.method,forKey: "method")
@@ -334,6 +335,8 @@ public class MethodInstance:Function
             self.addLocalSlot(parameter)
             }
         }
+        
+ 
         
     public func generic(_ name:String) -> Self
         {

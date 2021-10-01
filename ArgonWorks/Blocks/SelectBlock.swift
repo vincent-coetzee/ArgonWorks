@@ -20,6 +20,13 @@ public class SelectBlock: Block
         super.init()
         }
         
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
+        }
+        
+ 
+        
     public func addWhen(block: WhenBlock)
         {
         self.whenBlocks.append(block)

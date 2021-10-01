@@ -20,7 +20,7 @@ public class AsExpression: Expression
     public required init?(coder: NSCoder)
         {
         self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
-        self.into = coder.decodeObject(forKey: "into") as! Type
+        self.into = coder.decodeType(forKey: "into")!
         super.init(coder: coder)
         }
 
@@ -28,7 +28,7 @@ public class AsExpression: Expression
         {
         super.encode(with: coder)
         coder.encode(self.lhs,forKey: "lhs")
-        coder.encode(self.into,forKey: "into")
+        coder.encodeType(self.into,forKey: "into")
         }
         
     init(_ lhs:Expression,into: Type)
@@ -37,6 +37,8 @@ public class AsExpression: Expression
         self.into = into
         super.init()
         }
+        
+ 
         
     public override var displayString: String
         {

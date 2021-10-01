@@ -154,7 +154,7 @@ public class Instruction:Identifiable
             }
         }
         
-    public enum Register:Int,Comparable,CaseIterable,Identifiable,Encodable,Decodable,Equatable
+    public enum Register:Int,Comparable,CaseIterable,Identifiable,Equatable
         {
         public static var generalPurposeRegisters = [Self.R0,Self.R1,Self.R2,Self.R3,Self.R4,Self.R5,Self.R6,Self.R7,Self.R8,Self.R9,Self.R10,Self.R11,Self.R12,Self.R13,Self.R14,Self.R15]
         

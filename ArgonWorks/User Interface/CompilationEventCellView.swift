@@ -18,19 +18,25 @@ class CompilationEventCellView: NSTableCellView
                 case .none:
                     break
                 case .warning(let location,let text):
-                    let lineStart = location.lineStart
-                    let start = location.tokenStart - lineStart
-                    let stop = location.tokenStop - lineStart
-                    self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
+                    let start = location.tokenStart - location.lineStart
+                    let stop = location.tokenStop - location.lineStart
+                    let line = String(format: "% 6d",location.line)
+                    self.lineNumberView.stringValue = "Line \(line) \(start):\(stop)"
+                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
                     self.detailView.stringValue = "Warning: \(text)"
-                    self.iconView.image = NSImage(named:"AnnotationWarning")!
+                    self.iconView.image = NSImage(named: event.iconName)!
+                    self.iconView.image?.isTemplate = true
+                    self.iconView.contentTintColor = NSColor.argonNeonYellow
                 case .error(let location,let text):
-                    let lineStart = location.lineStart
-                    let start = location.tokenStart - lineStart
-                    let stop = location.tokenStop - lineStart
-                    self.lineNumberView.stringValue = "\(location.line):\(start)-\(stop)"
+                    let start = location.tokenStart - location.lineStart
+                    let stop = location.tokenStop - location.lineStart
+                    let line = String(format: "% 6d",location.line)
+                    self.lineNumberView.stringValue = "Line \(line) \(start):\(stop)"
+                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
                     self.detailView.stringValue = "Error: \(text)"
-                    self.iconView.image = NSImage(named:"AnnotationError")!
+                    self.iconView.image = NSImage(named: event.iconName)!
+                    self.iconView.image?.isTemplate = true
+                    self.iconView.contentTintColor = NSColor.argonSizzlingRed
                 }
             }
         }

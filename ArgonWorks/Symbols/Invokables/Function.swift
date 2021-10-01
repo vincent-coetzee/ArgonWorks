@@ -5,12 +5,17 @@
 //  Created by Vincent Coetzee on 3/7/21.
 //
 
-import Foundation
+import AppKit
 import FFI
 import Interpreter
 
 public class Function:Invokable,Displayable
     {
+    public override var defaultColor: NSColor
+        {
+        Palette.shared.functionColor
+        }
+        
     public override var displayString: String
         {
         let parms = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"

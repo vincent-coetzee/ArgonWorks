@@ -9,6 +9,11 @@ import AppKit
 
 public class SymbolGroup:ContainerSymbol
     {
+    public override var isSymbolGroup: Bool
+        {
+        return(true)
+        }
+        
     public override var defaultColor: NSColor
         {
         NSColor.argonXCornflower
@@ -90,7 +95,7 @@ public class SymbolGroup:ContainerSymbol
             {
             return(symbol)
             }
-        for element in self.symbols.filter{$0.isSystemContainer}
+        for element in self.symbols.filter({$0.isSystemContainer})
             {
             if let symbol = element.lookup(name:name)
                 {

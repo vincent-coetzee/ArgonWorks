@@ -43,18 +43,20 @@ public class EnumerationCase:Symbol
         {
         self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
         self.symbol = coder.decodeObject(forKey: "symbol") as! Argon.Symbol
-        self.rawValue = coder.decodeObject(forKey: "rawValue") as! LiteralExpression
-        self.associatedTypes = coder.decodeObject(forKey: "associatedTypes") as! Types
+        self.rawValue = coder.decodeObject(forKey: "rawValue") as? LiteralExpression
+        self.associatedTypes = coder.decodeTypes(forKey: "associatedTypes")
         super.init(coder: coder)
         }
 
+ 
+        
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
         coder.encode(self.enumeration,forKey: "enumeration")
         coder.encode(self.symbol,forKey: "symbol")
         coder.encode(self.rawValue,forKey: "rawValue")
-        coder.encode(self.associatedTypes,forKey: "associatedTypes")
+        coder.encodeTypes(self.associatedTypes,forKey: "associatedTypes")
         }
     
     public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)

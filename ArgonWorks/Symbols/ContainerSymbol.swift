@@ -15,7 +15,6 @@ public class ContainerSymbol:Symbol
         }
         
     internal var symbols = Symbols()
-    private var _children: Symbols?
     
     public override var isExpandable: Bool
         {
@@ -61,8 +60,9 @@ public class ContainerSymbol:Symbol
         
     public required init?(coder: NSCoder)
         {
+        print("DECODING CONTAINER")
         self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
-        self._children = coder.decodeObject(forKey: "_children") as? Symbols
+        print("DECODED \(self.symbols.count) SYMBOLS")
         super.init(coder: coder)
         }
         
@@ -71,11 +71,12 @@ public class ContainerSymbol:Symbol
         super.init(label: label)
         }
         
+ 
+        
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
         coder.encode(self.symbols,forKey: "symbols")
-        coder.encode(self._children,forKey: "_children")
         }
     ///
     ///

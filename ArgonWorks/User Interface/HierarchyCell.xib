@@ -14,9 +14,9 @@
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="T0f-54-Vpx">
-                    <rect key="frame" x="18" y="0.0" width="32" height="13"/>
+                    <rect key="frame" x="18" y="1" width="31" height="13"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="UIX-tM-gs1">
-                        <font key="font" metaFont="systemBold" size="10"/>
+                        <font key="font" metaFont="system" size="10"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
@@ -28,8 +28,8 @@
                     </constraints>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="sgt-Zv-11z"/>
                 </imageView>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bVh-b7-139">
-                    <rect key="frame" x="49" y="0.0" width="31" height="13"/>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bVh-b7-139">
+                    <rect key="frame" x="48" y="1" width="31" height="13"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Label" id="Uwf-Ms-t2b">
                         <font key="font" metaFont="system" size="10"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -38,11 +38,11 @@
                 </textField>
             </subviews>
             <constraints>
-                <constraint firstAttribute="bottom" secondItem="T0f-54-Vpx" secondAttribute="bottom" id="3D2-Gx-IiW"/>
+                <constraint firstAttribute="bottom" secondItem="T0f-54-Vpx" secondAttribute="bottom" constant="1" id="3D2-Gx-IiW"/>
                 <constraint firstItem="bVh-b7-139" firstAttribute="firstBaseline" secondItem="T0f-54-Vpx" secondAttribute="firstBaseline" id="G5X-Y2-Edt"/>
                 <constraint firstItem="T0f-54-Vpx" firstAttribute="leading" secondItem="ml3-Xa-3fX" secondAttribute="trailing" id="LON-ph-hdN"/>
                 <constraint firstItem="ml3-Xa-3fX" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" id="g06-Hm-N4M"/>
-                <constraint firstItem="bVh-b7-139" firstAttribute="leading" secondItem="T0f-54-Vpx" secondAttribute="trailing" constant="2" id="ixe-Qz-51V"/>
+                <constraint firstItem="bVh-b7-139" firstAttribute="leading" secondItem="T0f-54-Vpx" secondAttribute="trailing" constant="3" id="ixe-Qz-51V"/>
                 <constraint firstAttribute="bottom" secondItem="ml3-Xa-3fX" secondAttribute="bottom" id="udF-Wq-5m5"/>
                 <constraint firstItem="ml3-Xa-3fX" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" id="yMt-Eq-PwK"/>
             </constraints>

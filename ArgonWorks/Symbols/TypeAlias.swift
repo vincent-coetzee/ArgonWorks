@@ -5,10 +5,20 @@
 //  Created by Vincent Coetzee on 3/7/21.
 //
 
-import Foundation
+import AppKit
 
 public class TypeAlias:Symbol
     {
+    public override var defaultColor: NSColor
+        {
+        Palette.shared.typeAliasColor
+        }
+        
+    public var mangledName: String
+        {
+        return(self._type.mangledName)
+        }
+        
     public override var imageName: String
         {
         "IconType"
@@ -28,14 +38,16 @@ public class TypeAlias:Symbol
     
     public required init?(coder: NSCoder)
         {
-        self._type = coder.decodeObject(forKey: "_type") as! Type
+        self._type = coder.decodeType(forKey: "_type")!
         super.init(coder: coder)
         }
+        
+ 
         
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self._type,forKey: "_type")
+        coder.encodeType(self._type,forKey: "_type")
         }
         
     public override var typeCode:TypeCode

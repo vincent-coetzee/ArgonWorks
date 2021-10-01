@@ -42,7 +42,9 @@ public class ArrayAccessExpression: Expression
         self.index = index
         super.init()
         }
-        
+    
+ 
+    
     public override var resultType: Type
         {
         self.array.resultType

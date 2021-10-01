@@ -43,14 +43,28 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         {
         self.index = coder.decodeObject(forKey: "index") as! UUID
         self.label = coder.decodeObject(forKey: "label") as! Label
-        self.parent = coder.decodeObject(forKey: "parent") as! Parent
-        self.locations = coder.decodeObject(forKey: "locations") as! NodeLocations
+        self.parent = coder.decodeParent(forKey: "parent")!
+        self.locations = coder.decodeNodeLocations(forKey: "locations")
         }
         
     public func encode(with coder:NSCoder)
         {
+        coder.encode(self.index,forKey: "index")
+        coder.encode(self.label,forKey: "label")
+        coder.encodeParent(self.parent,forKey: "parent")
+        coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
         
+//    public required init(input: InputFile) throws
+//        {
+//        fatalError("Not implemented")
+//        }
+//    
+    public func write(output: OutputFile) throws
+        {
+        }
+    
+    
     public var name: Name
         {
         return(self.parent.name + self.label)

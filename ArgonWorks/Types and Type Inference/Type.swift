@@ -16,6 +16,14 @@ public enum TypeError: Error,Equatable
     
 public indirect enum Type: Equatable
     {
+    public init(input: InputFile) throws {
+    fatalError()
+    }
+    
+    public func write(output: OutputFile) throws {
+        
+    }
+    
     public static func ==(lhs:Type,rhs:Type) -> Bool
         {
         switch(lhs,rhs)
@@ -49,13 +57,14 @@ public indirect enum Type: Equatable
                 return(.error(.mismatch))
             }
         }
-        
+
     case error(TypeError)
     case `class`(Class)
     case enumeration(Enumeration)
     case method(Label,Types,Type)
     case methodApplication(MethodInstance)
     case forwardReference(Name,Context)
+    case typeAlias(TypeAlias)
     
     public var displayString: String
         {
@@ -93,6 +102,8 @@ public indirect enum Type: Equatable
             {
             case .error:
                 return("error")
+            case .typeAlias(let alias):
+                return(alias.mangledName)
             case .class(let aClass):
                 return(aClass.mangledName)
             case .enumeration(let enumeration):
@@ -205,7 +216,7 @@ public indirect enum Type: Equatable
                 return(false)
             }
         }
-        
+
     public var isStringClass: Bool
         {
         switch(self)
@@ -335,23 +346,23 @@ public indirect enum Type: Equatable
             }
         }
         
-    public func instanciate(withTypes: Types,reportingContext: ReportingContext) -> Type
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.instanciate(withTypes: withTypes,reportingContext: reportingContext))
-            case .enumeration:
-                fatalError("Need to define a subclass of Enumeration for Generic Enumerations")
-            case .method:
-                break
-            case .methodApplication:
-                break
-            default:
-                break
-            }
-        return(.error(.undefined))
-        }
+//    public func instanciate(withTypes: Types,reportingContext: ReportingContext) -> Type
+//        {
+//        switch(self)
+//            {
+//            case .class(let aClass):
+//                return(aClass.instanciate(withTypes: withTypes,reportingContext: reportingContext))
+//            case .enumeration:
+//                fatalError("Need to define a subclass of Enumeration for Generic Enumerations")
+//            case .method:
+//                break
+//            case .methodApplication:
+//                break
+//            default:
+//                break
+//            }
+//        return(.error(.undefined))
+//        }
     
     }
 

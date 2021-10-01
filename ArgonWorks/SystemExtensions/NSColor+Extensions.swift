@@ -37,7 +37,7 @@ extension NSColor
     public static let argonBayside:NSColor = NSColor(hex: 0x5fc9bf)
     public static let argonMangoGreen:NSColor = NSColor(hex: 0x96ff00)
     public static let argonSeaGreen:NSColor = NSColor(hex: 0x007563)
-    public static let argonDarkGray:NSColor = NSColor(hex: 0x121212)
+
     public static let argonNeonYellow:NSColor = NSColor(hex: 0xF3F315)
     public static let argonNeonOrange = NSColor(red: 237.0/255.0,green: 111.0/255.0,blue:45.0/255.0,alpha:1)
     public static let argonNeonGreen = NSColor(red: 128.0/255.0,green: 189.0/255.0,blue:4.0/255.0,alpha:1)
@@ -92,11 +92,41 @@ extension NSColor
     public static let argonGreenBlueCrayola = NSColor(hex: 0x1982C4)
     public static let argonRoyalPurple = NSColor(hex: 0x6A4C93)
     
+    public static let argonLightGray = NSColor(hex: 0x888888)
+    public static let argonLighterGray = NSColor(hex: 0xA0A0A0)
+    public static let argonMidGray = NSColor(hex: 0x666666)
+    public static let argonDarkGray = NSColor(hex: 0x444444)
+    public static let argonDarkerGray = NSColor(hex: 0x222222)
+    public static let argonDarkesGray:NSColor = NSColor(hex: 0x121212)
+    
     public static let argonQuinacridoneMagenta = NSColor(hex: 0x8F2D56)
     public static let argonCaledonGreen = NSColor(hex: 0x218380)
     public static let argonBrightYellowCrayola = NSColor(hex: 0xFBB13C)
     public static let argonSkyBlueCrayola = NSColor(hex: 0x73D2DE)
     
+    public func lighten(by amount: CGFloat) -> NSColor
+        {
+        var colors = Array<CGFloat>(repeating: 0, count: 4)
+        self.getComponents(&colors)
+        let red = min(255,colors[0] + amount * 255.0)
+        let green = min(255,colors[1] + amount * 255.0)
+        let blue = min(255,colors[2] + amount * 255.0)
+        let alpha = colors[3]
+        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        }
+        
+    public var lighter: NSColor
+        {
+        let correctionFactor:CGFloat = 0.5;
+        var colors = Array<CGFloat>(repeating: 0, count: 4)
+        self.getComponents(&colors)
+        let red = (255 - colors[0]) * correctionFactor + colors[0];
+        let green = (255 - colors[1]) * correctionFactor + colors[1];
+        let blue = (255 - colors[2]) * correctionFactor + colors[2];
+        let alpha = colors[3]
+        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        }
+        
     public var swiftUIColor: Color
         {
         var components:[CGFloat] = [0,0,0]

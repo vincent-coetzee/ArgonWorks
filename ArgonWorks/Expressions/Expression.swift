@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Expression: NSObject
+public class Expression: NSObject,NSCoding
     {
     public func operation(_ symbol:Token.Symbol,_ rhs:Expression) -> Expression
         {
@@ -94,13 +94,17 @@ public class Expression: NSObject
         
     public required init?(coder: NSCoder)
         {
-        self.parent = Parent(coder: coder)!
+        print("DECODE EXPRESSION")
+        self.parent = coder.decodeParent(forKey: "parent")!
+        self.locations = coder.decodeSourceLocations(forKey: "locations")
         super.init()
         }
 
     public func encode(with coder:NSCoder)
         {
-        self.parent.encode(with: coder)
+        print("ENCODE EXPRESSION")
+        coder.encodeParent(self.parent,forKey: "parent")
+        coder.encodeSourceLocations(self.locations,forKey:"locations")
         }
         
     public func addDeclaration(_ location:Location)

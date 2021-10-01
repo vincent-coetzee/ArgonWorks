@@ -27,10 +27,12 @@ public class UnaryExpression: Expression
         
     required init?(coder: NSCoder)
         {
-        self.operationName = coder.decodeObject(forKey: "operationName") as!String
+        self.operationName = coder.decodeString(forKey: "operationName")!
         self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
         super.init(coder: coder)
         }
+        
+ 
         
     public override func encode(with coder: NSCoder)
         {

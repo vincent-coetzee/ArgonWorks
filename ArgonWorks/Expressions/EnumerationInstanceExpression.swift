@@ -32,11 +32,13 @@ public class EnumerationInstanceExpression: Expression
     required init?(coder: NSCoder)
         {
         self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
-        self.theCase = coder.decodeObject(forKey:"theClass") as? EnumerationCase
+        self.theCase = coder.decodeObject(forKey:"theCase") as? EnumerationCase
         self.associatedValues = coder.decodeObject(forKey:"associatedValues") as? Array<Expression>
         self.caseLabel = coder.decodeObject(forKey:"caseLabel") as! String
         super.init(coder: coder)
         }
+        
+ 
         
     public override func encode(with coder: NSCoder)
         {

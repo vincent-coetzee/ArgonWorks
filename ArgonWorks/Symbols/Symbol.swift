@@ -13,10 +13,19 @@ public class Symbol:Node,ParseNode
     {
     public var defaultColor: NSColor
         {
-        Palette.shared.sunnyScheme.mid
+        Palette.shared.symbolColor
         }
-    
+    public var isSlot: Bool
+        {
+        return(false)
+        }
+
     public var isEnumeration: Bool
+        {
+        return(false)
+        }
+        
+    public var isSymbolGroup: Bool
         {
         return(false)
         }
@@ -34,6 +43,22 @@ public class Symbol:Node,ParseNode
     public var isClassParameter: Bool
         {
         return(false)
+        }
+        
+    public var selectionColor: NSColor
+        {
+        get
+            {
+            if self._selectionColor.isNil
+                {
+                return(self.defaultColor)
+                }
+            return(self._selectionColor!)
+            }
+        set
+            {
+            self._selectionColor = newValue
+            }
         }
         
     public var isSystemModule: Bool
@@ -105,11 +130,6 @@ public class Symbol:Node,ParseNode
         {
         return(false)
         }
-        
-    public var symbolType: SymbolType
-        {
-        .none
-        }    
     
     public var typeCode:TypeCode
         {
@@ -166,6 +186,7 @@ public class Symbol:Node,ParseNode
     public var privacyScope:PrivacyScope? = nil
     internal var addresses = Addresses()
     internal var source: String?
+    private var _selectionColor: NSColor?
     
     public override init(label:Label)
         {
@@ -175,26 +196,64 @@ public class Symbol:Node,ParseNode
     
     public required init?(coder: NSCoder)
         {
-        self.privacyScope = PrivacyScope(rawValue: coder.decodeObject(forKey: "privacyScope") as! String)!
+        print("DECODE SYMBOL(\(Swift.type(of: self)))")
+        self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
         super.init(coder: coder)
+        print("DECODED SYMBOL \(self.label) \(self.index)")
         }
+        
+ 
         
     public override func encode(with coder:NSCoder)
         {
+        print("ENCODE SYMBOL(\(Swift.type(of: self))) \(self.label)")
         super.encode(with: coder)
-        coder.encode(self.privacyScope?.rawValue,forKey: "privacyScope")
+        coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
         coder.encode(self.source,forKey: "source")
         }
         
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
+//        cell.text.stringValue = self.displayString
+//        let image = NSImage(named: self.imageName)!
+//        image.isTemplate = true
+//        cell.icon.image = image
+//        cell.icon.contentTintColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+//        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+//
         cell.text.stringValue = self.displayString
         let image = NSImage(named: self.imageName)!
         image.isTemplate = true
         cell.icon.image = image
-        cell.icon.contentTintColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
-        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+        var iconColor = NSColor.black
+        var textColor = Palette.shared.hierarchyTextColor
+        if self.isSymbolContainer
+            {
+            if self.childCount == 0
+                {
+                iconColor = .argonMidGray
+                textColor = .argonMidGray
+                self.selectionColor = NSColor.argonMidGray
+                }
+            else
+                {
+                iconColor = .argonNeonOrange
+                }
+            }
+        else
+            {
+            if self.isSlot
+                {
+                iconColor = NSColor.argonThemeBlueGreen
+                }
+            else
+                {
+                iconColor = NSColor.argonNeonOrange
+                }
+            }
+        cell.icon.contentTintColor = iconColor
+        cell.text.textColor = textColor
         }
 
     public func invert(cell: HierarchyCellView)
@@ -235,6 +294,7 @@ public class Symbol:Node,ParseNode
         {
         let typeName = Swift.type(of: self)
         print("\(indent)\(typeName): \(self.label)")
+        print("\(indent)INDEX: \(self.index)")
         }
             
     public func isExpandable(forChildType type: ChildType) -> Bool
@@ -272,6 +332,15 @@ public class Symbol:Node,ParseNode
     public func directlyContains(symbol:Symbol) -> Bool
         {
         return(false)
+        }
+        
+    public func lookup(index: UUID) -> Symbol?
+        {
+        if self.index == index
+            {
+            return(self)
+            }
+        return(nil)
         }
         
     public func layoutInMemory()

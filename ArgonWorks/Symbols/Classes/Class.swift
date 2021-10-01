@@ -87,7 +87,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override var defaultColor: NSColor
         {
-        Palette.shared.sunnyScheme.light
+        Palette.shared.classColor
         }
     
     public var innerClassPointer: InnerClassPointer
@@ -391,6 +391,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public required init?(coder: NSCoder)
         {
+        print("DECODE CLASS")
         self.superclassReferences = []
         self.subclasses = coder.decodeObject(forKey: "subclasses") as! Classes
         self.superclasses = coder.decodeObject(forKey: "superclasses") as! Classes
@@ -405,10 +406,14 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
         self.depth = coder.decodeInteger(forKey: "depth")
         super.init(coder: coder)
+        print("DECODED CLASS \(self.label)")
         }
 
+ 
+        
     public override func encode(with coder:NSCoder)
         {
+        print("ENCODE CLASS")
         super.encode(with: coder)
         coder.encode(self.subclasses,forKey: "subclasses")
         coder.encode(self.superclasses,forKey: "superclasses")
@@ -492,6 +497,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         var indent = offset
         let typeName = Swift.type(of: self)
         print("\(indent)\(typeName): \(self.label)")
+        print("\(indent)INDEX: \(self.index)")
         if self.symbols.count > 0
             {
             indent += "\t"

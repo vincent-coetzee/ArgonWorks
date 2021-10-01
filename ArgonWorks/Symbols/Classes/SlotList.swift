@@ -7,8 +7,10 @@
 
 import Foundation
 
-public class SlotList:Collection
+public struct SlotList:Collection,Storable
     {
+
+    
     public var parent: Symbol!
     public var slots: Array<Slot> = []
     
@@ -39,8 +41,37 @@ public class SlotList:Collection
         
     public init()
         {
-        self.parent = .none
-        self.slots = []
+        }
+        
+//    public override init()
+//        {
+//        self.parent = .none
+//        self.slots = []
+//        super.init()
+//        }
+//
+//    required public init?(coder: NSCoder)
+//        {
+//        self.parent = coder.decodeObject(forKey: "parent") as? Symbol
+//        self.slots = coder.decodeObject(forKey: "slots") as! Array<Slot>
+//        super.init()
+//        }
+        
+//    public func encode(with coder:NSCoder)
+//        {
+//        coder.encode(self.parent,forKey:"parent")
+//        coder.encode(self.slots,forKey:"slots")
+//        }
+
+    public init(input: InputFile)
+        {
+        fatalError()
+        }
+    
+    public func write(output: OutputFile) throws
+        {
+//        try output.write(self.parent)
+//        try output.write(slots)
         }
         
     public func index(after: Int) -> Int
@@ -48,7 +79,7 @@ public class SlotList:Collection
         return(after + 1)
         }
         
-    public func append(_ slot: Slot)
+    public mutating func append(_ slot: Slot)
         {
         self.slots.append(slot)
         slot.setParent(self.parent)

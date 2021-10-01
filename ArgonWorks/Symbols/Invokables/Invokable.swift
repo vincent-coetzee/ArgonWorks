@@ -16,15 +16,15 @@ public class Invokable: Symbol
     
     public override var defaultColor: NSColor
         {
-        NSColor.argonSeaGreen
+        Palette.shared.invokableColor
         }
     
     public required init?(coder: NSCoder)
         {
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
-        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
-        self.library = coder.decodeObject(forKey: "library") as! DynamicLibrary
+        self.returnType = coder.decodeType(forKey: "returnType")!
+        self.library = coder.decodeDynamicLibrary(forKey: "library")
         super.init(coder: coder)
         }
         
@@ -37,11 +37,12 @@ public class Invokable: Symbol
         
     public override func encode(with coder: NSCoder)
         {
+        print("ENCODE INVOKABLE \(self.label)")
         super.encode(with: coder)
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
-        coder.encode(self.returnType,forKey: "returnType")
-        coder.encode(self.library,forKey: "library")
+        coder.encodeType(self.returnType,forKey: "returnType")
+        coder.encodeDynamicLibrary(self.library,forKey: "library")
         }
         
     public func curried() -> Array<SingleParameterInvokable>
@@ -81,6 +82,8 @@ public class SingleParameterInvokable: Symbol
         super.init(label: label)
         }
     
+ 
+        
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

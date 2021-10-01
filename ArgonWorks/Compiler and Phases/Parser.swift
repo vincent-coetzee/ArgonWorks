@@ -2013,15 +2013,15 @@ public class Parser: CompilerPass
                 start.append(try self.parseExpression())
                 }
             while self.token.isComma
-            if !self.token.isGluon
+            if !self.token.isSemicolon
                 {
-                self.reportingContext.dispatchError(at: self.token.location, message: "'::' was expected between LOOP clauses.")
+                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
                 }
             try self.nextToken()
             end = try self.parseExpression()
-            if !self.token.isGluon
+            if !self.token.isSemicolon
                 {
-                self.reportingContext.dispatchError(at: self.token.location, message: "'::' was expected between LOOP clauses.")
+                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
                 }
             try self.nextToken()
             repeat

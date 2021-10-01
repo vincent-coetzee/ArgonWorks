@@ -12,6 +12,20 @@ class AppDelegate: NSObject, NSApplicationDelegate
     {
     func applicationDidFinishLaunching(_ aNotification: Notification)
         {
+        let families = NSFontManager.shared.availableFontFamilies.sorted{$0 < $1}
+        for family in families
+            {
+            print("\(family)")
+            if let fonts = NSFontManager.shared.availableMembers(ofFontFamily: family)
+                {
+                for items in fonts
+                    {
+                    let array = items as! NSArray
+                    let name = array[0]
+                    print("\t\(name)")
+                    }
+                }
+            }
         TopModule.shared.resolveReferences()
         let small = VirtualMachine.small
         let array = InnerArrayPointer.allocate(arraySize: 20, elementClass: TopModule.shared.argonModule.slot, in: small)
@@ -44,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let source = try! String(contentsOf: sourceURL!)
         print(source)
         let compiler = Compiler()
-        compiler.compileChunk(source)
+        let chunk = compiler.compileChunk(source)
         let name1 = Name("\\\\Argon\\Collections")
         print(name1)
         let name2 = Name("\\Argon\\Collections")

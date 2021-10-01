@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Block:NSObject,NamingContext
+public class Block:NSObject,NamingContext,NSCoding
     {
     public var isReturnBlock: Bool
         {
@@ -80,12 +80,12 @@ public class Block:NSObject,NamingContext
         self.index = UUID()
         }
         
-    init(coder: NSCoder)
+    public required init?(coder: NSCoder)
         {
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
         self.localSlots = coder.decodeObject(forKey:"localSlots") as! Array<Slot>
         self.index = coder.decodeObject(forKey: "index") as! UUID
-//        self.parent = coder.decodeObject(forKey: "parent") as?
+        self.parent = coder.decodeParent(forKey: "parent")!
         }
         
     public func encode(with coder: NSCoder)
@@ -93,7 +93,7 @@ public class Block:NSObject,NamingContext
         coder.encode(self.blocks,forKey: "blocks")
         coder.encode(self.localSlots,forKey: "localSlots")
         coder.encode(self.index,forKey: "index")
-        coder.encode(self.parent,forKey: "parent")
+        coder.encodeParent(self.parent,forKey: "parent")
         }
         
     public func addBlock(_ block:Block)

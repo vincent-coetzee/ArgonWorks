@@ -115,6 +115,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case leftBracket = "["
         case rightBracket = "]"
         case colon = ":"
+        case semicolon = ";"
         case gluon = "::"
         case stop = "."
         case comma = ","
@@ -1140,6 +1141,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .symbol(let value,_):
                 return(value == .colon)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isSemicolon:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .semicolon)
             default:
                 return(false)
             }

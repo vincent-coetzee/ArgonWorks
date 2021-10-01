@@ -9,10 +9,18 @@ import Foundation
 
 public class LetBlock: Block
     {
+    private enum CodingKeys: String, CodingKey
+        {
+        case name
+        case value
+        case location
+        case slot
+        }
+    
     private let name: Name
     private let value:Expression
     private let location:Location
-    private let namingContext: NamingContext
+    private var namingContext: NamingContext?
     private let slot: Slot
     
     public init(name:Name,slot:Slot,location:Location,namingContext: NamingContext,value:Expression)
@@ -27,6 +35,11 @@ public class LetBlock: Block
         self.location = location
         self.namingContext = namingContext
         super.init()
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

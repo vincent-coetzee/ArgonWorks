@@ -6,7 +6,7 @@
 //
 
 import AppKit
-
+    
 public class HierarchySymbolWrapper
     {
     public enum GroupType
@@ -44,6 +44,23 @@ public class HierarchySymbolWrapper
         else
             {
             return(self.symbols.first!.allChildren.filter{self.type.matchesSymbol($0)}.map{HierarchySymbolWrapper(symbol: $0,type: self.type)})
+            }
+        }
+        
+        
+    public var selectionColor: NSColor
+        {
+        get
+            {
+            if self._selectionColor.isNil
+                {
+                return(self.defaultColor)
+                }
+            return(self._selectionColor!)
+            }
+        set
+            {
+            self._selectionColor = newValue
             }
         }
         
@@ -89,31 +106,58 @@ public class HierarchySymbolWrapper
             }
         }
         
-    public var defaultColor: NSColor
+    public var isContainerSymbol: Bool
         {
         if self.isGroup
             {
-            return(Palette.shared.sunnyScheme.mid)
+            return(false)
+            }
+        let symbol = self.symbols.first!
+        if symbol.isModule || symbol.isSymbolGroup
+            {
+            return(true)
+            }
+        return(false)
+        }
+        
+    public var childCount: Int
+        {
+        return(self.children.count)
+        }
+        
+    public var defaultColor: NSColor
+        {
+        if self.isGroup || self.symbols.first!.isModule || self.symbols.first!.isSymbolGroup
+            {
+            if self.symbols.count == 0
+                {
+                return(NSColor.argonCoral)
+                }
+            return(NSColor.argonNeonOrange)
             }
         else
             {
-            let symbol = self.symbols.first!
-            if symbol.isSystemSymbol
+            if self.isSlot
                 {
-                return(Palette.shared.sunnyScheme.light)
+                return(NSColor.argonThemeBlueGreen)
                 }
-            else if (symbol is Module || symbol is SymbolGroup) && self.children.count == 0
+            else
                 {
-                return(Palette.shared.sunnyScheme.dark)
+                return(NSColor.argonNeonOrange)
                 }
-            return(symbol.defaultColor)
             }
+        }
+        
+    private var isSlot: Bool
+        {
+        self.isGroup ? false : self.symbols.first!.isSlot
         }
         
     public let name: String
     public let isGroup: Bool
     public let symbols: Symbols
     public let type: GroupType
+    private var _selectionColor: NSColor?
     
     init(groupNamed: String,symbols: Array<Symbol>,type: GroupType)
         {
@@ -133,25 +177,38 @@ public class HierarchySymbolWrapper
         
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
-        var newColor = foregroundColor ?? self.defaultColor
-        if !self.isGroup
-            {
-            let symbol = self.symbols.first!
-            if symbol is Module || symbol is SymbolGroup
-                {
-                let kids = symbol.allChildren.filter{self.type.matchesSymbol($0)}
-                if kids.count == 0
-                    {
-                    newColor = NSColor.argonPapayaWhip
-                    }
-                }
-            }
         cell.text.stringValue = self.displayString
         let image = NSImage(named: self.imageName)!
         image.isTemplate = true
         cell.icon.image = image
-        cell.icon.contentTintColor = newColor
-        cell.text.textColor = newColor
+        var iconColor = NSColor.black
+        var textColor = Palette.shared.hierarchyTextColor
+        if self.isContainerSymbol
+            {
+            if self.childCount == 0
+                {
+                iconColor = .argonMidGray
+                textColor = .argonMidGray
+                self.selectionColor = .argonMidGray
+                }
+            else
+                {
+                iconColor = .argonNeonOrange
+                }
+            }
+        else
+            {
+            if self.isSlot
+                {
+                iconColor = NSColor.argonThemeBlueGreen
+                }
+            else
+                {
+                iconColor = NSColor.argonNeonOrange
+                }
+            }
+        cell.icon.contentTintColor = iconColor
+        cell.text.textColor = textColor
         }
 
     public func invert(cell: HierarchyCellView)

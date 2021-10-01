@@ -17,6 +17,13 @@ public class WhileBlock: Block
         super.init()
         }
         
+    public required init?(coder: NSCoder)
+        {
+        fatalError()
+        }
+        
+ 
+        
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
 //        let start = buffer.toHere()

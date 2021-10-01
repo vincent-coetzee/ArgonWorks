@@ -15,7 +15,7 @@ public class ClassInstanciationTerm: Expression
     required init?(coder: NSCoder)
         {
         self.type = coder.decodeObject(forKey: "type") as! Class
-        self.arguments = coder.decodeObject(forKey: "arguments") as! Arguments
+        self.arguments = coder.decodeArguments(forKey: "arguments")
         super.init(coder: coder)
         }
         
@@ -36,6 +36,8 @@ public class ClassInstanciationTerm: Expression
             argument.value.setParent(self)
             }
         }
+        
+ 
         
     public override var displayString: String
         {

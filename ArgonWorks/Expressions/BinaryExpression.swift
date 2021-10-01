@@ -286,15 +286,17 @@ public class BinaryExpression: Expression
         
     required init?(coder: NSCoder)
         {
-        self.operation = coder.decodeObject(forKey: "operation") as! Token.Symbol
+        self.operation = coder.decodeTokenSymbol(forKey: "operation")
         self.lhs = coder.decodeObject(forKey:"lhs") as! Expression
         self.rhs = coder.decodeObject(forKey:"rhs") as! Expression
         super.init(coder: coder)
         }
         
+ 
+        
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self.operation,forKey: "operation")
+        coder.encodeTokenSymbol(self.operation,forKey: "operation")
         coder.encode(self.lhs,forKey: "lhs")
         coder.encode(self.rhs,forKey: "rhs")
         }

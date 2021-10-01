@@ -20,6 +20,11 @@ public class Slot:Symbol
         .slot
         }
         
+    public override var isSlot: Bool
+        {
+        return(true)
+        }
+        
     public override var type: Type
         {
         return(self._type ?? .class(VoidClass.voidClass))
@@ -42,7 +47,7 @@ public class Slot:Symbol
         
     public override var defaultColor: NSColor
         {
-        Palette.shared.sunnyScheme.dark
+        Palette.shared.currentScheme.dark
         }
         
     public override var weight: Int
@@ -102,18 +107,23 @@ public class Slot:Symbol
 
     public required init?(coder: NSCoder)
         {
-        self._type = coder.decodeObject(forKey: "type") as? Type
+        self._type = coder.decodeType(forKey: "_type")
         self.offset = coder.decodeInteger(forKey: "offset")
-//        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
+        print("ABOUT TO DECODE AN EXPRESSION IN SLOT")
+        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
+        print("DECODED EXPRESSION \(Swift.type(of: self.initialValue)) IN SLOT")
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
         super.init(coder: coder)
         }
 
+ 
+        
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self._type,forKey: "_type")
+        coder.encodeType(self._type,forKey: "_type")
         coder.encode(self.offset,forKey: "offset")
+        coder.encode(self.initialValue,forKey:"initialValue")
         coder.encode(self.isClassSlot,forKey: "isClassSlot")
         }
         

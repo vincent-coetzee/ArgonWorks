@@ -18,6 +18,7 @@ public protocol InstructionBuffer
     func fromHere(_ marker:Instruction.LabelMarker) throws -> Argon.Integer
     func fromHere() -> Instruction.LabelMarker
     func toHere() -> Instruction.LabelMarker
+    @discardableResult
     func toHere(_ marker:Instruction.LabelMarker) throws -> Argon.Integer
     func triggerFromHere() -> Instruction.LabelMarker
     func triggerToHere() -> Instruction.LabelMarker

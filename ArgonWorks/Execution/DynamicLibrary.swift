@@ -23,11 +23,19 @@ public struct DynamicLibrary
             }
         }
         
-    private let path: String
+    public let path: String
     private var handle: UnsafeMutableRawPointer!
+    private let openOnDemand: Bool
     
+    init(openPathOnDemand path: String)
+        {
+        self.openOnDemand = true
+        self.path = path
+        }
+        
     init(path:String)
         {
+        self.openOnDemand = false
         self.path = path
         self.handle = dlopen(self.path,RTLD_LOCAL)
         if self.handle == nil
@@ -38,6 +46,7 @@ public struct DynamicLibrary
         
     init()
         {
+        self.openOnDemand = false
         self.path = ""
         self.handle = nil
         }

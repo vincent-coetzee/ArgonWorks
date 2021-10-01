@@ -20,10 +20,12 @@ public class ForwardReferenceClass: Class
         super.init(label: name.last)
         }
     
-    required public override init?(coder: NSCoder) {
+    required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+ 
+        
     public override func allocateAddresses(using allocator:AddressAllocator)
         {
         }

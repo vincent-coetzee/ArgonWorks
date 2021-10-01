@@ -24,7 +24,7 @@ public class SuffixExpression: Expression
     
     required init?(coder: NSCoder)
         {
-        self.operationName = coder.decodeObject(forKey: "operationName") as!String
+        self.operationName = coder.decodeString(forKey: "operationName")!
         self.expression = coder.decodeObject(forKey: "expression") as! Expression
         super.init(coder: coder)
         }
@@ -43,6 +43,8 @@ public class SuffixExpression: Expression
         super.init()
         self.expression.setParent(self)
         }
+        
+ 
         
     public override func realize(using realizer: Realizer)
         {

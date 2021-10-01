@@ -13,7 +13,7 @@ public class Transaction:Equatable
         {
         return(lhs.key == rhs.key)
         }
-    
+
     internal enum Holder: Equatable
         {
         case node(Node)
@@ -58,7 +58,7 @@ public class Transaction:Equatable
                 }
             }
         }
-        
+
     public struct Command: Equatable
         {
         private let action: Action
@@ -103,6 +103,7 @@ public class Transaction:Equatable
             }
         }
         
+    @discardableResult
     public static func begin() -> Transaction
         {
         self.current = Transaction(commands: [])

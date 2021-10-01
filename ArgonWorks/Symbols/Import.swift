@@ -17,7 +17,17 @@ public class Import:Symbol
         super.init(label: label)
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    public required init?(coder: NSCoder)
+        {
+        self.path = coder.decodeObject(forKey: "path") as? String
+        super.init(coder: coder)
+        }
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.path,forKey: "path")
+        }
+        
+ 
     }
-}

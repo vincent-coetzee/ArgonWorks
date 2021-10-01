@@ -81,7 +81,7 @@ public class PrimitiveClass:Class
     public static let stringClass = PrimitiveClass(label:"String",primitiveType:.string)
     public static let mutableStringClass = PrimitiveClass(label:"MutableString",primitiveType:.mutableString)
     
-    public enum PrimitiveType
+    public enum PrimitiveType: Int
         {
         case boolean
         case integer
@@ -119,9 +119,16 @@ public class PrimitiveClass:Class
         super.init(label: label)
         }
         
-    public required init?(coder: NSCoder)
+    required init?(coder: NSCoder)
         {
-        fatalError("init(coder:) has not been implemented")
+        self.primitiveType = PrimitiveType(rawValue: coder.decodeInteger(forKey: "primitiveType"))!
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.primitiveType.rawValue,forKey: "primitiveType")
+        super.encode(with: coder)
         }
     
     public override func layoutObjectSlots()
@@ -136,6 +143,7 @@ public class PrimitiveClass:Class
         {
         let typeName = Swift.type(of: self)
         print("\(indent)\(typeName): \(self.label)")
+        print("\(indent) INDEX: \(self.index)")
         }
         
     public override func printLayout()

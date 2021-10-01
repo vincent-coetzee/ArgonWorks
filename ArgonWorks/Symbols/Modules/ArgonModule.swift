@@ -289,9 +289,12 @@ public class ArgonModule: SystemModule
         UUID.stopSystemUUIDs()
         }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder)
+        {
+        super.init(coder: coder)
+        }
+        
+ 
         
     public override func resolveReferences()
         {
@@ -437,11 +440,12 @@ public class ArgonModule: SystemModule
         mathGroup.addSymbol(LibraryMethodInstance("exp",arg:self.float,out:self.float).libraryMethod)
         let formatGroup = SystemSymbolGroup(label: "Printing")
         self.addSymbol(formatGroup)
-        formatGroup.addSymbol(LibraryMethodInstance("print",self.integer).libraryMethod)
-        formatGroup.addSymbol(LibraryMethodInstance("print",self.float).libraryMethod)
-        formatGroup.addSymbol(LibraryMethodInstance("print",self.string).libraryMethod)
-        formatGroup.addSymbol(LibraryMethodInstance("print",self.boolean).libraryMethod)
-        formatGroup.addSymbol(LibraryMethodInstance("print",self.object).libraryMethod)
+        let method = LibraryMethodInstance("print",self.integer).libraryMethod
+        formatGroup.addSymbol(method)
+        method.addInstance(LibraryMethodInstance("print",self.float))
+        method.addInstance(LibraryMethodInstance("print",self.string))
+        method.addInstance(LibraryMethodInstance("print",self.boolean))
+        method.addInstance(LibraryMethodInstance("print",self.object))
         let ioGroup = SystemSymbolGroup(label: "IO")
         self.addSymbol(ioGroup)
         ioGroup.addSymbol(LibraryMethodInstance("next",self.readStream,"TYPE",self.integer).where("TYPE",self.object).libraryMethod)

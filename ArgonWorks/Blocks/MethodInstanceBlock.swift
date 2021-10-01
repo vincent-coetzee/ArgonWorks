@@ -22,6 +22,12 @@ public class MethodInstanceBlock: Block
         super.init()
         }
         
+    public required init?(coder: NSCoder)
+        {
+        self._methodInstance = coder.decodeObject(forKey: "methodInstance") as! MethodInstance
+        super.init(coder: coder)
+        }
+    
     public override func lookup(label: String) -> Symbol?
         {
         for slot in self.localSlots
@@ -57,6 +63,12 @@ public class MethodInstanceBlock: Block
     public override func addLocalSlot(_ slot:Slot)
         {
         self.methodInstance.addLocalSlot(slot)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self._methodInstance,forKey: "methodInstance")
+        super.encode(with: coder)
         }
         
     public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws

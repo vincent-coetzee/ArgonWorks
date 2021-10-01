@@ -16,3 +16,35 @@ public protocol NamingContext
     func lookup(label:Label) -> Symbol?
     func setSymbol(_ symbol:Symbol,atName: Name)
     }
+
+public struct NullContext: NamingContext
+    {
+    public var topModule: TopModule
+        {
+        TopModule()
+        }
+        
+    public var index: UUID
+        {
+        UUID()
+        }
+        
+    public var primaryContext: NamingContext
+        {
+        return(self)
+        }
+        
+    public func lookup(name:Name) -> Symbol?
+        {
+        nil
+        }
+        
+    public func lookup(label:Label) -> Symbol?
+        {
+        nil
+        }
+        
+    public func setSymbol(_ symbol:Symbol,atName: Name)
+        {
+        }
+    }

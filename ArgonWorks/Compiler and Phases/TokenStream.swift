@@ -58,7 +58,7 @@ public class TokenStream:Equatable
     private let digits = NSCharacterSet.decimalDigits
     private let whitespace = NSCharacterSet.whitespaces
     private let newline = NSCharacterSet.newlines
-    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@")
+    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@;")
     private let hexDigits = CharacterSet(charactersIn: "avbdefABCDEF0123456789_")
     private let binaryDigits = CharacterSet(charactersIn: "01_")
     private let operatorSymbols = CharacterSet(charactersIn: "=<>-+*/%!&|^~@")
@@ -913,6 +913,11 @@ public class TokenStream:Equatable
                 {
                 return(self.scanOperator(withPrefix:">"))
                 }
+            }
+        else if self.currentChar == ";"
+            {
+            self.nextChar()
+            return(.symbol(.semicolon,self.sourceLocation()))
             }
         else if self.currentChar == ":"
             {

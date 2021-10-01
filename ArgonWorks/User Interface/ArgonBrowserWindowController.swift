@@ -79,13 +79,6 @@ extension UserDefaults
         }
     }
     
-internal enum CompilationEvent
-    {
-    case none
-    case warning(Location,String)
-    case error(Location,String)
-    }
-    
 class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext,NSTableViewDataSource,NSTableViewDelegate
     {
     @IBOutlet var toolbar: NSToolbar!
@@ -242,6 +235,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     public func dispatchError(at: Location, message: String)
         {
         self.compilationEvents.append(.error(at,message))
+        let line = Int.random(in: 0..<15000)
+        self.compilationEvents.append(.warning(Location(line: line, lineStart: 800, lineStop: 870, tokenStart: 840, tokenStop: 869),"This is a psuedo warning added here."))
         self.errorListView?.reloadData()
         self.refreshSourceAnnotations()
         }
@@ -289,7 +284,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 
     @objc func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView?
         {
-        return(HierarchyRowView(selectionColor: NSColor.argonAnnotationOrange))
+        let event = self.compilationEvents[row]
+        return(HierarchyRowView(selectionColor: event.selectionColor))
         }
         
     private func initSourceEditor()

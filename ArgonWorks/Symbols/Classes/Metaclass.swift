@@ -32,7 +32,17 @@ public class Metaclass: Class
         super.init(label: label)
         }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.theClass,forKey: "theClass")
+        super.encode(with: coder)
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        self.theClass = coder.decodeObject(forKey: "theClass") as? Class
+        super.init(coder: coder)
+        }
+        
+ 
 }

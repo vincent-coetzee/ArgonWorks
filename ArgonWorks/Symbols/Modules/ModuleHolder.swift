@@ -48,6 +48,8 @@ public class ModuleHolder: Module
             fatalError("init(coder:) has not been implemented")
         }
         
+ 
+        
     public override func invert(cell: HierarchyCellView)
         {
         super.invert(cell: cell)
@@ -116,6 +118,8 @@ public class ElementHolder: Symbol
         fatalError("init(coder:) has not been implemented")
     }
     
+ 
+        
     public override func invert(cell: HierarchyCellView)
         {
         self.symbol.invert(cell: cell)

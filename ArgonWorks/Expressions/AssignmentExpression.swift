@@ -17,7 +17,7 @@ public class AssignmentExpression: Expression
         {
         self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
         self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
-        self.operationName = coder.decodeObject(forKey: "operationName") as! String
+        self.operationName = coder.decodeString(forKey: "operationName")!
         super.init(coder: coder)
         }
 
@@ -41,6 +41,8 @@ public class AssignmentExpression: Expression
         self.operationName = operation.name
         super.init()
         }
+        
+ 
         
     public override var displayString: String
         {
