@@ -27,6 +27,9 @@ class AppDelegate: NSObject, NSApplicationDelegate
                 }
             }
         TopModule.shared.resolveReferences()
+//        let aClass = TopModule.shared.argonModule.class
+//        let archiver = Archiver(path: URL(fileURLWithPath: "/Users/vincent/Desktop/Class.argonb"))
+//        try! archiver.writeRootObject(aClass)
         let small = VirtualMachine.small
         let array = InnerArrayPointer.allocate(arraySize: 20, elementClass: TopModule.shared.argonModule.slot, in: small)
         for word in Word(0)..<Word(20)

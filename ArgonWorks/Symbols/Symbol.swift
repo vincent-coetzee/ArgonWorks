@@ -30,6 +30,16 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var isTypeAlias: Bool
+        {
+        return(false)
+        }
+        
+    public var asType: Type
+        {
+        fatalError("asType should not be sent to a symbol that does not override it.")
+        }
+        
     public var isSymbolContainer: Bool
         {
         return(false)
@@ -198,12 +208,12 @@ public class Symbol:Node,ParseNode
         {
         print("DECODE SYMBOL(\(Swift.type(of: self)))")
         self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
+        print("DECODED KEY Symbol.privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
+        print("DECODED KEY Symbol.source")
         super.init(coder: coder)
         print("DECODED SYMBOL \(self.label) \(self.index)")
         }
-        
- 
         
     public override func encode(with coder:NSCoder)
         {

@@ -241,6 +241,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
+    public override var asType: Type
+        {
+        return(.class(self))
+        }
+        
     public var containsUninstanciatedParameterics: Bool
         {
         return(false)
@@ -375,7 +380,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     internal var hasBytes = false
     internal var _metaclass: Metaclass?
     internal var mangledCode: Label
-    internal var offsetOfClass: Dictionary<Class,Int> = [:]
+//    internal var offsetOfClass: Dictionary<Class,Int> = [:]
     internal var hasBeenRealized = false
     internal private(set) var depth:Int = -1
     
@@ -402,7 +407,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.hasBytes = coder.decodeBool(forKey: "hasBytes")
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
-        self.offsetOfClass = coder.decodeObject(forKey: "offsetOfClass") as! Dictionary<Class,Int>
+//        self.offsetOfClass = coder.decodeObject(forKey: "offsetOfClass") as! Dictionary<Class,Int>
         self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
         self.depth = coder.decodeInteger(forKey: "depth")
         super.init(coder: coder)
@@ -414,17 +419,27 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public override func encode(with coder:NSCoder)
         {
         print("ENCODE CLASS")
-        super.encode(with: coder)
         coder.encode(self.subclasses,forKey: "subclasses")
+        print("ENCODED KEY subclasses")
         coder.encode(self.superclasses,forKey: "superclasses")
+        print("ENCODED KEY superclasses")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
+        print("ENCODED KEY layoutSlots")
         coder.encode(self.magicNumber,forKey: "magicNumber")
-        coder.encode(self.hasBytes,forKey: "hasbytes")
+        print("ENCODED KEY magicNumber")
+        coder.encode(self.hasBytes,forKey: "hasBytes")
+        print("ENCODED KEY hasBytes")
         coder.encode(self._metaclass,forKey: "_metaclass")
+         print("ENCODED KEY _metaclass")
         coder.encode(self.mangledCode,forKey: "mangledCode")
-        coder.encode(self.offsetOfClass,forKey: "offsetOfClass")
+        print("ENCODED KEY mangledCode")
+//        coder.encode(self.offsetOfClass,forKey: "offsetOfClass")
+        print("ENCODED KEY offsetOfClass")
         coder.encode(self.hasBeenRealized,forKey: "hasBeenRealized")
+        print("ENCODED KEY hasBeenRealized")
         coder.encode(self.depth,forKey: "depth")
+        print("ENCODED KEY depth")
+        super.encode(with: coder)
         }
         
     ///
@@ -456,7 +471,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass.hasBytes = self.hasBytes
         newClass._metaclass = self._metaclass
         newClass.mangledCode = self.mangledCode
-        newClass.offsetOfClass = self.offsetOfClass
+//        newClass.offsetOfClass = self.offsetOfClass
         newClass.hasBeenRealized = self.hasBeenRealized
         newClass.depth = self.depth
         newClass.source = self.source
@@ -767,7 +782,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         visitedClasses.insert(self)
         print("LAYING OUT CLASS \(self.label) INDIRECTLY")
-        inClass.offsetOfClass[self] = offset
+//        inClass.offsetOfClass[self] = offset
         var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)

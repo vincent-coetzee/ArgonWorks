@@ -19,7 +19,8 @@ public class ForBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.name = ""
+        super.init(coder: coder)
         }
         
  

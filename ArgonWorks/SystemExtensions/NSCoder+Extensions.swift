@@ -65,10 +65,11 @@ extension NSCoder
         {
         if privacyScope.isNil
             {
-            self.encode("nil",forKey: forKey + "rawValue")
+            self.encode("nil",forKey: forKey + "flag")
             }
         else
             {
+            self.encode("notNil",forKey: forKey + "flag")
             self.encode(privacyScope!.rawValue,forKey: forKey + "rawValue")
             }
         }
@@ -208,44 +209,47 @@ extension NSCoder
             self.encode(-1,forKey:forKey + "flag")
             return
             }
-        self.encode(1,forKey: forKey + "flag")
-        switch(type)
+        else
             {
-            case .method(let name,let types,let returnType):
-                self.encode(3,forKey: forKey + "kind")
-                self.encode(name,forKey: forKey + "name")
-                self.encodeTypes(types,forKey: forKey + "types")
-                self.encodeType(returnType,forKey: forKey + "returnType")
-            case .class(let aClass):
-                self.encode(1,forKey: forKey + "kind")
-                self.encode(aClass,forKey: forKey + "class")
-            case .enumeration(let aClass):
-                self.encode(2,forKey: forKey + "kind")
-                self.encode(aClass,forKey: forKey + "enumeration")
-            case .forwardReference(let name,let context):
-                if let value = context.lookup(name: name)
-                    {
-                    if value is Class
+            self.encode(1,forKey: forKey + "flag")
+            switch(type)
+                {
+                case .method(let name,let types,let returnType):
+                    self.encode(3,forKey: forKey + "kind")
+                    self.encode(name,forKey: forKey + "name")
+                    self.encodeTypes(types,forKey: forKey + "types")
+                    self.encodeType(returnType,forKey: forKey + "returnType")
+                case .class(let aClass):
+                    self.encode(1,forKey: forKey + "kind")
+                    self.encode(aClass,forKey: forKey + "class")
+                case .enumeration(let aClass):
+                    self.encode(2,forKey: forKey + "kind")
+                    self.encode(aClass,forKey: forKey + "enumeration")
+                case .forwardReference(let name,let context):
+                    if let value = context.lookup(name: name)
                         {
-                        self.encode(1,forKey: forKey + "kind")
-                        self.encode(value as! Class,forKey: forKey + "class")
-                        }
-                    else if value is Enumeration
-                        {
-                        self.encode(2,forKey: forKey + "kind")
-                        self.encode(value as! Class,forKey: forKey + "enumeration")
+                        if value is Class
+                            {
+                            self.encode(1,forKey: forKey + "kind")
+                            self.encode(value as! Class,forKey: forKey + "class")
+                            }
+                        else if value is Enumeration
+                            {
+                            self.encode(2,forKey: forKey + "kind")
+                            self.encode(value as! Enumeration,forKey: forKey + "enumeration")
+                            }
+                        else
+                            {
+                            fatalError("FIX ME")
+                            }
                         }
                     else
                         {
-                        fatalError("FIX ME")
+                        fatalError("Using a forward reference here is a fuckup and needs to be fixed")
                         }
-                    }
-                else
-                    {
-                    fatalError("Using a forward reference here is a fuckup and needs to be fixed")
-                    }
-            default:
-                fatalError("Should not happen")
+                default:
+                    fatalError("Should not happen")
+                }
             }
         }
         
@@ -368,11 +372,12 @@ extension NSCoder
         
     public func decodePrivacyScope(forKey: String) -> PrivacyScope?
         {
-        let string = self.decodeObject(forKey: forKey + "rawValue") as! String
-        if string == "nil"
+        let flag = self.decodeString(forKey: forKey + "flag")!
+        if flag == "nil"
             {
             return(nil)
             }
+        let string = self.decodeObject(forKey: forKey + "rawValue") as! String
         return(PrivacyScope(rawValue: string)!)
         }
         
@@ -380,15 +385,19 @@ extension NSCoder
         {
         print("DECODE PARENT")
         let type = self.decodeInteger(forKey: key + "type")
+        print("DECODED KEY Parent.type")
         switch(type)
             {
             case 0:
                 return(Parent.none)
             case 1:
+                print("ABOUT TO DECODE PARENT KEY Parent.\(key)node")
                 return(Parent.node(self.decodeObject(forKey: key + "node") as! Node))
             case 2:
+                print("ABOUT TO DECODE PARENT KEY Parent.\(key)block")
                 return(Parent.block(self.decodeObject(forKey: key + "block") as! Block))
             case 3:
+                print("ABOUT TO DECODE PARENT KEY Parent.\(key)expression")
                 return(Parent.expression(self.decodeObject(forKey: key + "expression") as! Expression))
             default:
                 return(nil)

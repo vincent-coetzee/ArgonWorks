@@ -82,7 +82,7 @@ extension UserDefaults
 class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext,NSTableViewDataSource,NSTableViewDelegate
     {
     @IBOutlet var toolbar: NSToolbar!
-
+    @IBOutlet var splitViewController: NSSplitViewController!
     internal var classBrowser: NSOutlineView!
     internal var methodBrowser: NSOutlineView!
     
@@ -158,6 +158,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
         self.window!.delegate = self
         self.toolbar.validateVisibleItems()
+        let content = self.window!.contentView
+        let splitView = content!.subviews[0] as! NSSplitView
         }
     
     private func initObjectBrowser()
@@ -256,10 +258,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             switch(event)
                 {
                 case .warning(let location,_):
-                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "AnnotationWarning")!)
+                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "IconLineMarker")!)
                     self.sourceEditor.addAnnotation(annotation)
                 case .error(let location,_):
-                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "AnnotationError")!)
+                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "IconLineMarker")!)
                     self.sourceEditor.addAnnotation(annotation)
                 default:
                     break
@@ -286,6 +288,38 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         {
         let event = self.compilationEvents[row]
         return(HierarchyRowView(selectionColor: event.selectionColor))
+        }
+        
+    @objc func tableView(_ tableView: NSTableView,shouldSelectRow row: Int) -> Bool
+        {
+        let selectedRow = self.errorListView.selectedRow
+        guard selectedRow != -1 else
+            {
+            return(true)
+            }
+        if let view = self.errorListView.view(atColumn: 0, row: selectedRow, makeIfNecessary: false) as? CompilationEventCellView
+            {
+            view.makeUnhighlighted()
+            }
+        return(true)
+        }
+        
+    @objc func tableViewSelectionDidChange(_ notification: Notification)
+        {
+        let selectedRow = self.errorListView.selectedRow
+        guard selectedRow != -1 else
+            {
+            return
+            }
+        if let view = self.errorListView.view(atColumn: 0, row: selectedRow, makeIfNecessary: false) as? CompilationEventCellView
+            {
+            view.makeHighlighted()
+            }
+        let item = self.compilationEvents[selectedRow]
+        if let line = item.lineNumber
+            {
+            self.sourceEditor.highlight(line: line)
+            }
         }
         
     private func initSourceEditor()
@@ -486,18 +520,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             var url = self.currentSourceFileURL
             url?.deletePathExtension()
             url?.appendPathExtension("argonb")
-            var path = url!.path
-            var file = fopen(path,"wb")
-            fputs("STRING",file)
-            fflush(file)
-            fclose(file)
-            url?.deletePathExtension()
-            url?.appendPathExtension("argono")
-            path = url!.path
-            file = fopen(path,"wb")
-            fputs("STRING",file)
-            fflush(file)
-            fclose(file)
             if let theUrl = url
                 {
                 let source = self.sourceEditor.string
@@ -507,6 +529,9 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                     let data = try NSKeyedArchiver.archivedData(withRootObject: chunk, requiringSecureCoding: false)
                     try data.write(to: theUrl)
                     }
+                let newData = try Data(contentsOf: theUrl)
+                let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
+                print(result)
                 }
             }
         catch let error

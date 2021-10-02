@@ -14,15 +14,17 @@ public enum TypeError: Error,Equatable
     case undefined
     }
     
-public indirect enum Type: Equatable
+public indirect enum Type: Equatable,Storable
     {
-    public init(input: InputFile) throws {
-    fatalError()
-    }
+    public init(input: InputFile) throws
+        {
+        fatalError()
+        }
     
-    public func write(output: OutputFile) throws {
-        
-    }
+    public func write(output: OutputFile) throws
+        {
+        try output.write(self)
+        }
     
     public static func ==(lhs:Type,rhs:Type) -> Bool
         {

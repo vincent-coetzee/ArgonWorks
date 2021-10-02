@@ -10,7 +10,7 @@ import Foundation
 public class SelectBlock: Block
     {
     private let value:Expression
-    private var whenBlocks:Array<WhenBlock>
+    private var whenBlocks:Array<WhenBlock> = []
     public var otherwiseBlock: OtherwiseBlock?
     
     init(value: Expression)
@@ -22,10 +22,9 @@ public class SelectBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.value = Expression()
+        super.init(coder: coder)
         }
-        
- 
         
     public func addWhen(block: WhenBlock)
         {

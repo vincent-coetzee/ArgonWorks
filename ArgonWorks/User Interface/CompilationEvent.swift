@@ -15,7 +15,28 @@ internal enum CompilationEvent
     
     public var selectionColor: NSColor
         {
-        return(Palette.shared.compilationEventSelectionColor)
+        switch(self)
+            {
+            case .none:
+                return(NSColor.clear)
+            case .warning:
+                return(Palette.shared.compilationEventWarningSelectionColor)
+            case .error:
+                return(Palette.shared.compilationEventErrorSelectionColor)
+            }
+        }
+        
+    public var lineNumber: Int?
+        {
+        switch(self)
+            {
+            case .none:
+                return(nil)
+            case .warning(let location,_):
+                return(location.line)
+            case .error(let location,_):
+                return(location.line)
+            }
         }
         
     public var iconName: String

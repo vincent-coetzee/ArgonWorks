@@ -108,11 +108,13 @@ public class Slot:Symbol
     public required init?(coder: NSCoder)
         {
         self._type = coder.decodeType(forKey: "_type")
+        print("DECODED KEY Slot._type")
         self.offset = coder.decodeInteger(forKey: "offset")
-        print("ABOUT TO DECODE AN EXPRESSION IN SLOT")
+        print("DECODED KEY Slot.offset")
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
-        print("DECODED EXPRESSION \(Swift.type(of: self.initialValue)) IN SLOT")
+        print("DECODED KEY Slot.initialValue")
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
+        print("DECODED KEY Slot.isClassSlot")
         super.init(coder: coder)
         }
 

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
     
-public class Node:NSObject,NamingContext,Identifiable,NSCoding
+public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
     {
     public var tag: Int = 0
     public var index: UUID
@@ -42,28 +42,32 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
     required public init?(coder: NSCoder)
         {
         self.index = coder.decodeObject(forKey: "index") as! UUID
+        print("DECODED KEY Node.index")
         self.label = coder.decodeObject(forKey: "label") as! Label
+        print("DECODED KEY Node.label")
         self.parent = coder.decodeParent(forKey: "parent")!
+        print("DECODED KEY Node.parent")
         self.locations = coder.decodeNodeLocations(forKey: "locations")
+        print("DECODED KEY Node.locations")
         }
         
     public func encode(with coder:NSCoder)
         {
         coder.encode(self.index,forKey: "index")
         coder.encode(self.label,forKey: "label")
-        coder.encodeParent(self.parent,forKey: "parent")
-        coder.encodeNodeLocations(self.locations,forKey: "locations")
+//        coder.encodeParent(self.parent,forKey: "parent")
+//        coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
         
 //    public required init(input: InputFile) throws
 //        {
 //        fatalError("Not implemented")
 //        }
-//    
+    
     public func write(output: OutputFile) throws
         {
+        try output.write(self)
         }
-    
     
     public var name: Name
         {

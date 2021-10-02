@@ -95,6 +95,14 @@ public struct Palette
     public let slotColor = NSColor.argonCoral
     public let hierarchyTextColor = NSColor.white
     
+    public let compilationEventWarningSelectionColor = NSColor.argonNeonYellow
+    public let compilationEventErrorSelectionColor = NSColor.argonSizzlingRed
+    public let compilationEventWarningColor = NSColor.argonNeonYellow
+    public let compilationEventErrorColor = NSColor.argonSizzlingRed
+    public let compilationEventTextColor = NSColor.white
+    
+    public let compilationSelectedTextColor = NSColor.black
+    
     public var currentScheme: Scheme
         {
         return(self.greenScheme)

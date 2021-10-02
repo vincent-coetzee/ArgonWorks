@@ -27,7 +27,8 @@ public class IfBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.condition = Expression()
+        super.init(coder: coder)
         }
     
     public override func realize(using realizer:Realizer)

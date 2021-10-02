@@ -33,6 +33,11 @@ public class LibraryModule: Module
         self.path = coder.decodeString(forKey: "path")!
         super.init(coder: coder)
         }
-        
+
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.path,forKey: "path")
+        super.encode(with: coder)
+        }
  
     }

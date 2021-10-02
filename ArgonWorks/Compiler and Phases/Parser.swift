@@ -942,15 +942,10 @@ public class Parser: CompilerPass
         let parameters = try self.parseTypeParameters()
         if let symbol = self.currentContext.lookup(name: name)
             {
-            if symbol.isEnumeration
+            if symbol.isEnumeration || symbol.isTypeAlias || symbol.isClassParameter
                 {
                 symbol.addReference(location)
-                return(.enumeration(symbol as! Enumeration))
-                }
-            else if symbol.isClassParameter
-                {
-                symbol.addReference(location)
-                return(.class(symbol as! Class))
+                return(symbol.asType)
                 }
             else if symbol.isClass
                 {
@@ -1367,7 +1362,7 @@ public class Parser: CompilerPass
         let location = self.token.location
         let lhs = try self.parseArithmeticExpression()
         lhs.addDeclaration(location)
-        if self.token.isLeftBrocket || self.token.isLeftBrocketEquals || self.token.isEquals || self.token.isRightBrocket || self.token.isRightBrocketEquals
+        if self.token.isLeftBrocket || self.token.isLeftBrocketEquals || self.token.isEquals || self.token.isRightBrocket || self.token.isRightBrocketEquals || self.token.isNotEquals
             {
             let symbol = self.token.symbol
             try self.nextToken()
@@ -1943,10 +1938,13 @@ public class Parser: CompilerPass
         self.startClip()
         let location = self.token.location
         try self.nextToken()
-        let expression = try self.parseComparisonExpression()
+        let expression = try self.parseExpression()
         let statement = WhileBlock(condition: expression)
         statement.addDeclaration(location)
-        try self.parseBlock(into: statement)
+        try self.parseBraces
+            {
+            try self.parseBlock(into: statement)
+            }
         block.addBlock(statement)
         self.stopClip(into: block)
         }
@@ -1996,14 +1994,17 @@ public class Parser: CompilerPass
         let statement = LoopBlock(start: start,end: end,update: update)
         statement.addDeclaration(location)
         block.addBlock(statement)
-        try self.parseBlock(into: statement)
+        try self.parseBraces
+            {
+            try self.parseBlock(into: statement)
+            }
         self.stopClip(into: statement)
         }
         
     private func parseLoopConstraints() throws -> ([Expression],Expression,[Expression])
         {
         var start = Array<Expression>()
-        var end:Expression = Expression()
+        var end = Expression()
         var update = Array<Expression>()
         try self.parseParentheses
             {
@@ -2018,18 +2019,18 @@ public class Parser: CompilerPass
                 self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
                 }
             try self.nextToken()
-            end = try self.parseExpression()
-            if !self.token.isSemicolon
-                {
-                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
-                }
-            try self.nextToken()
             repeat
                 {
                 try self.parseComma()
                 update.append(try self.parseExpression())
                 }
             while self.token.isComma
+            if !self.token.isSemicolon
+                {
+                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
+                }
+            try self.nextToken()
+            end = try self.parseExpression()
             }
         return((start,end,update))
         }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum Parent
+public enum Parent:Storable
     {
     case none
     case node(Node)
@@ -19,6 +19,16 @@ public enum Parent
         self = .none
         }
 
+    public init(input: InputFile) throws
+        {
+        fatalError()
+        }
+    
+    public func write(output: OutputFile) throws
+        {
+        try output.write(self)
+        }
+        
     public var block: Block
         {
         switch(self)

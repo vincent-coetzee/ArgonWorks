@@ -153,6 +153,16 @@ public class LineNumberTextView: NSTextView {
         }
     }
 
+    public func highlight(line: Int)
+        {
+        let lineHeight = self.lineNumberGutter!.lineHeight
+        let offset = lineHeight * CGFloat(line)
+        self.selectedLineLayer.isHidden = false
+        var frame = NSRect(x:0,y:offset,width: self.bounds.width,height: lineHeight)
+        frame.origin.y = frame.minY - lineHeight
+        self.selectedLineLayer.frame = frame
+        }
+        
     public override func mouseDown(with event: NSEvent)
         {
         var line: Int = 0

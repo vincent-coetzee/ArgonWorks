@@ -7,10 +7,9 @@
 
 import Foundation
 
-public struct SlotList:Collection,Storable
+public class SlotList:NSObject,NSCoding,Collection,StorableObject
     {
-
-    
+    public let index = UUID()
     public var parent: Symbol!
     public var slots: Array<Slot> = []
     
@@ -39,7 +38,7 @@ public struct SlotList:Collection,Storable
             }
         }
         
-    public init()
+    public override init()
         {
         }
         
@@ -50,18 +49,20 @@ public struct SlotList:Collection,Storable
 //        super.init()
 //        }
 //
-//    required public init?(coder: NSCoder)
-//        {
-//        self.parent = coder.decodeObject(forKey: "parent") as? Symbol
-//        self.slots = coder.decodeObject(forKey: "slots") as! Array<Slot>
-//        super.init()
-//        }
+    required public init?(coder: NSCoder)
+        {
+        self.parent = coder.decodeObject(forKey: "parent") as? Symbol
+        print("DECODED KEY SlotList.parent")
+        self.slots = coder.decodeObject(forKey: "slots") as! Array<Slot>
+        print("DECODED KEY SlotList.slots")
+        super.init()
+        }
         
-//    public func encode(with coder:NSCoder)
-//        {
-//        coder.encode(self.parent,forKey:"parent")
-//        coder.encode(self.slots,forKey:"slots")
-//        }
+    public func encode(with coder:NSCoder)
+        {
+        coder.encode(self.parent,forKey:"parent")
+        coder.encode(self.slots,forKey:"slots")     
+        }
 
     public init(input: InputFile)
         {
@@ -79,7 +80,7 @@ public struct SlotList:Collection,Storable
         return(after + 1)
         }
         
-    public mutating func append(_ slot: Slot)
+    public func append(_ slot: Slot)
         {
         self.slots.append(slot)
         slot.setParent(self.parent)

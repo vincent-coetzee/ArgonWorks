@@ -9,6 +9,11 @@ import AppKit
 
 public class Enumeration:Class
     {
+    public override var asType: Type
+        {
+        return(.enumeration(self))
+        }
+        
     private var cases: EnumerationCases = []
     public var rawType: Type?
     
@@ -17,9 +22,12 @@ public class Enumeration:Class
         super.init(label: label)
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    public required init?(coder: NSCoder)
+        {
+        self.rawType = coder.decodeType(forKey: "rawType")
+        self.cases = coder.decodeObject(forKey: "cases") as! EnumerationCases
+        super.init(coder: coder)
+        }
     
     public override var isEnumeration: Bool
         {

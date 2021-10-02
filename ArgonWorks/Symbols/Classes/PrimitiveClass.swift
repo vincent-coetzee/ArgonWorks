@@ -81,7 +81,7 @@ public class PrimitiveClass:Class
     public static let stringClass = PrimitiveClass(label:"String",primitiveType:.string)
     public static let mutableStringClass = PrimitiveClass(label:"MutableString",primitiveType:.mutableString)
     
-    public enum PrimitiveType: Int
+    public enum PrimitiveType: Int32
         {
         case boolean
         case integer
@@ -121,13 +121,14 @@ public class PrimitiveClass:Class
         
     required init?(coder: NSCoder)
         {
-        self.primitiveType = PrimitiveType(rawValue: coder.decodeInteger(forKey: "primitiveType"))!
+        self.primitiveType = PrimitiveType(rawValue: coder.decodeInt32(forKey: "primitiveType"))!
+        print("DECODED KEY PrimitiveClass.primitiveType")
         super.init(coder: coder)
         }
         
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(self.primitiveType.rawValue,forKey: "primitiveType")
+        coder.encode(Int32(self.primitiveType.rawValue),forKey: "primitiveType")
         super.encode(with: coder)
         }
     

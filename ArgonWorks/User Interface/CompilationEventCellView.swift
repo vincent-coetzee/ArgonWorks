@@ -60,4 +60,28 @@ class CompilationEventCellView: NSTableCellView
     @IBOutlet var iconView: NSImageView!
     @IBOutlet var lineNumberView: NSTextField!
     @IBOutlet var detailView: NSTextField!
+    
+    public func makeHighlighted()
+        {
+        self.lineNumberView.textColor = Palette.shared.compilationSelectedTextColor
+        self.detailView.textColor = Palette.shared.compilationSelectedTextColor
+        self.iconView.contentTintColor = Palette.shared.compilationSelectedTextColor
+        }
+        
+    public func makeUnhighlighted()
+        {
+        switch(self.event)
+            {
+            case .warning:
+                self.iconView.contentTintColor = Palette.shared.compilationEventWarningColor
+                self.detailView.textColor = Palette.shared.compilationEventTextColor
+                self.lineNumberView.textColor = Palette.shared.compilationEventTextColor
+            case .error:
+                self.iconView.contentTintColor = Palette.shared.compilationEventErrorColor
+                self.detailView.textColor = Palette.shared.compilationEventTextColor
+                self.lineNumberView.textColor = Palette.shared.compilationEventTextColor
+            default:
+                break
+            }
+        }
     }

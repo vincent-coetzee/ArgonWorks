@@ -20,7 +20,8 @@ public class ExpressionBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.expression = Expression()
+        super.init(coder: coder)
         }
         
     public override func realize(using realizer:Realizer)

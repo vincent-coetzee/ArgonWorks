@@ -19,10 +19,9 @@ public class WhileBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.condition = Expression()
+        super.init(coder: coder)
         }
-        
- 
         
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {

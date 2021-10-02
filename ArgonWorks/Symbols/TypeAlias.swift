@@ -9,6 +9,11 @@ import AppKit
 
 public class TypeAlias:Symbol
     {
+    public override var isTypeAlias: Bool
+        {
+        return(true)
+        }
+        
     public override var defaultColor: NSColor
         {
         Palette.shared.typeAliasColor
@@ -22,6 +27,11 @@ public class TypeAlias:Symbol
     public override var imageName: String
         {
         "IconType"
+        }
+        
+    public override var asType: Type
+        {
+        return(self._type)
         }
         
     public override func emitCode(using: CodeGenerator)

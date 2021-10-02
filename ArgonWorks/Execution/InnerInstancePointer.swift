@@ -108,7 +108,8 @@ public class InnerInstancePointer:InnerPointer
     private func setClassSlots(inClass: Class,forClass: Class)
         {
 //        let name = forClass.label
-        let offset = inClass.offsetOfClass[forClass]
+//        let offset = inClass.offsetOfClass[fo
+        let offset:Int? = nil
         if offset.isNil
             {
             fatalError("Offset of class \(forClass.label) in class \(inClass.label) is nil can should not be")

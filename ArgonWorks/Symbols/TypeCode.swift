@@ -7,8 +7,13 @@
 
 import Foundation
 
-public enum TypeCode:Int
+public enum TypeCode:Int,Storable
     {
+    public func write(output: OutputFile) throws
+        {
+        try output.write(self)
+        }
+    
     public var isScalarValue: Bool
         {
         switch(self)

@@ -14,6 +14,7 @@ class ArgonBrowserInspectorViewController: NSViewController
     @IBOutlet var listScrollView: NSScrollView!
     @IBOutlet var editorHeaderView: HeaderView!
     @IBOutlet var editorView: NSView!
+    @IBOutlet var splitView: NSSplitView!
     
     override func viewDidLoad()
         {

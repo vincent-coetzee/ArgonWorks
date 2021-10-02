@@ -795,63 +795,59 @@
                         <toolbar key="toolbar" implicitIdentifier="09D11707-F4A3-4FD5-970E-AC5832E91C2B" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="8Cy-Jm-dyM">
                             <allowedToolbarItems>
                                 <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="at8-gz-kso"/>
-                                <toolbarItem implicitItemIdentifier="65A9A30F-FB06-424C-B8C8-2C4BC9B62EA8" label="Font Size" paletteLabel="Font Size" tag="-1" image="textformat.size" catalog="system" bordered="YES" id="AFb-Y2-DW7">
+                                <toolbarItem implicitItemIdentifier="65A9A30F-FB06-424C-B8C8-2C4BC9B62EA8" label="Increase Font" paletteLabel="Increase Font" tag="-1" image="plus.square" catalog="system" bordered="YES" id="AFb-Y2-DW7">
                                     <size key="minSize" width="30" height="25"/>
                                     <size key="maxSize" width="30" height="25"/>
                                 </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="2AEC7F44-E678-4CC6-B928-D12DA9E816D5" label="Decrease Font" paletteLabel="Decrease Font" tag="-1" image="minus.square" catalog="system" bordered="YES" id="UYu-2M-m3X">
+                                    <size key="minSize" width="27" height="25"/>
+                                    <size key="maxSize" width="27" height="25"/>
+                                </toolbarItem>
                                 <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="QgE-Oa-XiD"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="9nz-y3-rHy"/>
-                                <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="2G9-Xd-dhE"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="QhK-o3-Fp3"/>
-                                <toolbarItem implicitItemIdentifier="CF57AFD5-D5F7-4D33-84F7-B0000014943A" label="Compile" paletteLabel="Compile" tag="-1" image="eyebrow" catalog="system" bordered="YES" autovalidates="NO" id="NhU-Vb-tLq">
+                                <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="2G9-Xd-dhE"/>
+                                <toolbarItem implicitItemIdentifier="0C14DCCE-7E93-4946-AAE2-A4224411F799" label="Debug" paletteLabel="Debug" tag="-1" image="ant.circle" catalog="system" bordered="YES" id="VxB-v2-sea">
+                                    <size key="minSize" width="27" height="25"/>
+                                    <size key="maxSize" width="27" height="25"/>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="2C370AD4-1D96-462D-BF3D-229C78E4844C" label="Run" paletteLabel="Run" tag="-1" image="bolt.fill" catalog="system" bordered="YES" id="Gaq-6Y-X45">
+                                    <size key="minSize" width="25" height="25"/>
+                                    <size key="maxSize" width="25" height="25"/>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="CF57AFD5-D5F7-4D33-84F7-B0000014943A" label="Compile" paletteLabel="Compile" tag="-1" image="gearshape.2.fill" catalog="system" bordered="YES" autovalidates="NO" id="NhU-Vb-tLq">
                                     <size key="minSize" width="28" height="25"/>
                                     <size key="maxSize" width="28" height="25"/>
                                     <connections>
                                         <action selector="onCompile:" target="PcH-Zn-LV7" id="0Av-Kp-O71"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="79109262-A515-4577-9AAF-DFA57D1908EB" label="Build" paletteLabel="Build" tag="-1" image="pencil.tip.crop.circle" catalog="system" bordered="YES" id="VGU-ZK-oMS">
-                                    <size key="minSize" width="27" height="25"/>
-                                    <size key="maxSize" width="27" height="25"/>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="3BBE06E7-DB72-4C6B-920D-9DDC1D029B46" label="Parse" paletteLabel="Parse" tag="-1" image="pencil.and.outline" catalog="system" bordered="YES" id="cUU-VA-U99">
-                                    <size key="minSize" width="28" height="25"/>
-                                    <size key="maxSize" width="28" height="25"/>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="FF40B4B7-2108-4F92-ABAC-DCC5E502661B" label="Import" paletteLabel="Import" tag="-1" image="lock.open" catalog="system" bordered="YES" id="aaA-Ca-AHA">
-                                    <size key="minSize" width="29" height="25"/>
-                                    <size key="maxSize" width="29" height="25"/>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="14F93AA8-DD4B-4712-A3A4-5A13D1436B54" label="Package" paletteLabel="Package" tag="-1" image="envelope.open" catalog="system" bordered="YES" id="YL5-rK-JPN">
+                                <toolbarItem implicitItemIdentifier="14F93AA8-DD4B-4712-A3A4-5A13D1436B54" label="Package" paletteLabel="Package" tag="-1" image="shippingbox" catalog="system" bordered="YES" id="YL5-rK-JPN">
                                     <size key="minSize" width="30" height="25"/>
                                     <size key="maxSize" width="30" height="25"/>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="FD332320-7612-4907-B50E-9FE1F742E063" label="Symbols" paletteLabel="Symbols" tag="-1" image="cube" catalog="system" bordered="YES" id="DxZ-FL-D4t">
+                                <toolbarItem implicitItemIdentifier="FD332320-7612-4907-B50E-9FE1F742E063" label="Symbols" paletteLabel="Symbols" tag="-1" image="cube.fill" catalog="system" bordered="YES" id="DxZ-FL-D4t">
                                     <size key="minSize" width="28" height="25"/>
                                     <size key="maxSize" width="28" height="25"/>
                                     <connections>
                                         <action selector="onEmitSymbols:" target="6qh-Zt-TKK" id="609-Fs-kx4"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="B4DD8E49-431A-4A97-801A-D2CD05263DC4" label="Clean" paletteLabel="Clean" tag="-1" image="sparkles" catalog="system" bordered="YES" id="F64-Mb-gYy">
-                                    <size key="minSize" width="27" height="25"/>
-                                    <size key="maxSize" width="27" height="25"/>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="AA9E4C3F-B631-46B2-8D0D-D288746B690C" label="Open" paletteLabel="Open" tag="-1" image="doc" catalog="system" bordered="YES" autovalidates="NO" id="uEX-xc-Pbu">
+                                <toolbarItem implicitItemIdentifier="AA9E4C3F-B631-46B2-8D0D-D288746B690C" label="Open" paletteLabel="Open" tag="-1" image="arrow.up.doc" catalog="system" bordered="YES" autovalidates="NO" id="uEX-xc-Pbu">
                                     <size key="minSize" width="26" height="25"/>
                                     <size key="maxSize" width="26" height="25"/>
                                     <connections>
                                         <action selector="onOpenFile:" target="PcH-Zn-LV7" id="rJF-pP-utf"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="C4588316-EF6B-4118-92CD-057D5A4EEC52" label="New" paletteLabel="New" tag="-1" image="plus.square" catalog="system" bordered="YES" id="eB7-he-9F2">
+                                <toolbarItem implicitItemIdentifier="C4588316-EF6B-4118-92CD-057D5A4EEC52" label="New" paletteLabel="New" tag="-1" image="doc" catalog="system" bordered="YES" id="eB7-he-9F2">
                                     <size key="minSize" width="27" height="25"/>
                                     <size key="maxSize" width="27" height="25"/>
                                     <connections>
                                         <action selector="onNewEditor:" target="PcH-Zn-LV7" id="OOF-Oz-fKb"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="DD0EEEA0-3C09-45DC-A0F7-0186952DF45B" label="Save" paletteLabel="Save" tag="-1" image="square.and.arrow.down" catalog="system" bordered="YES" autovalidates="NO" id="9ki-Dz-a6R">
+                                <toolbarItem implicitItemIdentifier="DD0EEEA0-3C09-45DC-A0F7-0186952DF45B" label="Save" paletteLabel="Save" tag="-1" image="arrow.down.doc" catalog="system" bordered="YES" autovalidates="NO" id="9ki-Dz-a6R">
                                     <size key="minSize" width="27" height="25"/>
                                     <size key="maxSize" width="27" height="25"/>
                                     <connections>
@@ -860,21 +856,18 @@
                                 </toolbarItem>
                             </allowedToolbarItems>
                             <defaultToolbarItems>
-                                <toolbarItem reference="uEX-xc-Pbu"/>
                                 <toolbarItem reference="eB7-he-9F2"/>
+                                <toolbarItem reference="uEX-xc-Pbu"/>
                                 <toolbarItem reference="9ki-Dz-a6R"/>
                                 <toolbarItem reference="2G9-Xd-dhE"/>
+                                <toolbarItem reference="Gaq-6Y-X45"/>
                                 <toolbarItem reference="NhU-Vb-tLq"/>
-                                <toolbarItem reference="VGU-ZK-oMS"/>
-                                <toolbarItem reference="cUU-VA-U99"/>
-                                <toolbarItem reference="2G9-Xd-dhE"/>
-                                <toolbarItem reference="aaA-Ca-AHA"/>
                                 <toolbarItem reference="YL5-rK-JPN"/>
                                 <toolbarItem reference="DxZ-FL-D4t"/>
-                                <toolbarItem reference="F64-Mb-gYy"/>
                                 <toolbarItem reference="2G9-Xd-dhE"/>
                                 <toolbarItem reference="QgE-Oa-XiD"/>
                                 <toolbarItem reference="AFb-Y2-DW7"/>
+                                <toolbarItem reference="UYu-2M-m3X"/>
                                 <toolbarItem reference="at8-gz-kso"/>
                             </defaultToolbarItems>
                             <connections>
@@ -1194,9 +1187,9 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hYp-tF-Ith">
-                                <rect key="frame" x="0.0" y="0.0" width="474" height="714"/>
+                                <rect key="frame" x="0.0" y="0.0" width="434" height="714"/>
                                 <clipView key="contentView" id="zJR-9z-eqE">
-                                    <rect key="frame" x="1" y="1" width="472" height="712"/>
+                                    <rect key="frame" x="1" y="1" width="432" height="712"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" viewBased="YES" indentationPerLevel="20" outlineTableColumn="320-3r-fQN" id="kyY-RF-FDV">
@@ -1283,8 +1276,8 @@
                                         </outlineView>
                                     </subviews>
                                 </clipView>
-                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Mjc-hk-a0T">
-                                    <rect key="frame" x="1" y="697" width="472" height="16"/>
+                                <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Mjc-hk-a0T">
+                                    <rect key="frame" x="1" y="697" width="432" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="uyV-oc-jfM">
@@ -3316,19 +3309,18 @@
         </scene>
     </scenes>
     <resources>
+        <image name="ant.circle" catalog="system" width="15" height="15"/>
+        <image name="arrow.down.doc" catalog="system" width="14" height="16"/>
+        <image name="arrow.up.doc" catalog="system" width="14" height="16"/>
+        <image name="bolt.fill" catalog="system" width="13" height="17"/>
         <image name="chevron.forward.circle" catalog="system" width="15" height="15"/>
-        <image name="cube" catalog="system" width="16" height="17"/>
+        <image name="cube.fill" catalog="system" width="16" height="16"/>
         <image name="doc" catalog="system" width="14" height="16"/>
         <image name="doc.circle" catalog="system" width="15" height="15"/>
-        <image name="envelope.open" catalog="system" width="18" height="17"/>
-        <image name="eyebrow" catalog="system" width="16" height="14"/>
-        <image name="lock.open" catalog="system" width="17" height="15"/>
-        <image name="pencil.and.outline" catalog="system" width="16" height="16"/>
-        <image name="pencil.tip.crop.circle" catalog="system" width="15" height="15"/>
+        <image name="gearshape.2.fill" catalog="system" width="20" height="16"/>
+        <image name="minus.square" catalog="system" width="15" height="14"/>
         <image name="plus.square" catalog="system" width="15" height="14"/>
-        <image name="sparkles" catalog="system" width="15" height="17"/>
-        <image name="square.and.arrow.down" catalog="system" width="15" height="16"/>
-        <image name="textformat.size" catalog="system" width="18" height="12"/>
+        <image name="shippingbox" catalog="system" width="16" height="17"/>
         <namedColor name="ArgonLime">
             <color red="0.4779999852180481" green="0.60399997234344482" blue="0.0040000001899898052" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

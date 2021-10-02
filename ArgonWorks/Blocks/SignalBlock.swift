@@ -19,7 +19,8 @@ public class SignalBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.symbol = ""
+        super.init(coder: coder)
         }
         
  

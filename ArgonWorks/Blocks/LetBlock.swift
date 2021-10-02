@@ -39,7 +39,11 @@ public class LetBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.slot = Slot(label: "", type: .class(TopModule.shared.argonModule.integer))
+        self.name = Name()
+        self.value = Expression()
+        self.location = .zero
+        super.init(coder: coder)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

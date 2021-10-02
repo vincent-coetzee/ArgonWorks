@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Name:CustomStringConvertible,Comparable,Hashable
+public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     {
     public static func ==(lhs:Name,rhs:Name) -> Bool
         {
@@ -128,6 +128,16 @@ public struct Name:CustomStringConvertible,Comparable,Hashable
     public init()
         {
         self.components = []
+        }
+        
+    public func write(output: OutputFile) throws
+        {
+        try output.writeType(of: self)
+        try output.write(self.components.count)
+        for component in self.components
+            {
+            try output.write(component.string)
+            }
         }
         
     public init(rooted:Bool)

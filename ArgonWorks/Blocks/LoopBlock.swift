@@ -23,7 +23,10 @@ public class LoopBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.startExpressions = []
+        self.endExpression = Expression()
+        self.updateExpressions = []
+        super.init(coder: coder)
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -84,7 +87,7 @@ public class LoopBlock: Block
             }
         catch let error
             {
-            using.compiler.reportingContext.dispatchError(at: .zero, message: "\(error) Code generator has caught a throws when attemping to dereference a label marker, this is because some idiot used the marker incorrectly, fix it")
+            using.compiler.reportingContext.dispatchError(at: .zero, message: "\(error) Code generator has caught a throws when attemping to dereference a label marker, this is because some idiot ( yes you Vincent ) used the marker incorrectly, fix it")
             }
         }
     }

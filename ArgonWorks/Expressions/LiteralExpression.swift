@@ -93,14 +93,14 @@ public indirect enum Literal
                 coder.encode(10,forKey:"kind")
                 coder.encode(enumeration,forKey:"enumeration")
             case .method(let method):
-                coder.encode(11,forKey:"kind")
+                coder.encode(12,forKey:"kind")
                 coder.encode(method,forKey:"method")
             case .constant(let constant):
-                coder.encode(12,forKey:"kind")
+                coder.encode(13,forKey:"kind")
                 coder.encode(constant,forKey:"constant")
             case .enumerationCase(let aCase):
-                coder.encode(13,forKey:"kind")
-                coder.encode(aCase,forKey:"enumerationCasee")
+                coder.encode(11,forKey:"kind")
+                coder.encode(aCase,forKey:"enumerationCase")
             }
         }
     }

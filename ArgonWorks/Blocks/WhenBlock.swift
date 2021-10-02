@@ -24,7 +24,8 @@ public class WhenBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        fatalError()
+        self.condition = Expression()
+        super.init(coder: coder)
         }
     }
     
