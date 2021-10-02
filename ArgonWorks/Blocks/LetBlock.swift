@@ -9,57 +9,43 @@ import Foundation
 
 public class LetBlock: Block
     {
-    private enum CodingKeys: String, CodingKey
-        {
-        case name
-        case value
-        case location
-        case slot
-        }
-    
-    private let name: Name
-    private let value:Expression
+    private let expression:Expression
     private let location:Location
-    private var namingContext: NamingContext?
-    private let slot: Slot
     
-    public init(name:Name,slot:Slot,location:Location,namingContext: NamingContext,value:Expression)
+    public init(location:Location,expression:Expression)
         {
-        self.slot = slot
-        self.name = name
-        self.value = value
-        if Swift.type(of: self.value) == Expression.self
-            {
-            print("halt")
-            }
         self.location = location
-        self.namingContext = namingContext
+        self.expression = expression
         super.init()
         }
         
     public required init?(coder: NSCoder)
         {
-        self.slot = Slot(label: "", type: .class(TopModule.shared.argonModule.integer))
-        self.name = Name()
-        self.value = Expression()
-        self.location = .zero
+        self.location = coder.decodeLocation(forKey: "location")
+        self.expression = coder.decodeObject(forKey: "lhs") as! Expression
         super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encodeLocation(self.location,forKey: "location")
+        coder.encode(self.expression,forKey: "rhs")
+        super.encode(with: coder)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        let valueType = self.value.resultType
-        let slotType = slot.type
-        if !valueType.isSubtype(of: slotType)
-            {
-            analyzer.compiler.reportingContext.dispatchError(at: self.location, message: "An instance of class \(valueType) can not be assigned to an instance of \(slotType).")
-            }
+        let valueType = self.expression.resultType
+//        if !valueType.isSubtype(of: slotType)
+//            {
+//            analyzer.compiler.reportingContext.dispatchError(at: self.location, message: "An instance of class \(valueType) can not be assigned to an instance of \(slotType).")
+//            }
         }
         
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        try self.value.emitCode(into: buffer, using: generator)
-        let place = self.value.place
-        buffer.append(.STORE,place,.none,self.slot.addresses.mostEfficientAddress.operand)
+        try self.expression.emitCode(into: buffer, using: generator)
+//        let place = self.value.place
+//        buffer.append(.STORE,place,.none,self.slot.addresses.mostEfficientAddress.operand)
         }
     }

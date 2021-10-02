@@ -20,6 +20,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
 
+    public var isArrayClassInstance: Bool
+        {
+        return(false)
+        }
+        
     public var isEnumeration: Bool
         {
         return(false)

@@ -186,6 +186,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case IMPORT
         case IN
         case INFIX
+        case INIT
         case IS
         case LET
         case LOADED
@@ -193,8 +194,6 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case MAIN
         case MAKE
         case MAPPING
-        case me
-        case Me
         case METHOD
         case MODULE
         case NEXT
@@ -215,6 +214,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case RESUME
         case SEALED
         case SELECT
+        case `self`
+        case `Self`
         case SCOPED
         case SIGNAL
         case SLOT
@@ -458,39 +459,6 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-//
-//    public var asSymbolAttribute: SymbolAttribute
-//        {
-//        if !self.isSymbolAttribute
-//            {
-//            fatalError("This should not happen")
-//            }
-//        else
-//            {
-//            switch(self.keyword)
-//                {
-//                case .EXPORTED:
-//                    return(.exported)
-//                case .PUBLIC:
-//                    return(.public)
-//                case .PROTECTED:
-//                    return(.protected)
-//                case .PRIVATE:
-//                    return(.private)
-//                case .OPEN:
-//                    return(.open)
-//                case .CLOSED:
-//                    return(.closed)
-//                case .SEALED:
-//                    return(.sealed)
-//                case .UNSEALED:
-//                    return(.unsealed)
-//                default:
-//                    fatalError("This should not happen")
-//                }
-//            }
-//        }
-        
     public var isSystemClassKeyword: Bool
         {
         if !self.isKeyword
@@ -647,18 +615,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 fatalError("Invalid call on String")
             }
         }
-        
-//    public var typeParameter:String
-//        {
-//        switch(self)
-//            {
-//            case .typeParameter(let value,_):
-//                return(value)
-//            default:
-//                fatalError("Invalid call on String")
-//            }
-//        }
-        
+
     public var hashStringLiteral:Argon.Symbol
         {
         switch(self)
@@ -1498,6 +1455,18 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
+    public var isInit:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .INIT)
+            default:
+                return(false)
+            }
+        }
+        
+        
     public var isSlot:Bool
         {
         switch(self)
@@ -1596,13 +1565,25 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+    
         
-    public var isLowerMe:Bool
+    public var isSELF:Bool
         {
         switch(self)
             {
             case .keyword(let value,_):
-                return(value == .me)
+                return(value == .Self)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isSelf:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .self)
             default:
                 return(false)
             }
@@ -1741,17 +1722,6 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let keyword,_):
                 return(keyword == .METHOD)
-            default:
-                return(false)
-            }
-        }
-
-    public var isUpperMe:Bool
-        {
-        switch(self)
-            {
-            case .keyword(let keyword,_):
-                return(keyword == .Me)
             default:
                 return(false)
             }

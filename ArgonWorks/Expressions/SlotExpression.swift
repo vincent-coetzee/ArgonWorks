@@ -11,7 +11,7 @@ public class SlotExpression: Expression
     {
     public override var displayString: String
         {
-        return("\(self.receiver.displayString)->\(self.slot.displayString)")
+        return("\(self.receiver.displayString)->\(self.slotExpression?.displayString)")
         }
         
     public override var isLValue: Bool
@@ -20,29 +20,39 @@ public class SlotExpression: Expression
         }
         
     private let receiver: Expression
-    private let slot: Expression
+    private var slotExpression: Expression?
+    private var slot: Slot?
     
     required init?(coder: NSCoder)
         {
         self.receiver = coder.decodeObject(forKey: "receiver") as!Expression
-        self.slot = coder.decodeObject(forKey: "slot") as! Expression
+        self.slotExpression = coder.decodeObject(forKey: "slotExpression") as? Expression
+        self.slot = coder.decodeObject(forKey: "slot") as? Slot
         super.init(coder: coder)
+        }
+        
+    init(_ receiver:Expression,slot:Slot)
+        {
+        self.receiver = receiver
+        self.slot = slot
+        super.init()
         }
         
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
         coder.encode(self.slot,forKey: "slot")
+        coder.encode(self.slotExpression,forKey: "slotExpression")
         coder.encode(self.receiver,forKey: "receiver")
         }
         
-    init(_ receiver: Expression,slot: Expression)
+    init(_ receiver: Expression,slotExpression: SlotSelectorExpression)
         {
         self.receiver = receiver
-        self.slot = slot
+        self.slotExpression = slotExpression
         super.init()
         self.receiver.setParent(self)
-        self.slot.setParent(self)
+        self.slotExpression?.setParent(self)
         }
         
  
@@ -51,7 +61,7 @@ public class SlotExpression: Expression
         {
         let receiverType = self.receiver.resultType
         let aClass = receiverType.class
-        if let identifier = (self.slot as? SlotSelectorExpression)?.selector,let aSlot = aClass.layoutSlot(atLabel: identifier)
+        if let identifier = (self.slotExpression as? SlotSelectorExpression)?.selector,let aSlot = aClass.layoutSlot(atLabel: identifier)
             {
             return(aSlot.type)
             }
@@ -61,8 +71,8 @@ public class SlotExpression: Expression
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.receiver.analyzeSemantics(using: analyzer)
-        self.slot.analyzeSemantics(using: analyzer)
-        let selector = (self.slot as! SlotSelectorExpression).selector
+        self.slotExpression?.analyzeSemantics(using: analyzer)
+        let selector = (self.slotExpression as! SlotSelectorExpression).selector
         if self.receiver.lookupSlot(selector: selector).isNil
             {
             analyzer.compiler.reportingContext.dispatchError(at: self.declaration!, message: "Slot '\(selector)' was not found on the receiver, unable to resolve the slot.")
@@ -72,12 +82,12 @@ public class SlotExpression: Expression
     public override func realize(using realizer:Realizer)
         {
         self.receiver.realize(using: realizer)
-        self.slot.realize(using: realizer)
+        self.slotExpression?.realize(using: realizer)
         }
         
     public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        if let slot = self.receiver.lookupSlot(selector: (self.slot as! SlotSelectorExpression).selector)
+        if let slot = self.receiver.lookupSlot(selector: (self.slotExpression as! SlotSelectorExpression).selector)
             {
             try self.receiver.emitCode(into: instance,using: generator)
             let register = generator.registerFile.findRegister(forSlot: nil, inBuffer: instance)

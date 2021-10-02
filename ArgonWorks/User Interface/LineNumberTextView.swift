@@ -189,5 +189,19 @@ public class LineNumberTextView: NSTextView {
         self.selectedLineLayer.isHidden = self.downClickCount % 2 == 1
         super.mouseDown(with: event)
         }
-}
+        
+    public override func keyDown(with event: NSEvent)
+        {
+        if event.isARepeat,let someCharacters = event.characters
+            {
+            let newCharacters = someCharacters + someCharacters + someCharacters + someCharacters
+            let newEvent = NSEvent.keyEvent(with: event.type, location: event.locationInWindow, modifierFlags: event.modifierFlags, timestamp: event.timestamp, windowNumber: event.windowNumber, context: nil, characters: newCharacters, charactersIgnoringModifiers: event.charactersIgnoringModifiers!, isARepeat: event.isARepeat, keyCode: event.keyCode)
+            self.interpretKeyEvents([newEvent!])
+            }
+        else
+            {
+            self.interpretKeyEvents([event])
+            }
+        }
+    }
 

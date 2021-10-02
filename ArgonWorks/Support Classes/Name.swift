@@ -91,6 +91,15 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         return(Name(Array(self.components.dropFirst(1))))
         }
         
+    public var withoutLast: Name
+        {
+        if self.components.isEmpty
+            {
+            return(Name())
+            }
+        return(Name(Array(self.components.dropLast())))
+        }
+        
     public var isRooted: Bool
         {
         return(self.components.first!.isRoot)

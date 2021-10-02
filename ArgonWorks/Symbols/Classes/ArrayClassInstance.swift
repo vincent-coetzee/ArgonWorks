@@ -9,6 +9,16 @@ import Foundation
 
 public class ArrayClassInstance: GenericSystemClassInstance
     {
+    public var elementType: Type
+        {
+        return(self.genericClassParameterInstances[0])
+        }
+        
+    public override var isArrayClassInstance: Bool
+        {
+        return(true)
+        }
+        
     public override var isSystemSymbol: Bool
         {
         return(true)
@@ -23,11 +33,6 @@ public class ArrayClassInstance: GenericSystemClassInstance
     public override var memoryAddress: Word
         {
         return(self.sourceClass.memoryAddress)
-        }
-        
-    public func elementType() -> Type?
-        {
-        return(self.genericClassParameterInstances[0])
         }
         
     public override var typeCode:TypeCode

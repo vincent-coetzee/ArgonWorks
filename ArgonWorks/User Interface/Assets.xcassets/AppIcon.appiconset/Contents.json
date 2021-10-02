@@ -1,61 +1,61 @@
 {
   "images" : [
     {
-      "filename" : "ArgonIcon@16.png",
+      "filename" : "ArgonApplicationIcon@16.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
     },
     {
-      "filename" : "ArgonIcon@32-1.png",
+      "filename" : "ArgonApplicationIcon@32-1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "16x16"
     },
     {
-      "filename" : "ArgonIcon@32.png",
+      "filename" : "ArgonApplicationIcon@32.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"
     },
     {
-      "filename" : "ArgonIcon@64.png",
+      "filename" : "ArgonApplicationIcon@64.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "32x32"
     },
     {
-      "filename" : "ArgonIcon@128.png",
+      "filename" : "ArgonApplicationIcon@128.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
-      "filename" : "ArgonIcon@256-1.png",
+      "filename" : "ArgonApplicationIcon@256-1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
-      "filename" : "ArgonIcon@256.png",
+      "filename" : "ArgonApplicationIcon@256.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "ArgonIcon@512-1.png",
+      "filename" : "ArgonApplicationIcon@512-1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "ArgonIcon@512.png",
+      "filename" : "ArgonApplicationIcon@512.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "ArgonIcon@1024.png",
+      "filename" : "ArgonApplicationIcon@1024.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

@@ -19,6 +19,31 @@ public class Expression: NSObject,NSCoding
         return(UnaryExpression(symbol, self))
         }
         
+    public var isSlotDeclarationExpression: Bool
+        {
+        return(false)
+        }
+        
+    public var isUnresolved: Bool
+        {
+        return(false)
+        }
+        
+    public var isSelf: Bool
+        {
+        return(false)
+        }
+        
+    public var isSELF: Bool
+        {
+        return(false)
+        }
+        
+    public var isSuper: Bool
+        {
+        return(false)
+        }
+        
     public func index(_ index:Expression) -> Expression
         {
         return(ArrayAccessExpression(array:self,index:index))
@@ -31,7 +56,7 @@ public class Expression: NSObject,NSCoding
         
     public func slot(_ index:Expression) -> Expression
         {
-        return(SlotExpression(self,slot: index))
+        return(SlotExpression(self,slotExpression: index as! SlotSelectorExpression))
         }
         
     public func cast(into: Type) -> Expression
@@ -158,6 +183,10 @@ public class Expression: NSObject,NSCoding
     public var displayString: String
         {
         return("")
+        }
+        
+   public func activate(context: Context,withInitialValue value: Expression)
+        {
         }
         
     public func dump(depth: Int)

@@ -70,42 +70,46 @@ public class TopModule: SystemModule
         self.index = UUID(index: 0)
         }
         
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-        
- 
+    required init?(coder: NSCoder)
+        {
+        super.init(coder: coder)
+        }
         
     public override func resolveReferences()
         {
         self.argonModule.resolveReferences()
         }
         
-    public override func lookup(name:Name) -> Symbol?
+    public override func lookup(name: Name) -> Symbol?
         {
         if name.isEmpty
             {
             return(nil)
             }
-        if name.isRooted
+        else if name.isRooted
             {
-            if let context = self.primaryContext.lookup(label: name.first)
+            if name.count == 1
                 {
-                return(context.lookup(name: name.withoutFirst))
+                return(nil)
                 }
-            return(nil)
+            if let start = TopModule.shared.lookup(label: name.first)
+                {
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
             }
-        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+        else if name.count == 1
             {
-            return(symbol)
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
             }
-        if name.count == 1,let symbol = self.lookup(label: name.first)
+        else if let start = self.lookup(label: name.first)
             {
-            return(symbol)
-            }
-        for module in self.symbols.filter({$0.isSystemModule})
-            {
-            if let symbol = module.lookup(name: name)
+            if let symbol = start.lookup(name: name.withoutFirst)
                 {
                 return(symbol)
                 }

@@ -10,12 +10,7 @@ import Cocoa
 public class Outliner: NSScrollView,NSOutlineViewDataSource, NSOutlineViewDelegate
     {
     public var symbols: Array<Symbol> = []
-        {
-        didSet
-            {
-//            self.outlineView.reloadData()
-            }
-        }
+ 
         
     public var childType: ChildType = .class
     public var foregroundColor: NSColor = NSColor.controlAccentColor

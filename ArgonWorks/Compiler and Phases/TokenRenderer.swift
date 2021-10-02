@@ -48,6 +48,8 @@ public class TokenRenderer
         case constant
         case enumeration
         case systemClass
+        case typeAlias
+        case classParameter
         
         init(_ token:Token)
             {
@@ -99,7 +101,7 @@ public class TokenRenderer
                 self = .name
             case .invisible(_, _):
                 self = .none
-            }
+                }
             }
         }
         
@@ -123,6 +125,11 @@ public class TokenRenderer
     init(systemClassNames: Array<String>)
         {
         self.systemClassNames = systemClassNames
+        }
+        
+    public func set(kind someKind: Kind,forToken someToken: Token)
+        {
+        self.attributes[someToken.location.range]![.foregroundColor] = self.mapKindToForegroundColor(kind: someKind,systemClassNames: self.systemClassNames)
         }
         
     public func processTokens(_ tokens: Tokens)

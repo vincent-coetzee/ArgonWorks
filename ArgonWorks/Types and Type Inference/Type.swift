@@ -16,11 +16,50 @@ public enum TypeError: Error,Equatable
     
 public indirect enum Type: Equatable,Storable
     {
+    public var classValue: Class
+        {
+        switch(self)
+            {
+            case .class(let aClass):
+                return(aClass)
+            default:
+                fatalError("This should not be called on a Type with this value.")
+            }
+        }
+        
+    public var isArrayClassInstance: Bool
+        {
+        switch(self)
+            {
+            case .class(let aClass):
+                return(aClass.isArrayClassInstance)
+            default:
+                return(false)
+            }
+        }
+        
     public init(input: InputFile) throws
         {
         fatalError()
         }
     
+    public func lookup(label: Label) -> Symbol?
+        {
+        switch(self)
+            {
+            case .error:
+                return(nil)
+            case .class(let aClass):
+                return(aClass.lookup(label: label))
+            case .enumeration(let enumeration):
+                return(enumeration.lookup(label: label))
+            case .method:
+                return(nil)
+            default:
+                return(nil)
+            }
+        }
+        
     public func write(output: OutputFile) throws
         {
         try output.write(self)

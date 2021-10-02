@@ -221,7 +221,7 @@ public class LiteralExpression: Expression
         }
         
         
-    private let literal:Literal
+    public let literal:Literal
 
     public override var resultType: Type
         {
@@ -329,7 +329,7 @@ public class LiteralExpression: Expression
                     }
                 else if let aSlot = module.lookup(label: child) as? Slot
                     {
-                    return(SlotExpression(self, slot: SlotSelectorExpression(selector: aSlot.label)))
+                    return(SlotExpression(self, slotExpression: SlotSelectorExpression(selector: aSlot.label)))
                     }
                 else if let aModule = module.lookup(label: child) as? Module
                     {

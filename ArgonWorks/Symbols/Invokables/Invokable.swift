@@ -12,8 +12,7 @@ public class Invokable: Symbol
     internal var cName: String
     internal var parameters: Parameters
     public var returnType: Type = .class(VoidClass.voidClass)
-    public var library:DynamicLibrary = .emptyLibrary
-    
+
     public override var defaultColor: NSColor
         {
         Palette.shared.invokableColor
@@ -24,7 +23,6 @@ public class Invokable: Symbol
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
         self.returnType = coder.decodeType(forKey: "returnType")!
-        self.library = coder.decodeDynamicLibrary(forKey: "library")
         super.init(coder: coder)
         }
         
@@ -42,7 +40,6 @@ public class Invokable: Symbol
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
         coder.encodeType(self.returnType,forKey: "returnType")
-        coder.encodeDynamicLibrary(self.library,forKey: "library")
         }
         
     public func curried() -> Array<SingleParameterInvokable>

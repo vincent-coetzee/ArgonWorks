@@ -70,6 +70,11 @@ public class Block:NSObject,NamingContext,NSCoding
         fatalError("Attempt to remove a symbol n a block")
         }
         
+    public var firstInitializer: Initializer?
+        {
+        return(self.parent.firstInitializer)
+        }
+        
     public func setSymbol(_ symbol: Symbol,atName: Name)
         {
         self.parent.setSymbol(symbol,atName: atName)

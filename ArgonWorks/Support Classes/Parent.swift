@@ -91,6 +91,21 @@ public enum Parent:Storable
             }
         }
         
+    public var firstInitializer: Initializer?
+        {
+        switch(self)
+            {
+            case .none:
+                return(nil)
+            case .node(let node):
+                return(node.firstInitializer)
+            case .expression:
+                return(nil)
+            case .block(let block):
+                return(block.firstInitializer)
+            }
+        }
+        
     public func lookup(label: Label) -> Symbol?
         {
         switch(self)

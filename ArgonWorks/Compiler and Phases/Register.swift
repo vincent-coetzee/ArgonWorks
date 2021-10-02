@@ -95,7 +95,7 @@ public class RegisterFile
         
     private func spillRegister(_ register:Register,inBuffer: InstructionBuffer) -> Instruction.Register
         {
-        let address = Address.absolute(0)
+        let address = Address.relocation(.DSNextAddress)
         for slot in register.slots
             {
             slot.addresses.append(address)

@@ -209,6 +209,10 @@ public class Instruction:Identifiable
         case method(Method)
         case constant(Constant)
         case relocation(Int)
+        case `self`
+        case `Self`
+        case `super`
+        case DSNextAddress
         }
         
     public enum Opcode:Int

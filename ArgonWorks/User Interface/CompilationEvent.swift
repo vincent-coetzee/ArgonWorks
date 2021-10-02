@@ -39,6 +39,24 @@ internal enum CompilationEvent
             }
         }
         
+    public var tintColor: NSColor
+        {
+        switch(self)
+            {
+            case .none:
+                return(NSColor.white)
+            case .warning:
+                return(Palette.shared.compilationEventWarningColor)
+            case .error:
+                return(Palette.shared.compilationEventErrorColor)
+            }
+        }
+        
+    public var icon: NSImage
+        {
+        return(NSImage(named: self.iconName)!)
+        }
+        
     public var iconName: String
         {
         switch(self)

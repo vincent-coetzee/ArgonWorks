@@ -336,7 +336,12 @@ public class MethodInstance:Function
             }
         }
         
- 
+    @discardableResult
+    public override func addSymbol(_ symbol: Symbol) -> Symbol
+        {
+        self.localSymbols.append(symbol)
+        return(symbol)
+        }
         
     public func generic(_ name:String) -> Self
         {

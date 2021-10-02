@@ -14,6 +14,7 @@ public enum Address
     case absolute(Word)
     case relative(Instruction.Register,Int)
     case stack(Instruction.Register,Int)
+    case relocation(Instruction.LiteralValue)
     
     public var absoluteAddress: Word
         {
@@ -100,6 +101,8 @@ public enum Address
                 return(.stack(register,Argon.Integer(offset)))
             case .relative(let register,let offset):
                 return(.indirect(register,Word(bitPattern: Argon.Integer(offset))))
+            case .relocation(let literal):
+                return(.relocation(literal))
             }
         }
         

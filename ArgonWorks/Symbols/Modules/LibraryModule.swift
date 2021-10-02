@@ -20,7 +20,7 @@ public class LibraryModule: Module
         .libraryModule
         }
         
-    private var path: String?
+    public var path: String?
     
     init(label:Label,path:String)
         {

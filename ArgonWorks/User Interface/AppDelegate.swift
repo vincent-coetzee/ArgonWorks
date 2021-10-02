@@ -121,5 +121,16 @@ class AppDelegate: NSObject, NSApplicationDelegate
             }
         controller.showWindow(self)
         }
+        
+    @IBAction
+    public func openSymbolBrowser(_ sender:Any?)
+        {
+        let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonSymbolController") as? NSWindowController else
+            {
+            return
+            }
+        controller.showWindow(self)
+        }
     }
 

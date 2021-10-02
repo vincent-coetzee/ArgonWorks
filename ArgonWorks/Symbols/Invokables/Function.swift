@@ -11,6 +11,8 @@ import Interpreter
 
 public class Function:Invokable,Displayable
     {
+    public var library:DynamicLibrary = .emptyLibrary
+    
     public override var defaultColor: NSColor
         {
         Palette.shared.functionColor
@@ -25,6 +27,23 @@ public class Function:Invokable,Displayable
     public override var imageName: String
         {
         "IconFunction"
+        }
+        
+    public override init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.library = coder.decodeDynamicLibrary(forKey: "library")
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encodeDynamicLibrary(self.library,forKey: "library")
+        super.encode(with: coder)
         }
         
     public func call(withArguments: Words) -> Word?

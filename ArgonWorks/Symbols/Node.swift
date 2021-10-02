@@ -69,6 +69,11 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         try output.write(self)
         }
     
+    public var firstInitializer: Initializer?
+        {
+        return(nil)
+        }
+        
     public var name: Name
         {
         return(self.parent.name + self.label)
@@ -123,29 +128,41 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         return(self.parent.topModule)
         }
         
-    public func lookup(name:Name) -> Symbol?
+    public func lookup(name: Name) -> Symbol?
         {
         if name.isEmpty
             {
             return(nil)
             }
-        if name.isRooted
+        else if name.isRooted
             {
-            if let context = self.primaryContext.lookup(label: name.first)
+            if name.count == 1
                 {
-                return(context.lookup(name: name.withoutFirst))
+                return(nil)
                 }
-            return(nil)
+            if let start = TopModule.shared.lookup(label: name.first)
+                {
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
             }
-        if name.count == 1,let symbol = self.lookup(label: name.first)
+        else if name.count == 1
             {
-            return(symbol)
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
             }
-        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+        else if let start = self.lookup(label: name.first)
             {
-            return(symbol)
+            if let symbol = start.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
             }
-        return(self.parent.lookup(name:name))
+        return(self.parent.lookup(name: name))
         }
         
     public func lookup(label: Label) -> Symbol?

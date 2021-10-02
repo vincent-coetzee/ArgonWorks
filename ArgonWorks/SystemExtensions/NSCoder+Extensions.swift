@@ -340,6 +340,17 @@ extension NSCoder
         return(arguments)
         }
         
+    public func decodeName(forKey: String) -> Name
+        {
+        let string = self.decodeString(forKey: forKey + "name")! as Label
+        return(Name(string))
+        }
+        
+    public func encodeName(_ name:Name,forKey: String)
+        {
+        self.encode(name.string,forKey: forKey + "name")
+        }
+        
     public func decodeNodeLocation(forKey: String) -> NodeLocation
         {
         let kind = self.decodeInteger(forKey: forKey + "kind")

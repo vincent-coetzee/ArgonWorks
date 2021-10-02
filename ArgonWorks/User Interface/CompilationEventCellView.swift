@@ -20,23 +20,17 @@ class CompilationEventCellView: NSTableCellView
                 case .warning(let location,let text):
                     let start = location.tokenStart - location.lineStart
                     let stop = location.tokenStop - location.lineStart
-                    let line = String(format: "% 6d",location.line)
-                    self.lineNumberView.stringValue = "Line \(line) \(start):\(stop)"
-                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
+                    let line = String(format: "%d",location.line)
+                    self.lineNumberView.stringValue = "Line \(line) from \(start) to \(stop)"
+//                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
                     self.detailView.stringValue = "Warning: \(text)"
-                    self.iconView.image = NSImage(named: event.iconName)!
-                    self.iconView.image?.isTemplate = true
-                    self.iconView.contentTintColor = NSColor.argonNeonYellow
                 case .error(let location,let text):
                     let start = location.tokenStart - location.lineStart
                     let stop = location.tokenStop - location.lineStart
-                    let line = String(format: "% 6d",location.line)
-                    self.lineNumberView.stringValue = "Line \(line) \(start):\(stop)"
-                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
+                    let line = String(format: "%d",location.line)
+                    self.lineNumberView.stringValue = "Line \(line) from \(start) to \(stop)"
+//                    self.lineNumberView.font = NSFont(name: "SFMono-Regular",size: 11)!
                     self.detailView.stringValue = "Error: \(text)"
-                    self.iconView.image = NSImage(named: event.iconName)!
-                    self.iconView.image?.isTemplate = true
-                    self.iconView.contentTintColor = NSColor.argonSizzlingRed
                 }
             }
         }
@@ -65,7 +59,6 @@ class CompilationEventCellView: NSTableCellView
         {
         self.lineNumberView.textColor = Palette.shared.compilationSelectedTextColor
         self.detailView.textColor = Palette.shared.compilationSelectedTextColor
-        self.iconView.contentTintColor = Palette.shared.compilationSelectedTextColor
         }
         
     public func makeUnhighlighted()
@@ -73,11 +66,9 @@ class CompilationEventCellView: NSTableCellView
         switch(self.event)
             {
             case .warning:
-                self.iconView.contentTintColor = Palette.shared.compilationEventWarningColor
                 self.detailView.textColor = Palette.shared.compilationEventTextColor
                 self.lineNumberView.textColor = Palette.shared.compilationEventTextColor
             case .error:
-                self.iconView.contentTintColor = Palette.shared.compilationEventErrorColor
                 self.detailView.textColor = Palette.shared.compilationEventTextColor
                 self.lineNumberView.textColor = Palette.shared.compilationEventTextColor
             default:

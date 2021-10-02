@@ -17,6 +17,17 @@ public enum Context: Equatable
     case block(Block)
     case node(Node)
 
+    public var firstInitializer: Initializer?
+        {
+        switch(self)
+            {
+            case .block(let block):
+                return(block.firstInitializer)
+            case .node(let node):
+                return(node.firstInitializer)
+            }
+        }
+        
     public func addSymbol(_ symbol:Symbol)
         {
         switch(self)
@@ -79,6 +90,7 @@ public class Parser: CompilerPass
     private var source: String?
     public var wasCancelled = false
     public var currentTag = 0
+    private var isParsingLValue = false
     
     public static func parseChunk(_ source:String,in compiler:Compiler) -> ParseNode?
         {
@@ -357,7 +369,25 @@ public class Parser: CompilerPass
         self.dispatchError("Path expected for a library module but \(self.token) was found.")
         return(.path("",Location.zero))
         }
-        
+    ///
+    ///
+    /// PARSE A MODULE
+    ///
+    /// All modules are identified by a Name which may
+    /// or may not be a segmented name. Modules can be opened and closed
+    /// repeatedly and each time a module is opened conformances can be
+    /// added to it, such as contracts or similar. When a named module
+    /// represents an existing module, that module ( such as it exists
+    /// in the image of the ArgonWorks instance parsing the code ) will be
+    /// fetched from main memory and all constructs in the Argon source file
+    /// being parsed will take place in that module. If constructs overwrite
+    /// what is currently stored in the module then it is the users
+    /// responsibility. If you want to preserve a module from being modified
+    /// then save it out to an Argon Symbols file where its state will
+    /// be preserved until as such time as it is loaded into memory
+    /// again.
+    ///
+    ///
     private func parseModule() throws -> Module
         {
         let location = self.token.location
@@ -366,32 +396,51 @@ public class Parser: CompilerPass
         let name = try self.parseName()
         var module = self.currentContext.lookup(name: name) as? Module
         var isNew = false
+        var path: String? = nil
         if self.token.isLeftPar
             {
             try self.parseParentheses
                 {
-                let path = try self.parsePath().pathLiteral
-                if module != nil
+                path = try self.parsePath().pathLiteral
+                }
+            }
+        if module.isNil
+            {
+            isNew = true
+            if path.isNotNil
+                {
+                module = LibraryModule(label: name.last,path: path!)
+                }
+            else
+                {
+                module = Module(label: name.last)
+                }
+            }
+        else
+            {
+            if path.isNotNil
+                {
+                if let libraryModule = module as? LibraryModule
                     {
-                    self.cancelCompletion()
-                    self.dispatchError("Module \(name.displayString) already exists and can not be merged with a LibraryModule.")
+                    libraryModule.path = path!
                     }
                 else
                     {
-                    module = LibraryModule(label: name.last,path: path)
-                    isNew = true
+                    self.dispatchWarning(at: location,"A module named '\(name.string)' was found, but it was used as a library module and it is a module")
                     }
                 }
-            }
-        else if module.isNil
-            {
-            module = Module(label: name.last)
-            module?.tag = self.currentTag
-            isNew = true
+            self.dispatchWarning(at: location,"A module named '\(name.string)' already exists, its contents may be overwritten.")
             }
         if isNew
             {
-            self.currentContext.addSymbol(module!)
+            if name.count == 1
+                {
+                self.currentContext.addSymbol(module!)
+                }
+            else
+                {
+                self.currentContext.lookup(name: name.withoutLast)?.addSymbol(module!)
+                }
             module?.addDeclaration(location)
             }
         else
@@ -451,6 +500,8 @@ public class Parser: CompilerPass
                             {
                             case .IMPORT:
                                     return(try self.parseImport())
+                            case .INIT:
+                                    return(try self.parseInitializer())
                             case .FUNCTION:
                                     return(try self.parseFunction())
                             case .MAIN:
@@ -511,6 +562,33 @@ public class Parser: CompilerPass
                 }
             }
         return(Import(label: label,path: path))
+        }
+        
+    private func parseInitializer() throws -> Initializer
+        {
+        let location = self.token.location
+        try self.nextToken()
+        let label = try self.parseLabel()
+        if let theClass = self.currentContext.lookup(label: label) as? Class
+            {
+            let parameters = try self.parseParameters()
+            let initializer = Initializer(label: label)
+            initializer.declaringClass = theClass
+            initializer.addDeclaration(location)
+            initializer.parameters = parameters
+            self.pushContext(initializer)
+            try parseBraces
+                {
+                try self.parseBlock(into: initializer.block)
+                }
+            self.popContext()
+            return(initializer)
+            }
+        else
+            {
+            self.dispatchError("Initializer \(label) declaration but the class which should be defined for the initializer is not.")
+            return(Initializer(label: Argon.nextName("1_Initializer_")))
+            }
         }
         
     private func parseInterceptor() throws -> Interceptor
@@ -843,9 +921,19 @@ public class Parser: CompilerPass
         return(constant)
         }
         
+    private func dispatchWarning(at location: Location,_ message:String)
+        {
+        self.reportingContext.dispatchWarning(at: location,message: message)
+        }
+        
     private func dispatchError(_ message:String)
         {
         self.reportingContext.dispatchError(at: self.token.location,message: message)
+        }
+        
+    private func dispatchWarning(_ message:String)
+        {
+        self.reportingContext.dispatchWarning(at: self.token.location,message: message)
         }
         
     private func dispatchError(at location: Location,_ message:String)
@@ -900,6 +988,7 @@ public class Parser: CompilerPass
         let location = self.token.location
         var name:Name
         self.visualToken.kind = .class
+        let identifierToken = self.token
         if self.token.isIdentifier && self.token.isSystemClassName
             {
             self.visualToken.kind = .type
@@ -910,10 +999,6 @@ public class Parser: CompilerPass
             {
             self.visualToken.kind = .type
             name = Name(self.token.identifier)
-            if let symbol = self.currentContext.lookup(name: name),symbol.isEnumeration
-                {
-                self.visualToken.kind = .enumeration
-                }
             }
         else if self.token.isName
             {
@@ -939,44 +1024,53 @@ public class Parser: CompilerPass
             ///
             ///
             }
+        let resolvedSymbol = self.currentContext.lookup(name: name)
+        if resolvedSymbol.isNil
+            {
+            self.dispatchError("The identifier \(name) could not be resolved, a symbol couuld not be found")
+            return(Type.class(TopModule.shared.argonModule.object))
+            }
+        else
+            {
+            resolvedSymbol!.addReference(location)
+            }
+        if resolvedSymbol!.isEnumeration
+            {
+            self.visualToken.set(kind:.enumeration,forToken: identifierToken)
+            return(resolvedSymbol!.asType)
+            }
+        else if resolvedSymbol!.isTypeAlias
+            {
+            self.visualToken.set(kind:.typeAlias,forToken: identifierToken)
+            return(resolvedSymbol!.asType)
+            }
+        else if resolvedSymbol!.isClassParameter
+            {
+            self.visualToken.set(kind:.classParameter,forToken: identifierToken)
+            return(resolvedSymbol!.asType)
+            }
         let parameters = try self.parseTypeParameters()
-        if let symbol = self.currentContext.lookup(name: name)
+        if resolvedSymbol!.isClass
             {
-            if symbol.isEnumeration || symbol.isTypeAlias || symbol.isClassParameter
+            var clazz = Type.class(resolvedSymbol as! Class)
+            if !clazz.isGenericClass && !parameters.isEmpty
                 {
-                symbol.addReference(location)
-                return(symbol.asType)
-                }
-            else if symbol.isClass
-                {
-                var clazz = Type.class(symbol as! Class)
-                if !clazz.isGenericClass && !parameters.isEmpty
-                    {
-                    self.reportingContext.dispatchError(at: location, message: "Class '\(name)' is not a parameterized class but there are class parameters defined for it.")
-                    try self.nextToken()
-                    }
-                else if clazz.isGenericClass && !parameters.isEmpty
-                    {
-                    clazz = (clazz.class as! GenericClass).instanciate(withTypes: parameters, reportingContext: self.reportingContext)
-                    }
-                clazz.class.addReference(location)
-                return(clazz)
-                }
-            else
-                {
-                self.reportingContext.dispatchError(at: location, message: "A type was expected but was not found, the identifier '\(name)' was found.")
+                self.reportingContext.dispatchError(at: location, message: "Class '\(name)' is not a parameterized class but there are class parameters defined for it.")
                 try self.nextToken()
-                return(.class(Class(label:"")))
                 }
+            else if clazz.isGenericClass && !parameters.isEmpty
+                {
+                clazz = (clazz.class as! GenericClass).instanciate(withTypes: parameters, reportingContext: self.reportingContext)
+                }
+            clazz.class.addReference(location)
+            return(clazz)
             }
-        if name.isEmpty
+        else
             {
-            self.reportingContext.dispatchError(at: location, message: "An invalid type reference was encountered.")
-            name = Name("1_name")
+            self.dispatchError("A type was expected but was not found, the identifier '\(name)' was found.")
+            try self.nextToken()
+            return(.class(TopModule.shared.argonModule.object))
             }
-        let clazz = Type.forwardReference(name,self.currentContext)
-//        clazz.addDeclaration(location)
-        return(clazz)
         }
         
     private func parseMethodType() throws -> Type
@@ -1199,9 +1293,18 @@ public class Parser: CompilerPass
         lhs.addDeclaration(location)
         if self.token.isAssign
             {
+            self.isParsingLValue = false
             try self.nextToken()
             let rhs = try self.parseAsExpression()
-            return(AssignmentExpression(lhs,Token.Operator("="),rhs))
+            if lhs.isSlotDeclarationExpression
+                {
+                lhs.activate(context: self.currentContext,withInitialValue: rhs)
+                return(lhs)
+                }
+            else
+                {
+                return(AssignmentExpression(lhs,Token.Operator("="),rhs))
+                }
             }
         print("PARSED EXPRESSION:")
         print(lhs.displayString)
@@ -1232,42 +1335,62 @@ public class Parser: CompilerPass
         let location = self.token.location
         var lhs = try self.parseSlotExpression()
         lhs.addDeclaration(location)
-        var child:String
+        var identifier:String
         while self.token.isGluon
             {
-            if !lhs.canBeScoped
+            if self.isParsingLValue && lhs.isUnresolved
                 {
-                self.reportingContext.dispatchError(at: self.token.location, message: "An expression that can be scoped is required before a gluon.")
-                lhs = LiteralExpression(.class(Class(label:"")))
-                }
-            try self.nextToken()
-            if self.token.isIdentifier
-                {
-                child = self.token.identifier
                 try self.nextToken()
-                }
-            else if self.token.isHashStringLiteral
-                {
-                child = self.token.hashStringLiteral
-                try self.nextToken()
+                let type = try self.parseType()
+                let label = (lhs as! UnresolvedExpression).label
+                lhs = SlotDeclarationExpression(label: label, type: type)
                 }
             else
                 {
-                self.reportingContext.dispatchError(at: self.token.location, message: "An identifier was expected after the gluon, but '\(self.token)' was found.")
+                if !lhs.canBeScoped
+                    {
+                    self.reportingContext.dispatchError(at: self.token.location, message: "An expression that can be scoped is required before a gluon.")
+                    lhs = LiteralExpression(.class(Class(label:"")))
+                    }
                 try self.nextToken()
-                child = ""
-                }
-            if let expression = lhs.scopedExpression(for: child)
-                {
-                lhs = expression
-                }
-            else
-                {
-                self.reportingContext.dispatchError(at: self.token.location, message: "The reference '\(child)' is not valid in the current context.")
-                }
-            if self.token.isLeftPar && lhs.isEnumerationCaseExpression
-                {
-                lhs = try self.parseAssociatedValues(with: lhs)
+                if self.token.isIdentifier
+                    {
+                    identifier = self.token.identifier
+                    if let initializer = self.currentContext.firstInitializer,let theClass = initializer.declaringClass
+                        {
+                        if let child = theClass.lookup(label: identifier) as? Slot
+                            {
+                            return(SlotExpression(lhs, slot: child))
+                            }
+                        else
+                            {
+                            self.dispatchError("'\(identifier)' can not be found in the current context.")
+                            }
+                        }
+                    }
+                else if self.token.isHashStringLiteral
+                    {
+                    identifier = self.token.hashStringLiteral
+                    try self.nextToken()
+                    }
+                else
+                    {
+                    self.reportingContext.dispatchError(at: location, message: "An identifier was expected after the gluon, but '\(self.token)' was found.")
+                    try self.nextToken()
+                    identifier = ""
+                    }
+                if let expression = lhs.scopedExpression(for: identifier)
+                    {
+                    lhs = expression
+                    }
+                else
+                    {
+                    self.reportingContext.dispatchError(at: location, message: "The reference '\(identifier)' is not valid in the current context.")
+                    }
+                if self.token.isLeftPar && lhs.isEnumerationCaseExpression
+                    {
+                    lhs = try self.parseAssociatedValues(with: lhs)
+                    }
                 }
             }
         return(lhs)
@@ -1313,7 +1436,7 @@ public class Parser: CompilerPass
     private func parseIncDecExpression() throws -> Expression
         {
         let location = self.token.location
-        let expression = try self.parseArrayExpression()
+        let expression = try self.parseIndexedExpression()
         expression.addDeclaration(location)
         if self.token.isPlusPlus || self.token.isMinusMinus
             {
@@ -1324,7 +1447,7 @@ public class Parser: CompilerPass
         return(expression)
         }
 
-    private func parseArrayExpression() throws -> Expression
+    private func parseIndexedExpression() throws -> Expression
         {
         let location = self.token.location
         var lhs = try self.parseBooleanExpression()
@@ -1490,6 +1613,62 @@ public class Parser: CompilerPass
             {
             return(try self.parseEnumerationCaseExpression())
             }
+        else if self.token.isLeftBracket
+            {
+            try self.nextToken()
+            let expression = try self.parseExpression()
+            if expression.isUnresolved
+                {
+                let tuple = DestructuringExpression()
+                tuple.isArrayDestructure = true
+                if self.token.isComma
+                    {
+                    while self.token.isComma
+                        {
+                        try self.parseComma()
+                        tuple.append(try self.parseExpression())
+                        }
+                    }
+                if self.token.isRightBracket
+                    {
+                    try self.nextToken()
+                    }
+                else
+                    {
+                    self.dispatchWarning("']' expected after destructing tuple.")
+                    }
+                return(tuple)
+                }
+            else if self.token.isComma && expression.isLiteralExpression
+                {
+                var array = Array<Literal>()
+                array.append((expression as! LiteralExpression).literal)
+                while self.token.isComma
+                    {
+                    try self.parseComma()
+                    let expr = try self.parseExpression()
+                    if expr.isLiteralExpression
+                        {
+                        array.append((expr as! LiteralExpression).literal)
+                        }
+                    else
+                        {
+                        self.dispatchError("A literal value was expected as part of the literal array.")
+                        return(LiteralExpression(.array(array)))
+                        }
+                    }
+                if self.token.isRightBracket
+                    {
+                    try self.nextToken()
+                    }
+                else
+                    {
+                    self.dispatchWarning("']' expected after array literal.")
+                    }
+                return(LiteralExpression(.array(array)))
+                }
+            return(expression)
+            }
         else if self.token.isLeftPar
             {
             return(try self.parseParentheses
@@ -1497,10 +1676,11 @@ public class Parser: CompilerPass
                 let expression = try self.parseExpression()
                 if self.token.isComma
                     {
-                    let tuple = TupleExpression()
+                    let tuple = DestructuringExpression()
                     tuple.append(expression)
                     while self.token.isComma
                         {
+                        try self.parseComma()
                         tuple.append(try self.parseExpression())
                         }
                     return(tuple)
@@ -1511,6 +1691,21 @@ public class Parser: CompilerPass
         else if self.token.isLeftBrace
             {
             return(try self.parseClosureTerm())
+            }
+        else if self.token.isSelf
+            {
+            try self.nextToken()
+            return(PseudoVariableExpression(.vSelf))
+            }
+        else if self.token.isSELF
+            {
+            try self.nextToken()
+            return(PseudoVariableExpression(.vSELF))
+            }
+        else if self.token.isSuper
+            {
+            try self.nextToken()
+            return(PseudoVariableExpression(.vSuper))
             }
         else
             {
@@ -1596,7 +1791,7 @@ public class Parser: CompilerPass
             {
             return(LiteralExpression(.constant(symbol)))
             }
-        else if let symbol = aSymbol as? Slot
+        else if let symbol = aSymbol as? LocalSlot
             {
             let read = LocalSlotExpression(slot: symbol)
             read.addDeclaration(location)
@@ -1608,7 +1803,7 @@ public class Parser: CompilerPass
             }
         else
             {
-            let term = LocalSlotExpression(slot: Slot(label: name.last, type: .class(VoidClass.voidClass)))
+            let term = UnresolvedExpression(label: name.last)
             term.addDeclaration(location)
             return(term)
             }
@@ -1771,6 +1966,10 @@ public class Parser: CompilerPass
                 {
                 try self.parseLetBlock(into: block)
                 }
+            else if self.token.isSelf || self.token.isSELF || self.token.isSuper
+                {
+                block.addBlock(ExpressionBlock(try self.parseExpression()))
+                }
             else
                 {
                 self.dispatchError("A statement was expected but \(self.token) was found.")
@@ -1890,28 +2089,81 @@ public class Parser: CompilerPass
         self.stopClip(into: statement)
         }
         
+
+    private func parseLValue() throws -> LValue
+        {
+        var label = self.token.identifier
+        let slotHolder = self.currentContext.lookup(label: label) as? LocalSlot
+        if slotHolder.isNil
+            {
+            self.dispatchError("A symbol named '\(label)' could not be resolved in the current context.")
+            return(LValue())
+            }
+        var lvalue:LValue = LocalLValue(localSlot: slotHolder!)
+        while self.token.isGluon || self.token.isLeftBracket
+            {
+            if self.token.isGluon
+                {
+                try self.nextToken()
+                label = self.token.identifier
+                try self.nextToken()
+                if let slot = lvalue.lookup(label: label) as? Slot
+                    {
+                    lvalue = lvalue.slot(slot)
+                    }
+                }
+            }
+        while self.token.isGluon || self.token.isLeftBracket
+            {
+            let last = self.token
+            try self.nextToken()
+            if last.isGluon
+                {
+                label = self.token.identifier
+                try self.nextToken()
+                if let slot = lvalue.lookup(label: label) as? Slot
+                    {
+                    lvalue = lvalue.slot(slot)
+                    }
+                else
+                    {
+                    self.dispatchError("A slot named '\(label)' was expected in lvalue \(lvalue) bt was not found.")
+                    return(lvalue)
+                    }
+                }
+            else if last.isLeftBracket
+                {
+                let index = try self.parseExpression()
+                if !self.token.isRightBracket
+                    {
+                    self.dispatchWarning("A ']' was expected after an array access.")
+                    }
+                else
+                    {
+                    try self.nextToken()
+                    }
+                lvalue = lvalue.index(index)
+                }
+            }
+        return(lvalue)
+        }
+        
     private func parseLetBlock(into block: Block) throws
         {
         self.startClip()
         let location = self.token.location
         try self.nextToken()
-        let someVariable = try self.parseName()
-        var type: Type?
-        if self.token.isGluon
-            {
-            try self.nextToken()
-            type = try self.parseType()
-            }
-        if !self.token.isAssign
-            {
-            self.dispatchError("'=' expected after LET clause.")
-            }
-        try self.nextToken()
-        let value = try self.parseExpression()
-        value.setParent(block)
-        let localSlot = LocalSlot(label: someVariable.last, type: type,value: value)
-        block.addLocalSlot(localSlot)
-        let statement = LetBlock(name: someVariable,slot:localSlot,location: self.token.location,namingContext: block,value: value)
+        self.isParsingLValue = true
+        let expression = try self.parseExpression()
+        self.isParsingLValue = false
+//        if !self.token.isAssign
+//            {
+//            self.dispatchError("'=' expected after LET clause.")
+//            }
+//        try self.nextToken()
+//        let rhs = try self.parseExpression()
+//        rhs.setParent(block)
+        let statement = LetBlock(location: self.token.location,expression: expression)
         statement.addDeclaration(location)
         block.addBlock(statement)
         self.stopClip(into: statement)
