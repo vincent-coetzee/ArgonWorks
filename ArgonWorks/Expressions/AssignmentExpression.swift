@@ -9,6 +9,16 @@ import Foundation
 
 public class AssignmentExpression: Expression
     {
+    public override var lhsValue: Expression?
+        {
+        return(self.lhs)
+        }
+        
+    public override var rhsValue: Expression?
+        {
+        return(self.rhs)
+        }
+        
     private let rhs: Expression
     private let lhs: Expression
     private var operationName: String = ""
@@ -29,7 +39,7 @@ public class AssignmentExpression: Expression
         coder.encode(self.operationName,forKey: "operationName")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
         return(.error(.undefined))
         }
@@ -38,15 +48,14 @@ public class AssignmentExpression: Expression
         {
         self.rhs = rhs
         self.lhs = lhs
+        self.lhs.becomeLValue()
         self.operationName = operation.name
         super.init()
         }
         
- 
-        
     public override var displayString: String
         {
-        return("\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)")
+        return("\(self.lhs.displayString) \(self.operationName) \(self.rhs.displayString)")
         }
 
     public override func realize(using realizer:Realizer)
@@ -61,11 +70,14 @@ public class AssignmentExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         try self.lhs.emitCode(into: instance,using: generator)
+        if self.lhs.place == T3AInstruction.Operand.none
+            {
+            print("halt")
+            }
         try self.rhs.emitCode(into: instance,using: generator)
-        instance.append(.STORE,self.lhs.place,.none,rhs.place)
-        self._place = rhs.place
+        instance.append(nil,"MOVINDIRECT",self.lhs.place,rhs.place,.none)
         }
     }

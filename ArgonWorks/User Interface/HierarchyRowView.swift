@@ -44,7 +44,8 @@ class HierarchyRowView: NSTableRowView
                 }
             else
                 {
-                self.symbol!.selectionColor.setFill()
+//                self.symbol!.selectionColor.setFill()
+                Palette.shared.hierarchySelectionColor.setFill()
                 }
             let selectionPath = NSBezierPath.init(roundedRect: selectionRect, xRadius: 0, yRadius: 0)
             selectionPath.fill()

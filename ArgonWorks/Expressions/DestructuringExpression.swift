@@ -15,7 +15,7 @@ public class DestructuringExpression: Expression
         return("TUPLE\(string)")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
         return(.class(Tuple(label: Argon.nextName("1TUPLE"))))
         }
@@ -42,6 +42,14 @@ public class DestructuringExpression: Expression
         coder.encode(self.isArrayDestructure,forKey: "isArrayDestructure")
         }
         
+     public override func becomeLValue()
+        {
+        for expression in self.expressions
+            {
+            expression.becomeLValue()
+            }
+        }
+        
     public func append(_ expression: Expression)
         {
         self.expressions.append(expression)
@@ -59,7 +67,7 @@ public class DestructuringExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         print("TupleExpression NEEDS TO GENERATE CODE")
         }

@@ -27,9 +27,22 @@
 // THE SOFTWARE.
 import Cocoa
 
+internal protocol SourceEditorDelegate
+    {
+    func sourceEditorGutter(_ view: LineNumberGutter,selectedAnnotationAtLine: Int)
+    }
+    
 /// A NSTextView with a line number gutter attached to it.
 public class LineNumberTextView: NSTextView {
 
+    internal var sourceEditorDelegate: SourceEditorDelegate?
+        {
+        didSet
+            {
+            self.lineNumberGutter?.sourceEditorDelegate = self.sourceEditorDelegate
+            }
+        }
+    
     /// Holds a layer which has been used to highlight the currently selected line / or not
     private var selectedLineLayer = CALayer()
     /// Holds the color to be used when highlighting a selected line
@@ -109,7 +122,7 @@ public class LineNumberTextView: NSTextView {
         scrollView.hasHorizontalRuler = false
         scrollView.hasVerticalRuler   = true
         scrollView.rulersVisible      = true
-
+        self.initTabs()
         self.addObservers()
         }
         
@@ -135,9 +148,29 @@ public class LineNumberTextView: NSTextView {
         scrollView.hasVerticalRuler   = true
         scrollView.rulersVisible      = true
 
+        self.initTabs()
         self.addObservers()
     }
 
+    internal func initTabs()
+        {
+        let style = NSMutableParagraphStyle()
+        style.headIndent = 0
+        style.firstLineHeadIndent = 0
+        var attributes:Dictionary<NSAttributedString.Key,Any> = [:]
+        attributes[.paragraphStyle] = style
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 0, options: [:]))
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 60, options: [:]))
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 120, options: [:]))
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 180, options: [:]))
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 240, options: [:]))
+        style.addTabStop(NSTextTab(textAlignment: .left, location: 300, options: [:]))
+//            let count = self.string.count
+//            let storage = self.textStorage
+//            storage?.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: count))
+        self.typingAttributes = attributes
+        }
+        
     /// Add observers to redraw the line number gutter, when necessary.
     internal func addObservers() {
         self.postsFrameChangedNotifications = true
@@ -202,6 +235,35 @@ public class LineNumberTextView: NSTextView {
             {
             self.interpretKeyEvents([event])
             }
+        }
+        
+    public override func insertNewline(_ sender:Any?)
+        {
+        let location = self.selectedRanges[0].rangeValue.location
+        var start = location
+        let string = self.string
+        let startIndex = string.startIndex
+        var currentIndex = string.index(startIndex,offsetBy: location)
+        var tabString = ""
+        if currentIndex < string.endIndex
+            {
+            while currentIndex < string.endIndex && string[currentIndex] != "\n"
+                {
+                start += 1
+                currentIndex = string.index(after: currentIndex)
+                }
+            while currentIndex < string.endIndex && string[currentIndex].isWhitespace
+                {
+                if string[currentIndex] == "\t"
+                    {
+                    tabString += "\t"
+                    }
+                start += 1
+                currentIndex = string.index(after: currentIndex)
+                }
+            }
+        let range = NSRange(location: location,length: 0)
+        self.textStorage?.replaceCharacters(in: range, with: "\n\(tabString)")
         }
     }
 

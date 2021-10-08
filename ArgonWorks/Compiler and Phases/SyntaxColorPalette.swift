@@ -47,21 +47,21 @@ extension SyntaxColorPalette
         () -> SyntaxColorPalette in
         var palette = SyntaxColorPalette()
         palette[SyntaxColor.enumeration.rawValue] = NSColor.argonThemeCyan
-        palette[SyntaxColor.keyword.rawValue] = NSColor.argonNeonPink
-        palette[SyntaxColor.text.rawValue] = NSColor.argonXcodePink
+        palette[SyntaxColor.keyword.rawValue] = Palette.shared.hierarchyPrimaryTintColor
+        palette[SyntaxColor.text.rawValue] = NSColor.argonLime
         palette[SyntaxColor.name.rawValue] = NSColor.argonXIvory
         palette[SyntaxColor.string.rawValue] = NSColor.argonXBlue
         palette[SyntaxColor.comment.rawValue] = NSColor.argonXPurple
-        palette[SyntaxColor.class.rawValue] = NSColor.argonXOrange
-        palette[SyntaxColor.identifier.rawValue] = NSColor.argonXIdentifier
+        palette[SyntaxColor.class.rawValue] = NSColor.argonThemeBlueGreen
+        palette[SyntaxColor.identifier.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.integer.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.float.rawValue] = NSColor.argonSizzlingRed
         palette[SyntaxColor.symbol.rawValue] = NSColor.argonSalmonPink
         palette[SyntaxColor.operator.rawValue] = NSColor.argonCheese
-        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonXLightBlue
+        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonSalmonPink
         palette[SyntaxColor.byte.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.character.rawValue] = NSColor.argonXSmoke
-        palette[SyntaxColor.type.rawValue] = NSColor.argonNeonPink
+        palette[SyntaxColor.type.rawValue] = NSColor.cyan
         palette[SyntaxColor.method.rawValue] = NSColor.argonThemeBlueGreen
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside

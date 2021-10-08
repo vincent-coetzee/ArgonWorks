@@ -9,14 +9,29 @@ import AppKit
 
 public class TypeAlias:Symbol
     {
-    public override var isTypeAlias: Bool
+    public override var isType: Bool
         {
         return(true)
         }
         
-    public override var defaultColor: NSColor
+    public override var classValue: Class
         {
-        Palette.shared.typeAliasColor
+        self._type.classValue
+        }
+        
+    public override var canBecomeAClass: Bool
+        {
+        return(self._type.canBecomeAClass)
+        }
+        
+    public override var canBecomeAType: Bool
+        {
+        return(true)
+        }
+        
+    public override var isTypeAlias: Bool
+        {
+        return(true)
         }
         
     public var mangledName: String
@@ -24,7 +39,7 @@ public class TypeAlias:Symbol
         return(self._type.mangledName)
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconType"
         }

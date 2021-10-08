@@ -71,7 +71,7 @@ public class MethodInstanceBlock: Block
         super.encode(with: coder)
         }
         
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         for slot in self.localSlots
             {

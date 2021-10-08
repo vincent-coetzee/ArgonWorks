@@ -9,17 +9,14 @@ import AppKit
 
 public class Invokable: Symbol
     {
+    internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
     public var returnType: Type = .class(VoidClass.voidClass)
-
-    public override var defaultColor: NSColor
-        {
-        Palette.shared.invokableColor
-        }
     
     public required init?(coder: NSCoder)
         {
+        self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
         self.returnType = coder.decodeType(forKey: "returnType")!
@@ -36,6 +33,7 @@ public class Invokable: Symbol
     public override func encode(with coder: NSCoder)
         {
         print("ENCODE INVOKABLE \(self.label)")
+        coder.encode(self.localSymbols,forKey: "localSymbols")
         super.encode(with: coder)
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
@@ -50,6 +48,11 @@ public class Invokable: Symbol
     public override func isElement(ofType: Group.ElementType) -> Bool
         {
         return(ofType == .method)
+        }
+        
+    public func addLocalSlot(_ localSlot:Slot)
+        {
+        self.localSymbols.append(localSlot)
         }
     }
     

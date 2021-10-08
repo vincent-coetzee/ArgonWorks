@@ -171,6 +171,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case CLAIMED
         case CLASS
         case CLOSED
+        case COCOON
         case CONSTANT
         case DELEGATE
         case ELSE
@@ -191,6 +192,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case LET
         case LOADED
         case LOCAL
+        case MACRO
         case MAIN
         case MAKE
         case MAPPING
@@ -1257,6 +1259,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
+    public var isCocoon:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .COCOON)
+            default:
+                return(false)
+            }
+        }
+        
     public var isUnsealed:Bool
         {
         switch(self)
@@ -1411,6 +1424,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .READ)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isMacro:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .MACRO)
             default:
                 return(false)
             }

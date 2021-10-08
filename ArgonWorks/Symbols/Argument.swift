@@ -24,7 +24,7 @@ extension Arguments
     {
     public var resultTypes: Array<Type>
         {
-        return(self.map{$0.value.resultType})
+        return(self.map{$0.value.type})
         }
     }
 //

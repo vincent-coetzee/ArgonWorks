@@ -77,24 +77,16 @@ public struct LayoutFrame
         }
     }
 
-public class PaneHostingView: NSView
+public class LayoutHostingView: NSView
     {
     public override func layout()
         {
-        let safeFrame = self.safeAreaLayoutGuide.frame
-        print(safeFrame)
-        let theBounds = self.bounds
-        print("LAYOUT==========================================================")
         super.layout()
         let frame = self.bounds
-        for pane in self.subviews.filter{$0 is Pane}.map{$0 as! Pane}
+        for pane in self.subviews.filter({$0 is LayoutView}).map({$0 as! LayoutView})
             {
-            var aPane = pane
-            var viewFrame = pane.layoutFrame.rectangle(inRect: frame)
-//            viewFrame.origin.y += 30
-//            viewFrame.origin.y = theBounds.maxY - viewFrame.origin.y
-            aPane.frame = viewFrame
-            print("VIEW = \(pane) LAYOUTFRAME = \(pane.layoutFrame) RECT=\(aPane.frame)")
+            pane.frame = pane.layoutFrame.rectangle(inRect: frame)
+            print("VIEW = \(pane) LAYOUTFRAME = \(pane.layoutFrame) RECT=\(pane.frame)")
             }
         }
     }

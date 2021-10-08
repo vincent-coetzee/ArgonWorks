@@ -56,7 +56,7 @@ public class ForwardReferenceClass: Class
         fatalError()
         }
 
-    public override func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
         fatalError()
         }

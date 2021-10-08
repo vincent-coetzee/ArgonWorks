@@ -13,39 +13,42 @@ public class LocalSlotExpression: Expression
         {
         return("\(self.slot.label)")
         }
-        
-    public override var isLValue: Bool
-        {
-        return(true)
-        }
-        
+
     public var localSlot: Slot
         {
         return(self.slot)
         }
-    
+
     private let slot: Slot
-    
+    private var isLValue = false
+
     required init?(coder: NSCoder)
         {
         self.slot = coder.decodeObject(forKey: "slot") as! Slot
+        self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
         }
-        
+
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
         coder.encode(self.slot,forKey:"slot")
+        coder.encode(self.isLValue,forKey:"isLValue")
         }
-        
+
     init(slot: Slot)
         {
         self.slot = slot
         super.init()
         }
-        
+
     public override func realize(using realizer:Realizer)
         {
+        }
+
+    public override func becomeLValue()
+        {
+        self.isLValue = true
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -56,16 +59,23 @@ public class LocalSlotExpression: Expression
             analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
             }
         }
-        
-    public override var resultType: Type
+
+    public override var type: Type
         {
         return(self.slot.type)
         }
-        
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
+
+    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
-        
-        try self.slot.emitCode(into: instance,using: using)
-        self._place = slot.addresses.mostEfficientAddress.operand
+        let temp = instance.nextTemporary()
+        instance.append(nil,"ADDR",.local(self.slot),.none,temp)
+        self._place = temp
+        }
+
+    public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
+        {
+        let temp = instance.nextTemporary()
+        instance.append(nil,"MOV",.local(self.slot),.none,temp)
+        self._place = temp
         }
     }

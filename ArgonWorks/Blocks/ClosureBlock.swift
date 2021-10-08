@@ -11,7 +11,8 @@ public class ClosureBlock: Block
     {
     public var parameters = Parameters()
     public var returnType:Type = .class(VoidClass.voidClass)
-    
+    public var buffer: T3ABuffer = T3ABuffer()
+        
     public func addParameter(label:String,type: Type)
         {
         let parameter = Parameter(label: label,type: type)
@@ -28,7 +29,7 @@ public class ClosureBlock: Block
             }
         }
         
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         var stackOffset = MemoryLayout<Word>.size
         for parameter in self.parameters
@@ -44,7 +45,7 @@ public class ClosureBlock: Block
             }
         for block in self.blocks
             {
-            try block.emitCode(into: into,using: using)
+            try block.emitCode(into: buffer,using: using)
             }
         }
     }

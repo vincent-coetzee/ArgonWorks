@@ -12,6 +12,36 @@ import FFI
 
 public class Class:ContainerSymbol,ObservableObject,Displayable
     {
+    public override var isType: Bool
+        {
+        return(true)
+        }
+        
+    public var isSuperclassListEmpty: Bool
+        {
+        return(self.superclasses.count == 0)
+        }
+        
+    public override var classValue: Class
+        {
+        self
+        }
+        
+    public var completeName: String
+        {
+        return(self.label)
+        }
+        
+    public override var canBecomeAClass: Bool
+        {
+        return(true)
+        }
+        
+    public override var canBecomeAType: Bool
+        {
+        return(true)
+        }
+        
     public static var classesByAddress = Dictionary<Word,Class>()
     
 //    public static let `class` = self.topModule.argonModule.class
@@ -78,11 +108,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public override var isClass: Bool
         {
         return(true)
-        }
-        
-    public var isGenericClassParameter: Bool
-        {
-        return(false)
         }
         
     public override var defaultColor: NSColor
@@ -231,11 +256,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
-    public var isSystemClass: Bool
-        {
-        return(false)
-        }
-        
     public var isGenericClass: Bool
         {
         return(false)
@@ -256,7 +276,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return([])
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconClass"
         }
@@ -264,6 +284,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public override var symbolColor: NSColor
         {
         .argonLime
+        }
+        
+    public var laidOutSlots: Array<Slot>
+        {
+        return(self.layoutSlots.slots)
         }
         
     public var mangledName: String
@@ -283,7 +308,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override var children: Symbols
         {
-        return(self.subclasses.sorted{$0.label<$1.label})
+        return(self.localSlots.sorted{$0.label < $1.label} + self.subclasses.sorted{$0.label<$1.label})
         }
         
     public var sizeInBytes: Int
@@ -317,6 +342,16 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             text = "\(count) items"
             }
         leaderCell.textField?.stringValue = text
+        }
+        
+    public var localSuperclasses: Array<Class>
+        {
+        return(self.superclasses)
+        }
+        
+    public var localSubclasses: Array<Class>
+        {
+        return(self.subclasses)
         }
         
     public var localAndInheritedSlots: Slots
@@ -370,9 +405,9 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         }
         
     internal var superclassReferences = Array<ForwardReferenceClass>()
-    internal var subclasses = Classes()
-    internal var superclasses = Classes()
-    internal var layoutSlots: SlotList
+    private var subclasses = Classes()
+    private var superclasses = Classes()
+    private var layoutSlots: SlotList
     internal var magicNumber:Int
     internal var slotClassType:Slot.Type = Slot.self
     internal var isMemoryPreallocated = false
@@ -478,6 +513,61 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass.addresses = self.addresses
         newClass.locations = self.locations
         return(newClass)
+        }
+        
+    public func addSubclass(_ aClass: Class)
+        {
+        if !self.subclasses.contains(aClass)
+            {
+            self.subclasses.append(aClass)
+            }
+        if !aClass.superclasses.contains(self)
+            {
+            aClass.superclasses.append(self)
+            }
+        self.journalEntries.append(.addSubclass(aClass,to: self))
+        }
+        
+    internal func layoutSlotKeys() -> Array<InnerInstancePointer.SlotKey>
+        {
+        var keys = Array<InnerInstancePointer.SlotKey>()
+        for slot in self.layoutSlots
+            {
+            let key = InnerInstancePointer.SlotKey(name: slot.label,offset: slot.offset / 8)
+            keys.append(key)
+            }
+        return(keys)
+        }
+        
+    public func addSuperclass(_ aClass: Class)
+        {
+        if !self.superclasses.contains(aClass)
+            {
+            self.superclasses.append(aClass)
+            }
+        if !aClass.subclasses.contains(self)
+            {
+            aClass.subclasses.append(self)
+            }
+        self.journalEntries.append(.addSuperclass(aClass,to: self))
+        }
+        
+    public func removeSuperclass(_ aClass: Class)
+        {
+        self.superclasses.removeAll(where: { aClass == $0})
+        if aClass.subclasses.contains(self)
+            {
+            aClass.subclasses.removeAll(where: { self == $0})
+            }
+        }
+        
+    public func removeSubclass(_ aClass: Class)
+        {
+        self.subclasses.removeAll(where: { aClass == $0})
+        if aClass.superclasses.contains(self)
+            {
+            aClass.superclasses.removeAll(where: { self == $0})
+            }
         }
         
     public func isSubclass(of superclass:Class) -> Bool
@@ -858,14 +948,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             reference.realizeClass()
             if let symbol = reference.theClass
                 {
-                if !self.superclasses.contains(symbol)
-                    {
-                    self.superclasses.append(symbol)
-                    }
-                if !symbol.subclasses.contains(self)
-                    {
-                    symbol.subclasses.append(self)
-                    }
+                self.addSuperclass(symbol)
                 symbol.realizeSuperclasses()
                 }
             else

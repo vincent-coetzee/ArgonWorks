@@ -153,6 +153,7 @@ public class TokenRenderer
     public func setToken(_ token: Token)
         {
         self.currentToken = token
+        self.attributes[token.location.range]![.foregroundColor] = self.mapTokenToForegroundColor(token: token)
         }
         
     private func mapTokenToForegroundColor(token: Token) -> NSColor
@@ -168,7 +169,7 @@ public class TokenRenderer
             case .hashString:
                 return(SyntaxColorPalette.symbolColor)
             case .note:
-                return(NSColor.argonNeonFuchsia)
+                return(NSColor.cyan)
             case .directive:
                 return(SyntaxColorPalette.directiveColor)
             case .comment:
@@ -188,7 +189,7 @@ public class TokenRenderer
             case .symbol:
                 return(SyntaxColorPalette.operatorColor)
             case .none:
-                return(NSColor.argonNeonFuchsia)
+                return(NSColor.cyan)
             case .operator:
                 return(SyntaxColorPalette.operatorColor)
             case .character:
@@ -259,6 +260,8 @@ public class TokenRenderer
                 localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
             case .localSlot:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .systemClass:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
             case .classSlot:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
             case .type:

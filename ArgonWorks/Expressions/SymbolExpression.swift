@@ -23,7 +23,7 @@ public class SymbolExpression: Expression
         return(false)
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
         return(self.symbol.type)
         }
@@ -92,7 +92,7 @@ public class SymbolExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         print("SymbolExpression NEEDS TO GENERATE CODE")
         }

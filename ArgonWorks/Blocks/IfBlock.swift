@@ -63,26 +63,24 @@ public class IfBlock: Block
         self.elseBlock?.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
+        let outLabel = buffer.nextLabel()
         try self.condition.emitCode(into: buffer,using: using)
-        buffer.append(.BRF,self.condition.place,.none,.label(0))
-        let fromThere = buffer.triggerFromHere()
+        buffer.append(nil,"BRF",self.condition.place,.none,.label(outLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)
             }
-        let fromEnd = buffer.triggerFromHere()
         if self.elseBlock.isNotNil
             {
-            try buffer.toHere(fromThere)
+            buffer.pendingLabel = outLabel
             try self.elseBlock!.emitCode(into: buffer,using: using)
             }
         else
             {
-            try buffer.toHere(fromThere)
+            buffer.pendingLabel = outLabel
             }
-        try buffer.toHere(fromEnd)
         }
     }
     

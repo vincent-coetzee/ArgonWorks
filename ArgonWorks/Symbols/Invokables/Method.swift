@@ -10,6 +10,22 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var type: Type
+        {
+        get
+            {
+            return(.method(self))
+            }
+        set
+            {
+            }
+        }
+        
+    public override var canBecomeAType: Bool
+        {
+        return(true)
+        }
+        
     public var methodSignatures: MethodSignatures
         {
         self.instances.map{$0.methodSignature}
@@ -19,12 +35,7 @@ public class Method:Symbol
         {
         return(false)
         }
-        
-    public override var defaultColor: NSColor
-        {
-        Palette.shared.methodColor
-        }
-        
+
     public var isMain: Bool = false
     public var returnType: Type = .class(VoidClass.voidClass)
     public var proxyParameters = Parameters()
@@ -67,7 +78,7 @@ public class Method:Symbol
         return(Method(label:label))
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconMethod"
         }

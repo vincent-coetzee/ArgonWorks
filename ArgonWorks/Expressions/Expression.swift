@@ -18,12 +18,7 @@ public class Expression: NSObject,NSCoding
         {
         return(UnaryExpression(symbol, self))
         }
-        
-    public var isSlotDeclarationExpression: Bool
-        {
-        return(false)
-        }
-        
+
     public var isUnresolved: Bool
         {
         return(false)
@@ -56,7 +51,7 @@ public class Expression: NSObject,NSCoding
         
     public func slot(_ index:Expression) -> Expression
         {
-        return(SlotExpression(self,slotExpression: index as! SlotSelectorExpression))
+        return(SlotAccessExpression(self,slotExpression: index as! SlotSelectorExpression))
         }
         
     public func cast(into: Type) -> Expression
@@ -64,14 +59,24 @@ public class Expression: NSObject,NSCoding
         return(AsExpression(self,into: into))
         }
         
+    public var rhsValue: Expression?
+        {
+        return(nil)
+        }
+        
+    public var lhsValue: Expression?
+        {
+        return(nil)
+        }
+        
     public var declaration: Location?
         {
         return(self.locations.declaration)
         }
         
-    public var isLValue: Bool
+    public var unresolvedLabel: String
         {
-        return(false)
+        fatalError()
         }
         
     public var isLiteralExpression: Bool
@@ -89,7 +94,7 @@ public class Expression: NSObject,NSCoding
         return(false)
         }
         
-    public var resultType: Type
+    public var type: Type
         {
         .error(.mismatch)
         }
@@ -99,19 +104,24 @@ public class Expression: NSObject,NSCoding
         return(false)
         }
         
+    public var isVariableExpression: Bool
+        {
+        return(false)
+        }
+        
     public var enumerationCase: EnumerationCase
         {
         fatalError()
         }
         
-    public var place: Instruction.Operand
+    public var place: T3AInstruction.Operand
         {
         return(self._place)
         }
     
-    public var locations = SourceLocations()
-    public var _place: Instruction.Operand = .none
-    public var parent: Parent = .none
+    public private(set) var locations = SourceLocations()
+    public internal(set) var _place: T3AInstruction.Operand = .none
+    public private(set) var parent: Parent = .none
     
     public override init()
         {
@@ -150,6 +160,14 @@ public class Expression: NSObject,NSCoding
         {
         }
         
+    public func setType(_ type:Type)
+        {
+        }
+        
+    public func becomeLValue()
+        {
+        }
+        
     public func scopedExpression(for child: String) -> Expression?
         {
         return(nil)
@@ -160,7 +178,12 @@ public class Expression: NSObject,NSCoding
         }
         
 
-    public func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
+    public func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+//        fatalError("This should have been implemented")
+        }
+        
+    public func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
 //        fatalError("This should have been implemented")
         }

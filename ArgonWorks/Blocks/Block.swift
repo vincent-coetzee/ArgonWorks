@@ -133,7 +133,7 @@ public class Block:NSObject,NamingContext,NSCoding
             }
         }
         
-    public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         for block in self.blocks
             {

@@ -34,6 +34,8 @@ private let LINE_NUMBER_OFFSET: CGFloat  = 16.0
 /// Adds line numbers to a NSTextField.
 class LineNumberGutter: NSRulerView {
 
+    internal var sourceEditorDelegate: SourceEditorDelegate?
+    
     /// Holds the height of a line
     internal var lineHeight: CGFloat = 0
     /// Holds the number of lines
@@ -196,6 +198,18 @@ class LineNumberGutter: NSRulerView {
         }
     }
     
+    internal func annotation(atPoint: NSPoint) -> LineAnnotation?
+        {
+        for annotation in self.annotations.values
+            {
+            if annotation.area.contains(atPoint)
+                {
+                return(annotation)
+                }
+            }
+        return(nil)
+        }
+    
     ///
     ///  - parameter rect: NSRect to draw the gutter view in.
     internal func find(lineNumber line:inout Int,andRectangle rectangle:inout NSRect,forPoint point: NSPoint)
@@ -300,5 +314,18 @@ class LineNumberGutter: NSRulerView {
         // Draw the attributed string to the calculated point.
         attributedString.draw(at: NSPoint(x: xPosition - LINE_NUMBER_OFFSET, y: relativePoint.y + yPos))
     }
+    
+    public override func mouseDown(with event: NSEvent)
+        {
+        let point = self.convert(event.locationInWindow, from: nil)
+        for annotation in self.annotations.values
+            {
+            if annotation.area.contains(point)
+                {
+                self.sourceEditorDelegate?.sourceEditorGutter(self, selectedAnnotationAtLine: annotation.line)
+                }
+            }
+        super.mouseDown(with: event)
+        }
 
 }

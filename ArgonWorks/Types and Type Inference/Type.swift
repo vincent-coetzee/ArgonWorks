@@ -8,7 +8,7 @@
 import Foundation
 import FFI
 
-public enum TypeError: Error,Equatable
+public enum TypeError:Int,Error,Equatable
     {
     case mismatch
     case undefined
@@ -16,6 +16,17 @@ public enum TypeError: Error,Equatable
     
 public indirect enum Type: Equatable,Storable
     {
+    public var canBecomeAClass: Bool
+        {
+        switch(self)
+            {
+            case .class:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
     public var classValue: Class
         {
         switch(self)
@@ -75,9 +86,9 @@ public indirect enum Type: Equatable,Storable
                 return(error1 == error2)
             case (.enumeration(let error1),.enumeration(let error2)):
                 return(error1 == error2)
-            case (.method(let label1,let types1,let type1),.method(let label2,let types2,let type2)):
+            case (.methodApplication(let label1,let types1,let type1),.methodApplication(let label2,let types2,let type2)):
                 return(label1 == label2 && types1 == types2 && type1 == type2)
-            case (.methodApplication(let error1),.methodApplication(let error2)):
+            case (.method(let error1),.method(let error2)):
                 return(error1 == error2)
             default:
                 return(false)
@@ -102,8 +113,8 @@ public indirect enum Type: Equatable,Storable
     case error(TypeError)
     case `class`(Class)
     case enumeration(Enumeration)
-    case method(Label,Types,Type)
-    case methodApplication(MethodInstance)
+    case method(Method)
+    case methodApplication(String,Types,Type)
     case forwardReference(Name,Context)
     case typeAlias(TypeAlias)
     
@@ -117,8 +128,8 @@ public indirect enum Type: Equatable,Storable
                 return(aClass.displayString)
             case .enumeration(let enumeration):
                 return(enumeration.displayString)
-            case .method(let label,_,_):
-                return(label)
+            case .method(let method):
+                return(method.displayString)
             default:
                 return("somthings wrong")
             }
@@ -182,10 +193,10 @@ public indirect enum Type: Equatable,Storable
                 return(aClass.label)
             case .enumeration(let aClass):
                 return(aClass.label)
-            case .method(let label,_,_):
+            case .method(let method):
+                return(method.label)
+            case .methodApplication(let label,_,_):
                 return(label)
-            case .methodApplication(let aClass):
-                return(aClass.label)
             default:
                 return("")
             }
@@ -212,8 +223,8 @@ public indirect enum Type: Equatable,Storable
                 return(aClass.memoryAddress)
             case .method:
                 fatalError()
-            case .methodApplication(let aClass):
-                return(aClass.memoryAddress)
+            case .methodApplication:
+                fatalError()
             default:
                 return(0)
             }
@@ -229,8 +240,8 @@ public indirect enum Type: Equatable,Storable
                 return(aClass.typeCode)
             case .method:
                 return(.method)
-            case .methodApplication(let aClass):
-                return(aClass.typeCode)
+            case .methodApplication:
+                fatalError()
             default:
                 return(.none)
             }
@@ -348,9 +359,9 @@ public indirect enum Type: Equatable,Storable
                 return(class1.isInclusiveSubclass(of: class2))
             case (.enumeration(let enum1),.enumeration(let enum2)):
                 return(enum1 == enum2)
-            case (.method(let label1,let types1,let type1),.method(let label2,let types2,let type2)):
+            case (.methodApplication(let label1,let types1,let type1),.methodApplication(let label2,let types2,let type2)):
                 return(label1 == label2 && types1 == types2 && type1 == type2)
-            case (.methodApplication(let m1),.methodApplication(let m2)):
+            case (.method(let m1),.method(let m2)):
                 return(m1 == m2)
             default:
                 return(false)
@@ -378,10 +389,10 @@ public indirect enum Type: Equatable,Storable
                 aClass.realize(using: realizer)
             case .enumeration(let aClass):
                 aClass.realize(using: realizer)
-            case .method:
+            case .method(let method):
+                method.realize(using: realizer)
+            case .methodApplication:
                 break
-            case .methodApplication(let aClass):
-                aClass.realize(using: realizer)
             default:
                 break
             }

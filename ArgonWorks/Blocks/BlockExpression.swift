@@ -41,7 +41,7 @@ public class BlockExpression: Expression
         coder.encode(self.block,forKey: "block")
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
         try self.block.emitCode(into: instance,using: using)
         }

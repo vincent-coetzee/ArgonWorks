@@ -9,7 +9,7 @@ import Foundation
 
 public class AsExpression: Expression
     {
-    public override var resultType: Type
+    public override var type: Type
         {
         return(into)
         }
@@ -57,7 +57,7 @@ public class AsExpression: Expression
 //        self.into.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         print("AsExpression NEEDS TO GENERATE CODE")
         }

@@ -43,6 +43,157 @@ extension NSCoder
             self.encode(value,forKey: forKey + "value")
             }
         }
+
+    public func encodeLiteralValue(_ literal: Instruction.LiteralValue,forKey key: String)
+        {
+        switch(literal)
+            {
+            case .nil:
+                self.encode(0,forKey: key + "kind")
+            case .string(let string):
+                self.encode(1,forKey: key + "kind")
+                self.encode(string,forKey: key + "string")
+            case .symbol(let string):
+                self.encode(2,forKey: key + "kind")
+                self.encode(string,forKey: key + "symbol")
+            case .class(let string):
+                self.encode(3,forKey: key + "kind")
+                self.encode(string,forKey: key + "class")
+            case .module(let string):
+                self.encode(4,forKey: key + "kind")
+                self.encode(string,forKey: key + "module")
+            case .enumeration(let string):
+                self.encode(5,forKey: key + "kind")
+                self.encode(string,forKey: key + "enumeration")
+            case .method(let string):
+                self.encode(6,forKey: key + "kind")
+                self.encode(string,forKey: key + "method")
+            case .enumerationCase(let string):
+                self.encode(7,forKey: key + "kind")
+                self.encode(string,forKey: key + "enumerationCase")
+            case .constant(let string):
+                self.encode(8,forKey: key + "kind")
+                self.encode(string,forKey: key + "constant")
+            case .relocation(let string):
+                self.encode(9,forKey: key + "kind")
+                self.encode(string,forKey: key + "index")
+            case .self:
+                self.encode(10,forKey: key + "kind")
+            case .Self:
+                self.encode(11,forKey: key + "kind")
+            case .super:
+                self.encode(12,forKey: key + "kind")
+            case .DSNextAddress:
+                self.encode(13,forKey: key + "kind")
+            case .MAKE:
+                self.encode(14,forKey: key + "kind")
+            }
+        }
+        
+    public func decodeLiteralValue(forKey key: String) -> Instruction.LiteralValue
+        {
+        let kind = self.decodeInteger(forKey: key + "kind")
+        switch(kind)
+            {
+            case 0:
+                return(.nil)
+            case 1:
+                return(.string(self.decodeObject(forKey: key + "string") as! String))
+            case 2:
+                return(.symbol(self.decodeObject(forKey: key + "symbol") as! String))
+            case 3:
+                return(.class(self.decodeObject(forKey: key + "class") as! Class))
+            case 4:
+                return(.module(self.decodeObject(forKey: key + "module") as! Module))
+            case 5:
+                return(.enumeration(self.decodeObject(forKey: key + "enumeration") as! Enumeration))
+            case 6:
+                return(.method(self.decodeObject(forKey: key + "method") as! Method))
+            case 7:
+                return(.enumerationCase(self.decodeObject(forKey: key + "enumerationCase") as! EnumerationCase))
+            case 8:
+                return(.constant(self.decodeObject(forKey: key + "constant") as! Constant))
+            case 9:
+                return(.relocation(self.decodeInteger(forKey: key + "index")))
+            case 10:
+                return(.self)
+            case 11:
+                return(.Self)
+            case 12:
+                return(.super)
+            case 13:
+                return(.DSNextAddress)
+            case 14:
+                return(.MAKE)
+            default:
+                fatalError("This should not happen")
+            }
+        }
+        
+    public func encodeT3AOperand(_ operand: T3AInstruction.Operand,forKey key: String)
+        {
+        switch(operand)
+            {
+            case .none:
+                self.encode(0,forKey: key + "kind")
+            case .temporary(let index):
+                self.encode(1,forKey: key + "kind")
+                self.encode(index,forKey: key + "index")
+            case .local(let slot):
+                self.encode(2,forKey: key + "kind")
+                self.encode(slot,forKey: key + "slot")
+            case .label(let label):
+                self.encode(3,forKey: key + "kind")
+                self.encode(label,forKey: key + "label")
+            case .integer(let label):
+                self.encode(4,forKey: key + "kind")
+                self.encode(label,forKey: key + "integer")
+            case .float(let label):
+                self.encode(5,forKey: key + "kind")
+                self.encode(label,forKey: key + "float")
+            case .string(let label):
+                self.encode(6,forKey: key + "kind")
+                self.encode(label,forKey: key + "string")
+            case .boolean(let label):
+                self.encode(7,forKey: key + "kind")
+                self.encode(label,forKey: key + "boolean")
+            case .literal(let literal):
+                self.encode(8,forKey: key + "kind")
+                self.encodeLiteralValue(literal,forKey: key + "literal")
+            case .returnRegister:
+                self.encode(9,forKey: key + "kind")
+            }
+        }
+        
+    public func decodeT3AOperand(forKey key: String) -> T3AInstruction.Operand
+        {
+        let kind = self.decodeInteger(forKey: key + "kind")
+        switch(kind)
+            {
+            case 0:
+                return(.none)
+            case 9:
+                return(.returnRegister)
+            case 1:
+                return(.temporary(self.decodeInteger(forKey: key + "index")))
+            case 2:
+                return(.local(self.decodeObject(forKey: key + "slot") as! Slot))
+            case 3:
+                return(.label(self.decodeObject(forKey: key + "label") as! T3ALabel))
+            case 4:
+                return(.integer(self.decodeInteger(forKey: key + "integer")))
+            case 5:
+                return(.float(self.decodeDouble(forKey: key + "float")))
+            case 6:
+                return(.string(self.decodeObject(forKey: key + "string")  as! String))
+            case 7:
+                return(.boolean(self.decodeBool(forKey: key + "boolean")))
+            case 8:
+                return(.literal(self.decodeLiteralValue(forKey: key + "literal")))
+            default:
+                fatalError("This should not occur")
+            }
+        }
         
     public func encodeArgument(_ argument: Argument,forKey: String)
         {
@@ -174,7 +325,11 @@ extension NSCoder
             case(2):
                 return(Type.enumeration(self.decodeObject(forKey: forKey + "enumeration") as! Enumeration))
             case(3):
-                return(Type.method(self.decodeString(forKey:forKey + "name")!,self.decodeTypes(forKey: forKey + "types"),self.decodeType(forKey: forKey + "returnType")!))
+                return(Type.method(self.decodeObject(forKey:forKey + "method") as! Method))
+            case(5):
+                return(Type.methodApplication(self.decodeString(forKey: forKey + "name")!,self.decodeTypes(forKey: forKey + "types"),self.decodeType(forKey: forKey + "type")!))
+            case(6):
+                return(Type.error(TypeError(rawValue: self.decodeInteger(forKey:forKey + "error"))!))
             default:
                 fatalError("Invalid type kind - error in archive")
             }
@@ -214,11 +369,9 @@ extension NSCoder
             self.encode(1,forKey: forKey + "flag")
             switch(type)
                 {
-                case .method(let name,let types,let returnType):
+                case .method(let method):
                     self.encode(3,forKey: forKey + "kind")
-                    self.encode(name,forKey: forKey + "name")
-                    self.encodeTypes(types,forKey: forKey + "types")
-                    self.encodeType(returnType,forKey: forKey + "returnType")
+                    self.encode(method,forKey: forKey + "method")
                 case .class(let aClass):
                     self.encode(1,forKey: forKey + "kind")
                     self.encode(aClass,forKey: forKey + "class")
@@ -226,6 +379,7 @@ extension NSCoder
                     self.encode(2,forKey: forKey + "kind")
                     self.encode(aClass,forKey: forKey + "enumeration")
                 case .forwardReference(let name,let context):
+                    self.encode(4,forKey: forKey + "kind")
                     if let value = context.lookup(name: name)
                         {
                         if value is Class
@@ -247,6 +401,14 @@ extension NSCoder
                         {
                         fatalError("Using a forward reference here is a fuckup and needs to be fixed")
                         }
+                case .methodApplication(let name,let types,let type):
+                    self.encode(5,forKey: forKey + "kind")
+                    self.encode(name,forKey:forKey + "name")
+                    self.encodeTypes(types,forKey: forKey + "types")
+                    self.encodeType(type,forKey: forKey + "type")
+                case .error(let error):
+                    self.encode(6,forKey: forKey + "kind")
+                    self.encode(error.rawValue,forKey: forKey + "error")
                 default:
                     fatalError("Should not happen")
                 }

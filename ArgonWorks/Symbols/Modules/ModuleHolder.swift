@@ -11,12 +11,12 @@ public class ModuleHolder: Module
     {
     public override var defaultColor:NSColor
         {
-        NSColor.argonCheese
+        Palette.shared.hierarchyPrimaryTintColor
         }
     
-    public override var imageName: String
+    public override var iconName: String
         {
-        self.module.imageName
+        self.module.iconName
         }
         
     public override var isExpandable: Bool
@@ -65,14 +65,14 @@ public class ModuleHolder: Module
 
 public class ElementHolder: Symbol
     {
-    public override var defaultColor: NSColor
+    public override var defaultColor:NSColor
         {
-        NSColor.argonCheese
+        Palette.shared.hierarchyPrimaryTintColor
         }
-    
-    public override var imageName: String
+        
+    public override var iconName: String
         {
-        self.symbol.imageName
+        self.symbol.iconName
         }
         
     public override var isExpandable: Bool
@@ -99,7 +99,7 @@ public class ElementHolder: Symbol
             var values = kids.map{ElementHolder($0)}
             if self.symbol.isClass
                 {
-                values.append(contentsOf: (self.symbol as! Class).subclasses.map{ElementHolder($0)})
+                values.append(contentsOf: (self.symbol as! Class).localSubclasses.map{ElementHolder($0)})
                 }
             return(values)
             }

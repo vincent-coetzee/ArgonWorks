@@ -9,9 +9,25 @@ import AppKit
 
 public class Enumeration:Class
     {
-    public override var asType: Type
+    public override var isType: Bool
         {
-        return(.enumeration(self))
+        return(true)
+        }
+        
+    public override var canBecomeAType: Bool
+        {
+        return(true)
+        }
+        
+    public override var type: Type
+        {
+        get
+            {
+            return(.enumeration(self))
+            }
+        set
+            {
+            }
         }
         
     private var cases: EnumerationCases = []
@@ -34,7 +50,7 @@ public class Enumeration:Class
         return(true)
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         return("IconEnumeration")
         }

@@ -66,11 +66,16 @@ public typealias MethodSignatures = Array<MethodSignature>
 /// will actually be used when this instance of a method is called.
 ///
 ///
-public class MethodInstance:Function
+public class MethodInstance:Function,StackFrame
     {
     public var methodSignature: MethodSignature
         {
         MethodSignature(parameters: self.parameters,instance: self)
+        }
+        
+    public override var iconName: String
+        {
+        "IconMethodInstance"
         }
         
     public var isSystemMethodInstance: Bool
@@ -91,18 +96,17 @@ public class MethodInstance:Function
         
     internal private(set) var block: MethodInstanceBlock! = nil
     
-    private var localSymbols = Symbols()
+
     private var _method:Method?
-    public let buffer:InstructionBuffer
+    public let buffer:T3ABuffer
     public var instructionsAddress: Word = 0
     public var isGenericMethod = false
     public var genericParameters = GenericClassParameters()
     
     public required init?(coder: NSCoder)
         {
-        self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self._method = coder.decodeObject(forKey: "method") as? Method
-        self.buffer = InstructionHoldingBuffer()
+        self.buffer = T3ABuffer()
 //        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
 //        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
@@ -113,7 +117,6 @@ public class MethodInstance:Function
         {
         print("ENCODE METHOD INSTANCE \(self.label)")
         super.encode(with: coder)
-        coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.method,forKey: "method")
         coder.encode(self.genericParameters,forKey: "genericParameters")
         }
@@ -168,7 +171,7 @@ public class MethodInstance:Function
         
     override init(label:Label)
         {
-        self.buffer = InstructionHoldingBuffer()
+        self.buffer = T3ABuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -176,7 +179,7 @@ public class MethodInstance:Function
         
     public init(_ label:Label)
         {
-        self.buffer = InstructionHoldingBuffer()
+        self.buffer = T3ABuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -340,6 +343,7 @@ public class MethodInstance:Function
     public override func addSymbol(_ symbol: Symbol) -> Symbol
         {
         self.localSymbols.append(symbol)
+        symbol.frame = self
         return(symbol)
         }
         
@@ -379,12 +383,7 @@ public class MethodInstance:Function
             self.localSymbols.append(symbol)
             }
         }
-        
-    public func addLocalSlot(_ localSlot:Slot)
-        {
-        self.localSymbols.append(localSlot)
-        }
-        
+    
     public func hasSameReturnType(_ clazz: Class) -> Bool
         {
         return(self.returnType == Type.class(clazz))
@@ -404,17 +403,17 @@ public class MethodInstance:Function
         
     public func layoutSymbol(in vm: VirtualMachine)
         {
-        guard !self.isMemoryLayoutDone else
-            {
-            return
-            }
-        let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
-        for instruction in self.buffer.instructions
-            {
-            pointer.append(instruction)
-            }
-        self.addresses.append(Address.absolute(pointer.address))
-        self.isMemoryLayoutDone = true
+//        guard !self.isMemoryLayoutDone else
+//            {
+//            return
+//            }
+//        let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
+//        for instruction in self.buffer.instructions
+//            {
+//            pointer.append(instruction)
+//            }
+//        self.addresses.append(Address.absolute(pointer.address))
+//        self.isMemoryLayoutDone = true
         }
         
     public override func emitCode(using generator: CodeGenerator) throws
@@ -458,7 +457,7 @@ public class MethodInstance:Function
             }
         for (mine,yours) in zip(self.parameters,input)
             {
-            if !yours.value.resultType.isEquivalent(to: mine.type)
+            if !yours.value.type.isEquivalent(to: mine.type)
                 {
                 return(false)
                 }

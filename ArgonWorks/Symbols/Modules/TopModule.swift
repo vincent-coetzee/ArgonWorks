@@ -16,6 +16,8 @@ import Foundation
 ///
 public class TopModule: SystemModule
     {
+    public static let argonModule = ArgonModule()
+    
     public override var typeCode:TypeCode
         {
         .topModule
@@ -48,8 +50,11 @@ public class TopModule: SystemModule
         {
         return(Name(rooted:true))
         }
-        
-    public let argonModule = ArgonModule()
+    
+    public var argonModule: ArgonModule
+        {
+        return(Self.argonModule)
+        }
         
     public var userModules: Array<Module>
         {
@@ -60,7 +65,7 @@ public class TopModule: SystemModule
         {
         super.init(label: "Root")
         self.index = UUID(index: 0)
-        self.addSymbol(self.argonModule)
+        self.addSymbol(Self.argonModule)
         }
         
     init(_ array:Array<Module>)

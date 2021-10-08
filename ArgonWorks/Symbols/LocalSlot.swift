@@ -9,9 +9,9 @@ import Foundation
 
 public class LocalSlot:Slot
     {
-    public var place: Instruction.Operand = .none
+    public var place: T3AInstruction.Operand = .none
     
-    init(label:Label,type:Type?,value:Expression)
+    init(label:Label,type:Type?,value:Expression?)
         {
         super.init(label: label, type: type)
         self.initialValue = value
@@ -33,9 +33,8 @@ public class LocalSlot:Slot
         .localSlot
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator)
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
         {
-        self.place = self.addresses.mostEfficientAddress.operand
         }
         
     public override func lookup(label: String) -> Symbol?

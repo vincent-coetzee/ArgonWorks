@@ -13,18 +13,13 @@ public class Function:Invokable,Displayable
     {
     public var library:DynamicLibrary = .emptyLibrary
     
-    public override var defaultColor: NSColor
-        {
-        Palette.shared.functionColor
-        }
-        
     public override var displayString: String
         {
         let parms = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
         return(self.label + parms + " -> " + self.returnType.displayString)
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconFunction"
         }

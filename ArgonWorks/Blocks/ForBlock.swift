@@ -22,6 +22,4 @@ public class ForBlock: Block
         self.name = ""
         super.init(coder: coder)
         }
-        
- 
     }

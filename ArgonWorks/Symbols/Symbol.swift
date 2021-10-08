@@ -11,16 +11,47 @@ import SwiftUI
 
 public class Symbol:Node,ParseNode
     {
-    public var defaultColor: NSColor
+    public var isType: Bool
         {
-        Palette.shared.symbolColor
+        return(false)
         }
+        
+    public var isGenericClassParameter: Bool
+        {
+        return(false)
+        }
+        
+    public var defaultColor:NSColor
+        {
+        Palette.shared.hierarchyPrimaryTintColor
+        }
+        
+    public var canBecomeAType: Bool
+        {
+        return(false)
+        }
+        
+    public var canBecomeAClass: Bool
+        {
+        return(false)
+        }
+        
     public var isSlot: Bool
         {
         return(false)
         }
 
+    public var classValue: Class
+        {
+        fatalError()
+        }
+        
     public var isArrayClassInstance: Bool
+        {
+        return(false)
+        }
+        
+    public var isSystemClass: Bool
         {
         return(false)
         }
@@ -101,6 +132,16 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var allJournalEntries: Array<JournalEntry>
+        {
+        return([])
+        }
+        
+    public var journalTransaction: JournalTransaction
+        {
+        return(JournalTransaction(entries: []))
+        }
+        
     public func newItemButton(_ binding:Binding<String?>) -> AnyView
         {
         return(AnyView(EmptyView()))
@@ -126,7 +167,7 @@ public class Symbol:Node,ParseNode
         return("\(Swift.type(of:self))(\(self.label))")
         }
         
-    public var imageName: String
+    public var iconName: String
         {
         "IconEmpty"
         }
@@ -146,6 +187,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
     
+    public var isGenericClassInstance: Bool
+        {
+        return(false)
+        }
+        
     public var typeCode:TypeCode
         {
         fatalError("TypeCode being called on Symbol which is not valid")
@@ -186,7 +232,7 @@ public class Symbol:Node,ParseNode
         {
         }
         
-    public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
 //        fatalError("Should not have been called")
         }
@@ -195,6 +241,7 @@ public class Symbol:Node,ParseNode
         {
         }
         
+    internal var frame: StackFrame?
     internal var isMemoryLayoutDone: Bool = false
     internal var isSlotLayoutDone: Bool = false
     internal var locations: SourceLocations = SourceLocations()
@@ -238,17 +285,18 @@ public class Symbol:Node,ParseNode
 //        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
 //
         cell.text.stringValue = self.displayString
-        let image = NSImage(named: self.imageName)!
+        let image = NSImage(named: self.iconName)!
         image.isTemplate = true
         cell.icon.image = image
         var iconColor = NSColor.black
         var textColor = Palette.shared.hierarchyTextColor
         if self.isSymbolContainer
             {
+            var textColor = Palette.shared.hierarchyTextColor
             if self.childCount == 0
                 {
                 iconColor = .argonMidGray
-                textColor = .argonMidGray
+                textColor = .argonWhite70
                 self.selectionColor = NSColor.argonMidGray
                 }
             else
@@ -258,6 +306,7 @@ public class Symbol:Node,ParseNode
             }
         else
             {
+            textColor = .argonWhite30
             if self.isSlot
                 {
                 iconColor = NSColor.argonThemeBlueGreen
@@ -267,13 +316,18 @@ public class Symbol:Node,ParseNode
                 iconColor = NSColor.argonNeonOrange
                 }
             }
-        cell.icon.contentTintColor = iconColor
+        cell.icon.contentTintColor = Palette.shared.headerTextColor
         cell.text.textColor = textColor
         }
 
+    public func beginJournalTransaction()
+        {
+        self.resetJournalEntries()
+        }
+        
     public func invert(cell: HierarchyCellView)
         {
-        let image = NSImage(named: self.imageName)!.image(withTintColor: NSColor.black)
+        let image = NSImage(named: self.iconName)!.image(withTintColor: NSColor.black)
         cell.icon.image = image
         cell.icon.contentTintColor = NSColor.black
         cell.icon.isHighlighted = false
@@ -312,6 +366,10 @@ public class Symbol:Node,ParseNode
         print("\(indent)INDEX: \(self.index)")
         }
             
+    public func resetJournalEntries()
+        {
+        }
+        
     public func isExpandable(forChildType type: ChildType) -> Bool
         {
         return(self.isExpandable && self.childCount(forChildType: type) > 0)

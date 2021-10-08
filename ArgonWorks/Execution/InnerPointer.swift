@@ -269,7 +269,7 @@ public class InnerPointer:Addressable
             {
             self.setSlotValue(aClass.memoryAddress,atKey: aKey)
             }
-        for superclass in aClass.superclasses
+        for superclass in aClass.localSuperclasses
             {
             self.assignSystemSlots(from: superclass)
             }

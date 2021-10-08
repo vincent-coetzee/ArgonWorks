@@ -25,18 +25,18 @@ public class ReturnBlock: Block
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.value.analyzeSemantics(using: analyzer)
-        let returnValue = self.methodInstance.returnType
-        let valueType = self.value.resultType
+        let returnValue = self.methodInstance.type
+        let valueType = self.value.type
         if !valueType.isEquivalent(to: returnValue)
             {
             analyzer.compiler.reportingContext.dispatchError(at: self.declaration!, message: "The type of the return expression \(valueType.label) does not match that of the method \(returnValue)")
             }
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         try self.value.emitCode(into: buffer,using: generator)
-        buffer.append(.STORE,self.value.place,.none,.register(.RET))
+        buffer.append(nil,"STORE",self.value.place,.none,.returnRegister)
         }
         
     public override func dump(depth: Int)

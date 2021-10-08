@@ -9,7 +9,7 @@ import Foundation
 
 public class WhenBlock: Block
     {
-    public var conditionPlace: Instruction.Operand
+    public var conditionPlace: T3AInstruction.Operand
         {
         return(self.condition.place)
         }

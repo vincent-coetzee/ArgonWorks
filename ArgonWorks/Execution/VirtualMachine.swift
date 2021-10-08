@@ -34,13 +34,18 @@ public class VirtualMachine
     public private(set) var staticSegment = StaticSegment(size: MemorySize.bytes(10))
     
     public var registers: Array<Word> = Array(repeating: 0, count: Instruction.Register.allCases.count + 1)
-    public var topModule: TopModule!
+    public var topModule: TopModule
+        {
+        return(TopModule.shared)
+        }
+        
     public let pageServer: PageServer!
     public var symbolTable: SymbolTable!
     public let index = UUID()
+    
     public var argonModule: ArgonModule
         {
-        self.topModule.argonModule
+        TopModule.shared.argonModule
         }
         
     public var ip: Int
@@ -63,7 +68,7 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kStandardStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kStandardStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kStandardDataSegmentSize)
-        self.topModule = TopModule()
+//        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
@@ -79,7 +84,7 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kSmallStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kSmallStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kSmallDataSegmentSize)
-        self.topModule = TopModule()
+//        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self
@@ -95,7 +100,7 @@ public class VirtualMachine
         self.staticSegment = StaticSegment(size: Self.kTinyStaticSegmentSize)
         self.stackSegment = StackSegment(size: Self.kTinyStackSegmentSize)
         self.dataSegment = DataSegment(size: Self.kTinyDataSegmentSize)
-        self.topModule = TopModule()
+//        self.topModule = TopModule()
         self.managedSegment.virtualMachine = self
         self.stackSegment.virtualMachine = self
         self.staticSegment.virtualMachine = self

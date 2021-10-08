@@ -183,6 +183,16 @@ public enum TypeResult
     
 public class BinaryExpression: Expression
     {
+    public override var lhsValue: Expression?
+        {
+        return(self.lhs)
+        }
+        
+    public override var rhsValue: Expression?
+        {
+        return(self.rhs)
+        }
+        
     private let operation: Token.Symbol
     private let rhs: Expression
     private let lhs: Expression
@@ -202,10 +212,10 @@ public class BinaryExpression: Expression
         return("\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
-        let left = self.lhs.resultType
-        let right = self.rhs.resultType
+        let left = self.lhs.type
+        let right = self.rhs.type
         switch(self.operation)
             {
             case .leftBrocket:
@@ -225,8 +235,8 @@ public class BinaryExpression: Expression
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        let left = self.lhs.resultType
-        let right = self.rhs.resultType
+        let left = self.lhs.type
+        let right = self.rhs.type
         if left.isNotClass || right.isNotClass
             {
             analyzer.cancelCompletion()
@@ -292,7 +302,11 @@ public class BinaryExpression: Expression
         super.init(coder: coder)
         }
         
- 
+     public override func becomeLValue()
+        {
+        self.lhs.becomeLValue()
+        self.lhs.becomeLValue()
+        }
         
     public override func encode(with coder: NSCoder)
         {
@@ -310,60 +324,60 @@ public class BinaryExpression: Expression
         rhs.dump(depth: depth + 1)
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        var opcode:Instruction.Opcode = .NOP
+        var opcode: String = "NOP"
         switch(self.operation)
             {
             case .add:
-                if self.resultType == TopModule.shared.argonModule.float.type
+                if self.type == TopModule.shared.argonModule.float.type
                     {
-                    opcode = .FADD
+                    opcode = "FADD"
                     }
                 else
                     {
-                    opcode = .IADD
+                    opcode = "IADD"
                     }
             case .sub:
-                if self.resultType == TopModule.shared.argonModule.float.type
+                if self.type == TopModule.shared.argonModule.float.type
                     {
-                    opcode = .FSUB
+                    opcode = "FSUB"
                     }
                 else
                     {
-                    opcode = .ISUB
+                    opcode = "ISUB"
                     }
             case .mul:
-                if self.resultType == TopModule.shared.argonModule.float.type
+                if self.type == TopModule.shared.argonModule.float.type
                     {
-                    opcode = .FMUL
+                    opcode = "FMUL"
                     }
                 else
                     {
-                    opcode = .IMUL
+                    opcode = "IMUL"
                     }
             case .div:
-                if self.resultType == TopModule.shared.argonModule.float.type
+                if self.type == TopModule.shared.argonModule.float.type
                     {
-                    opcode = .FDIV
+                    opcode = "FDIV"
                     }
                 else
                     {
-                    opcode = .IDIV
+                    opcode = "IDIV"
                     }
             case .modulus:
-                if self.resultType == TopModule.shared.argonModule.float.type
+                if self.type == TopModule.shared.argonModule.float.type
                     {
-                    opcode = .FMOD
+                    opcode = "FMOD"
                     }
                 else
                     {
-                    opcode = .IMOD
+                    opcode = "IMOD"
                     }
             case .and:
-                opcode = .AND
+                opcode = "AND"
             case .or:
-                opcode = .OR
+                opcode = "OR"
             case .rightBrocket:
                 fallthrough
             case .rightBrocketEquals:
@@ -373,28 +387,29 @@ public class BinaryExpression: Expression
             case .leftBrocket:
                 fallthrough
             case .leftBrocketEquals:
-                if self.resultType.isNotClass
+                if self.type.isNotClass
                     {
                     print(self.rhs.displayString)
                     generator.dispatchError(at: self.declaration!, message: "The type of this expression is not defined.")
                     generator.cancelCompletion()
                     break
                     }
-                if self.resultType.isPrimitiveClass
+                if self.type.isPrimitiveClass
                     {
-                    opcode = .CMPW
+                    opcode = "CMPW"
                     }
                 else
                     {
-                    opcode = .CMPO
+                    opcode = "CMPO"
                     }
             default:
                 break
             }
+        let temp = instance.nextTemporary()
         try self.lhs.emitCode(into: instance, using: generator)
+        instance.append(nil,"MOV",self.lhs.place,.none,temp)
         try self.rhs.emitCode(into: instance, using: generator)
-        let outputRegister = generator.registerFile.findRegister(forSlot: nil, inBuffer: instance)
-        instance.append(opcode,lhs.place,rhs.place,.register(outputRegister))
-        self._place = .register(outputRegister)
+        instance.append(nil,opcode,temp,rhs.place,temp)
+        self._place = temp
         }
     }

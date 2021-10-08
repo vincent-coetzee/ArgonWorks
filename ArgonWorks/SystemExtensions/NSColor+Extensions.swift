@@ -92,17 +92,29 @@ extension NSColor
     public static let argonGreenBlueCrayola = NSColor(hex: 0x1982C4)
     public static let argonRoyalPurple = NSColor(hex: 0x6A4C93)
     
+    public static let argonWhite95 = NSColor(hex: 0xF2F2F2)
+    public static let argonWhite90 = NSColor(hex: 0xE5E5E5)
+    public static let argonWhite70 = NSColor(hex: 0xB2B2B2)
+    public static let argonWhite50 = NSColor(hex: 0x7F7F7F)
+    public static let argonWhite30 = NSColor(hex: 0x4C4C4C)
+    public static let argonWhite10 = NSColor(hex: 0x191919)
+    
     public static let argonLightGray = NSColor(hex: 0x888888)
     public static let argonLighterGray = NSColor(hex: 0xA0A0A0)
+    public static let argonMuchLighterGray = NSColor(hex: 0xCCCCCC)
+    public static let argonLightestGray = NSColor(hex: 0xEEEEEE)
+    public static let argonAlmostWhite = NSColor(hex: 0xF0F0F0)
     public static let argonMidGray = NSColor(hex: 0x666666)
     public static let argonDarkGray = NSColor(hex: 0x444444)
     public static let argonDarkerGray = NSColor(hex: 0x222222)
-    public static let argonDarkesGray:NSColor = NSColor(hex: 0x121212)
+    public static let argonDarkestGray:NSColor = NSColor(hex: 0x121212)
     
     public static let argonQuinacridoneMagenta = NSColor(hex: 0x8F2D56)
     public static let argonCaledonGreen = NSColor(hex: 0x218380)
     public static let argonBrightYellowCrayola = NSColor(hex: 0xFBB13C)
     public static let argonSkyBlueCrayola = NSColor(hex: 0x73D2DE)
+    
+    public static let argonWindowFrameGray = NSColor(red: 47, green: 47, blue: 47)
     
     public func lighten(by amount: CGFloat) -> NSColor
         {
@@ -113,6 +125,18 @@ extension NSColor
         let blue = min(255,colors[2] + amount * 255.0)
         let alpha = colors[3]
         return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        }
+        
+    public func darken(by amount: CGFloat) -> NSColor
+        {
+//        var colors = Array<CGFloat>(repeating: 0, count: 4)
+//        self.getComponents(&colors)
+//        let red = max(0,colors[0] * 255.0 - amount * 255.0)
+//        let green = max(0,colors[1] * 255.0 - amount * 255.0)
+//        let blue = max(0,colors[2] * 255.0 - amount * 255.0)
+//        let alpha = colors[3]
+//        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        return(self.blended(withFraction: amount,of: .black)!)
         }
         
     public var lighter: NSColor

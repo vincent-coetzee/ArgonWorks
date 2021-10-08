@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="19162" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19162"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="c22-O7-iKe" customClass="LabelCellView" customModule="ArgonWorks" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="480" height="25"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="M9p-Wc-OBm">
+                    <rect key="frame" x="18" y="5" width="464" height="16"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="Bz3-qf-eKN">
+                        <font key="font" usesAppearanceFont="YES"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="M9p-Wc-OBm" secondAttribute="bottom" constant="5" id="f7u-nc-fb1"/>
+                <constraint firstAttribute="trailing" secondItem="M9p-Wc-OBm" secondAttribute="trailing" id="g7D-hw-0BH"/>
+                <constraint firstItem="M9p-Wc-OBm" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="4" id="nPG-AD-8DU"/>
+                <constraint firstItem="M9p-Wc-OBm" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="oHQ-eJ-My6"/>
+            </constraints>
+            <connections>
+                <outlet property="labelView" destination="M9p-Wc-OBm" id="8tY-ZJ-e0s"/>
+            </connections>
+            <point key="canvasLocation" x="139" y="153.5"/>
+        </customView>
+    </objects>
+</document>

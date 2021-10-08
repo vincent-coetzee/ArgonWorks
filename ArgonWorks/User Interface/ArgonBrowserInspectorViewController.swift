@@ -9,7 +9,7 @@ import Cocoa
 
 class ArgonBrowserInspectorViewController: NSViewController
     {
-    @IBOutlet var listView: NSTableView!
+    @IBOutlet var listView: NSOutlineView!
     @IBOutlet var listHeaderView: HeaderView!
     @IBOutlet var listScrollView: NSScrollView!
     @IBOutlet var editorHeaderView: HeaderView!
@@ -52,5 +52,6 @@ class ArgonBrowserInspectorViewController: NSViewController
         {
         let controller = self.view.window!.windowController as! ArgonBrowserWindowController
         controller.inspectorController = self
+        controller.errorListView = listView
         }
     }

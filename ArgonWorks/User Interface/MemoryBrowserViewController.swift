@@ -87,7 +87,7 @@ public class MemoryObjectItem: MemorySlotItem
             return
             }
         var index = 0
-        for slot in theClass!.layoutSlots.slots.sorted(by: {$0.offset < $1.offset}).dropFirst()
+        for slot in theClass!.laidOutSlots.sorted(by: {$0.offset < $1.offset}).dropFirst()
             {
             let mutableString = NSMutableAttributedString(attributedString: self.children![index].line)
             mutableString.append(NSAttributedString(string:" \(slot.label)",attributes: [.font: Self.itemFont,.foregroundColor: NSColor.argonThemeGreen]))

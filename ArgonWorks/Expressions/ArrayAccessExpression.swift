@@ -13,25 +13,23 @@ public class ArrayAccessExpression: Expression
         {
         return("\(self.array.displayString)[\(self.index.displayString)]")
         }
-        
-    public override var isLValue: Bool
-        {
-        return(true)
-        }
-        
+
     private let array:Expression
     private let index:Expression
+    private var isLValue = false
     
     public required init?(coder: NSCoder)
         {
         self.array = coder.decodeObject(forKey: "array") as! Expression
         self.index = coder.decodeObject(forKey: "index") as! Expression
+        self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
         }
 
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
+        coder.encode(self.isLValue,forKey: "isLValue")
         coder.encode(self.array,forKey: "array")
         coder.encode(self.index,forKey: "indexx")
         }
@@ -43,11 +41,14 @@ public class ArrayAccessExpression: Expression
         super.init()
         }
     
- 
-    
-    public override var resultType: Type
+    public override func becomeLValue()
         {
-        self.array.resultType
+        self.isLValue = true
+        }
+        
+    public override var type: Type
+        {
+        self.array.type
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -62,8 +63,20 @@ public class ArrayAccessExpression: Expression
         self.index.realize(using: realizer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        print("ArrayAccessExpression NEEDS TO GENERATE CODE")
+        let temp = instance.nextTemporary()
+        try self.array.emitCode(into: instance,using: generator)
+        instance.append(nil,"MOV",self.array.place,.none,temp)
+        let offset = instance.nextTemporary()
+        try self.index.emitCode(into: instance,using: generator)
+        instance.append(nil,"MOV",self.index.place,.none,offset)
+        instance.append(nil,"MUL",offset,.integer(8),offset)
+        self._place = offset
+        }
+        
+    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+//        fatalError("This should have been implemented")
         }
     }

@@ -9,12 +9,12 @@ import Foundation
 
 public class ClassInstanciationTerm: Expression
     {
-    private let type: Class
+    private let _type: Class
     private let arguments: Arguments
     
     required init?(coder: NSCoder)
         {
-        self.type = coder.decodeObject(forKey: "type") as! Class
+        self._type = coder.decodeObject(forKey: "type") as! Class
         self.arguments = coder.decodeArguments(forKey: "arguments")
         super.init(coder: coder)
         }
@@ -22,13 +22,13 @@ public class ClassInstanciationTerm: Expression
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.type,forKey: "type")
+        coder.encode(self._type,forKey: "type")
         coder.encode(self.arguments,forKey: "arguments")
         }
         
     public init(type: Class,arguments: Arguments)
         {
-        self.type = type
+        self._type = type
         self.arguments = arguments
         super.init()
         for argument in arguments
@@ -37,17 +37,15 @@ public class ClassInstanciationTerm: Expression
             }
         }
         
- 
-        
     public override var displayString: String
         {
         let string = "[" + self.arguments.displayString + "]"
         return("MAKE(\(self.type.displayString),\(string))")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
-        return(.class(self.type))
+        return(.class(self._type))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -68,8 +66,15 @@ public class ClassInstanciationTerm: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        print("MakeExpression NEEDS TO GENERATE CODE")
+        instance.append(nil,"PUSH",.literal(.class(self._type)),.none,.none)
+        for argument in self.arguments.reversed()
+            {
+            try argument.value.emitCode(into: instance,using: generator)
+            instance.append(nil,"PUSH",argument.value.place,.none,.none)
+            }
+        instance.append(nil,"CALL",.literal(.MAKE),.none,.none)
+        self._place = .returnRegister
         }
     }

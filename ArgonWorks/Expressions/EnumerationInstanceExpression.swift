@@ -9,7 +9,7 @@ import Foundation
 
 public class EnumerationInstanceExpression: Expression
     {
-    public override var resultType: Type
+    public override var type: Type
         {
         return(self.enumeration.isNil ? .error(.mismatch) : .enumeration(self.enumeration!))
         }
@@ -76,7 +76,7 @@ public class EnumerationInstanceExpression: Expression
         fatalError()
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         print("EnumerationInstanceExpression NEEDS TO GENERATE CODE")
         }

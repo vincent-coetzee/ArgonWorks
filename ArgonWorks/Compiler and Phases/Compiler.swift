@@ -60,6 +60,17 @@ public class Compiler
         self.parser!.parseChunk(source)
         }
         
+    public func commit()
+        {
+        TopModule.shared.resetJournalEntries()
+        }
+        
+    public func rollback()
+        {
+        TopModule.shared.journalTransaction.reverse()
+        TopModule.shared.resetJournalEntries()
+        }
+        
     @discardableResult
     public func compileChunk(_ source:String) -> ParseNode?
         {
@@ -68,7 +79,12 @@ public class Compiler
             return(nil)
             }
         self.parser = Parser(compiler: self)
-        self.lastChunk = parser!.parseChunk(source)!
+        TopModule.shared.beginJournalTransaction()
+        self.lastChunk = parser!.parseChunk(source)
+        for entry in TopModule.shared.allJournalEntries
+            {
+            print(entry.displayString)
+            }
         if let chunk = self.lastChunk
             {
             Realizer.realize(chunk,in:self)

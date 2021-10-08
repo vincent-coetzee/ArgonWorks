@@ -40,14 +40,9 @@ public class Slot:Symbol
         "\(self.label)::\(self._type?.displayString ?? "")"
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconSlot"
-        }
-        
-    public override var defaultColor: NSColor
-        {
-        Palette.shared.currentScheme.dark
         }
         
     public override var weight: Int
@@ -87,7 +82,7 @@ public class Slot:Symbol
         return(false)
         }
         
-    private var _type:Type?
+    public var _type:Type?
     public private(set) var offset:Int = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false

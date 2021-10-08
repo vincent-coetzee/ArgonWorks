@@ -10,7 +10,7 @@ import Foundation
 public class ExpressionBlock: Block
     {
     private let expression:Expression
-    public var place: Instruction.Operand = .none
+    public var place: T3AInstruction.Operand = .none
     
     init(_ expression:Expression)
         {
@@ -36,7 +36,7 @@ public class ExpressionBlock: Block
 //        let type = self.expression.resultType
         }
         
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         try self.expression.emitCode(into: into,using: using)
         self.place = self.expression.place

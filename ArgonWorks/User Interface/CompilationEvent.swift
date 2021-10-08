@@ -7,66 +7,146 @@
 
 import AppKit
     
-internal enum CompilationEvent
+internal class CompilationEvent
     {
-    case none
-    case warning(Location,String)
-    case error(Location,String)
+    public let location: Location
+    public let diagnostic: String
     
-    public var selectionColor: NSColor
+    public var isGroup: Bool
         {
-        switch(self)
-            {
-            case .none:
-                return(NSColor.clear)
-            case .warning:
-                return(Palette.shared.compilationEventWarningSelectionColor)
-            case .error:
-                return(Palette.shared.compilationEventErrorSelectionColor)
-            }
+        return(false)
         }
         
-    public var lineNumber: Int?
+    public var tokenStartOffset: Int
         {
-        switch(self)
-            {
-            case .none:
-                return(nil)
-            case .warning(let location,_):
-                return(location.line)
-            case .error(let location,_):
-                return(location.line)
-            }
+        return(self.location.tokenStart - self.location.lineStart)
+        }
+        
+    public var tokenStopOffset: Int
+        {
+        return(self.location.tokenStop - self.location.lineStart)
+        }
+
+    public var line: Int
+        {
+        return(self.location.line)
+        }
+        
+    public var selectionColor: NSColor
+        {
+        NSColor.white
         }
         
     public var tintColor: NSColor
         {
-        switch(self)
-            {
-            case .none:
-                return(NSColor.white)
-            case .warning:
-                return(Palette.shared.compilationEventWarningColor)
-            case .error:
-                return(Palette.shared.compilationEventErrorColor)
-            }
+        return(NSColor.white)
         }
         
     public var icon: NSImage
         {
-        return(NSImage(named: self.iconName)!)
+        return(NSImage(systemSymbolName: "triangle", accessibilityDescription: "warning triangle")!)
         }
         
-    public var iconName: String
+    public var childCount: Int
         {
-        switch(self)
-            {
-            case .none:
-                return("ImageEmpty")
-            case .warning:
-                return("IconWarning")
-            case .error:
-                return("IconError")
-            }
+        return(0)
+        }
+        
+    public func child(atIndex: Int) -> CompilationEvent
+        {
+        fatalError()
+        }
+        
+    public var isExpandable: Bool
+        {
+        return(false)
+        }
+        
+    internal init(location: Location,message: String)
+        {
+        self.location = location
+        self.diagnostic = message
+        }
+    }
+
+internal class CompilationWarningEvent: CompilationEvent
+    {
+    public override var tintColor: NSColor
+        {
+        return(Palette.shared.compilationEventWarningColor)
+        }
+        
+    public override var selectionColor: NSColor
+        {
+        return(Palette.shared.compilationEventWarningSelectionColor)
+        }
+        
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: "warning triangle")!)
+        }
+    }
+
+internal class CompilationErrorEvent: CompilationEvent
+    {
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "exclamationmark.octagon", accessibilityDescription: "error octogon")!)
+        }
+        
+    public override var tintColor: NSColor
+        {
+        return(Palette.shared.compilationEventErrorColor)
+        }
+        
+    public override var selectionColor: NSColor
+        {
+        return(Palette.shared.compilationEventErrorSelectionColor)
+        }
+    }
+
+internal class CompilationEventGroup: CompilationEvent
+    {
+    private var events: Array<CompilationEvent> = []
+    internal var isWarning = false
+    
+    public override var selectionColor: NSColor
+        {
+        Palette.shared.hierarchySelectionColor
+        }
+        
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "exclamationmark.square", accessibilityDescription: "warning square")!)
+        }
+        
+    public override var isGroup: Bool
+        {
+        return(true)
+        }
+        
+    public override var tintColor: NSColor
+        {
+        Palette.shared.hierarchySelectionColor
+        }
+        
+    public override var childCount: Int
+        {
+        return(self.events.count)
+        }
+        
+    public override func child(atIndex: Int) -> CompilationEvent
+        {
+        return(self.events[atIndex])
+        }
+        
+    public override var isExpandable: Bool
+        {
+        return(self.events.count > 0)
+        }
+        
+    public func addEvent(_ event:CompilationEvent)
+        {
+        self.events.append(event)
         }
     }

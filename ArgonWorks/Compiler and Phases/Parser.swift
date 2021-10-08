@@ -91,6 +91,7 @@ public class Parser: CompilerPass
     public var wasCancelled = false
     public var currentTag = 0
     private var isParsingLValue = false
+    private var streamStack = Stack<TokenStream>()
     
     public static func parseChunk(_ source:String,in compiler:Compiler) -> ParseNode?
         {
@@ -184,6 +185,11 @@ public class Parser: CompilerPass
         self.currentContext = self.contextStack.pop()
         }
         
+    private func addSymbol(_ symbol: Symbol)
+        {
+        self.currentContext.addSymbol(symbol)
+        }
+        
     private func initParser(source:String) throws
         {
         self.source = source
@@ -192,6 +198,14 @@ public class Parser: CompilerPass
         self.tokens = stream.allTokens(withComments: true, context: self.reportingContext)
         self.visualToken.processTokens(self.tokens)
         try self.nextToken()
+        }
+        
+    private func parseMacrosPhase1() throws
+        {
+        while self.token.isMacro
+            {
+            try self.nextToken()
+            }
         }
         
     @discardableResult
@@ -352,7 +366,7 @@ public class Parser: CompilerPass
         let label = try self.parseLabel()
         let module = MainModule(label: label)
         module.tag = self.currentTag
-        self.currentContext.addSymbol(module)
+        self.addSymbol(module)
         try self.parseModule(into: module)
         self.node = module
         return(module)
@@ -435,7 +449,7 @@ public class Parser: CompilerPass
             {
             if name.count == 1
                 {
-                self.currentContext.addSymbol(module!)
+                self.addSymbol(module!)
                 }
             else
                 {
@@ -623,7 +637,7 @@ public class Parser: CompilerPass
         let enumeration = Enumeration(label: label)
         enumeration.rawType = TopModule.shared.argonModule.integer.type
         enumeration.tag = self.currentTag
-        self.currentContext.addSymbol(enumeration)
+        self.addSymbol(enumeration)
         self.pushContext(enumeration)
         enumeration.addDeclaration(location)
         if self.token.isGluon
@@ -647,7 +661,7 @@ public class Parser: CompilerPass
         let method = Method(label: "_\(label)")
         method.addDeclaration(location)
         method.tag = self.currentTag
-        self.currentContext.addSymbol(method)
+        self.addSymbol(method)
         method.addInstance(methodInstance)
         return(enumeration)
         }
@@ -709,6 +723,71 @@ public class Parser: CompilerPass
             aCase.rawValue = try self.parseLiteral()
             }
         self.stopClip(into: aCase)
+        }
+        
+    private func parseCocoonSlot() throws -> Slot
+        {
+        try self.nextToken()
+        self.visualToken.kind = .classSlot
+        let location = self.token.location
+        let label = try self.parseLabel()
+        var type: Type?
+        if self.token.isGluon
+            {
+            try self.nextToken()
+            type = try self.parseType()
+            }
+        var initialValue:Expression?
+        if self.token.isAssign
+            {
+            try self.nextToken()
+            initialValue = try self.parseExpression()
+            }
+        var readBlock:VirtualReadBlock?
+        var writeBlock:VirtualWriteBlock?
+        try self.parseBraces
+            {
+            if self.token.isRead
+                {
+                try self.nextToken()
+                readBlock = VirtualReadBlock()
+                try self.parseBraces
+                    {
+                    try self.parseBlock(into: readBlock!)
+                    }
+                }
+            else
+                {
+                self.dispatchError("READ keyword expected.")
+                }
+            if self.token.isWrite
+                {
+                var variableLabel: String? = nil
+                try self.nextToken()
+                if self.token.isLeftPar
+                    {
+                    try self.parseParentheses
+                        {
+                        variableLabel = try self.parseLabel()
+                        }
+                    }
+                writeBlock = VirtualWriteBlock()
+                writeBlock!.newValueLabel = variableLabel
+                try self.parseBraces
+                    {
+                    try self.parseBlock(into: writeBlock!)
+                    }
+                }
+            }
+        var slot: Slot?
+        let rawLabel = "_\(label)"
+        let aSlot = CocoonSlot(rawLabel: rawLabel,label: label,type: type ?? .class(VoidClass.voidClass))
+        aSlot.addDeclaration(location)
+        aSlot.writeBlock = writeBlock
+        aSlot.readBlock = readBlock
+        slot = aSlot
+        slot!.initialValue = initialValue
+        return(slot!)
         }
         
     private func parseSlot() throws -> Slot
@@ -808,7 +887,56 @@ public class Parser: CompilerPass
                     {
                     let type = GenericClassParameter(label: name.last)
                     types.append(type)
-                    self.currentContext.addSymbol(type)
+                    self.addSymbol(type)
+                    }
+                }
+            while self.token.isComma
+            return(types)
+            }
+        return(typeParameters)
+        }
+        
+    private func parseClassTypes() throws -> Types
+        {
+        let location = self.token.location
+        let typeParameters = try self.parseBrockets
+            {
+            () throws -> Types in
+            var types = Types()
+            repeat
+                {
+                try self.parseComma()
+                let name = try self.parseName()
+                if let type = self.currentContext.lookup(name: name)
+                    {
+                    if type.isGenericClassParameter
+                        {
+                        self.dispatchError(at: location,message: "The type '\(name.displayString)' is a generic class parameter and can not be used in this context.")
+                        }
+                    else if let enumeration = type as? Enumeration
+                        {
+                        types.append(.enumeration(enumeration))
+                        }
+                    else if let aClass = type as? Class,!aClass.isGenericClassParameter
+                        {
+                        types.append(.class(aClass))
+                        }
+                    else if let alias = type as? TypeAlias
+                        {
+                        types.append(.typeAlias(alias))
+                        }
+                    else if let method = type as? Method
+                        {
+                        types.append(.method(method))
+                        }
+                    else
+                        {
+                        self.dispatchError(at: location,message: "The type '\(name.displayString)' is not a valid type in this context.")
+                        }
+                    }
+                else
+                    {
+                    self.dispatchError(at: location,message: "The type '\(name.displayString)' can not be resolved.")
                     }
                 }
             while self.token.isComma
@@ -825,12 +953,21 @@ public class Parser: CompilerPass
         self.visualToken.kind = .class
         let label = try self.parseLabel()
         var parameters = Classes()
+        let existingClass = self.currentContext.lookup(label: label) as? Class
+        if existingClass.isNotNil
+            {
+            self.dispatchWarning(at: location,"'\(label)' is already defined.")
+            }
         if self.token.isLeftBrocket
             {
             parameters = try self.parseClassParameters()
             }
         var aClass:Class
-        if parameters.isEmpty
+        if existingClass.isNotNil
+            {
+            aClass = existingClass!
+            }
+        else if parameters.isEmpty
             {
             aClass = Class(label: label)
             }
@@ -849,31 +986,30 @@ public class Parser: CompilerPass
             }
         aClass.tag = self.currentTag
         aClass.addDeclaration(location)
-        self.currentContext.addSymbol(aClass)
+        self.addSymbol(aClass)
         self.pushContext(aClass)
         if self.token.isGluon
             {
-            try self.nextToken()
-            repeat
+            let supers = try self.parseSuperclassReferences(for: aClass, at: location)
+            for superclass in supers
                 {
-                try self.parseComma()
-                self.visualToken.kind = .class
-                let otherClassName = try self.parseName()
-                let forwardClass = ForwardReferenceClass(name: otherClassName, context: self.currentContext)
-                forwardClass.addDeclaration(location)
-                aClass.superclassReferences.append(forwardClass)
+                aClass.addSuperclass(superclass)
                 }
-            while self.token.isComma
             }
-        if aClass.superclassReferences.isEmpty
+        if aClass.isSuperclassListEmpty
             {
-            aClass.superclassReferences.append(ForwardReferenceClass(name: Name("\\\\Argon\\Object"),context: self.currentContext))
+            aClass.addSuperclass(TopModule.shared.argonModule.object)
             }
         try self.parseBraces
             {
             while self.token.isSlot || self.token.isClass
                 {
-                if self.token.isSlot
+                if self.token.isCocoon
+                    {
+                    let slot = try self.parseCocoonSlot()
+                    aClass.addSymbol(slot)
+                    }
+                else if self.token.isSlot
                     {
                     let slot = try self.parseSlot()
                     slot.tag = self.currentTag
@@ -893,6 +1029,64 @@ public class Parser: CompilerPass
         print("CLASS PARAMETERS: \(aClass.parametricClasses?.displayString ?? "")")
         self.node = aClass
         return(aClass)
+        }
+        
+    private func parseSuperclassReferences(for aClass:Class,at location: Location) throws -> Array<Class>
+        {
+        var supers = Array<Class>()
+        try self.nextToken()
+        repeat
+            {
+            try self.parseComma()
+            self.visualToken.kind = .class
+            let superclassName = try self.parseName()
+            let symbol = self.currentContext.lookup(name: superclassName)
+            if symbol.isNil
+                {
+                self.dispatchError(at: location,"'\(superclassName.displayString)' can not be used as a superclass of '\(aClass.label)' because it is not defined in this context.")
+                }
+            else
+                {
+                if symbol!.canBecomeAClass
+                    {
+                    let superclass = symbol!.classValue
+                    if superclass.isGenericClass
+                        {
+                        if let instance = try self.parseGenericClassReference(superclass as! GenericClass,at: location)
+                            {
+                            supers.append(instance)
+                            }
+                        }
+                    else
+                        {
+                        supers.append(superclass)
+                        }
+                    }
+                else
+                    {
+                    self.dispatchError(at: location,"'\(superclassName.displayString)' is not a valid superclass reference in this context.")
+                    }
+                }
+            }
+        while self.token.isComma
+        return(supers)
+        }
+        
+    private func parseGenericClassReference(_ aClass: GenericClass,at location:Location) throws -> GenericClassInstance?
+        {
+        guard self.token.isLeftBrocket else
+            {
+            self.dispatchError(at: location,"'<' expected after reference to generic class '\(aClass.label)'.")
+            return(nil)
+            }
+        let superC = try self.parseBrockets
+            {
+            () -> Class in
+            let types = try self.parseClassTypes()
+            let superclass = aClass.instanciate(withTypes: types, reportingContext: self.reportingContext).classValue
+            return(superclass)
+            }
+        return(superC as! GenericClassInstance)
         }
         
     @discardableResult
@@ -917,7 +1111,7 @@ public class Parser: CompilerPass
         let constant = Constant(label: label,type: type,value: value)
         constant.addDeclaration(location)
         constant.tag = self.currentTag
-        self.currentContext.addSymbol(constant)
+        self.addSymbol(constant)
         return(constant)
         }
         
@@ -989,6 +1183,10 @@ public class Parser: CompilerPass
         var name:Name
         self.visualToken.kind = .class
         let identifierToken = self.token
+        if self.token.isIdentifier && self.token.identifier == "String"
+            {
+            print()
+            }
         if self.token.isIdentifier && self.token.isSystemClassName
             {
             self.visualToken.kind = .type
@@ -1052,6 +1250,11 @@ public class Parser: CompilerPass
         let parameters = try self.parseTypeParameters()
         if resolvedSymbol!.isClass
             {
+            self.visualToken.set(kind:.class,forToken: identifierToken)
+            if resolvedSymbol!.isSystemClass
+                {
+                self.visualToken.set(kind:.systemClass,forToken: identifierToken)
+                }
             var clazz = Type.class(resolvedSymbol as! Class)
             if !clazz.isGenericClass && !parameters.isEmpty
                 {
@@ -1095,7 +1298,7 @@ public class Parser: CompilerPass
             }
         try self.nextToken()
         let returnType = try self.parseType()
-        let reference = Type.method("",types,returnType)
+        let reference = Type.methodApplication("",types,returnType)
         return(reference)
         }
         
@@ -1214,7 +1417,7 @@ public class Parser: CompilerPass
             if returnType != existingMethod!.returnType
                 {
                 self.cancelCompletion()
-                self.dispatchError("The multimethod '\(existingMethod!.label)' declared in line \(existingMethod!.declaration?.line ?? 0) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
+                self.dispatchError("The multimethod '\(existingMethod!.label)' declared in line \(existingMethod!.declaration?.line) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
                 }
             for (yours,mine) in zip(list,existingMethod!.proxyParameters)
                 {
@@ -1253,7 +1456,7 @@ public class Parser: CompilerPass
             method!.isGenericMethod = isGenericMethod
             method!.addDeclaration(location)
             method?.tag = self.currentTag
-            self.currentContext.addSymbol(method!)
+            self.addSymbol(method!)
             if instance != nil
                 {
                 method!.addInstance(instance!)
@@ -1274,10 +1477,6 @@ public class Parser: CompilerPass
                 self.dispatchError(at: location,"This method has a return value but there is no RETURN statement in the body of the method.")
                 }
             }
-        if instance != nil
-            {
-            self.currentContext.addSymbol(instance!.method)
-            }
         return(method ?? existingMethod!)
         }
         
@@ -1287,31 +1486,6 @@ public class Parser: CompilerPass
         }
         
     private func parseExpression() throws -> Expression
-        {
-        let location = self.token.location
-        let lhs = try self.parseAsExpression()
-        lhs.addDeclaration(location)
-        if self.token.isAssign
-            {
-            self.isParsingLValue = false
-            try self.nextToken()
-            let rhs = try self.parseAsExpression()
-            if lhs.isSlotDeclarationExpression
-                {
-                lhs.activate(context: self.currentContext,withInitialValue: rhs)
-                return(lhs)
-                }
-            else
-                {
-                return(AssignmentExpression(lhs,Token.Operator("="),rhs))
-                }
-            }
-        print("PARSED EXPRESSION:")
-        print(lhs.displayString)
-        return(lhs)
-        }
-        
-    private func parseAsExpression() throws -> Expression
         {
 //        let location = self.token.location
 //        var lhs = try self.parseScopeExpression()
@@ -1338,59 +1512,44 @@ public class Parser: CompilerPass
         var identifier:String
         while self.token.isGluon
             {
-            if self.isParsingLValue && lhs.isUnresolved
+            try self.nextToken()
+            if self.token.isIdentifier
                 {
+                identifier = self.token.identifier
+                if let initializer = self.currentContext.firstInitializer,let theClass = initializer.declaringClass
+                    {
+                    if let child = theClass.lookup(label: identifier) as? Slot
+                        {
+                        return(SlotAccessExpression(lhs, slot: child))
+                        }
+                    else
+                        {
+                        self.dispatchError("'\(identifier)' can not be found in the current context.")
+                        }
+                    }
+                }
+            else if self.token.isHashStringLiteral
+                {
+                identifier = self.token.hashStringLiteral
                 try self.nextToken()
-                let type = try self.parseType()
-                let label = (lhs as! UnresolvedExpression).label
-                lhs = SlotDeclarationExpression(label: label, type: type)
                 }
             else
                 {
-                if !lhs.canBeScoped
-                    {
-                    self.reportingContext.dispatchError(at: self.token.location, message: "An expression that can be scoped is required before a gluon.")
-                    lhs = LiteralExpression(.class(Class(label:"")))
-                    }
+                self.reportingContext.dispatchError(at: location, message: "An identifier was expected after the gluon, but '\(self.token)' was found.")
                 try self.nextToken()
-                if self.token.isIdentifier
-                    {
-                    identifier = self.token.identifier
-                    if let initializer = self.currentContext.firstInitializer,let theClass = initializer.declaringClass
-                        {
-                        if let child = theClass.lookup(label: identifier) as? Slot
-                            {
-                            return(SlotExpression(lhs, slot: child))
-                            }
-                        else
-                            {
-                            self.dispatchError("'\(identifier)' can not be found in the current context.")
-                            }
-                        }
-                    }
-                else if self.token.isHashStringLiteral
-                    {
-                    identifier = self.token.hashStringLiteral
-                    try self.nextToken()
-                    }
-                else
-                    {
-                    self.reportingContext.dispatchError(at: location, message: "An identifier was expected after the gluon, but '\(self.token)' was found.")
-                    try self.nextToken()
-                    identifier = ""
-                    }
-                if let expression = lhs.scopedExpression(for: identifier)
-                    {
-                    lhs = expression
-                    }
-                else
-                    {
-                    self.reportingContext.dispatchError(at: location, message: "The reference '\(identifier)' is not valid in the current context.")
-                    }
-                if self.token.isLeftPar && lhs.isEnumerationCaseExpression
-                    {
-                    lhs = try self.parseAssociatedValues(with: lhs)
-                    }
+                identifier = ""
+                }
+            if let expression = lhs.scopedExpression(for: identifier)
+                {
+                lhs = expression
+                }
+            else
+                {
+                self.reportingContext.dispatchError(at: location, message: "The reference '\(identifier)' is not valid in the current context.")
+                }
+            if self.token.isLeftPar && lhs.isEnumerationCaseExpression
+                {
+                lhs = try self.parseAssociatedValues(with: lhs)
                 }
             }
         return(lhs)
@@ -1794,7 +1953,7 @@ public class Parser: CompilerPass
         else if let symbol = aSymbol as? LocalSlot
             {
             let read = LocalSlotExpression(slot: symbol)
-            read.addDeclaration(location)
+            read.addReference(location)
             return(read)
             }
         else if self.token.isLeftPar
@@ -1803,15 +1962,15 @@ public class Parser: CompilerPass
             }
         else
             {
-            let term = UnresolvedExpression(label: name.last)
+            let term = VariableExpression(label: name.last)
             term.addDeclaration(location)
             return(term)
             }
         }
         
-    private func parseClosureTerm() throws -> BlockExpression
+    private func parseClosureTerm() throws -> Expression
         {
-        let closure = ClosureBlock()
+        let closure = Closure(label: Argon.nextName("1_CLOSURE"))
         let location = self.token.location
         try self.parseBraces
             {
@@ -1831,12 +1990,11 @@ public class Parser: CompilerPass
                 }
             while !self.token.isRightBrace
                 {
-                try self.parseBlock(into: closure)
+                try self.parseBlock(into: closure.block)
                 }
             }
-        let block = BlockExpression(block: closure)
-        block.addDeclaration(location)
-        return(block)
+        closure.addDeclaration(location)
+        return(ClosureExpression(closure))
         }
         
     private func parseInvocationTerm(method: Method) throws -> Expression
@@ -2089,81 +2247,28 @@ public class Parser: CompilerPass
         self.stopClip(into: statement)
         }
         
-
-    private func parseLValue() throws -> LValue
-        {
-        var label = self.token.identifier
-        let slotHolder = self.currentContext.lookup(label: label) as? LocalSlot
-        if slotHolder.isNil
-            {
-            self.dispatchError("A symbol named '\(label)' could not be resolved in the current context.")
-            return(LValue())
-            }
-        var lvalue:LValue = LocalLValue(localSlot: slotHolder!)
-        while self.token.isGluon || self.token.isLeftBracket
-            {
-            if self.token.isGluon
-                {
-                try self.nextToken()
-                label = self.token.identifier
-                try self.nextToken()
-                if let slot = lvalue.lookup(label: label) as? Slot
-                    {
-                    lvalue = lvalue.slot(slot)
-                    }
-                }
-            }
-        while self.token.isGluon || self.token.isLeftBracket
-            {
-            let last = self.token
-            try self.nextToken()
-            if last.isGluon
-                {
-                label = self.token.identifier
-                try self.nextToken()
-                if let slot = lvalue.lookup(label: label) as? Slot
-                    {
-                    lvalue = lvalue.slot(slot)
-                    }
-                else
-                    {
-                    self.dispatchError("A slot named '\(label)' was expected in lvalue \(lvalue) bt was not found.")
-                    return(lvalue)
-                    }
-                }
-            else if last.isLeftBracket
-                {
-                let index = try self.parseExpression()
-                if !self.token.isRightBracket
-                    {
-                    self.dispatchWarning("A ']' was expected after an array access.")
-                    }
-                else
-                    {
-                    try self.nextToken()
-                    }
-                lvalue = lvalue.index(index)
-                }
-            }
-        return(lvalue)
-        }
-        
     private func parseLetBlock(into block: Block) throws
         {
         self.startClip()
         let location = self.token.location
         try self.nextToken()
-        self.isParsingLValue = true
-        let expression = try self.parseExpression()
-        self.isParsingLValue = false
-//        if !self.token.isAssign
-//            {
-//            self.dispatchError("'=' expected after LET clause.")
-//            }
-//        try self.nextToken()
-//        let rhs = try self.parseExpression()
-//        rhs.setParent(block)
-        let statement = LetBlock(location: self.token.location,expression: expression)
+        var lhs = try self.parseExpression()
+        if lhs.isVariableExpression
+            {
+            let label = (lhs as! VariableExpression).label
+            let localSlot = LocalSlot(label: label,type:Type.error(.undefined),value: nil)
+            self.currentContext.addSymbol(localSlot)
+            lhs = LocalSlotExpression(slot: localSlot)
+            }
+        if !self.token.isAssign
+            {
+            self.dispatchError("'=' expected after LET keyword.")
+            }
+        try self.nextToken()
+        let rhs = try self.parseExpression()
+        let statement = LetBlock(location: self.token.location,lhs: lhs,rhs: rhs)
+        rhs.setParent(statement)
+        lhs.setParent(statement)
         statement.addDeclaration(location)
         block.addBlock(statement)
         self.stopClip(into: statement)
@@ -2387,7 +2492,7 @@ public class Parser: CompilerPass
             function.returnType = try self.parseType()
             }
         function.tag = self.currentTag
-        self.currentContext.addSymbol(function)
+        self.addSymbol(function)
         return(function)
         }
         
@@ -2407,7 +2512,7 @@ public class Parser: CompilerPass
         let alias = TypeAlias(label: label,type: type)
         alias.addDeclaration(location)
         alias.tag = self.currentTag
-        self.currentContext.addSymbol(alias)
+        self.addSymbol(alias)
         return(alias)
         }
         

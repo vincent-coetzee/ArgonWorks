@@ -7,6 +7,54 @@
 
 import Foundation
 
+public struct JournalTransaction
+    {
+    internal typealias JournalEntries = Array<JournalEntry>
+    
+    private var entries: JournalEntries
+    
+    init(entries: JournalEntries)
+        {
+        self.entries = entries
+        }
+        
+    public func reverse()
+        {
+        for entry in self.entries
+            {
+            switch(entry)
+                {
+                case .addSymbol(let symbol,let toSymbol):
+                    toSymbol.removeSymbol(symbol)
+                case .addSuperclass(let aClass,let toClass):
+                    toClass.removeSuperclass(aClass)
+                case .addSubclass(let aClass,let toClass):
+                    toClass.removeSubclass(aClass)
+                }
+            }
+        }
+    }
+    
+public enum JournalEntry
+    {
+    public var displayString: String
+        {
+        switch(self)
+            {
+            case .addSymbol(let symbol,let toSymbol):
+                return("ADD \(symbol.label) TO \(toSymbol.label)")
+            case .addSuperclass(let symbol,let toSymbol):
+                return("ADD SUPERCLASS \(symbol.label) TO CLASS \(toSymbol.label)")
+            case .addSubclass(let symbol,let toSymbol):
+                return("ADD SUBCLASS \(symbol.label) TO CLASS \(toSymbol.label)")
+            }
+        }
+        
+    case addSymbol(Symbol,to: Symbol)
+    case addSuperclass(Class,to: Class)
+    case addSubclass(Class,to: Class)
+    }
+    
 public class ContainerSymbol:Symbol
     {
     public override var isGroup: Bool
@@ -14,7 +62,24 @@ public class ContainerSymbol:Symbol
         return(true)
         }
         
+    public override var journalTransaction: JournalTransaction
+        {
+        return(JournalTransaction(entries: self.allJournalEntries))
+        }
+        
+    public override var allJournalEntries: Array<JournalEntry>
+        {
+        var entries = Array<JournalEntry>()
+        for symbol in self.symbols
+            {
+            entries.append(contentsOf: symbol.allJournalEntries)
+            }
+        entries.append(contentsOf: self.journalEntries)
+        return(entries)
+        }
+        
     internal var symbols = Symbols()
+    internal var journalEntries = Array<JournalEntry>()
     
     public override var isExpandable: Bool
         {
@@ -44,10 +109,10 @@ public class ContainerSymbol:Symbol
     public var classesWithNotDirectlyContainedSuperclasses:Classes
         {
         var classes = self.symbols.filter{$0 is Class}.map{$0 as! Class}
-        classes = classes.filter{$0.superclasses.isEmpty}
+        classes = classes.filter{$0.localSuperclasses.isEmpty}
         for aClass in self.symbols.filter({$0 is Class}).map({$0 as! Class})
             {
-            for superclass in aClass.superclasses
+            for superclass in aClass.localSuperclasses
                 {
                 if !self.directlyContains(symbol: superclass)
                     {
@@ -130,6 +195,15 @@ public class ContainerSymbol:Symbol
             }
         }
         
+    public override func resetJournalEntries()
+        {
+        for symbol in self.symbols
+            {
+            symbol.resetJournalEntries()
+            }
+        self.journalEntries = []
+        }
+        
     public override func emitCode(using generator: CodeGenerator) throws
         {
         for symbol in self.symbols
@@ -149,7 +223,15 @@ public class ContainerSymbol:Symbol
     @discardableResult
     public override func addSymbol(_ symbol:Symbol) -> Symbol
         {
+        for oldSymbol in self.symbols
+            {
+            if symbol.label ==  oldSymbol.label
+                {
+                fatalError("Duplicate symbol in Module")
+                }
+            }
         self.symbols.append(symbol)
+        self.journalEntries.append(.addSymbol(symbol,to: self))
         symbol.setParent(self)
         return(symbol)
         }

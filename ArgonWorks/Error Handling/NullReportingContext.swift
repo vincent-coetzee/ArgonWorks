@@ -13,11 +13,11 @@ public struct NullReportingContext:ReportingContext
 
     public func dispatchWarning(at: Location, message: String)
         {
-        print("Warning \(message)")
+        print("Warning line \(at.line):\(message)")
         }
     
     public func dispatchError(at: Location, message: String)
         {
-        print("Line \(at.line): Error \(message)")
+        print("Error Line \(at.line): \(message)")
         }
     }

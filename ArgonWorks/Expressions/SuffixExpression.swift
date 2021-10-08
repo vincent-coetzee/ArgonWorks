@@ -9,9 +9,9 @@ import Foundation
 
 public class SuffixExpression: Expression
     {
-    public override var resultType: Type
+    public override var type: Type
         {
-        return(self.expression.resultType)
+        return(self.expression.type)
         }
         
     public override var displayString: String
@@ -56,15 +56,15 @@ public class SuffixExpression: Expression
         self.expression.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         try self.expression.emitCode(into: instance,using: using)
         switch(self.operationName)
             {
             case "++":
-                instance.append(.INC,self.expression.place,.none,self.expression.place)
+                instance.append(nil,"INC",self.expression.place,.none,self.expression.place)
             case "--":
-                instance.append(.DEC,self.expression.place,.none,self.expression.place)
+                instance.append(nil,"DEC",self.expression.place,.none,self.expression.place)
             default:
                 break
             }

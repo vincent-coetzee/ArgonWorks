@@ -99,9 +99,9 @@ public class SymbolElement: Symbol
         self.symbol.configure(leaderCell: leaderCell,foregroundColor: foregroundColor)
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
-        return(self.symbol.imageName)
+        return(self.symbol.iconName)
         }
         
     public override var isExpandable: Bool

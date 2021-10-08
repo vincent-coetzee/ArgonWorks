@@ -200,6 +200,7 @@ public class Instruction:Identifiable
         
     public enum LiteralValue:Equatable
         {
+        case `nil`
         case string(String)
         case symbol(String)
         case `class`(Class)
@@ -213,6 +214,7 @@ public class Instruction:Identifiable
         case `Self`
         case `super`
         case DSNextAddress
+        case MAKE
         }
         
     public enum Opcode:Int

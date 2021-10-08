@@ -23,15 +23,18 @@ public class WhileBlock: Block
         super.init(coder: coder)
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-//        let start = buffer.toHere()
+        let startLabel = buffer.nextLabel()
+        let endLabel = buffer.nextLabel()
+        buffer.pendingLabel = startLabel
         try self.condition.emitCode(into: buffer,using: generator)
-        buffer.append(.BRF,self.condition.place,.none,.label(0))
+        buffer.append(nil,"BRF",self.condition.place,.none,.label(endLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: generator)
             }
-        buffer.append(.BR,.none,.none,.label(0))
+        buffer.append(nil,"BR",.none,.none,.label(startLabel))
+        buffer.pendingLabel = endLabel
         }
     }

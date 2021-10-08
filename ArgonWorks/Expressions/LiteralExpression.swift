@@ -223,7 +223,7 @@ public class LiteralExpression: Expression
         
     public let literal:Literal
 
-    public override var resultType: Type
+    public override var type: Type
         {
         switch(self.literal)
             {
@@ -329,7 +329,7 @@ public class LiteralExpression: Expression
                     }
                 else if let aSlot = module.lookup(label: child) as? Slot
                     {
-                    return(SlotExpression(self, slotExpression: SlotSelectorExpression(selector: aSlot.label)))
+                    return(SlotAccessExpression(self, slotExpression: SlotSelectorExpression(selector: aSlot.label)))
                     }
                 else if let aModule = module.lookup(label: child) as? Module
                     {
@@ -358,38 +358,38 @@ public class LiteralExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        let register = generator.registerFile.findRegister(forSlot: nil, inBuffer: instance)
+       let temp = instance.nextTemporary()
         switch(self.literal)
             {
             case .nil:
-                instance.append(.LOAD,.absolute(0),.none,.register(register))
+                instance.append(nil,"LOAD",.literal(.nil),.none,temp)
             case .integer(let integer):
-                instance.append(.LOAD,.integer(integer),.none,.register(register))
+                instance.append(nil,"LOAD",.integer(Int(integer)),.none,temp)
             case .float(let float):
-                instance.append(.LOAD,.float(float),.none,.register(register))
+                instance.append(nil,"LOAD",.float(float),.none,temp)
             case .string(let string):
-                instance.append(.LOAD,.relocation(.string(string)),.none,.register(register))
+                instance.append(nil,"LOAD",.string(string),.none,temp)
             case .boolean(let boolean):
-                instance.append(.LOAD,.integer(boolean == .trueValue ? 1 : 0),.none,.none)
+                instance.append(nil,"LOAD",.boolean(boolean == .trueValue),.none,temp)
             case .symbol(let string):
-                instance.append(.LOAD,.relocation(.symbol(string)),.none,.register(register))
+                instance.append(nil,"LOAD",.literal(.symbol(string)),.none,temp)
             case .array:
                 fatalError()
             case .class(let aClass):
-                instance.append(.LOAD,.relocation(.class(aClass)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.class(aClass)),.none,temp)
             case .module(let module):
-                instance.append(.LOAD,.relocation(.module(module)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.module(module)),.none,temp)
             case .enumeration(let enumeration):
-                instance.append(.LOAD,.relocation(.enumeration(enumeration)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.enumeration(enumeration)),.none,temp)
             case .enumerationCase(let enumerationCase):
-                instance.append(.LOAD,.relocation(.enumerationCase(enumerationCase)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.enumerationCase(enumerationCase)),.none,temp)
             case .method(let method):
-                instance.append(.LOAD,.relocation(.method(method)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.method(method)),.none,temp)
             case .constant(let constant):
-                instance.append(.LOAD,.relocation(.constant(constant)),.none,.register(register))
+                 instance.append(nil,"LOAD",.literal(.constant(constant)),.none,temp)
             }
-        self._place = .register(register)
+        self._place = temp
         }
     }

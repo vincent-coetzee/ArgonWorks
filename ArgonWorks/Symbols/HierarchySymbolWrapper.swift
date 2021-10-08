@@ -69,7 +69,7 @@ public class HierarchySymbolWrapper
         return(!self.isGroup && self.symbols.first!.isSystemSymbol)
         }
         
-    public var imageName: String
+    public var iconName: String
         {
         if self.isGroup
             {
@@ -77,7 +77,7 @@ public class HierarchySymbolWrapper
             }
         else
             {
-            return(self.symbols.first!.imageName)
+            return(self.symbols.first!.iconName)
             }
         }
         
@@ -125,26 +125,15 @@ public class HierarchySymbolWrapper
         return(self.children.count)
         }
         
-    public var defaultColor: NSColor
+    public var defaultColor:NSColor
         {
-        if self.isGroup || self.symbols.first!.isModule || self.symbols.first!.isSymbolGroup
+        if self.isGroup
             {
-            if self.symbols.count == 0
-                {
-                return(NSColor.argonCoral)
-                }
-            return(NSColor.argonNeonOrange)
+            return(Palette.shared.hierarchyPrimaryTintColor)
             }
         else
             {
-            if self.isSlot
-                {
-                return(NSColor.argonThemeBlueGreen)
-                }
-            else
-                {
-                return(NSColor.argonNeonOrange)
-                }
+            return(self.symbols.first!.defaultColor)
             }
         }
         
@@ -178,42 +167,18 @@ public class HierarchySymbolWrapper
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
         cell.text.stringValue = self.displayString
-        let image = NSImage(named: self.imageName)!
+        let image = NSImage(named: self.iconName)!
         image.isTemplate = true
         cell.icon.image = image
         var iconColor = NSColor.black
-        var textColor = Palette.shared.hierarchyTextColor
-        if self.isContainerSymbol
-            {
-            if self.childCount == 0
-                {
-                iconColor = .argonMidGray
-                textColor = .argonMidGray
-                self.selectionColor = .argonMidGray
-                }
-            else
-                {
-                iconColor = .argonNeonOrange
-                }
-            }
-        else
-            {
-            if self.isSlot
-                {
-                iconColor = NSColor.argonThemeBlueGreen
-                }
-            else
-                {
-                iconColor = NSColor.argonNeonOrange
-                }
-            }
-        cell.icon.contentTintColor = iconColor
+        var textColor = self.isContainerSymbol ? Palette.shared.hierarchyGroupTextColor :  Palette.shared.hierarchyTextColor
+        cell.icon.contentTintColor = self.defaultColor
         cell.text.textColor = textColor
         }
 
     public func invert(cell: HierarchyCellView)
         {
-        let image = NSImage(named: self.imageName)!.image(withTintColor: NSColor.black)
+        let image = NSImage(named: self.iconName)!.image(withTintColor: NSColor.black)
         cell.icon.image = image
         cell.icon.contentTintColor = NSColor.black
         cell.icon.isHighlighted = false

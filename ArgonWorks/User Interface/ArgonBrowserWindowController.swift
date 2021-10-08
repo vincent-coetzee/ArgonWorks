@@ -79,11 +79,15 @@ extension UserDefaults
         }
     }
     
-class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext,NSTableViewDataSource,NSTableViewDelegate
+class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext
     {
+    public static let kCompilationEventCellIdentifier = NSUserInterfaceItemIdentifier(rawValue: ArgonBrowserWindowController.kCompilationEventCellName)
+    public static let kCompilationEventCellName = "CompilationEventCell"
+    public static let kCompilationEventCellNibName = "CompilationEventCell"
+    
     @IBOutlet var toolbar: NSToolbar!
     @IBOutlet var splitViewController: NSSplitViewController!
-    internal var classBrowser: NSOutlineView!
+//    internal var classBrowser: NSOutlineView!
     internal var methodBrowser: NSOutlineView!
     
     internal var objectBrowser: NSOutlineView!
@@ -94,7 +98,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             }
         }
     
-    private var errorListView: NSTableView!
+    internal var errorListView: NSOutlineView!
     
     internal var symbolList1: SymbolList!
     internal var symbolList2: SymbolList!
@@ -104,9 +108,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     private var compiler: Compiler! = nil
     private var currentSourceFileURL:URL? = nil
     private var currentSymbolFileURL:URL? = nil
-    private var compilationEvents: Array<CompilationEvent> = []
     private var forwarderView: ForwarderView?
     private var firstFrame: NSRect? = nil
+    private var compilationEvents: Dictionary<String,CompilationEvent> = [:]
+    private var compilationEventList: Array<CompilationEvent> = []
     
     public var capsules: Dictionary<URL,Capsule> = [:]
     public var currentCapsule: Capsule?
@@ -231,106 +236,52 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         
     public func dispatchWarning(at: Location, message: String)
         {
-        self.compilationEvents.append(.warning(at,message))
+        if let group = self.compilationEvents["\(at.line)"] as? CompilationEventGroup
+            {
+            group.addEvent(CompilationWarningEvent(location: at,message: message))
+            }
+        else
+            {
+            let group = CompilationEventGroup(location: at, message: message)
+            group.isWarning = true
+            self.compilationEvents["\(group.line)"] = group
+            }
+        self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
+        self.refreshSourceAnnotations()
         }
     
     public func dispatchError(at: Location, message: String)
         {
-        self.compilationEvents.append(.error(at,message))
+        if let group = self.compilationEvents["\(at.line)"] as? CompilationEventGroup
+            {
+            group.addEvent(CompilationErrorEvent(location: at,message: message))
+            }
+        else
+            {
+            let group = CompilationEventGroup(location: at, message: message)
+            group.isWarning = false
+            self.compilationEvents["\(group.line)"] = group
+            }
+        self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
         self.refreshSourceAnnotations()
         }
     
     private func resetReporting()
         {
-        self.compilationEvents = []
-        self.errorListView?.reloadData()
+        self.compilationEvents = [:]
         self.sourceEditor.removeAllAnnotations()
         }
         
     public func refreshSourceAnnotations()
         {
         self.sourceEditor.removeAllAnnotations()
-        for event in self.compilationEvents
+        for value in self.compilationEvents.values
             {
-            switch(event)
-                {
-                case .warning(let location,_):
-                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "IconLineMarker")!)
-                    self.sourceEditor.addAnnotation(annotation)
-                case .error(let location,_):
-                    let annotation = LineAnnotation(line: location.line, icon: NSImage(named: "IconLineMarker")!)
-                    self.sourceEditor.addAnnotation(annotation)
-                default:
-                    break
-                }
-            }
-        }
-        
-    public func numberOfRows(in tableView: NSTableView) -> Int
-        {
-        return(self.compilationEvents.count)
-        }
-        
-    @objc func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView?
-        {
-        if tableColumn!.identifier == NSUserInterfaceItemIdentifier(rawValue: "0")
-            {
-            if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventImageCellView"),owner: nil) as? CompilationEventImageCellView
-                {
-                cell.iconView.image = self.compilationEvents[row].icon
-                cell.iconView.image?.isTemplate = true
-                cell.iconView.contentTintColor = self.compilationEvents[row].tintColor
-                return(cell)
-                }
-            }
-        else
-            {
-            if let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventCellView"),owner: nil) as? CompilationEventCellView
-                {
-                cell.event = self.compilationEvents[row]
-                return(cell)
-                }
-            }
-        return(nil)
-        }
-
-    @objc func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView?
-        {
-        let event = self.compilationEvents[row]
-        return(HierarchyRowView(selectionColor: event.selectionColor))
-        }
-        
-    @objc func tableView(_ tableView: NSTableView,shouldSelectRow row: Int) -> Bool
-        {
-        let selectedRow = self.errorListView.selectedRow
-        guard selectedRow != -1 else
-            {
-            return(true)
-            }
-        if let view = self.errorListView.view(atColumn: 0, row: selectedRow, makeIfNecessary: false) as? CompilationEventCellView
-            {
-            view.makeUnhighlighted()
-            }
-        return(true)
-        }
-        
-    @objc func tableViewSelectionDidChange(_ notification: Notification)
-        {
-        let selectedRow = self.errorListView.selectedRow
-        guard selectedRow != -1 else
-            {
-            return
-            }
-        if let view = self.errorListView.view(atColumn: 0, row: selectedRow, makeIfNecessary: false) as? CompilationEventCellView
-            {
-            view.makeHighlighted()
-            }
-        let item = self.compilationEvents[selectedRow]
-        if let line = item.lineNumber
-            {
-            self.sourceEditor.highlight(line: line)
+            let group = value as! CompilationEventGroup
+            let annotation = LineAnnotation(line: group.line, icon: NSImage(named: "IconLineMarkerYellow")!)
+            self.sourceEditor.addAnnotation(annotation)
             }
         }
         
@@ -344,6 +295,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.sourceEditor.isAutomaticDashSubstitutionEnabled = false
         self.sourceEditor.isAutomaticTextReplacementEnabled = false
         self.sourceEditor.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
+        self.sourceEditor.sourceEditorDelegate = self
         for item in self.toolbar.items
             {
             if item.label == "Open"
@@ -407,21 +359,21 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 self.sourceEditor.textStorage?.setAttributes(attributes,range: range)
                 }
             self.sourceEditor.textStorage?.endEditing()
-            let style = NSMutableParagraphStyle()
-            style.headIndent = 400
-            style.firstLineHeadIndent = 400
-            var attributes:Dictionary<NSAttributedString.Key,Any> = [:]
-            attributes[.paragraphStyle] = style
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 50, options: [:]))
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 100, options: [:]))
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 150, options: [:]))
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 200, options: [:]))
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 400, options: [:]))
-            style.addTabStop(NSTextTab(textAlignment: .left, location: 500, options: [:]))
-            let count = self.sourceEditor.string.count
-            let storage = self.sourceEditor.textStorage
-            storage?.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: count))
-            self.sourceEditor.typingAttributes = attributes
+//            let style = NSMutableParagraphStyle()
+//            style.headIndent = 60
+//            style.firstLineHeadIndent = 60
+//            var attributes:Dictionary<NSAttributedString.Key,Any> = [:]
+//            attributes[.paragraphStyle] = style
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 60, options: [:]))
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 120, options: [:]))
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 180, options: [:]))
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 240, options: [:]))
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 300, options: [:]))
+//            style.addTabStop(NSTextTab(textAlignment: .left, location: 360, options: [:]))
+//            let count = self.sourceEditor.string.count
+//            let storage = self.sourceEditor.textStorage
+//            storage?.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: count))
+//            self.sourceEditor.typingAttributes = attributes
             self.toolbar.delegate = self
             self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
             }
@@ -439,12 +391,11 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.errorListView = inspectorController.listView
         self.errorListView.delegate = self
         self.errorListView.dataSource = self
-        var nib = NSNib(nibNamed: "CompilationEventCellView", bundle: nil)
-        self.errorListView.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventCellView"))
-        nib = NSNib(nibNamed: "CompilationEventImageCellView", bundle: nil)
-        self.errorListView.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "CompilationEventImageCellView"))
-        self.errorListView.rowHeight = 64
+        let nib = NSNib(nibNamed: Self.kCompilationEventCellNibName, bundle: nil)
+        self.errorListView.register(nib, forIdentifier: Self.kCompilationEventCellIdentifier)
+        self.errorListView.rowHeight = 35
         self.errorListView.intercellSpacing = NSSize(width: 0,height: 2)
+        self.errorListView.indentationPerLevel = 30
         self.errorListView?.reloadData()
         }
         
@@ -602,6 +553,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                     {
                     self.currentSymbolFileURL = theUrl
                     let source = self.sourceEditor.string
+                    Transaction.abort()
                     self.compiler = Compiler()
                     if let chunk = self.compiler.compileChunk(source)
                         {
@@ -612,6 +564,17 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                             let newData = try Data(contentsOf: theUrl)
                             let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
                             print(result)
+                            let output = result
+                            print(output)
+                            let topObject = result! as! Symbol
+                            if topObject.isModule
+                                {
+                                let module = topObject as! Module
+                                for symbol in module.symbols
+                                    {
+                                    print(symbol)
+                                    }
+                                }
                             }
                         catch let error
                             {
@@ -641,6 +604,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     @IBAction func onCompileFile(_ sender: Any?)
         {
         let source = self.sourceEditor.string
+        TopModule.shared.journalTransaction.reverse()
+        TopModule.shared.resetJournalEntries()
         let compiler = Compiler()
         self.resetReporting()
         compiler.reportingContext = self
@@ -648,15 +613,11 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         if let chunk = compiler.compileChunk(source)
             {
             let transaction = Transaction.current.copy()
-            Transaction.commit()
             TopModule.shared.printContents()
             self.currentCapsule?.with(source: source, product: chunk, transaction: transaction)
             if let module = chunk as? Module
                 {
                 module.realizeSuperclasses()
-                self.symbolList1.symbols = [TopModule.shared.argonModule.object]
-                self.symbolList2.symbols = [TopModule.shared]
-                self.symbolList3.symbols = [TopModule.shared.moduleRoot]
                 }
             }
         }
@@ -699,6 +660,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.sourceEditor.textStorage?.setAttributedString(mutableString)
                 self.resetReporting()
+                TopModule.shared.resetJournalEntries()
                 self.compiler = Compiler()
                 self.compiler.reportingContext = self
                 self.compiler.compileChunk(string)
@@ -716,8 +678,43 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 }
             }
         }
+
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem?
+        {
+            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+        item.label = "Item"
+        let image = NSImage(named: "IconClass")
+        let button = NSButton(frame: NSRect(x:0,y:0,width: 40,height: 40))
+        button.title = ""
+        button.image = image
+        button.setButtonType(.toggle)
+        button.bezelStyle = .rounded
+        button.action = #selector(ArgonBrowserWindowController.doButton(_:))
+        item.view = button
+        return(item)
+        }
+        
+    @IBAction func doButton(_ sender: Any?)
+        {
+        }
     }
 
+extension ArgonBrowserWindowController: SourceEditorDelegate
+    {
+    public func sourceEditorGutter(_ view: LineNumberGutter, selectedAnnotationAtLine line: Int)
+        {
+        if let group = self.compilationEvents["\(line)"]
+            {
+            let row = self.errorListView.row(forItem: group)
+            if row != -1
+                {
+                self.errorListView.scrollRowToVisible(row)
+                self.errorListView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+                }
+            }
+        }
+    }
+    
 public class ForwarderView: NSView
     {
     private var controller: ArgonBrowserWindowController
@@ -755,5 +752,88 @@ public class ForwarderView: NSView
     @IBAction func onNewEditor(_ sender: Any?)
         {
         self.controller.onNewEditor(sender)
+        }
+    }
+    
+extension ArgonBrowserWindowController:NSOutlineViewDelegate,NSOutlineViewDataSource
+    {
+    @objc public func outlineView(_ outlineView: NSOutlineView, numberOfChildrenOfItem item: Any?) -> Int
+        {
+        if item == nil
+            {
+            return(self.compilationEventList.count)
+            }
+        else
+            {
+            let event = item as! CompilationEvent
+            return(event.childCount)
+            }
+        }
+        
+    @objc public func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any
+        {
+        if item.isNil
+            {
+            return(self.compilationEventList[index])
+            }
+        else if let event = item as? CompilationEvent
+            {
+            return(event.child(atIndex: index))
+            }
+        fatalError()
+        }
+
+    @objc public func outlineView(_ outlineView: NSOutlineView, isItemExpandable item: Any) -> Bool
+        {
+        if let event = item as? CompilationEvent
+            {
+            return(event.isExpandable)
+            }
+        return(false)
+        }
+        
+    @objc public func outlineView(_ outlineView: NSOutlineView, rowViewForItem item: Any) -> NSTableRowView?
+        {
+        let row = CompilationEventRowView(selectionColor: Palette.shared.hierarchySelectionColor)
+        return(row)
+        }
+        
+    @objc public func outlineView(_ outlineView: NSOutlineView, shouldSelectItem item: Any) -> Bool
+        {
+//        guard outliner.isNotNil else
+//            {
+//            return(false)
+//            }
+//        let selectedRow = outliner!.selectedRow
+//        if selectedRow >= 0,let cell = outliner?.view(atColumn: 0, row: selectedRow, makeIfNecessary: false) as? HierarchyCellView
+//            {
+//            cell.revert()
+//            }
+        return(true)
+        }
+
+    public func outlineViewSelectionDidChange(_ notification: Notification)
+        {
+//        guard outliner.isNotNil else
+//            {
+//            return
+//            }
+//        let row = outliner!.selectedRow
+//        if row >= 0,let cell = outliner!.view(atColumn: 0, row: row, makeIfNecessary: false) as? HierarchyCellView
+//            {
+//            cell.invert()
+//            }
+        }
+        
+        
+    public func outlineView(_ outlineView: NSOutlineView,viewFor tableColumn: NSTableColumn?,item: Any) -> NSView?
+        {
+        if let event = item as? CompilationEvent
+            {
+            let view = outlineView.makeView(withIdentifier: Self.kCompilationEventCellIdentifier, owner: nil) as! CompilationEventCell
+            view.event = event
+            return(view)
+            }
+        return(nil)
         }
     }

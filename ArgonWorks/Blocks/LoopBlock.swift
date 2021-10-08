@@ -65,25 +65,26 @@ public class LoopBlock: Block
             }
         }
         
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
         for expression in self.startExpressions
             {
-            try expression.emitCode(into: into, using: using)
+            try expression.emitCode(into: buffer, using: using)
             }
-        let marker = into.fromHere()
+        let label = buffer.nextLabel()
+        buffer.pendingLabel = label
         for block in self.blocks
             {
-            try block.emitCode(into: into,using: using)
+            try block.emitCode(into: buffer,using: using)
             }
         for expression in self.updateExpressions
             {
-            try expression.emitCode(into: into,using: using)
+            try expression.emitCode(into: buffer,using: using)
             }
-        try self.endExpression.emitCode(into: into,using: using)
+        try self.endExpression.emitCode(into: buffer,using: using)
         do
             {
-            into.append(.BRT,self.endExpression.place,.none,.label(try into.toHere(marker)))
+            buffer.append(nil,"BRF",self.endExpression.place,.none,.label(label))
             }
         catch let error
             {

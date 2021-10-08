@@ -10,7 +10,7 @@ import Interpreter
 
 public class InnerInstancePointer:InnerPointer
     {
-    private struct SlotKey
+    internal struct SlotKey
         {
         internal let name: String
         internal let offset: Int
@@ -92,14 +92,13 @@ public class InnerInstancePointer:InnerPointer
         
     private func initWithClass(_ aClass:Class)
         {
-        for slot in aClass.layoutSlots
+        for slotKey in aClass.layoutSlotKeys()
             {
-            let slotKey = SlotKey(name: slot.label,offset: slot.offset / 8)
             self.slotKeys[slotKey.name] = slotKey
             }
         self.setSlotValue(aClass.memoryAddress,forKey: "_classPointer")
         self.setSlotValue(aClass.magicNumber,forKey: "_magicNumber")
-        for someClass in aClass.superclasses
+        for someClass in aClass.localSuperclasses
             {
             self.setClassSlots(inClass: aClass,forClass: someClass)
             }
@@ -127,7 +126,7 @@ public class InnerInstancePointer:InnerPointer
                 self.setSlotValue(forClass.memoryAddress,forKey: aSlot.label)
                 }
             }
-        for aClass in forClass.superclasses
+        for aClass in forClass.localSuperclasses
             {
             self.setClassSlots(inClass: inClass,forClass: aClass)
             }

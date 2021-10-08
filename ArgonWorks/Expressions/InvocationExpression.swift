@@ -15,7 +15,7 @@ public class InvocationExpression: Expression
         return("\(self.name)\(values)")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
         if self.method.isNil
             {
@@ -99,7 +99,7 @@ public class InvocationExpression: Expression
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.location, message: "Invocation of '\(self.name)' uses \(arguments.count) arguments but the method requires \(self.method!.proxyParameters.count).")
             }
-        let classes = self.arguments.map{$0.value.resultType}
+        let classes = self.arguments.map{$0.value.type}
         self.methodInstance = method?.dispatch(with: classes.map{$0})
         if self.methodInstance.isNil
             {
@@ -119,7 +119,7 @@ public class InvocationExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         if self.methodInstance.isNil
             {
@@ -128,17 +128,16 @@ public class InvocationExpression: Expression
         for argument in self.arguments.reversed()
             {
             try argument.value.emitCode(into: instance,using: using)
-            instance.append(.PUSH,argument.value.place, .none, .none)
+            instance.append(nil,"PUSH",argument.value.place, .none, .none)
             }
         let localCount = self.methodInstance!.localSlots.count
-        instance.append(.PUSH,.register(.BP),.none,.none)
-        instance.append(.MOV,.register(.SP),.none,.register(.BP))
+        instance.append(nil,"SAVESTACKFRAME",.none,.none,.none)
         if localCount > 0
             {
             let size = localCount * MemoryLayout<Word>.size
-            instance.append(.ISUB,.register(.SP),.integer(Argon.Integer(size)),.register(.SP))
+            instance.append(nil,"ENTER",.integer(size),.none,.none)
             }
-        instance.append(.DISP,.absolute(self.method!.memoryAddress),.none,.none)
+        instance.append(nil,"DISPATCH",.literal(.method(self.method!)),.none,.none)
         }
     }
 
@@ -176,7 +175,7 @@ public class MethodInvocationExpression: Expression
         coder.encode(self.method,forKey: "method")
         }
         
-    public override var resultType: Type
+    public override var type: Type
         {
         return(self.method.returnType)
         }
@@ -197,7 +196,7 @@ public class MethodInvocationExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator)
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator)
         {
         
         }

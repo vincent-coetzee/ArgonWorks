@@ -13,8 +13,13 @@ public class Constant:Slot
         {
         return(true)
         }
+
+    public override var iconName: String
+        {
+        return("IconConstant")
+        }
         
-    public var place: Instruction.Operand = .none
+    public var place: T3AInstruction.Operand = .none
     
     private let value: Expression
     
@@ -52,7 +57,7 @@ public class Constant:Slot
         .constant
         }
         
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         try self.value.emitCode(into: instance,using: using)
         self.place = self.value.place

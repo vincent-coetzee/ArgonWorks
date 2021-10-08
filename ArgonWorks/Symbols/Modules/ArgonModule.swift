@@ -489,8 +489,6 @@ public class ArgonModule: SystemModule
         arrays.addSymbol(LibraryMethodInstance("removeAll",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).libraryMethod)
         arrays.addSymbol(LibraryMethodInstance("withoutFirst",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).libraryMethod)
         arrays.addSymbol(LibraryMethodInstance("withoutLast",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).libraryMethod)
-        arrays.addSymbol(LibraryMethodInstance("withoutFirst",self.array.of(ClassParm("TYPE")),self.integer,self.array.of(ClassParm("TYPE"))).libraryMethod)
-        arrays.addSymbol(LibraryMethodInstance("withoutLast",self.array.of(ClassParm("TYPE")),self.integer,self.array.of(ClassParm("TYPE"))).libraryMethod)
         let strings = SystemSymbolGroup(label: "Strings")
         self.addSymbol(strings)
         strings.addSymbol(LibraryMethodInstance("separatedBy",self.string,self.string,self.array.of(self.string)).libraryMethod)

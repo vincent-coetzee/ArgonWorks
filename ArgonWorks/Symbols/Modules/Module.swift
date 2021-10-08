@@ -36,14 +36,6 @@ public class Module:ContainerSymbol
         .module
         }
         
-    public override var children: Array<Symbol>?
-        {
-        let modules = self.symbols.filter{$0 is Module}
-        let methods = self.symbols.filter{$0 is Method}.sorted{$0.label < $1.label}
-        let groups = self.symbols.filter{$0 is SymbolGroup}.sorted{$0.label < $1.label}
-        return(modules + groups + methods)
-        }
-        
     public var classes:Classes
         {
         var classes = Array(self.symbols.compactMap{$0 as? Class})
@@ -63,9 +55,9 @@ public class Module:ContainerSymbol
         return(methods)
         }
 
-    public override var imageName: String
+    public override var iconName: String
         {
-        "IconTest"
+        "IconModule"
         }
         
     public override var defaultColor: NSColor

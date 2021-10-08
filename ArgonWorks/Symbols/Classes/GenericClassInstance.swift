@@ -9,6 +9,18 @@ import Foundation
 
 public class GenericClassInstance:Class
     {
+    public override var completeName: String
+        {
+        let names = self.genericClassParameterInstances.map{$0.displayString}
+        let string = names.isEmpty ? "" : "<" + names.joined(separator: ",") + ">"
+        return("\(self.label)\(string)")
+        }
+        
+    public override var isGenericClassInstance: Bool
+        {
+        return(true)
+        }
+        
     public override var mangledName: String
         {
         let typeNames = "<" + self.genericClassParameterInstances.map{$0.mangledName}.joined(separator: ",") + ">"

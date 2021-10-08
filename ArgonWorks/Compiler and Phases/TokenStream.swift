@@ -304,6 +304,24 @@ public class TokenStream:Equatable
         return(text)
         }
         
+    @discardableResult
+    public func scanTextUntilMacroEnd() -> String
+        {
+        let scalar1:UnicodeScalar = "}"
+        let scalar2:UnicodeScalar = "$"
+        var text:String = ""
+        while self.currentChar != scalar1 && self.peekChar(at: 0) != scalar2 && !self.atEnd
+            {
+            text.append(String(self.currentChar))
+            self.nextChar()
+            }
+        if !atEnd
+            {
+            self.nextChar()
+            }
+        return(text)
+        }
+        
     private func scanInvisible()
         {
         self.eatSpace()

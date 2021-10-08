@@ -73,10 +73,10 @@ public struct Palette
     
     public let primaryHighlightColor = NSColor.controlAccentColor
     public let textInset = CGSize(width: 10,height: 10)
-    public let headerColor = NSColor.argonHeaderGray
-    public let headerTextColor = NSColor.argonDarkPurple
+    public let headerColor = NSColor.argonWindowFrameGray
+    public let headerTextColor = NSColor.argonBrightYellowCrayola
     public let headerHeight:CGFloat = 24
-    public let headerFont = NSFont(name: "SF Pro Bold",size: 14)
+    public let headerFont = NSFont(name: "SF Pro SemiBold",size: 16)
     public let objectBrowserTextColor = NSColor.argonAnnotationOrange
     public let classBrowserTextColor = NSColor.argonAnnotationOrange
     public let methodBrowserTextColor = NSColor.argonAnnotationOrange
@@ -94,12 +94,18 @@ public struct Palette
     public let functionColor = NSColor(hex: 0xFE5299)
     public let slotColor = NSColor.argonCoral
     public let hierarchyTextColor = NSColor.white
-    
-    public let compilationEventWarningSelectionColor = NSColor.argonNeonOrange
+    public let hierarchyGroupTextColor = NSColor.white
+    public let hierarchySelectionColor = NSColor.argonBrightYellowCrayola
+    public let hierarchyPrimaryTintColor = NSColor.argonBrightYellowCrayola
+    public let hierarchySecondaryTintColor = NSColor.argonCaledonGreen
+    public let hierarchyTertiaryTintColor = NSColor.argonSkyBlueCrayola
+
+    public let compilationEventWarningSelectionColor = NSColor.argonNeonYellow
     public let compilationEventErrorSelectionColor = NSColor.argonNeonOrange
-    public let compilationEventWarningColor = NSColor.argonNeonOrange
+    public let compilationEventWarningColor = NSColor.argonNeonYellow
     public let compilationEventErrorColor = NSColor.argonNeonOrange
     public let compilationEventTextColor = NSColor.white
+    public let compilationEventGroupColor = NSColor.argonSeaGreen
     
     public let compilationSelectedTextColor = NSColor.black
     

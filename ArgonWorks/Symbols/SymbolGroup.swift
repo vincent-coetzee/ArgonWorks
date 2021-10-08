@@ -13,13 +13,8 @@ public class SymbolGroup:ContainerSymbol
         {
         return(true)
         }
-        
-    public override var defaultColor: NSColor
-        {
-        NSColor.argonXCornflower
-        }
 
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconGroup"
         }

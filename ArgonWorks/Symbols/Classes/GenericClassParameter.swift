@@ -18,6 +18,11 @@ import Foundation
 
 public class GenericClassParameter: Class
     {
+    public override var isGenericClassParameter: Bool
+        {
+        return(true)
+        }
+        
     public override var containedClassParameters: Array<GenericClassParameter>
         {
         return(super.containedClassParameters.appending(self))
@@ -41,11 +46,6 @@ public class GenericClassParameter: Class
     public static func ==(lhs:GenericClassParameter,rhs:GenericClassParameter) -> Bool
         {
         return(lhs.label == rhs.label)
-        }
-        
-    public override var isGenericClassParameter: Bool
-        {
-        return(true)
         }
         
     public override func instanciate(withType: Type) -> Type

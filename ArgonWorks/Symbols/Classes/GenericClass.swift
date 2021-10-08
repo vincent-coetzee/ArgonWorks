@@ -9,6 +9,13 @@ import Foundation
 
 public class GenericClass:Class
     {
+    public override var completeName: String
+        {
+        let names = self.genericClassParameters.map{$0.displayString}
+        let string = names.isEmpty ? "" : "<" + names.joined(separator: ",") + ">"
+        return("\(self.label)\(string)")
+        }
+        
     public override var isGenericClass: Bool
         {
         return(true)
@@ -121,7 +128,7 @@ public class GenericClass:Class
         {
         if self.genericClassParameters.count != types.count
             {
-            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters does not match the number required by the class '\(self.label)'.")
+            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters(\(types.count)) does not match the number required by the class(\(self.genericClassParameters.count)) '\(self.label)'.")
             return(.class(GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: [])))
             }
         let typeMappings:[Type] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withType: $0.0)}

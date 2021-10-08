@@ -35,7 +35,7 @@ public class Parameter:Slot,Displayable
         super.init(label: label,type: type)
         }
     
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator)
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
         {
         self.place = self.addresses.mostEfficientAddress.operand
         }

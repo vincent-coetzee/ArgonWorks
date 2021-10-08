@@ -57,40 +57,34 @@ public class SelectBlock: Block
             }
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-        let aClass = self.value.resultType
+        let aClass = self.value.type
         try self.value.emitCode(into: buffer,using: generator)
-        var linksToBottom = Array<Instruction.LabelMarker>()
-        var fromCompare:Instruction.LabelMarker?
+        var linksToBottom = Array<T3ALabel>()
+        var nextWhen: T3ALabel?
+        let endLabel = buffer.nextLabel()
         for when in whenBlocks
             {
-            let outputRegister = generator.registerFile.findRegister(forSlot: nil, inBuffer: buffer)
+            var temp = buffer.nextTemporary()
             if aClass.isPrimitiveClass && !aClass.isStringClass
                 {
-                buffer.append(.CMPW,self.value.place,when.condition.place,.register(outputRegister))
+                buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,temp)
                 }
             else
                 {
-                buffer.append(.CMPO,self.value.place,when.condition.place,.register(outputRegister))
+                buffer.append(nextWhen,"CMPO",self.value.place,when.condition.place,temp)
                 }
-            if fromCompare.isNotNil
-                {
-                try buffer.toHere(fromCompare!)
-                }
-            buffer.append(.BRNEQ,.register(outputRegister),.none,.label(0))
-            fromCompare = buffer.triggerFromHere()
+            nextWhen = buffer.nextLabel()
+            buffer.append(nil,"BRNEQ",temp,.none,.label(nextWhen!))
             try when.emitCode(into: buffer,using: generator)
-            buffer.append(.BR,.none,.none,.label(0))
-            linksToBottom.append(buffer.triggerFromHere())
+            buffer.append(nil,"BR",.none,.none,.label(endLabel))
             }
         if self.otherwiseBlock.isNotNil
             {
+            buffer.pendingLabel = nextWhen
             try self.otherwiseBlock!.emitCode(into: buffer,using: generator)
             }
-        for link in linksToBottom
-            {
-            try buffer.toHere(link)
-            }
+        buffer.pendingLabel = endLabel
         }
     }

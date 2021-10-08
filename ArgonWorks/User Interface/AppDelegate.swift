@@ -132,5 +132,16 @@ class AppDelegate: NSObject, NSApplicationDelegate
             }
         controller.showWindow(self)
         }
+        
+    @IBAction
+    public func openSemanticBrowser(_ sender:Any?)
+        {
+        let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonSemanticController") as? NSWindowController else
+            {
+            return
+            }
+        controller.showWindow(self)
+        }
     }
 

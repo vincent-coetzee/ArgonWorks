@@ -14,7 +14,7 @@ public class EnumerationCase:Symbol
         return(self.enumeration.type)
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         return("IconSlot")
         }
