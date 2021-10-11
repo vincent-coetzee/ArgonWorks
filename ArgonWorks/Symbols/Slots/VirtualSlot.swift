@@ -45,4 +45,10 @@ public class VirtualSlot:Slot
         
     private var getter:InnerFunctionPointer?
     private var setter:InnerFunctionPointer?
+    
+    public override func analyzeSemantics(using: SemanticAnalyzer)
+        {
+        self.readBlock?.analyzeSemantics(using: using)
+        self.writeBlock?.analyzeSemantics(using: using)
+        }
     }

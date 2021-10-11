@@ -26,7 +26,7 @@ public class Parameter:Slot,Displayable
         
     public let isVisible:Bool
     public let isVariadic: Bool
-    public var place: Instruction.Operand = .none
+    public var place: T3AInstruction.Operand = .none
     
     init(label:Label,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
         {
@@ -37,7 +37,7 @@ public class Parameter:Slot,Displayable
     
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
         {
-        self.place = self.addresses.mostEfficientAddress.operand
+//        self.place = self.addresses.mostEfficientAddress.operand
         }
         
     required init(labeled: Label, ofType: Type) {

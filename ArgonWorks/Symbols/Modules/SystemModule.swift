@@ -36,12 +36,9 @@ public class SystemModule: Module
         
     public override func lookup(label: Label) -> Symbol?
         {
-        for symbol in self.symbols where symbol.label == label
+        if let symbol = self.symbolsByLabel[label]
             {
-            if symbol.label == label
-                {
-                return(symbol)
-                }
+            return(symbol)
             }
         for module in self.subModules
             {
@@ -95,18 +92,18 @@ public class SystemModule: Module
         self.layoutInMemory()
         }
         
-    internal func resolveReferences()
+    internal func resolveReferences(topModule: TopModule)
         {
         for symbol in self.symbols
             {
             if let aClass = symbol as? Class
                 {
-                aClass.realizeSuperclasses()
+                aClass.realizeSuperclasses(topModule: topModule)
                 }
             else if let aModule = symbol as? SystemModule
                 {
                 print("RESOLVING MODULE \(aModule.label)")
-                aModule.resolveReferences()
+                aModule.resolveReferences(topModule: topModule)
                 }
             }
         }

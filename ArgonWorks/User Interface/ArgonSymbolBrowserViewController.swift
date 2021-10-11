@@ -47,7 +47,7 @@ class ArgonSymbolBrowserViewController: NSViewController
 //        {
 //        if item.isNil
 //            {
-//            return(self.symbols[index])
+//            return(self.symbolsByLabel[index])
 //            }
 //        else if let symbol = item as? HierarchySymbolWrapper
 //            {

@@ -10,7 +10,7 @@ import Foundation
 
 public typealias Tokens = Array<Token>
 
-public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifiable
+public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifiable,Equatable
     {
     public static let systemClassNames = ["Object","Array","List","Set","Dictionary","Integer","Float","Boolean","Byte","Character","Pointer","Tuple","String","Symbol","Date","Time","DateTime"]
     
@@ -46,6 +46,60 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+        
+    public var stringValue: String
+        {
+        switch(self)
+            {
+            case .none:
+                return(".none")
+            case .comment(let string,_):
+                return("\(string)")
+            case .end:
+                return(".end")
+            case .identifier(let string,_):
+                return(string)
+            case .keyword(let keyword,_):
+                return("\(keyword)")
+            case .name(let string,_):
+                return("\(string.string)")
+            case .invisible(_,_):
+                return("")
+            case .path(let string,_):
+                return("\(string)")
+            case .hashString(let string,_):
+                return(string)
+            case .note(let string,_):
+                return(string)
+            case .directive(let string,_):
+                return(string)
+            case .string(let string,_):
+                return(string)
+            case .integer(let value,_):
+                return("\(value)")
+            case .float(let value,_):
+                return("\(value)")
+            case .symbol(let value,_):
+                return("\(value)")
+            case .operator(let string,_):
+                return("\(string)")
+            case .character(let char, _):
+                return("\(char)")
+            case .boolean(let boolean, _):
+                return("\(boolean)")
+            case .byte(let value,_):
+                return("\(value)")
+            case .keyPath(let value,_):
+                return("\(value)")
+            case .date(let date, _):
+                return("\(date)")
+            case .time(let time,_):
+                return("\(time)")
+            case .dateTime(let value,_):
+                return("\(value)")
+            }
+        }
+        
         
     public var id: Int
         {
@@ -138,7 +192,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case modulus = "%"
         case modulusEquals = "%="
         case macroStart = "${"
-        case macroEnd = "}$"
+        case macroStop = "}$"
         case noteStart = "!*"
         case noteEnd = "*!"
         case pow = "**"
@@ -175,6 +229,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case CONSTANT
         case DELEGATE
         case ELSE
+        case ELSEIF
         case ENUMERATION
         case EXPORTED
         case EXTENSION
@@ -348,6 +403,31 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
+    public var tokenColor: TokenColor
+        {
+        switch(self)
+            {
+            case .comment:
+                return(.comment)
+            case .identifier:
+                return(.identifier)
+            case .keyword:
+                return(.keyword)
+            case .integer:
+                return(.integer)
+            case .float:
+                return(.float)
+            case .string:
+                return(.string)
+            case .symbol:
+                fallthrough
+            case .operator:
+                return(.symbol)
+            default:
+                return(.text)
+            }
+        }
+        
     case none
     case comment(String,Location)
     case end(Location)
@@ -458,6 +538,67 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(".time(\(time))")
             case .dateTime(let value,_):
                 return(".dateTime(\(value))")
+            }
+        }
+        
+    public func withLocation(_ location: Location) -> Self
+        {
+        switch(self)
+            {
+            case .name(let string,_):
+                return(.name(string,location))
+//                return(".name()")
+            case .invisible(let string,_):
+                return(.invisible(string,location))
+//                return(".invisible(...)")
+            case .path(let string,_):
+                return(.path(string,location))
+            case .hashString(let string,_):
+                return(.hashString(string,location))
+//                return(".symbolString()")
+            case .note(let string,_):
+                return(.note(string,location))
+//                return(".note()")
+            case .directive(let string,_):
+                return(.directive(string,location))
+//                return(".directive()")
+            case .comment(let string,_):
+                return(.comment(string,location))
+//                return(".comment()")
+            case .end:
+                return(.end(location))
+            case .identifier(let string,_):
+                return(.identifier(string,location))
+//                return(".identifier()")
+            case .keyword(let keyword,_):
+                return(.keyword(keyword,location))
+            case .string(let string,_):
+                return(.string(string,location))
+//                return(".string()")
+            case .integer(let value,_):
+                return(.integer(value,location))
+            case .float(let value,_):
+                return(.float(value,location))
+            case .symbol(let value,_):
+                return(.symbol(value,location))
+            case .none:
+                return(.none)
+            case .operator(let string,_):
+                return(.operator(string,location))
+            case .character(let char, _):
+                return(.character(char,location))
+            case .boolean(let boolean, _):
+                return(.boolean(boolean,location))
+            case .byte(let value,_):
+                return(.byte(value,location))
+            case .keyPath(let value,_):
+                return(.keyPath(value,location))
+            case .date(let date, _):
+                return(.date(date,location))
+            case .time(let time,_):
+                return(.time(time,location))
+            case .dateTime(let value,_):
+                return(.dateTime(value,location))
             }
         }
         
@@ -1761,6 +1902,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+        
+    public var isElseIf:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .ELSEIF)
+            default:
+                return(false)
+            }
+        }
     
     public var isNot:Bool
         {
@@ -2437,12 +2589,12 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-    public var isMacroEnd:Bool
+    public var isMacroStop:Bool
         {
         switch(self)
             {
             case .symbol(let value,_):
-                return(value == .macroEnd)
+                return(value == .macroStop)
             default:
                 return(false)
             }

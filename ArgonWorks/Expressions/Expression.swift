@@ -96,7 +96,7 @@ public class Expression: NSObject,NSCoding
         
     public var type: Type
         {
-        .error(.mismatch)
+        .unknown
         }
     
     public var isEnumerationCaseExpression: Bool
@@ -122,6 +122,8 @@ public class Expression: NSObject,NSCoding
     public private(set) var locations = SourceLocations()
     public internal(set) var _place: T3AInstruction.Operand = .none
     public private(set) var parent: Parent = .none
+    internal private(set) var context: Context = .none
+    internal var compiler: Compiler!
     
     public override init()
         {
@@ -140,6 +142,11 @@ public class Expression: NSObject,NSCoding
         print("ENCODE EXPRESSION")
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeSourceLocations(self.locations,forKey:"locations")
+        }
+        
+    public func setContext(_ context: Context)
+        {
+        self.context = context
         }
         
     public func addDeclaration(_ location:Location)

@@ -33,7 +33,7 @@ public class VirtualMachine
     public private(set) var dataSegment = DataSegment(size: MemorySize.bytes(10))
     public private(set) var staticSegment = StaticSegment(size: MemorySize.bytes(10))
     
-    public var registers: Array<Word> = Array(repeating: 0, count: Instruction.Register.allCases.count + 1)
+//    public var registers: Array<Word> = Array(repeating: 0, count: Instruction.Register.allCases.count + 1)
     public var topModule: TopModule
         {
         return(TopModule.shared)
@@ -48,17 +48,17 @@ public class VirtualMachine
         TopModule.shared.argonModule
         }
         
-    public var ip: Int
-        {
-        get
-            {
-            return(Int(bitPattern: UInt(self.registers[Instruction.Register.IP.rawValue])))
-            }
-        set
-            {
-            self.registers[Instruction.Register.IP.rawValue] = Word(bitPattern: Int64(newValue))
-            }
-        }
+    public var ip: Int = 0
+//        {
+//        get
+//            {
+//            return(Int(bitPattern: UInt(self.registers[Instruction.Register.IP.rawValue])))
+//            }
+//        set
+//            {
+//            self.registers[Instruction.Register.IP.rawValue] = Word(bitPattern: Int64(newValue))
+//            }
+//        }
         
     private init()
         {
@@ -108,65 +108,65 @@ public class VirtualMachine
         self.symbolTable = SymbolTable(virtualMachine: self)
         }
         
-    @inlinable
-    public func setValue(_ value:Word,atRegister: Instruction.Register)
-        {
-        self.registers[atRegister.rawValue] = value
-        }
-    
-    @inlinable
-    public func setValue(_ value:Argon.Float,atRegister: Instruction.Register)
-        {
-        self.registers[atRegister.rawValue] = value.bitPattern
-        }
-        
-    @inlinable
-    public func setValue(_ value:Int,atRegister: Instruction.Register)
-        {
-        self.registers[atRegister.rawValue] = Word(bitPattern: Int64(value))
-        }
-        
-    @inlinable
-    public func value(atRegister: Instruction.Register) -> Word
-        {
-        return(self.registers[atRegister.rawValue])
-        }
-    
-    @inlinable
-    public func intValue(atRegister: Instruction.Register) -> Int
-        {
-        return(Int(bitPattern: UInt(self.registers[atRegister.rawValue])))
-        }
-    
-    @inlinable
-    public func floatValue(atRegister: Instruction.Register) -> Argon.Float
-        {
-        return(Argon.Float(bitPattern: self.registers[atRegister.rawValue]))
-        }
-        
-    public func resetVM()
-        {
-        for register in Instruction.Register.allCases
-            {
-            self.registers[register.rawValue] = 0
-            }
-        }
-        
-    public func executeInstruction(_ instruction: Instruction)
-        {
-        }
-        
-    @inlinable
-    public func register(atIndex: Instruction.Register) -> Word
-        {
-        return(self.registers[atIndex.rawValue])
-        }
-        
-    @inlinable
-    public func setRegister(_ word:Word,atIndex: Instruction.Register)
-        {
-        self.registers[atIndex.rawValue] = word
-        }
+//    @inlinable
+//    public func setValue(_ value:Word,atRegister: Instruction.Register)
+//        {
+//        self.registers[atRegister.rawValue] = value
+//        }
+//    
+//    @inlinable
+//    public func setValue(_ value:Argon.Float,atRegister: Instruction.Register)
+//        {
+//        self.registers[atRegister.rawValue] = value.bitPattern
+//        }
+//        
+//    @inlinable
+//    public func setValue(_ value:Int,atRegister: Instruction.Register)
+//        {
+//        self.registers[atRegister.rawValue] = Word(bitPattern: Int64(value))
+//        }
+//        
+//    @inlinable
+//    public func value(atRegister: Instruction.Register) -> Word
+//        {
+//        return(self.registers[atRegister.rawValue])
+//        }
+//    
+//    @inlinable
+//    public func intValue(atRegister: Instruction.Register) -> Int
+//        {
+//        return(Int(bitPattern: UInt(self.registers[atRegister.rawValue])))
+//        }
+//    
+//    @inlinable
+//    public func floatValue(atRegister: Instruction.Register) -> Argon.Float
+//        {
+//        return(Argon.Float(bitPattern: self.registers[atRegister.rawValue]))
+//        }
+//        
+//    public func resetVM()
+//        {
+//        for register in Instruction.Register.allCases
+//            {
+//            self.registers[register.rawValue] = 0
+//            }
+//        }
+//        
+//    public func executeInstruction(_ instruction: Instruction)
+//        {
+//        }
+//        
+//    @inlinable
+//    public func register(atIndex: Instruction.Register) -> Word
+//        {
+//        return(self.registers[atIndex.rawValue])
+//        }
+//        
+//    @inlinable
+//    public func setRegister(_ word:Word,atIndex: Instruction.Register)
+//        {
+//        self.registers[atIndex.rawValue] = word
+//        }
     }
     
 public typealias SymbolHandle = Word

@@ -19,6 +19,19 @@ public class PseudoVariableExpression: Expression
         case vSELF
         case vSelf
         case vSuper
+        
+        public var displayString: String
+            {
+            switch(self)
+                {
+                case .vSELF:
+                    return("Self")
+                case .vSelf:
+                    return("self")
+                case .vSuper:
+                    return("super")
+                }
+            }
         }
         
     public override var isSelf: Bool
@@ -36,7 +49,13 @@ public class PseudoVariableExpression: Expression
         return(variable == .vSuper)
         }
         
+    public override var type: Type
+        {
+        return(self._type)
+        }
+        
     private let variable: PseudoVariable
+    private var _type: Type = .unknown
     
     init(_ variable: PseudoVariable)
         {
@@ -54,5 +73,18 @@ public class PseudoVariableExpression: Expression
         {
         coder.encode(self.variable.rawValue,forKey: "variable")
         super.encode(with: coder)
+        }
+        
+    public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
+        {
+        if let initializer = self.context.firstInitializer,let aClass = initializer.declaringClass
+            {
+            self._type = aClass.type
+            }
+        else
+            {
+            analyzer.cancelCompletion()
+            analyzer.dispatchError(at: self.declaration!, message: "'\(self.variable.displayString)' is not available in the current context.")
+            }
         }
     }

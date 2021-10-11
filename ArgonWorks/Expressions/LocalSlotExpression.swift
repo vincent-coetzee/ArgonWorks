@@ -68,14 +68,18 @@ public class LocalSlotExpression: Expression
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
         let temp = instance.nextTemporary()
-        instance.append(nil,"ADDR",.local(self.slot),.none,temp)
+        instance.append(nil,"ADDR",.relocatable(.slot(self.slot)),.none,temp)
         self._place = temp
         }
 
     public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
         let temp = instance.nextTemporary()
-        instance.append(nil,"MOV",.local(self.slot),.none,temp)
+        instance.append(nil,"MOV",.relocatable(.slot(self.slot)),.none,temp)
         self._place = temp
         }
     }

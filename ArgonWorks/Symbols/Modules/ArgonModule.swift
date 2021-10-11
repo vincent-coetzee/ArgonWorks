@@ -22,6 +22,11 @@ public class ArgonModule: SystemModule
         .argonModule
         }
         
+    public override var isArgonModule: Bool
+        {
+        return(true)
+        }
+        
     public var nilClass: Class
         {
         return(self.lookup(label: "Nil") as! Class)
@@ -296,9 +301,9 @@ public class ArgonModule: SystemModule
         
  
         
-    public override func resolveReferences()
+    public override func resolveReferences(topModule: TopModule)
         {
-        super.resolveReferences()
+        super.resolveReferences(topModule: topModule)
         self.layout()
         }
         

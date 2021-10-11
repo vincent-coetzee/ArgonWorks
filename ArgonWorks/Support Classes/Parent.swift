@@ -49,7 +49,7 @@ public enum Parent:Storable
         switch(self)
             {
             case .none:
-                fatalError("This should not happen")
+                return(Name())
             case .expression:
                 fatalError("This should not happen")
             case .node(let node):

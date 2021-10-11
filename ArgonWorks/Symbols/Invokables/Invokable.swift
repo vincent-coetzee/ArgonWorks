@@ -14,6 +14,11 @@ public class Invokable: Symbol
     internal var parameters: Parameters
     public var returnType: Type = .class(VoidClass.voidClass)
     
+    public override var type: Type
+        {
+        return(self.returnType)
+        }
+        
     public required init?(coder: NSCoder)
         {
         self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
@@ -39,7 +44,7 @@ public class Invokable: Symbol
         coder.encode(self.parameters,forKey: "parameters")
         coder.encodeType(self.returnType,forKey: "returnType")
         }
-        
+
     public func curried() -> Array<SingleParameterInvokable>
         {
         return(SingleParameterInvokable.with(label: self.label, parameters: self.parameters, returnType: self.returnType))

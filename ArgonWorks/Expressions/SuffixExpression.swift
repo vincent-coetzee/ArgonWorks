@@ -58,6 +58,10 @@ public class SuffixExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
         try self.expression.emitCode(into: instance,using: using)
         switch(self.operationName)
             {

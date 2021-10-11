@@ -63,7 +63,7 @@ public class InnerInstructionBufferPointer: InnerPointer
         {
         let index = 8 + Word(self.count)
         let instructionPointer = WordPointer(address: self.address + index * Word(MemoryLayout<Word>.size))
-        instruction.write(to: instructionPointer!)
+//        instruction.write(to: instructionPointer!)
         self.count += 1
         }
     }

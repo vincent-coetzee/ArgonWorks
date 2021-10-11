@@ -102,7 +102,7 @@ struct ArgonWorxApp {
         input!.pointee = stringAddress.address
         var voidValue:UnsafeMutableRawPointer? = UnsafeMutableRawPointer(input)
         ffi_call(&interface,MutateSymbol(symbol!.address!),nil,&voidValue)
-        print("SIZE AND STRIDE OF Instruction: \(MemoryLayout<Instruction>.stride) \(MemoryLayout<Instruction>.size)")
+//        print("SIZE AND STRIDE OF Instruction: \(MemoryLayout<Instruction>.stride) \(MemoryLayout<Instruction>.size)")
         let vector = InnerVectorPointer.allocate(arraySize: 20, in: small)
         var randomSet = Array<Word>()
         let randomCount = 100

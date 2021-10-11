@@ -12,7 +12,7 @@ public class Closure:Invokable
     public let block: Block
     public let buffer: T3ABuffer
     
-    override init(label:Label)
+    required override init(label:Label)
         {
         self.block = Block()
         self.buffer = T3ABuffer()

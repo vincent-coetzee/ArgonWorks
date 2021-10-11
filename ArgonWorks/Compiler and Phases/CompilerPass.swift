@@ -16,6 +16,11 @@ public protocol CompilerPass
     
 extension CompilerPass
     {
+    public var argonModule: ArgonModule
+        {
+        self.compiler.topModule.argonModule
+        }
+        
     public func dispatchError(at: Location,message: String)
         {
         self.compiler.reportingContext.dispatchError(at: at,message: message)

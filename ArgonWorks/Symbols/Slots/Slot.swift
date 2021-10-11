@@ -113,8 +113,6 @@ public class Slot:Symbol
         super.init(coder: coder)
         }
 
- 
-        
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
@@ -124,7 +122,7 @@ public class Slot:Symbol
         coder.encode(self.isClassSlot,forKey: "isClassSlot")
         }
         
-    public func deepCopy() -> Slot
+    public override func clone() -> Slot
         {
         let newSlot = Slot(label: self.label,type: self._type)
         newSlot.addresses = self.addresses

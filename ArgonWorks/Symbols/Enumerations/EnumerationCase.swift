@@ -47,8 +47,6 @@ public class EnumerationCase:Symbol
         self.associatedTypes = coder.decodeTypes(forKey: "associatedTypes")
         super.init(coder: coder)
         }
-
- 
         
     public override func encode(with coder:NSCoder)
         {

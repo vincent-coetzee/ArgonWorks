@@ -10,11 +10,13 @@ import Foundation
 public class Import:Symbol
     {
     private let path: String?
+    private var symbolsByLabel: Dictionary<Label,Symbol> = [:]
     
     init(label: Label,path: String?)
         {
         self.path = path
         super.init(label: label)
+        self.tryLoadingPath()
         }
     
     public required init?(coder: NSCoder)
@@ -29,5 +31,27 @@ public class Import:Symbol
         coder.encode(self.path,forKey: "path")
         }
         
- 
+    private func tryLoadingPath()
+        {
+        if let filePath = self.path
+            {
+            let manager = FileManager.default
+            var isDirectory:ObjCBool = false
+            if manager.fileExists(atPath: filePath,isDirectory: &isDirectory)
+                {
+                let url = URL(fileURLWithPath: filePath)
+                if !isDirectory.boolValue,let data = try? Data(contentsOf: url)
+                    {
+                    let topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! TopModule
+                    for symbol in topModule.symbolsByLabel.values
+                        {
+                        if !symbol.isSystemModule
+                            {
+                            self.symbolsByLabel[symbol.label] = symbol
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }

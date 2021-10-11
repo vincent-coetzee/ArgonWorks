@@ -228,29 +228,29 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .nil:
-                return(TopModule.shared.argonModule.nilClass.type)
+                return(self.compiler.argonModule.nilClass.type)
             case .integer:
-                return(TopModule.shared.argonModule.integer.type)
+                return(self.compiler.argonModule.integer.type)
             case .float:
-                return(TopModule.shared.argonModule.float.type)
+                return(self.compiler.argonModule.float.type)
             case .string:
-                return(TopModule.shared.argonModule.string.type)
+                return(self.compiler.argonModule.string.type)
             case .boolean:
-                return(TopModule.shared.argonModule.boolean.type)
+                return(self.compiler.argonModule.boolean.type)
             case .symbol:
-                return(TopModule.shared.argonModule.symbol.type)
+                return(self.compiler.argonModule.symbol.type)
             case .array:
-                return(TopModule.shared.argonModule.array.type)
+                return(self.compiler.argonModule.array.type)
             case .class:
-                return(TopModule.shared.argonModule.class.type)
+                return(self.compiler.argonModule.class.type)
             case .module:
-                return(TopModule.shared.argonModule.module.type)
+                return(self.compiler.argonModule.module.type)
             case .enumeration:
-                return(TopModule.shared.argonModule.enumeration.type)
+                return(self.compiler.argonModule.enumeration.type)
             case .enumerationCase:
-                return(TopModule.shared.argonModule.enumerationCase.type)
+                return(self.compiler.argonModule.enumerationCase.type)
             case .method:
-                return(TopModule.shared.argonModule.method.type)
+                return(self.compiler.argonModule.method.type)
             case .constant(let constant):
                 return(constant.type)
             }
@@ -268,9 +268,7 @@ public class LiteralExpression: Expression
         self.literal = Literal(coder: coder)
         super.init(coder: coder)
         }
-        
- 
-        
+    
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
@@ -360,35 +358,39 @@ public class LiteralExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
        let temp = instance.nextTemporary()
         switch(self.literal)
             {
             case .nil:
                 instance.append(nil,"LOAD",.literal(.nil),.none,temp)
             case .integer(let integer):
-                instance.append(nil,"LOAD",.integer(Int(integer)),.none,temp)
+                instance.append(nil,"LOAD",.literal(.integer(Argon.Integer(integer))),.none,temp)
             case .float(let float):
-                instance.append(nil,"LOAD",.float(float),.none,temp)
+                instance.append(nil,"LOAD",.literal(.float(float)),.none,temp)
             case .string(let string):
-                instance.append(nil,"LOAD",.string(string),.none,temp)
+                instance.append(nil,"LOAD",.literal(.string(string)),.none,temp)
             case .boolean(let boolean):
-                instance.append(nil,"LOAD",.boolean(boolean == .trueValue),.none,temp)
+                instance.append(nil,"LOAD",.literal(.boolean(boolean)),.none,temp)
             case .symbol(let string):
                 instance.append(nil,"LOAD",.literal(.symbol(string)),.none,temp)
             case .array:
                 fatalError()
             case .class(let aClass):
-                 instance.append(nil,"LOAD",.literal(.class(aClass)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.class(aClass)),.none,temp)
             case .module(let module):
-                 instance.append(nil,"LOAD",.literal(.module(module)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.module(module)),.none,temp)
             case .enumeration(let enumeration):
-                 instance.append(nil,"LOAD",.literal(.enumeration(enumeration)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.enumeration(enumeration)),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append(nil,"LOAD",.literal(.enumerationCase(enumerationCase)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
             case .method(let method):
-                 instance.append(nil,"LOAD",.literal(.method(method)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append(nil,"LOAD",.literal(.constant(constant)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
             }
         self._place = temp
         }

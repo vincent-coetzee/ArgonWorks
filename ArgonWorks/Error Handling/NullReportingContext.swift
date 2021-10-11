@@ -11,6 +11,10 @@ public struct NullReportingContext:ReportingContext
     {
     public static let shared = NullReportingContext()
 
+    public func resetReporting()
+        {
+        }
+        
     public func dispatchWarning(at: Location, message: String)
         {
         print("Warning line \(at.line):\(message)")

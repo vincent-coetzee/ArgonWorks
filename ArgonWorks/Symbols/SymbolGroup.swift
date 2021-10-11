@@ -27,12 +27,9 @@ public class SymbolGroup:ContainerSymbol
     /// 
     public override func lookup(label:String) -> Symbol?
         {
-        for symbol in self.symbols
+        if let symbol = self.symbolsByLabel[label]
             {
-            if symbol.label == label
-                {
-                return(symbol)
-                }
+            return(symbol)
             }
         for element in self.symbols
             {

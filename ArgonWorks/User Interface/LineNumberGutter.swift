@@ -34,6 +34,8 @@ private let LINE_NUMBER_OFFSET: CGFloat  = 16.0
 /// Adds line numbers to a NSTextField.
 class LineNumberGutter: NSRulerView {
 
+    private var lineNumberRects:Array<NSRect> = []
+    
     internal var sourceEditorDelegate: SourceEditorDelegate?
     
     /// Holds the height of a line
@@ -118,6 +120,7 @@ class LineNumberGutter: NSRulerView {
     ///  - parameter rect: NSRect to draw the gutter view in.
     override func drawHashMarksAndLabels(in rect: NSRect)
         {
+        self.lineNumberRects = []
         // Set the current background color...
         self.backgroundColor.set()
         // ...and fill the given rect.
@@ -177,6 +180,7 @@ class LineNumberGutter: NSRulerView {
                         self.drawAnnotation(cartouche,atYPosition: lineRect.minY)
                         }
                     self.drawLineNumber(num: lineNumber, atYPosition: lineRect.minY)
+//                    self.lineNumberRects[lineNumber] = NSRect(x:0,y: lineRect.minY,width: 100,height: lineHeight)
                 } else {
                     break
                 }
@@ -237,6 +241,7 @@ class LineNumberGutter: NSRulerView {
             }
         catch
             {
+            lineNumber += 1
             return
             }
 

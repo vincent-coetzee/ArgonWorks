@@ -111,6 +111,14 @@ public class Method:Symbol
             }
         }
         
+    public override func analyzeSemantics(using: SemanticAnalyzer)
+        {
+        for instance in self.instances
+            {
+            instance.analyzeSemantics(using: using)
+            }
+        }
+        
     public override func emitCode(using generator: CodeGenerator) throws
         {
         for instance in self.instances
@@ -179,7 +187,7 @@ public class Method:Symbol
             return(nil)
             }
         let types = arguments.resultTypes
-        if types.isError
+        if types.isUnknown
             {
             return(nil)
             }
@@ -217,11 +225,11 @@ public typealias Methods = Array<Method>
 
 extension Types
     {
-    public var isError: Bool
+    public var isUnknown: Bool
         {
         for type in self
             {
-            if type.isError
+            if type.isUnknown
                 {
                 return(true)
                 }

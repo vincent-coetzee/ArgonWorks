@@ -45,16 +45,13 @@ public class TokenStream:Equatable
     private var currentString:String  = ""
     private var keywords:[String] = []
     private var startIndex:Int = 0
-//    private var keyValueCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_:"))
-//    private var typeParameterCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._"))
     private var identifierCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-?"))
     private var nameCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "\\_-?"))
     private var identifierStartCharacters = NSCharacterSet.letters.union(CharacterSet(charactersIn: "_$"))
     private var pathCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_/."))
     private let alphanumerics = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
-//    private let symbolString = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
     private let letters = NSCharacterSet.letters.union(CharacterSet(charactersIn: "_"))
-    private let quoteCharacters = CharacterSet(charactersIn: "\"")
+//    private let quoteCharacters = CharacterSet(charactersIn: "\"")
     private let digits = NSCharacterSet.decimalDigits
     private let whitespace = NSCharacterSet.whitespaces
     private let newline = NSCharacterSet.newlines
@@ -75,25 +72,23 @@ public class TokenStream:Equatable
     private var tokenLine:Int = 0
     private var positionStack = Stack<StreamPosition>()
     private var _braceDepth = 0
-//    public var lexicalState:LexicalState = .scanning
-//    private var errorSubject: PassthroughSubject<CompilerIssue, Never>?
-    
+    public var lineNumber:LineNumber = EmptyLineNumber()
     public var braceDepth:Int
         {
         return(self._braceDepth)
         }
         
-    public var lineNumber:Int
-        {
-        get
-            {
-            return(self.line)
-            }
-        set
-            {
-            self.line = newValue
-            }
-        }
+//    public var lineNumber:Int
+//        {
+//        get
+//            {
+//            return(self.line)
+//            }
+//        set
+//            {
+//            self.line = newValue
+//            }
+//        }
         
     private var atEnd:Bool
         {
@@ -318,6 +313,7 @@ public class TokenStream:Equatable
         if !atEnd
             {
             self.nextChar()
+            self.nextChar()
             }
         return(text)
         }
@@ -335,8 +331,10 @@ public class TokenStream:Equatable
             self.scanToEndOfLine()
             if self.parseComments
                 {
+//                let anIndex = self.source.index(self.source.startIndex,offsetBy: self.startIndex)
                 let endIndex = source.distance(from: source.startIndex, to: offset)
-                return(Token.comment(source.substring(with: startIndex..<endIndex),self.sourceLocation()))
+                print("Comments are '\(source.substring(with: (startIndex-1)..<endIndex))'")
+                return(Token.comment(source.substring(with: (startIndex-1)..<endIndex),self.sourceLocation()))
                 }
             return(self.nextToken())
             }
@@ -394,14 +392,28 @@ public class TokenStream:Equatable
         return(.path(string,self.sourceLocation()))
         }
         
+    public func peekToken(count: Int) -> Token
+        {
+        for index in 0..<count
+            {
+            let token = self.nextToken()
+            self.tokenStack.append(token)
+            if index == count - 1
+                {
+                return(token)
+                }
+            }
+        return(self.tokenStack[count-1])
+        }
+        
     public func nextToken() -> Token
         {
         self.tokenLine = line
-        if !tokenStack.isEmpty
+        if !self.tokenStack.isEmpty
             {
-            return(tokenStack.removeFirst())
+            return(self.tokenStack.removeFirst())
             }
-        tokenStart = characterOffset
+        self.tokenStart = self.characterOffset
         self.scanInvisible()
 //            {
 //            return(invisible)
@@ -416,6 +428,15 @@ public class TokenStream:Equatable
             {
             self.nextChar()
             return(.symbol(Token.Symbol(rawValue:"<")!,self.sourceLocation()))
+            }
+        else if self.currentChar == "$" && self.peekChar(at: 0) == "{"
+            {
+            self.nextChar()
+            self.nextChar()
+            let text = self.scanTextUntilMacroEnd()
+            self.tokenStack.append(.string(text,self.sourceLocation()))
+//            self.tokenStack.append(.symbol(.macroStop,self.sourceLocation()))
+            return(.symbol(.macroStart,self.sourceLocation()))
             }
         ///
         ///
@@ -634,9 +655,9 @@ public class TokenStream:Equatable
     private func scanString() -> Token
         {
         self.startIndex = self.characterOffset
-        var string = "\""
+        var string = ""
         self.nextChar()
-        while !self.quoteCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
+        while self.currentChar != "\"" && !self.atEnd && !self.atEndOfLine
             {
             string += String(self.currentChar)
             self.nextChar()
@@ -880,7 +901,7 @@ public class TokenStream:Equatable
             if self.currentChar == "$"
                 {
                 self.nextChar()
-                return(.symbol(.macroEnd,self.sourceLocation()))
+                return(.symbol(.macroStop,self.sourceLocation()))
                 }
             self._braceDepth -= 1
             return(.symbol(.rightBrace,self.sourceLocation()))
@@ -1065,7 +1086,8 @@ public class TokenStream:Equatable
         {
         self.tokenStop = self.characterOffset
         self.tokenStart = self.startIndex
-        return(Location(line:tokenLine,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
+        let line = LineNumber(line: self.line)
+        return(Location(lineNumber: line,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
         }
     
     private func scanOperator(withPrefix startString:String) -> Token

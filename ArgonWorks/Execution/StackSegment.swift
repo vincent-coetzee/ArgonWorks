@@ -49,9 +49,10 @@ public class StackSegment: Segment
         
     public override func allocateAddress(sizeInBytes: Int) -> Address
         {
-        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
-        let address = Address.relative(self.segmentRegister,Int(newAddress - baseAddress))
-        return(address)
+//        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
+//        let address = Address.relative(self.segmentRegister,Int(newAddress - baseAddress))
+//        return(address)
+        fatalError()
         }
         
     public override func allocateObject(sizeInBytes:Int) -> Word

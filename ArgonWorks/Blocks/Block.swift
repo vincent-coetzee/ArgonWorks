@@ -126,6 +126,8 @@ public class Block:NSObject,NamingContext,NSCoding
         {
         switch(context)
             {
+            case .none:
+                break
             case .block(let block):
                 self.parent = .block(block)
             case .node(let node):

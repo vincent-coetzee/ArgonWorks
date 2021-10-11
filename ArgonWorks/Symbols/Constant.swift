@@ -76,9 +76,10 @@ public class SystemConstant: Constant
             fatalError("init(labeled:ofType:) has not been implemented")
         }
     
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    public required init?(coder: NSCoder)
+        {
+        super.init(coder: coder)
+        }
     
  
 }

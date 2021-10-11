@@ -10,7 +10,6 @@ import Foundation
 public class Capsule
     {
     public let path: URL
-    public var transaction: Transaction?
     public let date: Date
     public let key: UUID
     public var compilationProduct: ParseNode?
@@ -23,10 +22,9 @@ public class Capsule
         self.key = UUID()
         }
         
-    public func with(source:String, product: ParseNode,transaction: Transaction)
+    public func with(source:String, product: ParseNode)
         {
         self.source = source
-        self.transaction = transaction
         self.compilationProduct = product
         }
     }

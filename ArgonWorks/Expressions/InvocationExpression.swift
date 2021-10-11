@@ -19,13 +19,12 @@ public class InvocationExpression: Expression
         {
         if self.method.isNil
             {
-            return(.error(.undefined))
+            return(.unknown)
             }
         return(self.method!.returnType)
         }
         
     private let name: Name
-    private let context: Context
     private let reportingContext: ReportingContext
     private let arguments: Arguments
     private var method: Method?
@@ -35,7 +34,6 @@ public class InvocationExpression: Expression
     required init?(coder: NSCoder)
         {
         self.name = Name()
-        self.context = .block(Block())
         self.reportingContext = NullReportingContext()
         self.arguments = []
         self.method = coder.decodeObject(forKey: "method") as? Method
@@ -57,13 +55,13 @@ public class InvocationExpression: Expression
         self.name = name
         self.location = location
         self.arguments = arguments
-        self.context = context
         self.reportingContext = reportingContext
         super.init()
         for argument in arguments
             {
             argument.value.setParent(self)
             }
+        self.setContext(context)
         }
         
  
@@ -135,9 +133,9 @@ public class InvocationExpression: Expression
         if localCount > 0
             {
             let size = localCount * MemoryLayout<Word>.size
-            instance.append(nil,"ENTER",.integer(size),.none,.none)
+            instance.append(nil,"ENTER",.literal(.integer(Argon.Integer(size))),.none,.none)
             }
-        instance.append(nil,"DISPATCH",.literal(.method(self.method!)),.none,.none)
+        instance.append(nil,"DISPATCH",.relocatable(.method(self.method!)),.none,.none)
         }
     }
 
@@ -198,7 +196,10 @@ public class MethodInvocationExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator)
         {
-        
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
         }
     }
 

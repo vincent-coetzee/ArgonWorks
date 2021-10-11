@@ -99,14 +99,14 @@ public class MethodInstance:Function,StackFrame
 
     private var _method:Method?
     public let buffer:T3ABuffer
-    public var instructionsAddress: Word = 0
+//    public var instructionsAddress: Word = 0
     public var isGenericMethod = false
     public var genericParameters = GenericClassParameters()
-    
+        
     public required init?(coder: NSCoder)
         {
         self._method = coder.decodeObject(forKey: "method") as? Method
-        self.buffer = T3ABuffer()
+        self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
 //        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
 //        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
@@ -118,6 +118,7 @@ public class MethodInstance:Function,StackFrame
         print("ENCODE METHOD INSTANCE \(self.label)")
         super.encode(with: coder)
         coder.encode(self.method,forKey: "method")
+        coder.encode(self.buffer,forKey: "buffer")
         coder.encode(self.genericParameters,forKey: "genericParameters")
         }
         
@@ -380,7 +381,7 @@ public class MethodInstance:Function,StackFrame
         {
         for symbol in scope.symbols
             {
-            self.localSymbols.append(symbol)
+            self.localSymbols.append(symbol as! Symbol)
             }
         }
     
@@ -421,13 +422,13 @@ public class MethodInstance:Function,StackFrame
         var stackOffset = MemoryLayout<Word>.size
         for parameter in self.parameters
             {
-            parameter.addresses.append(.stack(.BP,stackOffset))
+//            parameter.addresses.append(.stack(.BP,stackOffset))
             stackOffset += MemoryLayout<Word>.size
             }
         stackOffset = 0
         for slot in self.localSymbols
             {
-            slot.addresses.append(.stack(.BP,stackOffset))
+//            slot.addresses.append(.stack(.BP,stackOffset))
             stackOffset -= MemoryLayout<Word>.size
             }
         try block.emitCode(into: self.buffer,using: generator)

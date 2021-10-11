@@ -48,9 +48,10 @@ public class DataSegment: Segment
         
     public override func allocateAddress(sizeInBytes: Int) -> Address
         {
-        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
-        let address = Address.relative(self.segmentRegister,Int(newAddress - self.baseAddress))
-        return(address)
+//        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
+//        let address = Address.relative(self.segmentRegister,Int(newAddress - self.baseAddress))
+//        return(address)
+        fatalError()
         }
         
     public override func address(offset: Word) -> Word

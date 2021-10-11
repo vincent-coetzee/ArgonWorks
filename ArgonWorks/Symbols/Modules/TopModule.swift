@@ -53,7 +53,7 @@ public class TopModule: SystemModule
     
     public var argonModule: ArgonModule
         {
-        return(Self.argonModule)
+        return(self.lookup(label: "Argon") as! ArgonModule)
         }
         
     public var userModules: Array<Module>
@@ -71,7 +71,10 @@ public class TopModule: SystemModule
     init(_ array:Array<Module>)
         {
         super.init(label: "Root")
-        self.symbols.append(contentsOf: array)
+        for element in array
+            {
+            self.symbolsByLabel[element.label] = element
+            }
         self.index = UUID(index: 0)
         }
         
@@ -80,9 +83,21 @@ public class TopModule: SystemModule
         super.init(coder: coder)
         }
         
-    public override func resolveReferences()
+    public override func resolveReferences(topModule: TopModule)
         {
-        self.argonModule.resolveReferences()
+        self.argonModule.resolveReferences(topModule: topModule)
+        }
+        
+    public override func replaceSymbol(_ source: Symbol,with replacement: Symbol)
+        {
+        for symbol in self.symbols
+            {
+            symbol.replaceSymbol(source,with: replacement)
+            if symbol == source
+                {
+                self.symbolsByLabel[source.label] = replacement
+                }
+            }
         }
         
     public override func lookup(name: Name) -> Symbol?

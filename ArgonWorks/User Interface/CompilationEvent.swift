@@ -27,9 +27,9 @@ internal class CompilationEvent
         return(self.location.tokenStop - self.location.lineStart)
         }
 
-    public var line: Int
+    public var line: LineNumber
         {
-        return(self.location.line)
+        return(self.location.lineNumber)
         }
         
     public var selectionColor: NSColor
@@ -137,7 +137,8 @@ internal class CompilationEventGroup: CompilationEvent
         
     public override func child(atIndex: Int) -> CompilationEvent
         {
-        return(self.events[atIndex])
+        let children = self.events.sorted{$0.line.displayString < $1.line.displayString}
+        return(children[atIndex])
         }
         
     public override var isExpandable: Bool

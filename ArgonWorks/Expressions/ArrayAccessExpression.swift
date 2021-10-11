@@ -48,13 +48,23 @@ public class ArrayAccessExpression: Expression
         
     public override var type: Type
         {
-        self.array.type
+        if self.array.type.isUnknown
+            {
+            return(.unknown)
+            }
+        return((self.array.type.classValue as! ArrayClassInstance).elementType)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.array.analyzeSemantics(using: analyzer)
         self.index.analyzeSemantics(using: analyzer)
+        let arrayType = self.array.type
+        if !arrayType.isArrayClassInstance
+            {
+            analyzer.cancelCompletion()
+            analyzer.dispatchError(at: self.declaration!, message: "The type of object indexed is invalid.")
+            }
         }
         
     public override func realize(using realizer:Realizer)
@@ -65,13 +75,17 @@ public class ArrayAccessExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.lineNumber.line)
+            }
         let temp = instance.nextTemporary()
         try self.array.emitCode(into: instance,using: generator)
         instance.append(nil,"MOV",self.array.place,.none,temp)
         let offset = instance.nextTemporary()
         try self.index.emitCode(into: instance,using: generator)
         instance.append(nil,"MOV",self.index.place,.none,offset)
-        instance.append(nil,"MUL",offset,.integer(8),offset)
+        instance.append(nil,"MUL",offset,.literal(.integer(8)),offset)
         self._place = offset
         }
         

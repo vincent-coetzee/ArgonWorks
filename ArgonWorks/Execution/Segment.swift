@@ -20,17 +20,18 @@ public class Segment
         
         public var register: Instruction.Register
             {
-            switch(self)
-                {
-                case .stack:
-                    return(.SS)
-                case .static:
-                    return(.STS)
-                case .managed:
-                    return(.MS)
-                case .data:
-                    return(.DS)
-                }
+            fatalError()
+//            switch(self)
+//                {
+//                case .stack:
+//                    return(.SS)
+//                case .static:
+//                    return(.STS)
+//                case .managed:
+//                    return(.MS)
+//                case .data:
+//                    return(.DS)
+//                }
             }
         }
         
@@ -64,7 +65,8 @@ public class Segment
     
     public var segmentRegister: Instruction.Register
         {
-        return(self.segmentType.register)
+//        return(self.segmentType.register)
+        fatalError()
         }
         
     public init(size: MemorySize)

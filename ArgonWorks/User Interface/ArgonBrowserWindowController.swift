@@ -110,12 +110,13 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     private var currentSymbolFileURL:URL? = nil
     private var forwarderView: ForwarderView?
     private var firstFrame: NSRect? = nil
-    private var compilationEvents: Dictionary<String,CompilationEvent> = [:]
+    private var compilationEvents: Dictionary<Int,CompilationEvent> = [:]
     private var compilationEventList: Array<CompilationEvent> = []
     
     public var capsules: Dictionary<URL,Capsule> = [:]
     public var currentCapsule: Capsule?
     public var selectedFont: NSFont?
+    public var tokenizer:VisualTokenizer!
     
     public var sourceEditor: LineNumberTextView!
         {
@@ -123,6 +124,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             self.initSourceEditor()
             self.initFontManagement()
+            self.tokenizer = VisualTokenizer(lineNumberView: self.sourceEditor,reportingContext: self)
             }
         }
         
@@ -160,12 +162,11 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         let rectObject = RectObject(frame)
         rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
         self.window!.styleMask = [.resizable, .titled, .closable]
-        NotificationCenter.default.addObserver(self, selector: #selector(sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
+//        NotificationCenter.default.addObserver(self, selector: #selector(sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.sourceEditor)
         NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
         self.window!.delegate = self
         self.toolbar.validateVisibleItems()
         let content = self.window!.contentView
-        let splitView = content!.subviews[0] as! NSSplitView
         }
     
     private func initObjectBrowser()
@@ -200,8 +201,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         do
             {
             self.resetReporting()
-            Transaction.abort()
-            try self.compiler.parseChunk(self.sourceEditor.textStorage?.string ?? "")
+//            TopModule.shared.rollbackJournalTransaction()
+//            try self.compiler.parseChunk(self.sourceEditor.textStorage?.string ?? "")
             }
         catch
             {
@@ -236,7 +237,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         
     public func dispatchWarning(at: Location, message: String)
         {
-        if let group = self.compilationEvents["\(at.line)"] as? CompilationEventGroup
+        if let group = self.compilationEvents[at.lineNumber.primaryLine] as? CompilationEventGroup
             {
             group.addEvent(CompilationWarningEvent(location: at,message: message))
             }
@@ -244,7 +245,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             let group = CompilationEventGroup(location: at, message: message)
             group.isWarning = true
-            self.compilationEvents["\(group.line)"] = group
+            self.compilationEvents[group.line.primaryLine] = group
             }
         self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
@@ -253,7 +254,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     
     public func dispatchError(at: Location, message: String)
         {
-        if let group = self.compilationEvents["\(at.line)"] as? CompilationEventGroup
+        if let group = self.compilationEvents[at.lineNumber.primaryLine] as? CompilationEventGroup
             {
             group.addEvent(CompilationErrorEvent(location: at,message: message))
             }
@@ -261,14 +262,14 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             let group = CompilationEventGroup(location: at, message: message)
             group.isWarning = false
-            self.compilationEvents["\(group.line)"] = group
+            self.compilationEvents[group.line.primaryLine] = group
             }
         self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
         self.refreshSourceAnnotations()
         }
     
-    private func resetReporting()
+    public func resetReporting()
         {
         self.compilationEvents = [:]
         self.sourceEditor.removeAllAnnotations()
@@ -280,7 +281,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         for value in self.compilationEvents.values
             {
             let group = value as! CompilationEventGroup
-            let annotation = LineAnnotation(line: group.line, icon: NSImage(named: "IconLineMarkerYellow")!)
+            let annotation = LineAnnotation(line: group.line.line, icon: NSImage(named: "IconLineMarkerYellow")!)
             self.sourceEditor.addAnnotation(annotation)
             }
         }
@@ -334,14 +335,15 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 //                item.action = #selector(ForwarderView.onSaveObject(_:))
 //                item.isEnabled = true
 //                }
-            else if item.label == "Symbols"
+            else if item.label == "Object"
                 {
                 item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onSaveSymbols(_:))
+                item.action = #selector(ForwarderView.onSaveObject(_:))
                 item.isEnabled = true
                 }
             }
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
+        print("CURRENT SOURCE FILE URL ON OPENING BROWSER = \(urlString)")
         if let aString = urlString,
         let url = URL(string: aString),
         let string = try? String(contentsOf: url)
@@ -376,6 +378,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 //            self.sourceEditor.typingAttributes = attributes
             self.toolbar.delegate = self
             self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
+            }
+        else
+            {
+            print("WARNING: Unable to open file \(urlString)")
             }
         }
         
@@ -417,32 +423,29 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     @IBAction func onSaveFile(_ sender:Any?)
         {
         let text = self.sourceEditor.textStorage!.string
-        if self.currentSourceFileURL.isNotNil
+        guard self.currentSourceFileURL.isNil else
             {
             do
                 {
                 try text.write(to: self.currentSourceFileURL!, atomically: false, encoding: .utf8)
-                return
                 }
             catch let error
                 {
                 print("ERROR \(error) SAVING FiLE")
                 }
+            return
             }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [UTType("com.macsemantics.argon.source")!]
         panel.prompt = "Save"
         panel.message = "Select where the editor must save the Argon source."
-        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
-        if panel.runModal() == .OK
+        panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Desktop")
+        if panel.runModal() == .OK,let url = panel.url
             {
-            if let url = panel.url
-                {
-                try? text.write(to: url, atomically: false, encoding: .utf8)
-                UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
-                self.currentSourceFileURL = url
-                self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                }
+            try? text.write(to: url, atomically: false, encoding: .utf8)
+            UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
+            self.currentSourceFileURL = url
+            self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
             }
         }
     ///
@@ -503,7 +506,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         panel.allowedContentTypes = [UTType("com.macsemantics.argon.source")!]
         panel.prompt = "Save As"
         panel.message = "Select where the compiler must save the current source file under a new name."
-        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
+//        panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Desktop")
         if panel.runModal() == .OK
             {
             if let theUrl = panel.url
@@ -538,56 +541,39 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     ///
     ///
     ///
-    @IBAction func onSaveSymbols(_ sender:Any?)
+    @IBAction func onSaveObject(_ sender:Any?)
         {
-        if self.currentSymbolFileURL.isNil
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType("com.macsemantics.argon.object")!]
+        panel.prompt = "Save Object"
+        panel.message = "Select where the compiler must save the object file."
+        if panel.runModal() == .OK
             {
-            let panel = NSSavePanel()
-            panel.allowedContentTypes = [UTType("com.macsemantics.argon.symbols")!]
-            panel.prompt = "Save"
-            panel.message = "Select where the compiler must save the symbols from the compilation."
-            panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
-            if panel.runModal() == .OK
+            if let theUrl = panel.url
                 {
-                if let theUrl = panel.url
+                let source = self.sourceEditor.string
+                let aCompiler = Compiler()
+                if aCompiler.compileChunk(source).isNotNil
                     {
-                    self.currentSymbolFileURL = theUrl
-                    let source = self.sourceEditor.string
-                    Transaction.abort()
-                    self.compiler = Compiler()
-                    if let chunk = self.compiler.compileChunk(source)
+                    do
                         {
-                        do
+                        let data = try NSKeyedArchiver.archivedData(withRootObject: aCompiler.topModule, requiringSecureCoding: false)
+                        try data.write(to: theUrl)
+                        let newData = try Data(contentsOf: theUrl)
+                        let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
+                        print(result!)
+                        }
+                    catch let error
+                        {
+                        print(error)
+                        let alert = NSAlert()
+                        alert.icon = NSImage(named: "ObjectIcon")!
+                        alert.messageText = "Object writing error."
+                        alert.informativeText = "An error occured while writing the object file for this Argon module out to disk."
+                        alert.beginSheetModal(for: self.window!)
                             {
-                            let data = try NSKeyedArchiver.archivedData(withRootObject: chunk, requiringSecureCoding: false)
-                            try data.write(to: theUrl)
-                            let newData = try Data(contentsOf: theUrl)
-                            let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
-                            print(result)
-                            let output = result
-                            print(output)
-                            let topObject = result! as! Symbol
-                            if topObject.isModule
-                                {
-                                let module = topObject as! Module
-                                for symbol in module.symbols
-                                    {
-                                    print(symbol)
-                                    }
-                                }
-                            }
-                        catch let error
-                            {
-                            print(error)
-                            let alert = NSAlert()
-                            alert.icon = NSImage(named: "SymbolsIcon")!
-                            alert.messageText = "Symbol writing error."
-                            alert.informativeText = "An error occured while writing the symbols for this Argon module out to disk."
-                            alert.beginSheetModal(for: self.window!)
-                                {
-                                response in
-                                alert.window.endSheet(self.window!)
-                                }
+                            response in
+                            alert.window.endSheet(self.window!)
                             }
                         }
                     }
@@ -604,21 +590,13 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     @IBAction func onCompileFile(_ sender: Any?)
         {
         let source = self.sourceEditor.string
-        TopModule.shared.journalTransaction.reverse()
-        TopModule.shared.resetJournalEntries()
+        TopModule.shared.rollbackJournalTransaction()
         let compiler = Compiler()
         self.resetReporting()
         compiler.reportingContext = self
-        Transaction.abort()
         if let chunk = compiler.compileChunk(source)
             {
-            let transaction = Transaction.current.copy()
             TopModule.shared.printContents()
-            self.currentCapsule?.with(source: source, product: chunk, transaction: transaction)
-            if let module = chunk as? Module
-                {
-                module.realizeSuperclasses()
-                }
             }
         }
     ///
@@ -631,7 +609,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         {
         let mutableString = NSMutableAttributedString(string: "",attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
         self.sourceEditor.textStorage?.setAttributedString(mutableString)
-        Transaction.abort()
+        TopModule.shared.rollbackJournalTransaction()
         self.resetReporting()
         self.compiler = Compiler()
         self.compiler.reportingContext = self
@@ -651,7 +629,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         panel.canChooseFiles = true
         panel.prompt = "Open"
         panel.message = "Select an Argon source file to be opened in the Argon source editor."
-        panel.directoryURL = URL(fileURLWithPath: "/Users/vincent/Desktop")
+//        panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Desktop")
         if panel.runModal() == .OK
             {
             if let url = panel.url,let string = try? String(contentsOf: url)
@@ -660,7 +638,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.sourceEditor.textStorage?.setAttributedString(mutableString)
                 self.resetReporting()
-                TopModule.shared.resetJournalEntries()
+                TopModule.shared.rollbackJournalTransaction()
                 self.compiler = Compiler()
                 self.compiler.reportingContext = self
                 self.compiler.compileChunk(string)
@@ -675,6 +653,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 self.capsules[capsule.path] = capsule
                 self.currentCapsule = capsule
                 self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
+                TopModule.shared.rollbackJournalTransaction()
                 }
             }
         }
@@ -703,7 +682,7 @@ extension ArgonBrowserWindowController: SourceEditorDelegate
     {
     public func sourceEditorGutter(_ view: LineNumberGutter, selectedAnnotationAtLine line: Int)
         {
-        if let group = self.compilationEvents["\(line)"]
+        if let group = self.compilationEvents[line]
             {
             let row = self.errorListView.row(forItem: group)
             if row != -1
@@ -744,9 +723,9 @@ public class ForwarderView: NSView
         self.controller.onCompileFile(sender)
         }
         
-    @IBAction func onSaveSymbols(_ sender: Any?)
+    @IBAction func onSaveObject(_ sender: Any?)
         {
-        self.controller.onSaveSymbols(sender)
+        self.controller.onSaveObject(sender)
         }
 
     @IBAction func onNewEditor(_ sender: Any?)

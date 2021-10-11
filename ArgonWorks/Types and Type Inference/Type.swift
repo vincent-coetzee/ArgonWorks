@@ -58,7 +58,7 @@ public indirect enum Type: Equatable,Storable
         {
         switch(self)
             {
-            case .error:
+            case .unknown:
                 return(nil)
             case .class(let aClass):
                 return(aClass.lookup(label: label))
@@ -80,8 +80,8 @@ public indirect enum Type: Equatable,Storable
         {
         switch(lhs,rhs)
             {
-            case (.error(let error1),.error(let error2)):
-                return(error1 == error2)
+            case (.unknown,.unknown):
+                return(true)
             case (.class(let error1),.class(let error2)):
                 return(error1 == error2)
             case (.enumeration(let error1),.enumeration(let error2)):
@@ -89,6 +89,8 @@ public indirect enum Type: Equatable,Storable
             case (.methodApplication(let label1,let types1,let type1),.methodApplication(let label2,let types2,let type2)):
                 return(label1 == label2 && types1 == types2 && type1 == type2)
             case (.method(let error1),.method(let error2)):
+                return(error1 == error2)
+            case (.genericClassParameter(let error1),.genericClassParameter(let error2)):
                 return(error1 == error2)
             default:
                 return(false)
@@ -104,26 +106,33 @@ public indirect enum Type: Equatable,Storable
                     {
                     return(.class(class1))
                     }
-                return(.error(.mismatch))
+                return(.unknown)
+            case (.enumeration(let e1),.enumeration(let e2)):
+                if (e1 == e2)
+                    {
+                    return(.enumeration(e2))
+                    }
+                return(.unknown)
             default:
-                return(.error(.mismatch))
+                return(.unknown)
             }
         }
 
-    case error(TypeError)
+    case unknown
     case `class`(Class)
     case enumeration(Enumeration)
     case method(Method)
     case methodApplication(String,Types,Type)
     case forwardReference(Name,Context)
     case typeAlias(TypeAlias)
+    case genericClassParameter(GenericClassParameter)
     
     public var displayString: String
         {
         switch(self)
             {
-            case .error:
-                return("error")
+            case .unknown:
+                return("unknown")
             case .class(let aClass):
                 return(aClass.displayString)
             case .enumeration(let enumeration):
@@ -152,13 +161,15 @@ public indirect enum Type: Equatable,Storable
         {
         switch(self)
             {
-            case .error:
-                return("error")
+            case .unknown:
+                return("unknown")
             case .typeAlias(let alias):
                 return(alias.mangledName)
             case .class(let aClass):
                 return(aClass.mangledName)
             case .enumeration(let enumeration):
+                return(enumeration.label)
+            case .genericClassParameter(let enumeration):
                 return(enumeration.label)
             case .method:
                 fatalError()
@@ -171,14 +182,20 @@ public indirect enum Type: Equatable,Storable
         
     public var isGenericClassParameter: Bool
         {
-        return(false)
+        switch(self)
+            {
+            case .genericClassParameter:
+                return(true)
+            default:
+                return(false)
+            }
         }
         
-    public var isError: Bool
+    public var isUnknown: Bool
         {
         switch(self)
             {
-            case .error:
+            case .unknown:
                 return(true)
             default:
                 return(false)
@@ -192,6 +209,8 @@ public indirect enum Type: Equatable,Storable
             case .class(let aClass):
                 return(aClass.label)
             case .enumeration(let aClass):
+                return(aClass.label)
+            case .genericClassParameter(let aClass):
                 return(aClass.label)
             case .method(let method):
                 return(method.label)

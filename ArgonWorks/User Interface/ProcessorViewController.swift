@@ -12,7 +12,7 @@ class ProcessorViewController: NSViewController
     @IBOutlet var tableView: NSTableView!
     @IBOutlet var registersController: RegistersViewController!
     
-    private var buffer: InstructionBuffer!
+//    private var buffer: InstructionBuffer!
     
     private let virtualMachine = VirtualMachine.small
     
@@ -36,7 +36,7 @@ extension ProcessorViewController: NSTableViewDataSource
     {
     public func numberOfRows(in tableView: NSTableView) -> Int
         {
-        return(buffer.count)
+        return(0)
         }
     }
 

@@ -11,7 +11,7 @@ public class EnumerationInstanceExpression: Expression
     {
     public override var type: Type
         {
-        return(self.enumeration.isNil ? .error(.mismatch) : .enumeration(self.enumeration!))
+        return(self.enumeration.isNil ? .unknown : .enumeration(self.enumeration!))
         }
         
     public override var displayString: String

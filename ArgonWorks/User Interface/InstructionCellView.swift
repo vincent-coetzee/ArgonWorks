@@ -9,11 +9,11 @@ import Cocoa
 
 class InstructionCellView: NSTableCellView
     {
-    public var instruction: Instruction = Instruction(.NOP)
-        {
-        didSet
-            {
-            self.textField?.stringValue = "\(instruction.opcode) \(instruction.operandText)"
-            }
-        }
+//    public var instruction: Instruction = Instruction(.NOP)
+//        {
+//        didSet
+//            {
+//            self.textField?.stringValue = "\(instruction.opcode) \(instruction.operandText)"
+//            }
+//        }
     }

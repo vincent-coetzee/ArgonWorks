@@ -129,12 +129,16 @@ public class TokenRenderer
         
     public func set(kind someKind: Kind,forToken someToken: Token)
         {
+        guard !someToken.isEnd else
+            {
+            return
+            }
         self.attributes[someToken.location.range]![.foregroundColor] = self.mapKindToForegroundColor(kind: someKind,systemClassNames: self.systemClassNames)
         }
         
     public func processTokens(_ tokens: Tokens)
         {
-        for token in tokens
+        for token in tokens where !token.isEnd
             {
             if self.attributes[token.location.range].isNotNil
                 {
@@ -152,8 +156,22 @@ public class TokenRenderer
         
     public func setToken(_ token: Token)
         {
+        guard !token.isEnd else
+            {
+            return
+            }
         self.currentToken = token
-        self.attributes[token.location.range]![.foregroundColor] = self.mapTokenToForegroundColor(token: token)
+        if var attributes = self.attributes[token.location.range]
+            {
+            attributes[.foregroundColor] = self.mapTokenToForegroundColor(token: token)
+            self.attributes[token.location.range] = attributes
+            }
+        else
+            {
+            var attributes:[NSAttributedString.Key:Any] = [:]
+            attributes[.foregroundColor] = self.mapTokenToForegroundColor(token: token)
+            self.attributes[token.location.range] = attributes
+            }
         }
         
     private func mapTokenToForegroundColor(token: Token) -> NSColor

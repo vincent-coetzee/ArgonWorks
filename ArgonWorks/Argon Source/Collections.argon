@@ -1,0 +1,18 @@
+///
+///
+/// The primary Collections module for Argon
+///
+///
+
+MODULE Collections
+    {
+    EXPORTED METHOD count<ELEMENT>(=array::Array<ELEMENT>) -> Integer
+        {
+        RETURN(basicAt(on::array,key::"_count",as::Integer::class))
+        }
+        
+    EXPORTED METHOD count<ELEMENT>(=list::List<ELEMENT>) -> Integer
+        {
+        RETURN(basicAt(on::list,key::"_count",as::Integer::class))
+        }
+    }

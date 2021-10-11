@@ -18,7 +18,7 @@ public struct JournalTransaction
         self.entries = entries
         }
         
-    public func reverse()
+    public func rollback()
         {
         for entry in self.entries
             {
@@ -57,9 +57,25 @@ public enum JournalEntry
     
 public class ContainerSymbol:Symbol
     {
+    internal var symbols: Symbols
+        {
+        Array(self.symbolsByLabel.values)
+        }
+        
     public override var isGroup: Bool
         {
         return(true)
+        }
+        
+    public func commitJournalTransaction()
+        {
+        self.resetJournalEntries()
+        }
+        
+    public func rollbackJournalTransaction()
+        {
+        self.journalTransaction.rollback()
+        self.resetJournalEntries()
         }
         
     public override var journalTransaction: JournalTransaction
@@ -78,7 +94,7 @@ public class ContainerSymbol:Symbol
         return(entries)
         }
         
-    internal var symbols = Symbols()
+    internal var symbolsByLabel = Dictionary<Label,Symbol>()
     internal var journalEntries = Array<JournalEntry>()
     
     public override var isExpandable: Bool
@@ -98,7 +114,7 @@ public class ContainerSymbol:Symbol
         
     public override var allChildren: Symbols
         {
-        return(self.symbols)
+        return(Array(self.symbols))
         }
         
     public override var children: Symbols?
@@ -126,8 +142,8 @@ public class ContainerSymbol:Symbol
     public required init?(coder: NSCoder)
         {
         print("DECODING CONTAINER")
-        self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
-        print("DECODED \(self.symbols.count) SYMBOLS")
+        self.symbolsByLabel = coder.decodeObject(forKey: "symbolsByLabel") as! Dictionary<Label,Symbol>
+        print("DECODED \(self.symbolsByLabel.count) SYMBOLS")
         super.init(coder: coder)
         }
         
@@ -135,13 +151,11 @@ public class ContainerSymbol:Symbol
         {
         super.init(label: label)
         }
-        
- 
-        
+    
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.symbols,forKey: "symbols")
+        coder.encode(self.symbolsByLabel,forKey: "symbolsByLabel")
         }
     ///
     ///
@@ -150,19 +164,20 @@ public class ContainerSymbol:Symbol
     ///
     public override func lookup(label:String) -> Symbol?
         {
-        for symbol in self.symbols
+        if let symbol = self.symbolsByLabel[label]
             {
-            if symbol.label == label
-                {
-                return(symbol)
-                }
+            return(symbol)
             }
         return(self.parent.lookup(label: label))
         }
         
     public override func removeSymbol(_ symbol: Symbol)
         {
-        self.symbols.removeAll(where: {$0.index == symbol.index})
+        if self.symbolsByLabel[symbol.label].isNotNil
+            {
+            symbol.resetParent()
+            self.symbolsByLabel[symbol.label] = nil
+            }
         }
         
     public override func setSymbol(_ symbol:Symbol,atName: Name)
@@ -212,11 +227,11 @@ public class ContainerSymbol:Symbol
             }
         }
         
-    public override func realizeSuperclasses()
+    public override func realizeSuperclasses(topModule: TopModule)
         {
         for element in self.symbols
             {
-            element.realizeSuperclasses()
+            element.realizeSuperclasses(topModule: topModule)
             }
         }
         
@@ -230,7 +245,7 @@ public class ContainerSymbol:Symbol
                 fatalError("Duplicate symbol in Module")
                 }
             }
-        self.symbols.append(symbol)
+        self.symbolsByLabel[symbol.label] = symbol
         self.journalEntries.append(.addSymbol(symbol,to: self))
         symbol.setParent(self)
         return(symbol)
@@ -252,7 +267,7 @@ public class ContainerSymbol:Symbol
             element.removeObject(taggedWith: taggedWith)
             if element.tag == taggedWith
                 {
-                self.symbols.removeAll(where: {$0.index == element.index})
+                self.symbolsByLabel[element.label] = nil
                 }
             }
         }

@@ -28,6 +28,13 @@ public class Compiler
         TopModule.shared.argonModule.classes.map{$0.label}
         }
     
+    public static let cleanData = try! NSKeyedArchiver.archivedData(withRootObject: TopModule.shared, requiringSecureCoding: false)
+    
+    public var argonModule: ArgonModule
+        {
+        self.topModule.argonModule
+        }
+        
     internal private(set) var namingContext: NamingContext
     private var parser: Parser?
     internal var lastChunk: ParseNode?
@@ -38,8 +45,8 @@ public class Compiler
     
     init()
         {
-        self.topModule = TopModule.shared
-        self.namingContext = TopModule.shared
+        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        self.namingContext = self.topModule
         }
         
     public var reportingContext:ReportingContext = NullReportingContext.shared
@@ -54,21 +61,18 @@ public class Compiler
             {
             return
             }
-        Transaction.abort()
-        Transaction.begin()
         self.parser = Parser(compiler: self)
         self.parser!.parseChunk(source)
         }
         
     public func commit()
         {
-        TopModule.shared.resetJournalEntries()
+        self.topModule.commitJournalTransaction()
         }
         
     public func rollback()
         {
-        TopModule.shared.journalTransaction.reverse()
-        TopModule.shared.resetJournalEntries()
+        self.topModule.rollbackJournalTransaction()
         }
         
     @discardableResult
@@ -79,12 +83,13 @@ public class Compiler
             return(nil)
             }
         self.parser = Parser(compiler: self)
-        TopModule.shared.beginJournalTransaction()
+        self.topModule.beginJournalTransaction()
         self.lastChunk = parser!.parseChunk(source)
-        for entry in TopModule.shared.allJournalEntries
+        if self.lastChunk.isNotNil
             {
-            print(entry.displayString)
+            self.topModule.resolveReferences(topModule: self.topModule)
             }
+        self.topModule.printContents()
         if let chunk = self.lastChunk
             {
             Realizer.realize(chunk,in:self)

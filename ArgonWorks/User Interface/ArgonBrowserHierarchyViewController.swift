@@ -72,6 +72,9 @@ public class SymbolList:NSObject,NSOutlineViewDelegate,NSOutlineViewDataSource
         didSet
             {
             self.outliner?.reloadData()
+            self.outliner?.indentationPerLevel = 200
+            self.outliner?.rowHeight = 40
+            self.outliner?.intercellSpacing = NSSize(width: 20,height: 20)
             }
         }
         
@@ -86,6 +89,7 @@ public class SymbolList:NSObject,NSOutlineViewDelegate,NSOutlineViewDataSource
             self.outliner?.indentationPerLevel = 200
             self.outliner?.rowHeight = 40
             self.outliner?.intercellSpacing = NSSize(width: 20,height: 20)
+            self.outliner?.reloadData()
             }
         }
   

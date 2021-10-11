@@ -58,6 +58,10 @@ public class UnaryExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.lineNumber.line)
+            }
         try self.rhs.emitCode(into: instance, using: using)
         var opcode = "NOP"
         switch(self.operationName)

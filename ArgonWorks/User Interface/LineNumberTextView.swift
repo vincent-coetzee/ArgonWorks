@@ -237,28 +237,51 @@ public class LineNumberTextView: NSTextView {
             }
         }
         
+//    public override func insertNewline(_ sender:Any?)
+//        {
+//        let location = self.selectedRanges[0].rangeValue.location
+//        var start = location
+//        let string = self.string
+//        let startIndex = string.startIndex
+//        var currentIndex = string.index(startIndex,offsetBy: location)
+//        var tabString = ""
+//        if currentIndex < string.endIndex
+//            {
+//            while currentIndex < string.endIndex && string[currentIndex] != "\n"
+//                {
+//                start += 1
+//                currentIndex = string.index(after: currentIndex)
+//                }
+//            while currentIndex < string.endIndex && string[currentIndex].isWhitespace
+//                {
+//                if string[currentIndex] == "\t"
+//                    {
+//                    tabString += "\t"
+//                    }
+//                start += 1
+//                currentIndex = string.index(after: currentIndex)
+//                }
+//            }
+//        let range = NSRange(location: location,length: 0)
+//        self.textStorage?.replaceCharacters(in: range, with: "\n\(tabString)")
+//        }
+
     public override func insertNewline(_ sender:Any?)
         {
         let location = self.selectedRanges[0].rangeValue.location
-        var start = location
         let string = self.string
         let startIndex = string.startIndex
         var currentIndex = string.index(startIndex,offsetBy: location)
         var tabString = ""
         if currentIndex < string.endIndex
             {
-            while currentIndex < string.endIndex && string[currentIndex] != "\n"
+            currentIndex = string.index(currentIndex,offsetBy: 1)
+            while currentIndex < string.endIndex && string[currentIndex].isWhitespace && string[currentIndex] != "\n"
                 {
-                start += 1
-                currentIndex = string.index(after: currentIndex)
-                }
-            while currentIndex < string.endIndex && string[currentIndex].isWhitespace
-                {
-                if string[currentIndex] == "\t"
+                if string[currentIndex] == " "
                     {
-                    tabString += "\t"
+                    tabString += " "
                     }
-                start += 1
                 currentIndex = string.index(after: currentIndex)
                 }
             }

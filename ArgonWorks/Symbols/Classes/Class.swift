@@ -404,6 +404,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(list.sorted{$0.label<$1.label})
         }
         
+    internal var isForwardReferenced: Bool = false
     internal var superclassReferences = Array<ForwardReferenceClass>()
     private var subclasses = Classes()
     private var superclasses = Classes()
@@ -537,6 +538,14 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             keys.append(key)
             }
         return(keys)
+        }
+        
+    public override func analyzeSemantics(using: SemanticAnalyzer)
+        {
+        for slot in self.layoutSlots
+            {
+            slot.analyzeSemantics(using: using)
+            }
         }
         
     public func addSuperclass(_ aClass: Class)
@@ -937,7 +946,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         }
         
-    public override func realizeSuperclasses()
+    public override func realizeSuperclasses(topModule: TopModule)
         {
         guard !self.hasBeenRealized else
             {
@@ -945,11 +954,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         for reference in self.superclassReferences
             {
-            reference.realizeClass()
+            reference.realizeClass(topModule: topModule)
             if let symbol = reference.theClass
                 {
                 self.addSuperclass(symbol)
-                symbol.realizeSuperclasses()
+                symbol.realizeSuperclasses(topModule: topModule)
                 }
             else
                 {

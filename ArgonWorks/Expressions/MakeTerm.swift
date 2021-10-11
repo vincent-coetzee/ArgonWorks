@@ -9,12 +9,12 @@ import Foundation
 
 public class ClassInstanciationTerm: Expression
     {
-    private let _type: Class
+    private let _class: Class
     private let arguments: Arguments
     
     required init?(coder: NSCoder)
         {
-        self._type = coder.decodeObject(forKey: "type") as! Class
+        self._class = coder.decodeObject(forKey: "_class") as! Class
         self.arguments = coder.decodeArguments(forKey: "arguments")
         super.init(coder: coder)
         }
@@ -22,13 +22,13 @@ public class ClassInstanciationTerm: Expression
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self._type,forKey: "type")
+        coder.encode(self._class,forKey: "_class")
         coder.encode(self.arguments,forKey: "arguments")
         }
         
     public init(type: Class,arguments: Arguments)
         {
-        self._type = type
+        self._class = type
         self.arguments = arguments
         super.init()
         for argument in arguments
@@ -45,7 +45,7 @@ public class ClassInstanciationTerm: Expression
         
     public override var type: Type
         {
-        return(.class(self._type))
+        return(.class(self._class))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -68,13 +68,17 @@ public class ClassInstanciationTerm: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        instance.append(nil,"PUSH",.literal(.class(self._type)),.none,.none)
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        instance.append(nil,"PUSH",.relocatable(.class(self._class)),.none,.none)
         for argument in self.arguments.reversed()
             {
             try argument.value.emitCode(into: instance,using: generator)
             instance.append(nil,"PUSH",argument.value.place,.none,.none)
             }
-        instance.append(nil,"CALL",.literal(.MAKE),.none,.none)
+        instance.append(nil,"CALL",.relocatable(.function(Function(label: "MAKE"))),.none,.none)
         self._place = .returnRegister
         }
     }

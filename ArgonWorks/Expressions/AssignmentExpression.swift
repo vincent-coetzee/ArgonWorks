@@ -41,7 +41,7 @@ public class AssignmentExpression: Expression
         
     public override var type: Type
         {
-        return(.error(.undefined))
+        return(.unknown)
         }
         
     init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)
@@ -68,16 +68,24 @@ public class AssignmentExpression: Expression
         {
         self.lhs.analyzeSemantics(using: analyzer)
         self.rhs.analyzeSemantics(using: analyzer)
+        if self.lhs.type.isUnknown && !self.rhs.type.isUnknown
+            {
+            self.lhs.setType(self.rhs.type)
+            }
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        try self.lhs.emitCode(into: instance,using: generator)
-        if self.lhs.place == T3AInstruction.Operand.none
+        if let location = self.declaration
             {
-            print("halt")
+            instance.append(lineNumber: location.line)
             }
+        try self.lhs.emitCode(into: instance,using: generator)
         try self.rhs.emitCode(into: instance,using: generator)
         instance.append(nil,"MOVINDIRECT",self.lhs.place,rhs.place,.none)
+        if rhs.place.isNone
+            {
+            print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")
+            }
         }
     }

@@ -11,7 +11,7 @@ import Foundation
 public class CodeGenerator: CompilerPass
     {
     public let compiler: Compiler
-    public let registerFile: RegisterFile
+//    public let registerFile: RegisterFile
     public var wasCancelled = false
     public var isLValue = false
     
@@ -30,7 +30,7 @@ public class CodeGenerator: CompilerPass
     public init(compiler: Compiler)
         {
         self.compiler = compiler
-        self.registerFile = RegisterFile()
+//        self.registerFile = RegisterFile()
         }
         
     public func cancelCompletion()

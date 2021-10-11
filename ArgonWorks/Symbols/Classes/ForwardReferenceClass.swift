@@ -9,6 +9,11 @@ import Foundation
 
 public class ForwardReferenceClass: Class
     {
+    public override var isForwardReferenceClass: Bool
+        {
+        return(true)
+        }
+        
     private let localName: Name
     private let context: Context?
     internal var theClass: Class?
@@ -24,15 +29,13 @@ public class ForwardReferenceClass: Class
         fatalError("init(coder:) has not been implemented")
     }
     
- 
-        
     public override func allocateAddresses(using allocator:AddressAllocator)
         {
         }
         
-    public func realizeClass()
+    public func realizeClass(topModule: TopModule)
         {
-        let aContext = self.context.isNil ? Context.node(TopModule.shared.argonModule) : self.context!
+        let aContext = self.context.isNil ? Context.node(topModule.argonModule) : self.context!
         self.theClass = aContext.lookup(name: self.localName) as? Class
         if self.theClass.isNil
             {
@@ -42,7 +45,7 @@ public class ForwardReferenceClass: Class
         
     public override func realize(using realizer: Realizer)
         {
-        let aContext = self.context.isNil ? Context.node(realizer.virtualMachine.topModule.argonModule) : self.context!
+        let aContext = self.context.isNil ? Context.node(realizer.argonModule) : self.context!
         self.theClass = aContext.lookup(name: self.localName) as? Class
         if self.theClass.isNil
             {

@@ -7,11 +7,21 @@
 
 import Foundation
 
-public class T3ABuffer: NSObject,NSCoding
+public class T3ABuffer: NSObject,NSCoding,Collection
     {
     public var count: Int
         {
         return(self.instructions.count)
+        }
+        
+    public var startIndex: Int
+        {
+        return(self.instructions.startIndex)
+        }
+        
+    public var endIndex: Int
+        {
+        return(self.instructions.endIndex)
         }
         
     public var instructions = Array<T3AInstruction>()
@@ -42,9 +52,24 @@ public class T3ABuffer: NSObject,NSCoding
         T3AInstruction.nextTemporary()
         }
         
+    public func index(after index:Int) -> Int
+        {
+        return(index + 1)
+        }
+        
+    public subscript(_ index:Int) -> T3AInstruction
+        {
+        return(self.instructions[index])
+        }
+        
     public func nextLabel() -> T3ALabel
         {
         T3ALabel()
+        }
+        
+    public func append(lineNumber: Int)
+        {
+        self.append(nil,"LINE",.literal(.integer(Argon.Integer(lineNumber))),.none,.none)
         }
         
     public func append(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)

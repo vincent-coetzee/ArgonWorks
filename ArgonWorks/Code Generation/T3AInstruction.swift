@@ -18,8 +18,84 @@ public class T3AInstruction: NSObject,NSCoding
         return(.temporary(index))
         }
         
-    public enum Operand: Equatable
+    public enum LiteralValue
         {
+        case `nil`
+        case string(String)
+        case symbol(String)
+        case integer(Argon.Integer)
+        case float(Argon.Float)
+        case boolean(Argon.Boolean)
+        case character(Argon.Character)
+        case byte(Argon.Byte)
+        }
+
+    public enum RelocatableValue
+        {
+        public var symbol: Symbol?
+            {
+            switch(self)
+                {
+                case .slot(let symbol):
+                    return(symbol)
+                case .function(let symbol):
+                    return(symbol)
+                case .method(let symbol):
+                    return(symbol)
+                case .module(let symbol):
+                    return(symbol)
+                case .class(let symbol):
+                    return(symbol)
+                case .enumeration(let symbol):
+                    return(symbol)
+                case .enumerationCase(let symbol):
+                    return(symbol)
+                case .constant(let symbol):
+                    return(symbol)
+                default:
+                    return(nil)
+                }
+            }
+            
+        case `self`
+        case `Self`
+        case `super`
+        case slot(Slot)
+        case function(Function)
+        case method(Method)
+        case module(Module)
+        case `class`(Class)
+        case enumeration(Enumeration)
+        case enumerationCase(EnumerationCase)
+        case constant(Constant)
+        case segmentDS
+        case relocatableIndex(Int)
+        }
+
+    public enum Operand
+        {
+        public var relocatableValue: RelocatableValue
+            {
+            switch(self)
+                {
+                case .relocatable(let value):
+                    return(value)
+                default:
+                    fatalError("This should not be asked of this value.")
+                }
+            }
+            
+        public var isRelocatable: Bool
+            {
+            switch(self)
+                {
+                case .relocatable:
+                    return(true)
+                default:
+                    return(false)
+                }
+            }
+            
         public var isNone: Bool
             {
             switch(self)
@@ -50,42 +126,42 @@ public class T3AInstruction: NSObject,NSCoding
                     return("NONE")
                 case .returnRegister:
                     return("RET")
-                case .local(let slot):
-                    return("LOCAL(\(slot.label))")
                 case .temporary(let integer):
                     return("TEMP_\(integer)")
                 case .label(let label):
                     return(label.displayString)
-                case .integer(let integer):
-                    return("\(integer)")
-                case .float(let integer):
-                    return("\(integer)")
-                case .string(let integer):
-                    return("\"\(integer)\"")
+                case .relocatable(let relocatable):
+                    return("\(relocatable)")
                 case .literal(let literal):
                     return("\(literal)")
-                case .boolean(let boolean):
-                    return("\(boolean)")
                 }
             }
             
         case none
         case returnRegister
         case temporary(Int)
-        case local(Slot)
         case label(T3ALabel)
-        case integer(Int)
-        case float(Double)
-        case string(String)
-        case boolean(Bool)
-        case literal(Instruction.LiteralValue)
+        case relocatable(RelocatableValue)
+        case literal(LiteralValue)
         }
         
     public var displayString: String
         {
-        if self.opcode == "MOVINDIRECT"
+        if self.opcode == "LINE"
             {
-            print("helt")
+            switch(self.operand1)
+                {
+                case .literal(let literal):
+                    switch(literal)
+                        {
+                        case .integer(let integer):
+                            return(";;  LINE \(integer)")
+                        default:
+                            return("")
+                        }
+                default:
+                    return("")
+                }
             }
         let labelString = self.label.isNil ? "       " : self.label!.displayString
         var columns:Array<String> = []
@@ -112,6 +188,12 @@ public class T3AInstruction: NSObject,NSCoding
     public var operand2: Operand = .none
     public var result: Operand = .none
     
+    init(lineNumber: Int)
+        {
+        self.opcode = "LINE"
+        self.operand1 = .literal(.integer(Argon.Integer(lineNumber)))
+        }
+        
     init(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: Operand,_ operand2: Operand,_ result: Operand)
         {
         self.label = label
@@ -126,18 +208,25 @@ public class T3AInstruction: NSObject,NSCoding
         self.offset = coder.decodeInteger(forKey: "offset")
         self.label = coder.decodeObject(forKey: "label") as? T3ALabel
         self.opcode = coder.decodeObject(forKey: "opcode") as! String
-        self.operand1 = coder.decodeT3AOperand(forKey: "operand1")
-        self.operand2 = coder.decodeT3AOperand(forKey: "operand2")
-        self.result = coder.decodeT3AOperand(forKey: "result")
+        self.operand1 = coder.decodeOperand(forKey: "operand1")
+        self.operand2 = coder.decodeOperand(forKey: "operand2")
+        self.result = coder.decodeOperand(forKey: "result")
+        }
+        
+    public func copy() -> Self
+        {
+        return(T3AInstruction(self.label,self.opcode,self.operand1,self.operand2,self.result) as! Self)
         }
         
     public func encode(with coder: NSCoder)
         {
-        coder.encode(self.offset,forKey: "offset")
+        coder.encode(self.offset!,forKey: "offset")
         coder.encode(self.label,forKey: "label")
         coder.encode(self.opcode,forKey: "opcode")
-        coder.encode(self.operand1,forKey: "operand1")
-        coder.encode(self.operand2,forKey: "operand2")
-        coder.encode(self.result,forKey: "result")
+        coder.encodeOperand(self.operand1,forKey: "operand1")
+        coder.encodeOperand(self.operand2,forKey: "operand2")
+        coder.encodeOperand(self.result,forKey: "result")
         }
     }
+
+public typealias T3AInstructions = Array<T3AInstruction>

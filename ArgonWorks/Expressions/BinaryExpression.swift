@@ -227,7 +227,7 @@ public class BinaryExpression: Expression
             case .rightBrocket:
                 fallthrough
             case .rightBrocketEquals:
-                return(.class(TopModule.shared.argonModule.boolean))
+                return(.class(self.compiler.argonModule.boolean))
             default:
                 return(left + right)
             }
@@ -248,7 +248,7 @@ public class BinaryExpression: Expression
             case .and:
                 fallthrough
             case .or:
-                if left.isSameClass(self.topModule.argonModule.boolean) && right.isSameClass(self.topModule.argonModule.boolean)
+                if left.isSameClass(self.compiler.argonModule.boolean) && right.isSameClass(self.compiler.argonModule.boolean)
                     {
                     break
                     }
@@ -326,11 +326,15 @@ public class BinaryExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
         var opcode: String = "NOP"
         switch(self.operation)
             {
             case .add:
-                if self.type == TopModule.shared.argonModule.float.type
+                if self.type == generator.argonModule.float.type
                     {
                     opcode = "FADD"
                     }
@@ -339,7 +343,7 @@ public class BinaryExpression: Expression
                     opcode = "IADD"
                     }
             case .sub:
-                if self.type == TopModule.shared.argonModule.float.type
+                if self.type == generator.argonModule.float.type
                     {
                     opcode = "FSUB"
                     }
@@ -348,7 +352,7 @@ public class BinaryExpression: Expression
                     opcode = "ISUB"
                     }
             case .mul:
-                if self.type == TopModule.shared.argonModule.float.type
+                if self.type == generator.argonModule.float.type
                     {
                     opcode = "FMUL"
                     }
@@ -357,7 +361,7 @@ public class BinaryExpression: Expression
                     opcode = "IMUL"
                     }
             case .div:
-                if self.type == TopModule.shared.argonModule.float.type
+                if self.type == generator.argonModule.float.type
                     {
                     opcode = "FDIV"
                     }
@@ -366,7 +370,7 @@ public class BinaryExpression: Expression
                     opcode = "IDIV"
                     }
             case .modulus:
-                if self.type == TopModule.shared.argonModule.float.type
+                if self.type == generator.argonModule.float.type
                     {
                     opcode = "FMOD"
                     }
@@ -410,6 +414,10 @@ public class BinaryExpression: Expression
         instance.append(nil,"MOV",self.lhs.place,.none,temp)
         try self.rhs.emitCode(into: instance, using: generator)
         instance.append(nil,opcode,temp,rhs.place,temp)
+        if rhs.place.isNone
+            {
+            print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")
+            }
         self._place = temp
         }
     }

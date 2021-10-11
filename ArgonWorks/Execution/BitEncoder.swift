@@ -10,7 +10,7 @@ import Foundation
 public protocol BitEncoder
     {
     func encode<T:RawRepresentable>(value:T,inWidth width: Int) where T.RawValue == Int
-    func encode<T:RawConvertible>(value:T,inWidth width:Int)
+//    func encode<T:RawConvertible>(value:T,inWidth width:Int)
     func encode(value:Word,inWidth width:Int)
     func encode(extraWord:Word) -> Int
     }

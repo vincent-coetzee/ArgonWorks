@@ -55,8 +55,8 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         {
         coder.encode(self.index,forKey: "index")
         coder.encode(self.label,forKey: "label")
-//        coder.encodeParent(self.parent,forKey: "parent")
-//        coder.encodeNodeLocations(self.locations,forKey: "locations")
+        coder.encodeParent(self.parent,forKey: "parent")
+        coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
         
 //    public required init(input: InputFile) throws
@@ -84,6 +84,11 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         return(lhs.index == rhs.index)
         }
 
+    public func resetParent()
+        {
+        self.parent = .none
+        }
+        
     public func setParent(_ node: Node)
         {
         self.parent = .node(node)
@@ -103,6 +108,8 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         {
         switch(context)
             {
+            case .none:
+                break
             case .block(let block):
                 self.parent = .block(block)
             case .node(let node):

@@ -53,8 +53,9 @@ public class StaticSegment:Segment
     public override func allocateAddress(sizeInBytes: Int) -> Address
         {
         let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
-        let address = Address.relative(self.segmentRegister,Int(newAddress - self.baseAddress))
-        return(address)
+//        let address = Address.relative(self.segmentRegister,Int(newAddress - self.baseAddress))
+//        return(address)
+        fatalError()
         }
         
     public override func allocateObject(sizeInBytes:Int) -> Word

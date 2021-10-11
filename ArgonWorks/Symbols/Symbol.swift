@@ -16,6 +16,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var isArgonModule: Bool
+        {
+        return(false)
+        }
+        
     public var isGenericClassParameter: Bool
         {
         return(false)
@@ -41,6 +46,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
 
+    public var isForwardReferenceClass: Bool
+        {
+        return(false)
+        }
+        
     public var classValue: Class
         {
         fatalError()
@@ -220,7 +230,7 @@ public class Symbol:Node,ParseNode
             }
         }
         
-    public func realizeSuperclasses()
+    public func realizeSuperclasses(topModule: TopModule)
         {
         }
         
@@ -250,12 +260,11 @@ public class Symbol:Node,ParseNode
     internal var source: String?
     private var _selectionColor: NSColor?
     
-    public override init(label:Label)
+    public override init(label: Label)
         {
-        super.init(label:label)
-        self.addresses.append(.absolute(0))
+        super.init(label: label)
         }
-    
+        
     public required init?(coder: NSCoder)
         {
         print("DECODE SYMBOL(\(Swift.type(of: self)))")
@@ -275,6 +284,15 @@ public class Symbol:Node,ParseNode
         coder.encode(self.source,forKey: "source")
         }
         
+    public func clone() -> Symbol
+        {
+        return(Symbol(label: self.label))
+        }
+        
+    public func replaceSymbol(_ source: Symbol,with replacement: Symbol)
+        {
+        }
+        
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
 //        cell.text.stringValue = self.displayString
@@ -288,20 +306,20 @@ public class Symbol:Node,ParseNode
         let image = NSImage(named: self.iconName)!
         image.isTemplate = true
         cell.icon.image = image
-        var iconColor = NSColor.black
+//        var iconColor = NSColor.black
         var textColor = Palette.shared.hierarchyTextColor
         if self.isSymbolContainer
             {
-            var textColor = Palette.shared.hierarchyTextColor
+//            var textColor = Palette.shared.hierarchyTextColor
             if self.childCount == 0
                 {
-                iconColor = .argonMidGray
+//                iconColor = .argonMidGray
                 textColor = .argonWhite70
                 self.selectionColor = NSColor.argonMidGray
                 }
             else
                 {
-                iconColor = .argonNeonOrange
+//                iconColor = .argonNeonOrange
                 }
             }
         else
@@ -309,11 +327,11 @@ public class Symbol:Node,ParseNode
             textColor = .argonWhite30
             if self.isSlot
                 {
-                iconColor = NSColor.argonThemeBlueGreen
+//                iconColor = NSColor.argonThemeBlueGreen
                 }
             else
                 {
-                iconColor = NSColor.argonNeonOrange
+//                iconColor = NSColor.argonNeonOrange
                 }
             }
         cell.icon.contentTintColor = Palette.shared.headerTextColor
