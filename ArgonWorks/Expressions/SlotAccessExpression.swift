@@ -19,12 +19,14 @@ public class SlotAccessExpression: Expression
     private var slot: Slot?
     private var isLValue = false
     private var _type: Type?
-    
+    private var selector: String?
+     
     required init?(coder: NSCoder)
         {
         self.receiver = coder.decodeObject(forKey: "receiver") as!Expression
         self.slotExpression = coder.decodeObject(forKey: "slotExpression") as? Expression
         self.slot = coder.decodeObject(forKey: "slot") as? Slot
+        self.selector = coder.decodeString(forKey: "selector")
         self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
         }
@@ -43,6 +45,7 @@ public class SlotAccessExpression: Expression
         coder.encode(self.slot,forKey: "slot")
         coder.encode(self.slotExpression,forKey: "slotExpression")
         coder.encode(self.receiver,forKey: "receiver")
+        coder.encode(self.selector,forKey: "selector")
         }
         
     public override func setType(_ type:Type)
@@ -64,6 +67,15 @@ public class SlotAccessExpression: Expression
         self.slotExpression?.setParent(self)
         }
         
+    init(_ receiver: Expression,selector: String)
+        {
+        self.receiver = receiver
+        self.slotExpression = nil
+        super.init()
+        self.receiver.setParent(self)
+        self.selector = selector
+        }
+        
     public override var type: Type
         {
         let receiverType = self.receiver.type
@@ -72,7 +84,11 @@ public class SlotAccessExpression: Expression
             return(.unknown)
             }
         let aClass = receiverType.class
-        if let identifier = (self.slotExpression as? SlotSelectorExpression)?.selector,let aSlot = aClass.layoutSlot(atLabel: identifier)
+        if self.slot.isNotNil
+            {
+            return(slot!.type)
+            }
+        if let identifier = (self.slotExpression as? SlotSelectorExpression)?.selector,let aSlot = aClass.slotWithLabel(identifier)
             {
             return(aSlot.type)
             }
@@ -81,6 +97,11 @@ public class SlotAccessExpression: Expression
             return(self._type!)
             }
         return(.unknown)
+        }
+        
+    public override func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self.type.slotWithLabel(label))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

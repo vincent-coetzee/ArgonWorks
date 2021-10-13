@@ -15,6 +15,10 @@ public struct NullReportingContext:ReportingContext
         {
         }
         
+    public func cancelCompletion()
+        {
+        }
+        
     public func dispatchWarning(at: Location, message: String)
         {
         print("Warning line \(at.line):\(message)")

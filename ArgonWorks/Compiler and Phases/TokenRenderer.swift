@@ -113,7 +113,7 @@ public class TokenRenderer
             }
         set
             {
-            self.attributes[self.currentToken.location.range]![.foregroundColor] = self.mapKindToForegroundColor(kind: newValue,systemClassNames: self.systemClassNames)
+//            self.attributes[self.currentToken.location.range]![.foregroundColor] = Self.mapKindToForegroundColor(kind: newValue,systemClassNames: self.systemClassNames)
             }
         }
         
@@ -127,14 +127,14 @@ public class TokenRenderer
         self.systemClassNames = systemClassNames
         }
         
-    public func set(kind someKind: Kind,forToken someToken: Token)
-        {
-        guard !someToken.isEnd else
-            {
-            return
-            }
-        self.attributes[someToken.location.range]![.foregroundColor] = self.mapKindToForegroundColor(kind: someKind,systemClassNames: self.systemClassNames)
-        }
+//    public func set(kind someKind: Kind,forToken someToken: Token)
+//        {
+//        guard !someToken.isEnd else
+//            {
+//            return
+//            }
+//        self.attributes[someToken.location.range]![.foregroundColor] = Self.mapKindToForegroundColor(kind: someKind,systemClassNames: self.systemClassNames)
+//        }
         
     public func processTokens(_ tokens: Tokens)
         {
@@ -227,7 +227,7 @@ public class TokenRenderer
             }
         }
         
-    public func mapKindToForegroundColor(kind:Kind,systemClassNames: Array<String>) -> NSColor
+    public static func mapKindToForegroundColor(kind: TokenKind,systemClassNames: Array<String> = []) -> NSColor
         {
         var localAttributes:[NSAttributedString.Key:Any] = [:]
         switch(kind)
@@ -239,15 +239,7 @@ public class TokenRenderer
             case .keyword:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.keywordColor
             case .identifier:
-                let identifier = self.currentToken.identifier
-                if systemClassNames.contains(identifier)
-                    {
-                    localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
-                    }
-                else
-                    {
-                    localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
-                    }
+                localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
             case .name:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.nameColor
             case .enumeration:

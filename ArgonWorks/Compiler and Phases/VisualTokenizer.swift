@@ -7,24 +7,31 @@
 
 import AppKit
 
-public class VisualTokenizer
+public class VisualTokenizer: SemanticTokenRenderer
     {
-    public var source: String = ""
+    public var kind: TokenRenderer.Kind
         {
-        didSet
+        get
             {
-            self.update()
+            return(.none)
+            }
+        set
+            {
             }
         }
         
     private let lineNumberView: LineNumberTextView
     private var tokenColors = Dictionary<TokenColor,NSColor>()
     private let reportingContext: ReportingContext
+    private let systemClassNames: Array<String>
+    private let font: NSFont
     
     init(lineNumberView: LineNumberTextView,reportingContext: ReportingContext)
         {
         self.lineNumberView = lineNumberView
         self.reportingContext = reportingContext
+        self.systemClassNames = Compiler.systemClassNames
+        self.font = NSFont(name: "Menlo",size: 12)!
         self.initColors()
         NotificationCenter.default.addObserver(self, selector: #selector(VisualTokenizer.sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.lineNumberView)
         }
@@ -39,38 +46,157 @@ public class VisualTokenizer
         self.tokenColors[TokenColor.float] = SyntaxColorPalette.floatColor
         self.tokenColors[TokenColor.string] = SyntaxColorPalette.stringColor
         self.tokenColors[TokenColor.symbol] = SyntaxColorPalette.symbolColor
+        self.tokenColors[TokenColor.systemClass] = NSColor.argonBrightYellowCrayola
         }
         
     @IBAction func sourceChangedNotification(_ notification: NSNotification)
         {
         self.reportingContext.resetReporting()
-        self.source = self.lineNumberView.string
+        self.update(self.lineNumberView.string)
         }
         
-    private func update()
+    public func update(_ string: String)
         {
-        let stream = TokenStream(source: self.source,context: NullReportingContext())
-        let tokens = stream.allTokens(withComments: true, context: NullReportingContext())
-        self.processTokens(tokens)
-        let compiler = Compiler()
-        compiler.reportingContext = self.reportingContext
-        compiler.compileChunk(self.source)
+        var someTokens: Tokens = []
+        let time = Timer().time
+            {
+            let stream = TokenStream(source: string,context: NullReportingContext())
+            let tokens = stream.allTokens(withComments: true, context: NullReportingContext())
+            self.processTokens(tokens)
+            someTokens = tokens
+            }
+        print("Time to generate and process tokens = \(time)")
+        let time2 = Timer().time
+            {
+            let compiler = Compiler(tokens: someTokens)
+            compiler.reportingContext = self.reportingContext
+            compiler.compile(parseOnly: true)
+            }
+        print("Time to create Compiler and parse = \(time2)")
         }
         
     public func processTokens(_ tokens: Tokens)
         {
-        let font = NSFont(name: "Menlo",size: 12)!
         let string = self.lineNumberView.textStorage!
-        let textAttributes:[NSAttributedString.Key:Any] = [.foregroundColor:SyntaxColorPalette.textColor,.font: font]
+        let textAttributes:[NSAttributedString.Key:Any] = [.foregroundColor:SyntaxColorPalette.textColor,.font: self.font]
         string.beginEditing()
         string.setAttributes(textAttributes, range: NSRange(location: 0,length: string.length))
         for token in tokens
             {
-            let tokenColor = token.tokenColor
-            let color = self.tokenColors[tokenColor]!
-            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: font]
+            var tokenColor = token.tokenColor
+            var color = self.tokenColors[tokenColor]!
+            if token.isIdentifier && self.systemClassNames.contains(token.identifier)
+                {
+                tokenColor = .systemClass
+                color = self.tokenColors[tokenColor]!
+                }
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
             string.setAttributes(attributes, range: token.location.range)
             }
         string.endEditing()
+        }
+        
+    public func setKind(_ kind: TokenKind,ofToken token:Token)
+        {
+        if kind == .systemClass
+            {
+//            let color = TokenRenderer.mapKindToForegroundColor(kind: kind)
+            let color = self.tokenColors[.systemClass]
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+            self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+            }
+        else if kind == .type
+            {
+            let color = NSColor.argonCoral
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+            self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+            }
+        else if kind == .class
+            {
+            let color = NSColor.argonStoneTerrace
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+            self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+            }
+        }
+        
+    public func markToken(_ token: Token,as kind: TokenRenderer.Kind)
+        {
+        let color = self.mapKindToForegroundColor(token: token,kind: kind)
+        let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+        self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+        }
+        
+    private func mapKindToForegroundColor(token: Token,kind:TokenRenderer.Kind) -> NSColor
+        {
+        var localAttributes:[NSAttributedString.Key:Any] = [:]
+        switch(kind)
+            {
+            case .none:
+                break
+            case .invisible:
+                break
+            case .keyword:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.keywordColor
+            case .identifier:
+                if token.isIdentifier
+                    {
+                    let identifier = token.identifier
+                    if self.systemClassNames.contains(identifier)
+                        {
+                        localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
+                        }
+                    else
+                        {
+                        localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
+                        }
+                    }
+                else
+                    {
+                    localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
+                    }
+            case .name:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.nameColor
+            case .enumeration:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.enumerationColor
+            case .comment:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.commentColor
+            case .path:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.pathColor
+            case .symbol:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.symbolColor
+            case .string:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.stringColor
+            case .class:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.classColor
+            case .integer:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.integerColor
+            case .float:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.floatColor
+            case .directive:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.directiveColor
+            case .methodInvocation:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.methodColor
+            case .method:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.methodColor
+            case .functionInvocation:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
+            case .function:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
+            case .localSlot:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .systemClass:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
+            case .classSlot:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .type:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.typeColor
+            case .constant:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.constantColor
+            case .module:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
+            default:
+                localAttributes[.foregroundColor] = NSColor.magenta
+            }
+        return(localAttributes[.foregroundColor]! as! NSColor)
         }
     }

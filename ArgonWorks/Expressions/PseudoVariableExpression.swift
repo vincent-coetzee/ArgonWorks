@@ -69,6 +69,11 @@ public class PseudoVariableExpression: Expression
         super.init(coder: coder)
         }
         
+    public override func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self._type.slotWithLabel(label))
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.variable.rawValue,forKey: "variable")

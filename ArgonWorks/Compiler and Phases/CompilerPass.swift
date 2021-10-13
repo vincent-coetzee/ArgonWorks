@@ -9,6 +9,7 @@ import Foundation
 
 public protocol CompilerPass
     {
+    var argonModule: ArgonModule { get }
     var compiler: Compiler { get }
     func dispatchError(at: Location,message: String)
     func cancelCompletion()
@@ -16,9 +17,14 @@ public protocol CompilerPass
     
 extension CompilerPass
     {
+    public func cancelCompletion()
+        {
+        self.compiler.cancelCompletion()
+        }
+        
     public var argonModule: ArgonModule
         {
-        self.compiler.topModule.argonModule
+        self.compiler.argonModule
         }
         
     public func dispatchError(at: Location,message: String)

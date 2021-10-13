@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class LocalSlotExpression: Expression
+public class SlotExpression: Expression
     {
     public override var displayString: String
         {
@@ -49,6 +49,11 @@ public class LocalSlotExpression: Expression
     public override func becomeLValue()
         {
         self.isLValue = true
+        }
+        
+    public override func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self.slot.slotWithLabel(label))
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

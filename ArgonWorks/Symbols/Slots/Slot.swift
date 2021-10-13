@@ -10,6 +10,16 @@ import AppKit
 
 public class Slot:Symbol
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        fatalError()
+        }
+        
+    public override class func classForKeyedUnarchiver() -> AnyClass
+        {
+        return(ImportedSlot.self)
+        }
+        
     public static func ==(lhs:Slot,rhs:Slot) -> Bool
         {
         return(lhs.index == rhs.index)
@@ -103,13 +113,9 @@ public class Slot:Symbol
     public required init?(coder: NSCoder)
         {
         self._type = coder.decodeType(forKey: "_type")
-        print("DECODED KEY Slot._type")
         self.offset = coder.decodeInteger(forKey: "offset")
-        print("DECODED KEY Slot.offset")
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
-        print("DECODED KEY Slot.initialValue")
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
-        print("DECODED KEY Slot.isClassSlot")
         super.init(coder: coder)
         }
 
@@ -133,6 +139,11 @@ public class Slot:Symbol
         newSlot.initialValue = self.initialValue
         newSlot.isClassSlot = self.isClassSlot
         return(newSlot)
+        }
+        
+    public func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self.type.slotWithLabel(label))
         }
         
     public override func realize(using realizer: Realizer)

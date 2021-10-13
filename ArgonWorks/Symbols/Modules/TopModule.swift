@@ -16,7 +16,10 @@ import Foundation
 ///
 public class TopModule: SystemModule
     {
-    public static let argonModule = ArgonModule()
+    public override class func classForKeyedUnarchiver() -> AnyClass
+        {
+        return(TopModule.self)
+        }
     
     public override var typeCode:TypeCode
         {
@@ -65,7 +68,7 @@ public class TopModule: SystemModule
         {
         super.init(label: "Root")
         self.index = UUID(index: 0)
-        self.addSymbol(Self.argonModule)
+        self.addSymbol(ArgonModule())
         }
         
     init(_ array:Array<Module>)

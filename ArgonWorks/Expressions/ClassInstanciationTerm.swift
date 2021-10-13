@@ -66,6 +66,11 @@ public class ClassInstanciationTerm: Expression
             }
         }
         
+    public override func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self.type.slotWithLabel(label))
+        }
+        
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         if let location = self.declaration

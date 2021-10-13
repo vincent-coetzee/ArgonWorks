@@ -9,7 +9,6 @@ import Foundation
 
 public protocol ParseNode
     {
-//    var subNodes: Array<ParseNode>? { get }
     var type: Type { get }
     var privacyScope: PrivacyScope? { get set }
     func emitCode(using: CodeGenerator) throws

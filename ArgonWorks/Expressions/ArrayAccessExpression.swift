@@ -67,6 +67,11 @@ public class ArrayAccessExpression: Expression
             }
         }
         
+    public override func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(self.type.slotWithLabel(label))
+        }
+        
     public override func realize(using realizer:Realizer)
         {
         self.array.realize(using: realizer)

@@ -12,6 +12,11 @@ import FFI
 
 public class Class:ContainerSymbol,ObservableObject,Displayable
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        return(LiteralExpression(.class(self)))
+        }
+        
     public override var isType: Bool
         {
         return(true)
@@ -89,7 +94,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override func emitCode(using: CodeGenerator)
         {
-        print("NEED TO WRITE OUT CLASS \(self.label)")
         }
         
 //    public static var integer: Class = ArgonModule.argonModule.integer
@@ -432,7 +436,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public required init?(coder: NSCoder)
         {
-        print("DECODE CLASS")
         self.superclassReferences = []
         self.subclasses = coder.decodeObject(forKey: "subclasses") as! Classes
         self.superclasses = coder.decodeObject(forKey: "superclasses") as! Classes
@@ -443,38 +446,24 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.hasBytes = coder.decodeBool(forKey: "hasBytes")
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
-//        self.offsetOfClass = coder.decodeObject(forKey: "offsetOfClass") as! Dictionary<Class,Int>
         self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
         self.depth = coder.decodeInteger(forKey: "depth")
         super.init(coder: coder)
-        print("DECODED CLASS \(self.label)")
         }
 
  
         
     public override func encode(with coder:NSCoder)
         {
-        print("ENCODE CLASS")
         coder.encode(self.subclasses,forKey: "subclasses")
-        print("ENCODED KEY subclasses")
         coder.encode(self.superclasses,forKey: "superclasses")
-        print("ENCODED KEY superclasses")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
-        print("ENCODED KEY layoutSlots")
         coder.encode(self.magicNumber,forKey: "magicNumber")
-        print("ENCODED KEY magicNumber")
         coder.encode(self.hasBytes,forKey: "hasBytes")
-        print("ENCODED KEY hasBytes")
         coder.encode(self._metaclass,forKey: "_metaclass")
-         print("ENCODED KEY _metaclass")
         coder.encode(self.mangledCode,forKey: "mangledCode")
-        print("ENCODED KEY mangledCode")
-//        coder.encode(self.offsetOfClass,forKey: "offsetOfClass")
-        print("ENCODED KEY offsetOfClass")
         coder.encode(self.hasBeenRealized,forKey: "hasBeenRealized")
-        print("ENCODED KEY hasBeenRealized")
         coder.encode(self.depth,forKey: "depth")
-        print("ENCODED KEY depth")
         super.encode(with: coder)
         }
         
@@ -591,7 +580,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public func isInclusiveSubclass(of someClass:Class) -> Bool
         {
-        print("TESTING WHETHER \(self.label) <= \(someClass.label)")
         if self == someClass
             {
             return(true)
@@ -604,6 +592,32 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                 }
             }
         return(false)
+        }
+        
+    public func inherits(from: Class) -> Bool
+        {
+        self.isInclusiveSubclass(of: from)
+        }
+        
+    public func slotWithLabel(_ label: Label) -> Slot?
+        {
+        for slot in self.localSlots
+            {
+            if slot.label == label
+                {
+                return(slot)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
+        {
+        if archiver is ArgonArchiver
+            {
+            print("halt")
+            }
+        return(super.replacementObject(for: archiver))
         }
         
     public override func printContents(_ offset: String = "")

@@ -7,7 +7,6 @@
 
 import AppKit
 import FFI
-import Interpreter
 
 public class Function:Invokable,Displayable
     {
@@ -65,7 +64,7 @@ public class Function:Invokable,Displayable
             }
         if let address = self.library.findSymbol(self.cName)
             {
-            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
+//            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
             }
         return(0)
         }

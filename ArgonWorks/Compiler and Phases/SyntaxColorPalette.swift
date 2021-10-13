@@ -48,6 +48,7 @@ public enum TokenColor:Int
     case float
     case comment
     case symbol
+    case systemClass
     }
     
 public typealias SyntaxColorPalette = Dictionary<String,NSColor>
@@ -65,7 +66,7 @@ extension SyntaxColorPalette
         palette[SyntaxColor.string.rawValue] = NSColor.argonXBlue
         palette[SyntaxColor.comment.rawValue] = NSColor(red: 145,green: 92,blue: 176)
         palette[SyntaxColor.class.rawValue] = NSColor(hex: 0xE7B339)
-        palette[SyntaxColor.identifier.rawValue] = NSColor(red: 222,green: 72,blue: 130)
+        palette[SyntaxColor.identifier.rawValue] = NSColor.argonThemePink
         palette[SyntaxColor.integer.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.float.rawValue] = NSColor.argonSizzlingRed
         palette[SyntaxColor.symbol.rawValue] = NSColor.argonSalmonPink

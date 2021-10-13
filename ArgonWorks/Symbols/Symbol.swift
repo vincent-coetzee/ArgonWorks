@@ -7,11 +7,20 @@
 
 import Foundation
 import AppKit
-import SwiftUI
 
 public class Symbol:Node,ParseNode
     {
+    public var asLiteralExpression: LiteralExpression?
+        {
+        return(nil)
+        }
+        
     public var isType: Bool
+        {
+        return(false)
+        }
+        
+    public var isImported: Bool
         {
         return(false)
         }
@@ -152,16 +161,6 @@ public class Symbol:Node,ParseNode
         return(JournalTransaction(entries: []))
         }
         
-    public func newItemButton(_ binding:Binding<String?>) -> AnyView
-        {
-        return(AnyView(EmptyView()))
-        }
-        
-    public func newItemView(_ binding:Binding<String>) -> AnyView
-        {
-        return(AnyView(EmptyView()))
-        }
-        
     public var declaration: Location?
         {
         self.locations.declaration
@@ -267,18 +266,13 @@ public class Symbol:Node,ParseNode
         
     public required init?(coder: NSCoder)
         {
-        print("DECODE SYMBOL(\(Swift.type(of: self)))")
         self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
-        print("DECODED KEY Symbol.privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
-        print("DECODED KEY Symbol.source")
         super.init(coder: coder)
-        print("DECODED SYMBOL \(self.label) \(self.index)")
         }
         
     public override func encode(with coder:NSCoder)
         {
-        print("ENCODE SYMBOL(\(Swift.type(of: self))) \(self.label)")
         super.encode(with: coder)
         coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
         coder.encode(self.source,forKey: "source")
@@ -291,6 +285,11 @@ public class Symbol:Node,ParseNode
         
     public func replaceSymbol(_ source: Symbol,with replacement: Symbol)
         {
+        }
+        
+    public func allImportedSymbols() -> Symbols
+        {
+        []
         }
         
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)

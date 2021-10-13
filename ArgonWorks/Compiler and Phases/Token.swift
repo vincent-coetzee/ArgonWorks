@@ -2797,4 +2797,15 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+        
+    public var isScope:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .rightArrow)
+            default:
+                return(false)
+            }
+        }
     }

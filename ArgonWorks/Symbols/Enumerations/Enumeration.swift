@@ -9,6 +9,11 @@ import AppKit
 
 public class Enumeration:Class
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        LiteralExpression(.enumeration(self))
+        }
+        
     public override var isType: Bool
         {
         return(true)
@@ -70,14 +75,13 @@ public class Enumeration:Class
         .enumeration
         }
         
-    @discardableResult
-    public override func addSymbol(_ symbol:Symbol) -> Self
+    public override func addSymbol(_ symbol:Symbol)
         {
         if let aCase = symbol as? EnumerationCase
             {
             self.cases.append(aCase)
             aCase.setParent(self)
-            return(self)
+            return
             }
         fatalError("Attempt to add a symbol of type \(Swift.type(of: symbol)) to the enumeration called \(self.label)")
         }
@@ -104,6 +108,18 @@ public class Enumeration:Class
         super.encode(with: coder)
         coder.encodeType(self.rawType,forKey: "rawType")
         coder.encode(self.cases,forKey: "cases")
+        }
+        
+    public func caseWithLabel(_ label: Label) -> EnumerationCase?
+        {
+        for aCase in self.cases
+            {
+            if aCase.label == label
+                {
+                return(aCase)
+                }
+            }
+        return(nil)
         }
         
     public override func layoutInMemory()

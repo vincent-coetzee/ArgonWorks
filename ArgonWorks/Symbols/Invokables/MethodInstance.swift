@@ -340,12 +340,10 @@ public class MethodInstance:Function,StackFrame
             }
         }
         
-    @discardableResult
-    public override func addSymbol(_ symbol: Symbol) -> Symbol
+    public override func addSymbol(_ symbol: Symbol)
         {
         self.localSymbols.append(symbol)
         symbol.frame = self
-        return(symbol)
         }
         
     public func generic(_ name:String) -> Self

@@ -34,7 +34,6 @@ extension NSCoder
         
     public func decodeOperand(forKey: String) -> T3AInstruction.Operand
         {
-        print("DECODE OPERAND")
         let kind = self.decodeInteger(forKey: forKey + "kind")
         switch(kind)
             {
@@ -275,44 +274,7 @@ extension NSCoder
                 self.encodeLocation(aLocation,forKey: forKey)
             }
         }
-        
-    public func decodeRelocatableEntries(forKey: String) -> Array<ObjectFile.RelocatableEntry>
-        {
-        let count = self.decodeInteger(forKey: forKey + "count")
-        var entries = Array<ObjectFile.RelocatableEntry>()
-        for index in 0..<count
-            {
-            entries.append(self.decodeRelocatableEntry(forKey: forKey + "entry\(index)"))
-            }
-        return(entries)
-        }
-        
-    public func encodeRelocatableEntries(_ entries: Array<ObjectFile.RelocatableEntry>,forKey: String)
-        {
-        self.encode(entries.count,forKey: forKey + "count")
-        var index = 0
-        for entry in entries
-            {
-            self.encodeRelocatableEntry(entry,forKey: forKey + "entry\(index)")
-            index += 1
-            }
-        }
-        
-    public func decodeRelocatableEntry(forKey: String) -> ObjectFile.RelocatableEntry
-        {
-        let symbol = self.decodeObject(forKey: forKey + "symbol") as! Symbol
-        let relocatable = self.decodeRelocatableValue(forKey: forKey + "relocatable")
-        let relocatableIndex = self.decodeInteger(forKey: forKey + "relocatableIndex")
-        return(ObjectFile.RelocatableEntry(symbol: symbol, relocatable: relocatable, relocatableIndex: relocatableIndex))
-        }
-    
-    public func encodeRelocatableEntry(_ entry: ObjectFile.RelocatableEntry,forKey: String)
-        {
-        self.encode(entry.symbol,forKey: forKey + "symbol")
-        self.encodeRelocatableValue(entry.relocatable,forKey: forKey + "relocatable")
-        self.encode(entry.relocatableIndex,forKey: forKey + "relocatableIndex")
-        }
-        
+  
     public func encodeSourceLocation(_ location: SourceLocation,forKey: String)
         {
         switch(location)
@@ -386,7 +348,6 @@ extension NSCoder
         
     public func decodeType(forKey: String) -> Type?
         {
-        print("DECODING TYPE")
         let flag = self.decodeInteger(forKey: forKey + "flag")
         if flag == -1
             {
@@ -635,21 +596,16 @@ extension NSCoder
         
     public func decodeParent(forKey key: String) -> Parent?
         {
-        print("DECODE PARENT")
         let type = self.decodeInteger(forKey: key + "type")
-        print("DECODED KEY Parent.type")
         switch(type)
             {
             case 0:
                 return(Parent.none)
             case 1:
-                print("ABOUT TO DECODE PARENT KEY Parent.\(key)node")
                 return(Parent.node(self.decodeObject(forKey: key + "node") as! Node))
             case 2:
-                print("ABOUT TO DECODE PARENT KEY Parent.\(key)block")
                 return(Parent.block(self.decodeObject(forKey: key + "block") as! Block))
             case 3:
-                print("ABOUT TO DECODE PARENT KEY Parent.\(key)expression")
                 return(Parent.expression(self.decodeObject(forKey: key + "expression") as! Expression))
             default:
                 return(nil)

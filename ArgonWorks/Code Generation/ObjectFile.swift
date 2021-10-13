@@ -9,87 +9,36 @@ import Foundation
 
 public class ObjectFile: NSObject,NSCoding
     {
-    public struct RelocatableEntry
-        {
-        internal let symbol: Symbol
-        internal let relocatable: T3AInstruction.RelocatableValue
-        internal let relocatableIndex: Int
-        }
-        
-    private var relocatables: Array<ObjectFile.RelocatableEntry> = []
-    internal var relocatablesBySymbolIndex = Dictionary<UUID,RelocatableEntry>()
-    internal var relocatablesByIndex = Dictionary<Int,RelocatableEntry>()
-    internal var methods: Array<Method> = []
-        
-    override init()
-        {
-        }
-        
-    required public init(coder: NSCoder)
-        {
-        self.relocatables = coder.decodeRelocatableEntries(forKey: "relocatables")
-        self.methods = coder.decodeObject(forKey: "methods") as! Array<Method>
-        for entry in self.relocatables
-            {
-            self.relocatablesBySymbolIndex[entry.symbol.index] = entry
-            self.relocatablesByIndex[entry.relocatableIndex] = entry
-            }
-        }
+    public let version: SemanticVersion
+    public let date: Date
+    public let module: Module
+    public let filename: String
+    public let root: Symbol
     
-    public func encode(with coder: NSCoder)
+    init(filename: String,module: Module,root: Symbol,date:Date = Date(),version: SemanticVersion = SemanticVersion(major: 1, minor: 0, patch: 0))
         {
-        coder.encode(self.relocatables.map{$0.symbol},forKey: "symbols")
-        coder.encodeRelocatableEntries(self.relocatables, forKey: "relocatables")
+        self.module = module
+        self.date = date
+        self.version = version
+        self.filename = filename
+        self.root = root
         }
         
-    public func addMethod(_ method: Method)
+    public required init(coder: NSCoder)
         {
-        for instance in method.instances
-            {
-            self.addMethodInstance(instance)
-            }
+        self.version = coder.decodeObject(forKey: "version") as! SemanticVersion
+        self.module = coder.decodeObject(forKey: "module") as! Module
+        self.root = coder.decodeObject(forKey: "root") as! Symbol
+        self.date = (coder.decodeObject(forKey: "date") as! NSDate) as Date
+        self.filename = coder.decodeString(forKey: "filename")!
         }
         
-    public func addMethods(_ methods: Methods)
+    public func encode(with coder:NSCoder)
         {
-        for method in methods
-            {
-            self.addMethod(method)
-            }
-        }
-        
-    private func processOperand(operandNumber: Int,_ operand: T3AInstruction.Operand,instruction: T3AInstruction)
-        {
-        guard operand.isRelocatable else
-            {
-            return
-            }
-        let value = operand.relocatableValue
-        let index = self.relocatables.count
-        let entry = RelocatableEntry(symbol: value.symbol!,relocatable: value, relocatableIndex: index)
-        self.relocatables.append(entry)
-        self.relocatablesBySymbolIndex[entry.symbol.index] = entry
-        self.relocatablesByIndex[index] = entry
-        switch(operandNumber)
-            {
-            case 1:
-                instruction.operand1 = .relocatable(.relocatableIndex(index))
-            case 2:
-                instruction.operand2 = .relocatable(.relocatableIndex(index))
-            case 3:
-                instruction.result = .relocatable(.relocatableIndex(index))
-            default:
-                break
-            }
-        }
-        
-    public func addMethodInstance(_ methodInstance: MethodInstance)
-        {
-        for instruction in methodInstance.buffer
-            {
-            self.processOperand(operandNumber: 1,instruction.operand1,instruction: instruction)
-            self.processOperand(operandNumber: 2,instruction.operand2,instruction: instruction)
-            self.processOperand(operandNumber: 3,instruction.result,instruction: instruction)
-            }
+        coder.encode(version,forKey: "version")
+        coder.encode(module,forKey: "module")
+        coder.encode(date as NSDate,forKey: "date")
+        coder.encode(filename,forKey: "filename")
+        coder.encode(root,forKey: "root")
         }
     }

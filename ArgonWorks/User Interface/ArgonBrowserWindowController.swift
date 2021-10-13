@@ -122,9 +122,9 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         {
         didSet
             {
+            self.tokenizer = VisualTokenizer(lineNumberView: self.sourceEditor,reportingContext: self)
             self.initSourceEditor()
             self.initFontManagement()
-            self.tokenizer = VisualTokenizer(lineNumberView: self.sourceEditor,reportingContext: self)
             }
         }
         
@@ -156,7 +156,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     override func windowDidLoad()
         {
         super.windowDidLoad()
-        self.compiler = Compiler()
+        self.compiler = Compiler(source:"" )
         self.window?.setFrame(self.firstFrame!, display: true, animate: true)
         let frame = self.firstFrame!
         let rectObject = RectObject(frame)
@@ -207,12 +207,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         catch
             {
             }
-        self.sourceEditor.textStorage?.beginEditing()
-        for (range,attributes) in self.compiler.tokenRenderer.attributes
-            {
-            self.sourceEditor.textStorage?.setAttributes(attributes,range: range)
-            }
-        self.sourceEditor.textStorage?.endEditing()
         }
         
     private func initFontManagement()
@@ -272,7 +266,9 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     public func resetReporting()
         {
         self.compilationEvents = [:]
+        self.compilationEventList = []
         self.sourceEditor.removeAllAnnotations()
+        self.errorListView?.reloadData()
         }
         
     public func refreshSourceAnnotations()
@@ -319,8 +315,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 }
             else if item.label == "Fonts"
                 {
-//                item.target = self.forwarderView!
-//                item.action = #selector(ForwarderView.onSaveFile(_:))
                 item.isEnabled = true
                 }
             else if item.label == "New"
@@ -329,12 +323,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 item.action = #selector(ForwarderView.onNewEditor(_:))
                 item.isEnabled = true
                 }
-//            else if item.label == "Object"
-//                {
-//                item.target = self.forwarderView!
-//                item.action = #selector(ForwarderView.onSaveObject(_:))
-//                item.isEnabled = true
-//                }
             else if item.label == "Object"
                 {
                 item.target = self.forwarderView!
@@ -343,7 +331,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 }
             }
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
-        print("CURRENT SOURCE FILE URL ON OPENING BROWSER = \(urlString)")
         if let aString = urlString,
         let url = URL(string: aString),
         let string = try? String(contentsOf: url)
@@ -351,31 +338,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             self.currentSourceFileURL = url
             let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
             self.sourceEditor.textStorage?.setAttributedString(mutableString)
-            self.resetReporting()
-            self.compiler = Compiler()
-            self.compiler.reportingContext = self
-            self.compiler.compileChunk(string)
-            self.sourceEditor.textStorage?.beginEditing()
-            for (range,attributes) in self.compiler.tokenRenderer.attributes
-                {
-                self.sourceEditor.textStorage?.setAttributes(attributes,range: range)
-                }
-            self.sourceEditor.textStorage?.endEditing()
-//            let style = NSMutableParagraphStyle()
-//            style.headIndent = 60
-//            style.firstLineHeadIndent = 60
-//            var attributes:Dictionary<NSAttributedString.Key,Any> = [:]
-//            attributes[.paragraphStyle] = style
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 60, options: [:]))
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 120, options: [:]))
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 180, options: [:]))
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 240, options: [:]))
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 300, options: [:]))
-//            style.addTabStop(NSTextTab(textAlignment: .left, location: 360, options: [:]))
-//            let count = self.sourceEditor.string.count
-//            let storage = self.sourceEditor.textStorage
-//            storage?.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: count))
-//            self.sourceEditor.typingAttributes = attributes
+            self.compiler = Compiler(source: self.sourceEditor.string,reportingContext: self,tokenRenderer: self.tokenizer)
+            self.compiler.compile()
             self.toolbar.delegate = self
             self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
             }
@@ -551,13 +515,13 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             if let theUrl = panel.url
                 {
-                let source = self.sourceEditor.string
-                let aCompiler = Compiler()
-                if aCompiler.compileChunk(source).isNotNil
+                let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: self,tokenRenderer: self.tokenizer)
+                if let module = aCompiler.compile() as? Module
                     {
                     do
                         {
-                        let data = try NSKeyedArchiver.archivedData(withRootObject: aCompiler.topModule, requiringSecureCoding: false)
+                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
+                        let data = try ArgonArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
                         try data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
                         let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
@@ -590,11 +554,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     @IBAction func onCompileFile(_ sender: Any?)
         {
         let source = self.sourceEditor.string
-        TopModule.shared.rollbackJournalTransaction()
-        let compiler = Compiler()
-        self.resetReporting()
-        compiler.reportingContext = self
-        if let chunk = compiler.compileChunk(source)
+        let compiler = Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer)
+        if let chunk = compiler.compile()
             {
             TopModule.shared.printContents()
             }
@@ -609,11 +570,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         {
         let mutableString = NSMutableAttributedString(string: "",attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
         self.sourceEditor.textStorage?.setAttributedString(mutableString)
-        TopModule.shared.rollbackJournalTransaction()
         self.resetReporting()
-        self.compiler = Compiler()
-        self.compiler.reportingContext = self
-        self.currentSourceFileURL = nil
         self.window?.title = "ArgonBrowser [ Untitled.argon ]"
         }
     ///
@@ -637,23 +594,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 self.currentSourceFileURL = url
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.sourceEditor.textStorage?.setAttributedString(mutableString)
-                self.resetReporting()
-                TopModule.shared.rollbackJournalTransaction()
-                self.compiler = Compiler()
-                self.compiler.reportingContext = self
-                self.compiler.compileChunk(string)
-                self.sourceEditor.textStorage?.beginEditing()
-                for (range,attributes) in self.compiler.tokenRenderer.attributes
-                    {
-                    self.sourceEditor.textStorage?.setAttributes(attributes,range: range)
-                    }
-                self.sourceEditor.textStorage?.endEditing()
+                self.tokenizer.update(self.sourceEditor.string)
                 UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
-                let capsule = Capsule(path: url)
-                self.capsules[capsule.path] = capsule
-                self.currentCapsule = capsule
                 self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                TopModule.shared.rollbackJournalTransaction()
+                _ = Compiler(source: self.sourceEditor.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
                 }
             }
         }

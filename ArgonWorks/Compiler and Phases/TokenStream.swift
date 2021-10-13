@@ -9,7 +9,7 @@
 import Foundation
 import Combine
 
-public class TokenStream:Equatable
+public class TokenStream:Equatable, TokenSource
     {
     public static func == (lhs: TokenStream, rhs: TokenStream) -> Bool
         {
@@ -365,6 +365,11 @@ public class TokenStream:Equatable
         var string = start
         self.nextChar()
         while self.identifierCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && !(self.currentChar == "-" && self.peekChar(at:0) == ">")
+            {
+            string += self.currentChar
+            self.nextChar()
+            }
+        if self.identifierCharacters.contains(self.currentChar) && !(self.currentChar == "-" && self.peekChar(at:0) == ">")
             {
             string += self.currentChar
             self.nextChar()

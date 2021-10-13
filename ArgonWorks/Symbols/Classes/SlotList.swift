@@ -52,9 +52,7 @@ public class SlotList:NSObject,NSCoding,Collection,StorableObject
     required public init?(coder: NSCoder)
         {
         self.parent = coder.decodeObject(forKey: "parent") as? Symbol
-        print("DECODED KEY SlotList.parent")
         self.slots = coder.decodeObject(forKey: "slots") as! Array<Slot>
-        print("DECODED KEY SlotList.slots")
         super.init()
         }
         

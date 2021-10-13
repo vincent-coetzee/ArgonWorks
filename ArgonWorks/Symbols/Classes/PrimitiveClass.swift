@@ -122,7 +122,6 @@ public class PrimitiveClass:Class
     required init?(coder: NSCoder)
         {
         self.primitiveType = PrimitiveType(rawValue: coder.decodeInt32(forKey: "primitiveType"))!
-        print("DECODED KEY PrimitiveClass.primitiveType")
         super.init(coder: coder)
         }
         

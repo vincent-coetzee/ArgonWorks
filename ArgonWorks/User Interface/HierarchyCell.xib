@@ -16,7 +16,7 @@
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bVh-b7-139">
                     <rect key="frame" x="76" y="3" width="438" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Label" id="Uwf-Ms-t2b">
-                        <font key="font" metaFont="system" size="12"/>
+                        <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
@@ -31,7 +31,7 @@
                 <textField horizontalHuggingPriority="252" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="T0f-54-Vpx">
                     <rect key="frame" x="24" y="3" width="35" height="15"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="UIX-tM-gs1">
-                        <font key="font" metaFont="system" size="12"/>
+                        <font key="font" metaFont="cellTitle"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>

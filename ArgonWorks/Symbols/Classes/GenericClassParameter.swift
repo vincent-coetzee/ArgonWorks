@@ -18,6 +18,11 @@ import Foundation
 
 public class GenericClassParameter: Class
     {
+    public override class func classForKeyedUnarchiver() -> AnyClass
+        {
+        return(self.self)
+        }
+        
     public override var isGenericClassParameter: Bool
         {
         return(true)

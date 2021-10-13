@@ -42,13 +42,9 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
     required public init?(coder: NSCoder)
         {
         self.index = coder.decodeObject(forKey: "index") as! UUID
-        print("DECODED KEY Node.index")
         self.label = coder.decodeObject(forKey: "label") as! Label
-        print("DECODED KEY Node.label")
         self.parent = coder.decodeParent(forKey: "parent")!
-        print("DECODED KEY Node.parent")
         self.locations = coder.decodeNodeLocations(forKey: "locations")
-        print("DECODED KEY Node.locations")
         }
         
     public func encode(with coder:NSCoder)
@@ -177,8 +173,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         return(nil)
         }
         
-    @discardableResult
-    public func addSymbol(_ symbol:Symbol) -> Symbol
+    public func addSymbol(_ symbol:Symbol)
         {
         fatalError("Attempt to addSymbol to a \(Swift.type(of:self))")
         }

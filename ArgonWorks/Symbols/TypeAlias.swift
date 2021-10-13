@@ -9,6 +9,11 @@ import AppKit
 
 public class TypeAlias:Symbol
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        fatalError()
+        }
+        
     public override var isType: Bool
         {
         return(true)

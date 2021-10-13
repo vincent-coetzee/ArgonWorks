@@ -86,8 +86,6 @@ public enum Context: Equatable
         
 public class Parser: CompilerPass
     {
-    private var tokens = Array<Token>()
-    private var tokenIndex = 0
     internal private(set) var token:Token = .none
     private var lastToken:Token = .none
     public let compiler:Compiler
@@ -95,31 +93,34 @@ public class Parser: CompilerPass
     private var contextStack = Stack<Context>()
     private var currentContext:Context = .node(Node(label: ""))
     private var node:ParseNode?
-    internal var visualToken:TokenRenderer
     private var source: String?
     public var wasCancelled = false
     public var currentTag = 0
     private var isParsingLValue = false
-    private var streamStack = Stack<TokenStream>()
-    private var tokenStream: TokenStream!
+    private var sourceStack = Stack<TokenSource>()
+    private var tokenSource: TokenSource!
     private var lineNumber:LineNumber = EmptyLineNumber()
+    private var reportingContext:ReportingContext = NullReportingContext.shared
+    private var tokenRenderer: SemanticTokenRenderer!
     
-    public static func parseChunk(_ source:String,in compiler:Compiler) -> ParseNode?
+    init(compiler:Compiler,source: String)
         {
-        Parser(compiler: compiler).parseChunk(source)
-        }
-        
-    init(compiler:Compiler)
-        {
-        self.currentTag = compiler.currentTag
+        self.tokenRenderer = compiler.tokenRenderer
         self.compiler = compiler
-        self.namingContext = compiler.namingContext
-        self.visualToken = TokenRenderer(systemClassNames: compiler.systemClassNames)
+        self.namingContext = compiler.topModule
         self.reportingContext = compiler.reportingContext
+        self.initParser(source: source)
         }
         
-    public var reportingContext:ReportingContext = NullReportingContext.shared
-        
+    init(compiler:Compiler,tokens: Tokens)
+        {
+        self.tokenRenderer = compiler.tokenRenderer
+        self.compiler = compiler
+        self.namingContext = compiler.topModule
+        self.reportingContext = compiler.reportingContext
+        self.initParser(tokens: tokens)
+        }
+    
     public func cancelCompletion()
         {
         self.wasCancelled = true
@@ -133,22 +134,18 @@ public class Parser: CompilerPass
             throw(ParseError.endOfSourceFound)
             }
         self.lastToken = self.token
-        self.token = self.tokenStream.nextToken()
+        self.token = self.tokenSource.nextToken()
         self.token = self.token.withLocation(self.token.location.with(self.lineNumber.suffixed(by: token.location.lineNumber)))
-        if self.token.isEnd && !self.streamStack.isEmpty
+        if self.token.isEnd && !self.sourceStack.isEmpty
             {
-            self.tokenStream = self.streamStack.pop()
-            self.lineNumber = self.tokenStream.lineNumber
-            self.token = self.tokenStream.nextToken()
+            self.tokenSource = self.sourceStack.pop()
+            self.lineNumber = self.tokenSource.lineNumber
+            self.token = self.tokenSource.nextToken()
             }
-        self.visualToken.setToken(self.token)
-        self.tokenIndex += 1
         while self.token.isComment || self.token.isInvisible
             {
             print(self.token)
-            self.token = self.tokenStream.nextToken()
-            self.visualToken.setToken(self.token)
-            self.tokenIndex += 1
+            self.token = self.tokenSource.nextToken()
             }
         print(token)
         return(self.token)
@@ -156,24 +153,9 @@ public class Parser: CompilerPass
         
     private func peekToken1() throws -> Token
         {
-        return(self.tokenStream.peekToken(count: 1))
+        return(self.tokenSource.peekToken(count: 1))
         }
-        
-//    private func peekToken2() throws -> Token
-//        {
-//        return(self.peekToken(1))
-//        }
-        
-//    private func peekToken(_ index:Int) -> Token
-//        {
-//        let newToken = self.tokens[self.tokenIndex + index]
-//        if newToken.isComment || newToken.isInvisible
-//            {
-//            return(self.peekToken(index+1))
-//            }
-//        return(newToken)
-//        }
-        
+
     private func pushContext(_ aNode:Node)
         {
         let context = Context.node(aNode)
@@ -207,74 +189,88 @@ public class Parser: CompilerPass
         {
         self.currentContext.addSymbol(symbol)
         }
-        
-    private func initParser(source:String) throws
+    
+    private func initParser(tokens: Tokens)
+        {
+        self.source = nil
+        self.currentContext = .node(self.compiler.topModule)
+        self.tokenSource = TokenHolder(tokens: tokens)
+        self.reportingContext = self.compiler.reportingContext
+        }
+    
+    private func initParser(source: String)
         {
         self.source = source
         self.currentContext = .node(self.compiler.topModule)
-        let stream = TokenStream(source: source, context: self.reportingContext)
-        self.tokens = stream.allTokens(withComments: true, context: self.reportingContext)
-        self.visualToken.processTokens(self.tokens)
-        self.tokenStream = TokenStream(source: source,context: self.reportingContext)
-        try self.nextToken()
+        self.tokenSource = TokenStream(source: source,context: self.reportingContext)
+        self.reportingContext = self.compiler.reportingContext
         }
         
-    @discardableResult
-    public func parseChunk(_ source:String) -> ParseNode?
+    public func parseModifier() throws -> PrivacyScope?
         {
+        if self.token.isKeyword,let scope = PrivacyScope(rawValue: self.token.keyword.rawValue)
+            {
+            try self.nextToken()
+            return(scope)
+            }
+        return(nil)
+        }
+        
+    internal func parse() -> ParseNode?
+        {
+        self.reportingContext.resetReporting()
         do
             {
-            try self.initParser(source: source)
-            let result = try self.parsePrivacyModifier
+            try self.nextToken()
+            let modifier = try self.parseModifier()
+            if self.token.isEnd
                 {
-                (scope:PrivacyScope?) -> ParseNode? in
-                if self.token.isEnd
-                    {
-                    return(nil)
-                    }
-                var directive: Token.Directive?
-                if self.token.isDirective
-                    {
-                    directive = token.directive
-                    try self.nextToken()
-                    }
-                if !self.token.isKeyword
-                    {
-                    self.reportingContext.dispatchError(at: self.token.location, message: "KEYWORD expected.")
-                    return(nil)
-                    }
-                if self.token.isKeyword
-                    {
-                    switch(self.token.keyword)
-                        {
-                        case .MAIN:
-                                return(try self.parseMain())
-                        case .MODULE:
-                                return(try self.parseModule())
-                        case .CLASS:
-                                return(try self.parseClass())
-                        case .CONSTANT:
-                                return(try self.parseConstant())
-                        case .METHOD:
-                                return(try self.parseMethod(directive: directive))
-                        case .FUNCTION:
-                                return(try self.parseFunction())
-                        case .TYPE:
-                                return(try self.parseTypeAlias())
-                        case .ENUMERATION:
-                                return(try self.parseEnumeration())
-                        default:
-                            break
-                        }
-                    }
-                return(self.node)
+                return(nil)
                 }
-            return(result)
+            var directive: Token.Directive?
+            if self.token.isDirective
+                {
+                directive = token.directive
+                try self.nextToken()
+                }
+            if !self.token.isKeyword
+                {
+                self.reportingContext.dispatchError(at: self.token.location, message: "KEYWORD expected.")
+                return(nil)
+                }
+            if self.token.isKeyword
+                {
+                var parseNode: ParseNode?
+                if self.token.isMain
+                    {
+                    parseNode = try self.parseMain()
+                    }
+                else if self.token.isModule
+                    {
+                    parseNode = try self.parseModule()
+                    }
+                parseNode?.privacyScope = modifier
+                return(parseNode)
+                }
             }
         catch
             {
-            return(nil)
             }
+        return(nil)
+        }
+        
+    @discardableResult
+    public func parseSource(_ source:String) -> ParseNode?
+        {
+        self.initParser(source: source)
+        return(self.parse())
+        }
+        
+    @discardableResult
+    public func parseTokens(_ tokens: Tokens) -> ParseNode?
+        {
+        self.initParser(tokens: tokens)
+        return(self.parse())
         }
         
     private func chompKeyword() throws
@@ -387,7 +383,7 @@ public class Parser: CompilerPass
         {
         if self.token.isPathLiteral
             {
-            self.visualToken.kind = .path
+            self.tokenRenderer.setKind(.path,ofToken: self.token)
             try self.nextToken()
             return(self.lastToken)
             }
@@ -417,7 +413,7 @@ public class Parser: CompilerPass
         {
         let location = self.token.location
         try self.nextToken()
-        self.visualToken.kind = .module
+        self.tokenRenderer.setKind(.module,ofToken: self.token)
         let name = try self.parseName()
         var module = self.currentContext.lookup(name: name) as? Module
         var isNew = false
@@ -563,7 +559,10 @@ public class Parser: CompilerPass
                                     return(interceptor)
                             default:
                                 self.reportingContext.dispatchError(at: self.token.location, message: "A declaration for a module element was expected but \(self.token) was found.")
-                                try self.nextToken()
+                                if !self.token.isRightBrace
+                                    {
+                                    try self.nextToken()
+                                    }
                                 return(Symbol(label:""))
                             }
                         }
@@ -575,9 +574,11 @@ public class Parser: CompilerPass
         
     private func parseImport() throws -> Import
         {
+        let location = self.token.location
         try self.nextToken()
         let label = try self.parseLabel()
         var path:String?
+        var loadPath = false
         if self.token.isLeftPar
             {
             try self.parseParentheses
@@ -589,10 +590,12 @@ public class Parser: CompilerPass
                 else if self.token.isPathLiteral
                     {
                     path = self.token.pathLiteral
+                    loadPath = Import.tryLoadingPath(path,reportingContext: self.reportingContext,location: location)
                     }
+                try self.nextToken()
                 }
             }
-        return(Import(label: label,path: path))
+        return(Import(label: label,path: path,loadPath: loadPath))
         }
         
     private func parseInitializer() throws -> Initializer
@@ -745,7 +748,7 @@ public class Parser: CompilerPass
     private func parseCocoonSlot() throws -> Slot
         {
         try self.nextToken()
-        self.visualToken.kind = .classSlot
+        self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
         let location = self.token.location
         let label = try self.parseLabel()
         var type: Type?
@@ -810,7 +813,7 @@ public class Parser: CompilerPass
     private func parseSlot() throws -> Slot
         {
         try self.nextToken()
-        self.visualToken.kind = .classSlot
+        self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
         let location = self.token.location
         let label = try self.parseLabel()
         var type: Type?
@@ -984,7 +987,7 @@ public class Parser: CompilerPass
         {
         try self.nextToken()
         let location = self.token.location
-        self.visualToken.kind = .class
+        self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
         let label = try self.parseLabel()
         var parameters = GenericClassParameters()
         let existingClass = self.currentContext.lookup(label: label) as? Class
@@ -1060,7 +1063,7 @@ public class Parser: CompilerPass
         repeat
             {
             try self.parseComma()
-            self.visualToken.kind = .class
+            self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
             let superclassName = try self.parseName()
             let symbol = self.currentContext.lookup(name: superclassName)
             if symbol.isNil
@@ -1111,7 +1114,7 @@ public class Parser: CompilerPass
         {
         let location = self.token.location
         try self.nextToken()
-        self.visualToken.kind = .constant
+        self.tokenRenderer.setKind(.constant,ofToken: self.token)
         let label = try self.parseLabel()
         var type:Type = .class(VoidClass.voidClass)
         if self.token.isGluon
@@ -1198,7 +1201,7 @@ public class Parser: CompilerPass
         {
         let location = self.token.location
         var name:Name
-        self.visualToken.kind = .class
+        self.tokenRenderer.setKind(.type,ofToken: self.token)
         let identifierToken = self.token
         if self.token.isIdentifier && self.token.identifier == "String"
             {
@@ -1206,18 +1209,18 @@ public class Parser: CompilerPass
             }
         if self.token.isIdentifier && self.token.isSystemClassName
             {
-            self.visualToken.kind = .type
+            self.tokenRenderer.setKind(.type,ofToken: self.token)
             let lastPart = self.token.identifier
             name = Name("\\\\Argon\\" + lastPart)
             }
         else if self.token.isIdentifier
             {
-            self.visualToken.kind = .type
+            self.tokenRenderer.setKind(.type,ofToken: self.token)
             name = Name(self.token.identifier)
             }
         else if self.token.isName
             {
-            self.visualToken.kind = .type
+            self.tokenRenderer.setKind(.type,ofToken: self.token)
             name = self.token.nameLiteral
             }
         else if self.token.isLeftPar
@@ -1251,26 +1254,26 @@ public class Parser: CompilerPass
             }
         if resolvedSymbol!.isEnumeration
             {
-            self.visualToken.set(kind:.enumeration,forToken: identifierToken)
+            self.tokenRenderer.setKind(.enumeration,ofToken: identifierToken)
             return(resolvedSymbol!.asType)
             }
         else if resolvedSymbol!.isTypeAlias
             {
-            self.visualToken.set(kind:.typeAlias,forToken: identifierToken)
+            self.tokenRenderer.setKind(.typeAlias,ofToken: identifierToken)
             return(resolvedSymbol!.asType)
             }
         else if resolvedSymbol!.isClassParameter
             {
-            self.visualToken.set(kind:.classParameter,forToken: identifierToken)
+            self.tokenRenderer.setKind(.classParameter,ofToken: identifierToken)
             return(resolvedSymbol!.asType)
             }
         let parameters = try self.parseTypeParameters()
         if resolvedSymbol!.isClass
             {
-            self.visualToken.set(kind:.class,forToken: identifierToken)
+            self.tokenRenderer.setKind(.class,ofToken: identifierToken)
             if resolvedSymbol!.isSystemClass
                 {
-                self.visualToken.set(kind:.systemClass,forToken: identifierToken)
+                self.tokenRenderer.setKind(.systemClass,ofToken: identifierToken)
                 }
             var clazz = Type.class(resolvedSymbol as! Class)
             if !clazz.isGenericClass && !parameters.isEmpty
@@ -1364,8 +1367,8 @@ public class Parser: CompilerPass
             let newStream = TokenStream(source: newText, context: self.reportingContext)
             newStream.lineNumber = self.lineNumber
             self.lineNumber = LineNumber(line: self.token.location.line)
-            self.streamStack.push(self.tokenStream)
-            self.tokenStream = newStream
+            self.sourceStack.push(self.tokenSource)
+            self.tokenSource = newStream
             try self.nextToken()
             }
         else
@@ -1471,7 +1474,7 @@ public class Parser: CompilerPass
             repeat
                 {
                 try self.parseComma()
-                self.visualToken.kind = .type
+                self.tokenRenderer.setKind(.type,ofToken: self.token)
                 let label = try self.parseLabel()
                 parameters.append(GenericClassParameter(label: label))
                 }
@@ -1485,7 +1488,7 @@ public class Parser: CompilerPass
         {
         try self.nextToken()
         let location = self.token.location
-        self.visualToken.kind = .method
+        self.tokenRenderer.setKind(.method,ofToken: self.token)
         let name = try self.parseLabel()
         let existingMethod = self.currentContext.lookup(label: name) as? Method
         let localScope = TemporaryLocalScope(label:  "")
@@ -1615,7 +1618,7 @@ public class Parser: CompilerPass
         lhs.compiler = self.compiler
         lhs.addDeclaration(location)
         var identifier:String
-        while self.token.isGluon
+        while self.token.isScope
             {
             try self.nextToken()
             if self.token.isIdentifier
@@ -1693,7 +1696,24 @@ public class Parser: CompilerPass
         while self.token.isRightArrow
             {
             try self.nextToken()
-            lhs = lhs.slot(try self.parseSlotSelectorExpression())
+            if !self.token.isIdentifier
+                {
+                self.cancelCompletion()
+                self.dispatchError("Slot selector expected but '\(self.token)' was found.")
+                }
+            else
+                {
+                if let slot = lhs.slotWithLabel(self.token.identifier)
+                    {
+                    lhs = SlotAccessExpression(lhs,slot: slot)
+                    }
+                else
+                    {
+                    lhs = SlotAccessExpression(lhs,selector: self.token.identifier)
+                    self.dispatchWarning("The slot at selector '\(self.token.identifier)' can not be resolved, so the type of this expression can not be resolved.")
+                    }
+                }
+            try self.nextToken()
             }
         lhs.compiler = self.compiler
         return(lhs)
@@ -1892,7 +1912,7 @@ public class Parser: CompilerPass
             {
             return(try self.parseIdentifierTerm())
             }
-        else if self.token.isGluon
+        else if self.token.isScope
             {
             return(try self.parseEnumerationCaseExpression())
             }
@@ -2010,7 +2030,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             return(Expression())
             }
-        self.visualToken.kind = .enumeration
+        self.tokenRenderer.setKind(.enumeration,ofToken: self.token)
         let theCaseKey = self.token.identifier
         try self.nextToken()
         return(EnumerationInstanceExpression(caseLabel: theCaseKey,enumeration: nil, enumerationCase: nil, associatedValues: nil))
@@ -2018,7 +2038,7 @@ public class Parser: CompilerPass
         
     private func parseSlotSelectorExpression() throws -> Expression
         {
-        self.visualToken.kind = .classSlot
+        self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
         let location = self.token.location
         let first = try self.parseLabel()
         let lhs = SlotSelectorExpression(selector: first)
@@ -2031,15 +2051,34 @@ public class Parser: CompilerPass
         let location = self.token.location
         if try self.peekToken1().isLeftPar
             {
-            self.visualToken.kind = .methodInvocation
+            self.tokenRenderer.setKind(.methodInvocation,ofToken: self.token)
             }
         let name = try self.parseName()
         let aSymbol = self.currentContext.lookup(name: name)
+        print(aSymbol?.label)
         if let symbol = aSymbol as? Enumeration
             {
-            let enumeration = LiteralExpression(.enumeration(symbol))
-            enumeration.addDeclaration(location)
-            return(enumeration)
+            if self.token.isScope
+                {
+                try self.nextToken()
+                if !self.token.isHashStringLiteral
+                    {
+                    self.dispatchWarning("Symbol expected after descoping operator in the context of an enumeration.")
+                    }
+                else
+                    {
+                    if let aCase = symbol.caseWithLabel(self.token.hashStringLiteral)
+                        {
+                        try self.nextToken()
+                        return(LiteralExpression(.enumerationCase(aCase)))
+                        }
+                    else
+                        {
+                        self.dispatchWarning("'\(self.token.identifier)' is not a valid case of enumeration '\(symbol.label)'.")
+                        }
+                    }
+                }
+            return(LiteralExpression(.enumeration(symbol)))
             }
         else if let symbol = aSymbol as? Class
             {
@@ -2076,9 +2115,9 @@ public class Parser: CompilerPass
             {
             return(LiteralExpression(.constant(symbol)))
             }
-        else if let symbol = aSymbol as? LocalSlot
+        else if aSymbol is LocalSlot || aSymbol is Parameter
             {
-            let read = LocalSlotExpression(slot: symbol)
+            let read = SlotExpression(slot: aSymbol as! Slot)
             read.addReference(location)
             return(read)
             }
@@ -2165,7 +2204,7 @@ public class Parser: CompilerPass
     private func parseInvocationTerm(_ name:Name) throws -> Expression
         {
         let location = self.token.location
-        self.visualToken.kind = .methodInvocation
+        self.tokenRenderer.setKind(.methodInvocation,ofToken: self.token)
         let method = self.currentContext.lookup(name: name) as? Method
         if method.isNotNil
             {
@@ -2389,7 +2428,7 @@ public class Parser: CompilerPass
             let label = (lhs as! VariableExpression).label
             let localSlot = LocalSlot(label: label,type:Type.unknown,value: nil)
             self.currentContext.addSymbol(localSlot)
-            lhs = LocalSlotExpression(slot: localSlot)
+            lhs = SlotExpression(slot: localSlot)
             }
         if !self.token.isAssign
             {
@@ -2464,13 +2503,19 @@ public class Parser: CompilerPass
     private func stopClip(into block: Block)
         {
         let stop = self.token.location.tokenStop
-        block.source = self.source!.substring(with: self.textStart..<stop + 1)
+        if self.source.isNotNil
+            {
+            block.source = self.source!.substring(with: self.textStart..<stop + 1)
+            }
         }
         
     private func stopClip(into symbol: Symbol)
         {
         let stop = self.token.location.tokenStop
-        symbol.source = self.source!.substring(with: self.textStart..<stop + 1)
+        if self.source.isNotNil
+            {
+            symbol.source = self.source!.substring(with: self.textStart..<stop + 1)
+            }
         }
         
     private func parseLoopBlock(into block: Block) throws
@@ -2569,7 +2614,7 @@ public class Parser: CompilerPass
         expression.addDeclaration(location)
         let stop = self.token.location.tokenStop
         let newBlock = ExpressionBlock(expression)
-        newBlock.source = self.source!.substring(with: start..<stop + 1)
+        newBlock.source = self.source?.substring(with: start..<stop + 1) ?? ""
         block.addBlock(newBlock)
         }
         
@@ -2606,7 +2651,7 @@ public class Parser: CompilerPass
         {
         try self.nextToken()
         let location = self.token.location
-        self.visualToken.kind = .function
+        self.tokenRenderer.setKind(.function,ofToken: self.token)
         let cName = try self.parseParentheses
             {
             () throws -> String in
@@ -2634,7 +2679,7 @@ public class Parser: CompilerPass
         {
         try self.nextToken()
         let location = self.token.location
-        self.visualToken.kind = .type
+        self.tokenRenderer.setKind(.type,ofToken: self.token)
         let label = try self.parseLabel()
         if !self.token.isIs
             {
@@ -2695,7 +2740,7 @@ public class Parser: CompilerPass
             }
         self.popContext()
         let stop = self.token.location.tokenStop
-        handler.source = self.source!.substring(with: start..<stop + 1)
+        handler.source = self.source?.substring(with: start..<stop + 1) ?? ""
         }
     }
 

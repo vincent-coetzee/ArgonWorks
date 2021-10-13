@@ -9,6 +9,11 @@ import Foundation
 
 public class SystemClass:Class
     {
+    public override class func classForKeyedUnarchiver() -> AnyClass
+        {
+        return(self.self)
+        }
+        
     public override var isSystemSymbol: Bool
         {
         return(true)
@@ -63,7 +68,6 @@ public class SystemClass:Class
     
     public required init?(coder: NSCoder)
         {
-        print("DECODE SystemClass")
         self._typeCode = .class
         super.init(coder: coder)
         }

@@ -10,6 +10,11 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        return(LiteralExpression(.method(self)))
+        }
+        
     public override var type: Type
         {
         get
@@ -165,7 +170,6 @@ public class Method:Symbol
         
     public func buildDispatchTree(reportingContext: ReportingContext)
         {
-        self.dispatchRootNode = DispatchRootNode.rootNode(for: self.methodSignatures)
         }
         
     public func dispatch(with classes: Types) -> MethodInstance?
@@ -175,7 +179,14 @@ public class Method:Symbol
         
     public func addInstance(_ instance:MethodInstance)
         {
-        self.instances.append(instance)
+        if self.isMain
+            {
+            self.instances = [instance]
+            }
+        else
+            {
+            self.instances.append(instance)
+            }
         instance.setParent(self)
         self.proxyParameters = instance.parameters
         }

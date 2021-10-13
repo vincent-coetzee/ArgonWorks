@@ -71,7 +71,6 @@ public class GenericClass:Class
         
     required init?(coder: NSCoder)
         {
-        print("DECODE GenericClass")
         self.genericClassParameters = coder.decodeObject(forKey: "genericClassParameters") as! Array<Class>
         self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClassInstance>
         self._typeCode = .array

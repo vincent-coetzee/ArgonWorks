@@ -141,9 +141,7 @@ public class ContainerSymbol:Symbol
         
     public required init?(coder: NSCoder)
         {
-        print("DECODING CONTAINER")
         self.symbolsByLabel = coder.decodeObject(forKey: "symbolsByLabel") as! Dictionary<Label,Symbol>
-        print("DECODED \(self.symbolsByLabel.count) SYMBOLS")
         super.init(coder: coder)
         }
         
@@ -169,6 +167,20 @@ public class ContainerSymbol:Symbol
             return(symbol)
             }
         return(self.parent.lookup(label: label))
+        }
+        
+    public override func allImportedSymbols() -> Symbols
+        {
+        var symbols = Symbols()
+        for symbol in self.symbolsByLabel.values
+            {
+            if symbol.isImported
+                {
+                symbols.append(symbol)
+                }
+            symbols.append(contentsOf: symbol.allImportedSymbols())
+            }
+        return(symbols)
         }
         
     public override func removeSymbol(_ symbol: Symbol)
@@ -235,8 +247,7 @@ public class ContainerSymbol:Symbol
             }
         }
         
-    @discardableResult
-    public override func addSymbol(_ symbol:Symbol) -> Symbol
+    public override func addSymbol(_ symbol:Symbol)
         {
         for oldSymbol in self.symbols
             {
@@ -248,7 +259,6 @@ public class ContainerSymbol:Symbol
         self.symbolsByLabel[symbol.label] = symbol
         self.journalEntries.append(.addSymbol(symbol,to: self))
         symbol.setParent(self)
-        return(symbol)
         }
         
     public func addSymbols(_ symbols:Array<Symbol>) -> ContainerSymbol

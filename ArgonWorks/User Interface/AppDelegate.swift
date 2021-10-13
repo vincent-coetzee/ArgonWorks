@@ -28,10 +28,10 @@ class AppDelegate: NSObject, NSApplicationDelegate
             }
         TopModule.shared.resolveReferences(topModule: TopModule.shared)
         TopModule.shared.commitJournalTransaction()
-        let cleanData = try! NSKeyedArchiver.archivedData(withRootObject: TopModule.shared, requiringSecureCoding: false)
-        let topModuleClone = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(cleanData) as! TopModule
-        assert(topModuleClone == TopModule.shared,"Should not be equal")
-        topModuleClone.printContents()
+        let objectFile = ObjectFile(filename: "test.dat", module: Module(label: "junk"), root: TopModule.shared, date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
+        let cleanData = try! NSKeyedArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
+        let topModuleClone = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(cleanData) as! ObjectFile
+        print(topModuleClone)
 //        let aClass = TopModule.shared.argonModule.class
 //        let archiver = Archiver(path: URL(fileURLWithPath: "/Users/vincent/Desktop/Class.argonb"))
 //        try! archiver.writeRootObject(aClass)
@@ -167,6 +167,28 @@ class AppDelegate: NSObject, NSApplicationDelegate
         {
         let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonSemanticController") as? NSWindowController else
+            {
+            return
+            }
+        controller.showWindow(self)
+        }
+        
+    @IBAction
+    public func openObjectInspector(_ sender:Any?)
+        {
+        let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ObjectInspectorController") as? NSWindowController else
+            {
+            return
+            }
+        controller.showWindow(self)
+        }
+        
+    @IBAction
+    public func openRunner(_ sender:Any?)
+        {
+        let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonRunner") as? NSWindowController else
             {
             return
             }

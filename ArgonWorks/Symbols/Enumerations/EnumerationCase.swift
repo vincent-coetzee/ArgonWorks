@@ -9,6 +9,11 @@ import AppKit
 
 public class EnumerationCase:Symbol
     {
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        LiteralExpression(.enumerationCase(self))
+        }
+        
     public override var type: Type
         {
         return(self.enumeration.type)

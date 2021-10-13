@@ -10,20 +10,7 @@ import Combine
 
 public class Compiler
     {
-//    
-//    public static func tokenPublisher() -> AnyPublisher<VisualToken,Never>
-//        {
-//        let subject = PassthroughSubject<VisualToken,Never>()
-//        let newSubject:AnyPublisher<VisualToken,Never> = subject.map{$0.mapColors(systemClassNames: Self.systemClassNames)}.eraseToAnyPublisher()
-//        return(newSubject)
-//        }
-
-    public var tokenRenderer: TokenRenderer
-        {
-        return(self.parser?.visualToken ?? TokenRenderer(systemClassNames: self.systemClassNames))
-        }
-        
-    public var systemClassNames: Array<String>
+    public static var systemClassNames: Array<String>
         {
         TopModule.shared.argonModule.classes.map{$0.label}
         }
@@ -32,74 +19,60 @@ public class Compiler
     
     public var argonModule: ArgonModule
         {
-        self.topModule.argonModule
+        return(self.topModule.argonModule)
         }
         
-    internal private(set) var namingContext: NamingContext
-    private var parser: Parser?
-    internal var lastChunk: ParseNode?
+    internal var reportingContext:ReportingContext
+    private var parser: Parser!
+    internal var lastNode: ParseNode?
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
     internal var topModule: TopModule
-    internal var currentTag = Int.random(in: 0..<Int.max)
+    internal var tokenRenderer:SemanticTokenRenderer
     
-    init()
+    init(source: String,reportingContext: ReportingContext = NullReportingContext.shared,tokenRenderer: SemanticTokenRenderer = NullTokenRenderer())
         {
+        self.parser = nil
+        self.currentPass = nil
+        self.lastNode = nil
         self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
-        self.namingContext = self.topModule
+        self.reportingContext = reportingContext
+        self.tokenRenderer = tokenRenderer
+        self.parser = Parser(compiler: self,source: source)
+        self.currentPass = self.parser
+        self.tokenRenderer.update(source)
         }
         
-    public var reportingContext:ReportingContext = NullReportingContext.shared
-    
+    init(tokens: Tokens,reportingContext: ReportingContext = NullReportingContext.shared,tokenRenderer: SemanticTokenRenderer = NullTokenRenderer())
+        {
+        self.parser = nil
+        self.currentPass = nil
+        self.lastNode = nil
+        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        self.reportingContext = reportingContext
+        self.tokenRenderer = tokenRenderer
+        self.parser = Parser(compiler: self,tokens: tokens)
+        self.currentPass = self.parser
+        }
+
     public func cancelCompletion()
         {
+        self.completionWasCancelled = true
         }
-        
-    public func parseChunk(_ source:String) throws
-        {
-        if source.isEmpty
-            {
-            return
-            }
-        self.parser = Parser(compiler: self)
-        self.parser!.parseChunk(source)
-        }
-        
-    public func commit()
-        {
-        self.topModule.commitJournalTransaction()
-        }
-        
-    public func rollback()
-        {
-        self.topModule.rollbackJournalTransaction()
-        }
-        
+    
     @discardableResult
-    public func compileChunk(_ source:String) -> ParseNode?
+    public func compile(parseOnly: Bool = false) -> ParseNode?
         {
-        if source.isEmpty
-            {
-            return(nil)
-            }
-        self.parser = Parser(compiler: self)
-        self.topModule.beginJournalTransaction()
-        self.lastChunk = parser!.parseChunk(source)
-        if self.lastChunk.isNotNil
+        self.reportingContext.resetReporting()
+        if let node = self.parser.parse(),!parseOnly
             {
             self.topModule.resolveReferences(topModule: self.topModule)
-            }
-        self.topModule.printContents()
-        if let chunk = self.lastChunk
-            {
-            Realizer.realize(chunk,in:self)
-            SemanticAnalyzer.analyze(chunk,in:self)
-            AddressAllocator.allocateAddresses(chunk,in: self)
-            CodeGenerator.emit(into: chunk,in:self)
-            Optimizer.optimize(chunk,in:self)
-            let module = self.namingContext.primaryContext as! TopModule
-            module.dumpMethods()
-            return(chunk)
+            Realizer.realize(node,in:self)
+            SemanticAnalyzer.analyze(node,in:self)
+            AddressAllocator.allocateAddresses(node,in: self)
+            CodeGenerator.emit(into: node,in:self)
+            Optimizer.optimize(node,in:self)
+            return(node)
             }
         return(nil)
         }

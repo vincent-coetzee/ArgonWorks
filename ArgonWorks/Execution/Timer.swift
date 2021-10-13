@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Timer
+public class Timer
     {
     public func milliseconds() -> Int
         {
@@ -31,7 +31,14 @@ public struct Timer
         self.start()
         }
         
-    public mutating func start()
+    public func time(_ closure: () -> Void) -> Int
+        {
+        self.start()
+        closure()
+        return(self.stop())
+        }
+        
+    public func start()
         {
         self.startTime = self.milliseconds()
         }

@@ -131,7 +131,6 @@ public class Expression: NSObject,NSCoding
         
     public required init?(coder: NSCoder)
         {
-        print("DECODE EXPRESSION")
         self.parent = coder.decodeParent(forKey: "parent")!
         self.locations = coder.decodeSourceLocations(forKey: "locations")
         super.init()
@@ -139,7 +138,6 @@ public class Expression: NSObject,NSCoding
 
     public func encode(with coder:NSCoder)
         {
-        print("ENCODE EXPRESSION")
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeSourceLocations(self.locations,forKey:"locations")
         }
@@ -173,6 +171,11 @@ public class Expression: NSObject,NSCoding
         
     public func becomeLValue()
         {
+        }
+         
+    public func slotWithLabel(_ label: Label) -> Slot?
+        {
+        return(nil)
         }
         
     public func scopedExpression(for child: String) -> Expression?
