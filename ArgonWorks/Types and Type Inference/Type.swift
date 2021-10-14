@@ -387,18 +387,6 @@ public indirect enum Type: Equatable,Storable
             }
         }
         
-        
-    public func slotWithLabel(_ label: String) -> Slot?
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.slotWithLabel(label))
-            default:
-                return(nil)
-            }
-        }
-        
     public func isSubtype(of type:Type) -> Bool
         {
         switch(self,type)

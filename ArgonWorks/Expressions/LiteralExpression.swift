@@ -310,45 +310,29 @@ public class LiteralExpression: Expression
             }
         }
         
-    public override func scopedExpression(for child: String) -> Expression?
+    public override func lookup(label child: String) -> Symbol?
         {
         switch(self.literal)
             {
             case .class(let aClass):
                 if let symbol = aClass.lookup(label: child)
                     {
-                    return(SymbolExpression(symbol: symbol))
+                    return(symbol)
                     }
                 return(nil)
             case .module(let module):
-                if let aClass = module.lookup(label: child) as? Class
+                if let symbol = module.lookup(label: child)
                     {
-                    return(LiteralExpression(.class(aClass)))
-                    }
-                else if let aSlot = module.lookup(label: child) as? Slot
-                    {
-                    return(SlotAccessExpression(self, slotExpression: SlotSelectorExpression(selector: aSlot.label)))
-                    }
-                else if let aModule = module.lookup(label: child) as? Module
-                    {
-                    return(LiteralExpression(.module(aModule)))
-                    }
-                else if let aMethod = module.lookup(label: child) as? Method
-                    {
-                    return(LiteralExpression(.method(aMethod)))
-                    }
-                else if let anEnumeration = module.lookup(label: child) as? Enumeration
-                    {
-                    return(LiteralExpression(.enumeration(anEnumeration)))
+                    return(symbol)
                     }
                 else
                     {
                     return(nil)
                     }
             case .enumeration(let enumeration):
-                if let symbol = enumeration.lookup(label: child) as? EnumerationCase
+                if let symbol = enumeration.lookup(label: child)
                     {
-                    return(LiteralExpression(.enumerationCase(symbol)))
+                    return(symbol)
                     }
                 return(nil)
             default:

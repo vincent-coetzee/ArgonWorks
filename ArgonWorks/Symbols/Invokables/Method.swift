@@ -10,6 +10,11 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var isLiteral: Bool
+        {
+        return(true)
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         return(LiteralExpression(.method(self)))

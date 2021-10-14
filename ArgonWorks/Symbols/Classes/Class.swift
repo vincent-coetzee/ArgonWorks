@@ -22,6 +22,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(true)
         }
         
+    public override var isLiteral: Bool
+        {
+        return(true)
+        }
+        
     public var isSuperclassListEmpty: Bool
         {
         return(self.superclasses.count == 0)

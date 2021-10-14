@@ -48,8 +48,6 @@ public class SymbolExpression: Expression
         super.init()
         }
         
- 
-        
     public override func realize(using realizer: Realizer)
         {
         self.symbol.realize(using: realizer)

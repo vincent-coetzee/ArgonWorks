@@ -141,9 +141,9 @@ public class Slot:Symbol
         return(newSlot)
         }
         
-    public func slotWithLabel(_ label: Label) -> Slot?
+    public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.slotWithLabel(label))
+        return(self.type.lookup(label: label))
         }
         
     public override func realize(using realizer: Realizer)

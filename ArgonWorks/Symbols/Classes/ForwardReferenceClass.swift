@@ -36,7 +36,9 @@ public class ForwardReferenceClass: Class
     public func realizeClass(topModule: TopModule)
         {
         let aContext = self.context.isNil ? Context.node(topModule.argonModule) : self.context!
-        self.theClass = aContext.lookup(name: self.localName) as? Class
+        var newName = localName
+        newName.topModule = topModule
+        self.theClass = aContext.lookup(name: newName) as? Class
         if self.theClass.isNil
             {
             NullReportingContext.shared.dispatchError(at: self.declaration!, message: "The forward reference to class '\(self.localName)' could not be resolved.")

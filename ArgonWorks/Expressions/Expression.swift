@@ -173,7 +173,7 @@ public class Expression: NSObject,NSCoding
         {
         }
          
-    public func slotWithLabel(_ label: Label) -> Slot?
+    public func lookup(label: Label) -> Symbol?
         {
         return(nil)
         }

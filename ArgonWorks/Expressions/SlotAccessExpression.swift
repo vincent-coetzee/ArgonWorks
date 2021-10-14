@@ -16,7 +16,7 @@ public class SlotAccessExpression: Expression
 
     private let receiver: Expression
     private var slotExpression: Expression?
-    private var slot: Slot?
+    private var slot: Symbol?
     private var isLValue = false
     private var _type: Type?
     private var selector: String?
@@ -31,7 +31,7 @@ public class SlotAccessExpression: Expression
         super.init(coder: coder)
         }
         
-    init(_ receiver:Expression,slot:Slot)
+    init(_ receiver:Expression,slot: Symbol)
         {
         self.receiver = receiver
         self.slot = slot
@@ -99,9 +99,9 @@ public class SlotAccessExpression: Expression
         return(.unknown)
         }
         
-    public override func slotWithLabel(_ label: Label) -> Slot?
+    public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.slotWithLabel(label))
+        return(self.type.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -141,12 +141,20 @@ public class SlotAccessExpression: Expression
             {
             instance.append(lineNumber: location.line)
             }
-        if let slot = self.receiver.lookupSlot(selector: (self.slotExpression as! SlotSelectorExpression).selector)
+        if slot.isNotNil && slot is Slot
             {
             let temp = instance.nextTemporary()
             try self.receiver.emitCode(into: instance,using: generator)
             instance.append(nil,"MOV",self.receiver.place,.none,temp)
-            instance.append(nil,"IADD",temp,.literal(.integer(Argon.Integer(slot.offset))),temp)
+            instance.append(nil,"IADD",temp,.literal(.integer(Argon.Integer((slot as! Slot).offset))),temp)
+            self._place = temp
+            }
+        else if let expression = self.slotExpression,let aSlot = self.receiver.lookupSlot(selector: (expression as! SlotSelectorExpression).selector)
+            {
+            let temp = instance.nextTemporary()
+            try self.receiver.emitCode(into: instance,using: generator)
+            instance.append(nil,"MOV",self.receiver.place,.none,temp)
+            instance.append(nil,"IADD",temp,.literal(.integer(Argon.Integer(aSlot.offset))),temp)
             self._place = temp
             }
         else

@@ -64,11 +64,11 @@ public class SystemModule: Module
                 }
             return(nil)
             }
-        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+        if name.count == 1,let symbol = self.lookup(label: name.first)
             {
             return(symbol)
             }
-        if name.count == 1,let symbol = self.lookup(label: name.first)
+        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
             {
             return(symbol)
             }

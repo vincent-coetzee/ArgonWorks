@@ -29,12 +29,8 @@ public class ImportExpression: Expression
         super.encode(with: coder)
         }
     
-    public override func scopedExpression(for identifier: String) -> Expression?
+    public override func lookup(label: Label) -> Symbol?
         {
-        if let value = self.importSymbol.lookup(label: identifier)
-            {
-            return(value.asLiteralExpression)
-            }
-        return(nil)
+        return(self.importSymbol.lookup(label: label))
         }
     }

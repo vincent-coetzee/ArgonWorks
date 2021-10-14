@@ -69,9 +69,9 @@ public class PseudoVariableExpression: Expression
         super.init(coder: coder)
         }
         
-    public override func slotWithLabel(_ label: Label) -> Slot?
+    public override func lookup(label: Label) -> Symbol?
         {
-        return(self._type.slotWithLabel(label))
+        return(self._type.lookup(label: label))
         }
         
     public override func encode(with coder:NSCoder)

@@ -10,6 +10,16 @@ import AppKit
     
 public class Module:ContainerSymbol
     {
+    public override var isLiteral: Bool
+        {
+        return(true)
+        }
+        
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        return(LiteralExpression(.module(self)))
+        }
+        
     public override var isModule: Bool
         {
         return(true)

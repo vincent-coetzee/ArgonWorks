@@ -1709,9 +1709,16 @@ public class Parser: CompilerPass
                 }
             else
                 {
-                if let slot = lhs.slotWithLabel(self.token.identifier)
+                if let symbol = lhs.lookup(label: self.token.identifier)
                     {
-                    lhs = SlotAccessExpression(lhs,slot: slot)
+                    if symbol.isLiteral
+                        {
+                        lhs = symbol.asLiteralExpression!
+                        }
+                    else
+                        {
+                        lhs = SlotAccessExpression(lhs,slot: symbol)
+                        }
                     }
                 else
                     {
@@ -2059,11 +2066,13 @@ public class Parser: CompilerPass
             {
             self.tokenRenderer.setKind(.methodInvocation,ofToken: self.token)
             }
+        let nameToken = self.token
         let name = try self.parseName()
         let aSymbol = self.currentContext.lookup(name: name)
         print(aSymbol?.label)
         if let symbol = aSymbol as? Enumeration
             {
+            self.tokenRenderer.setKind(.enumeration,ofToken: nameToken)
             if self.token.isScope
                 {
                 try self.nextToken()
@@ -2105,6 +2114,7 @@ public class Parser: CompilerPass
                 }
             if self.token.isLeftPar
                 {
+                self.tokenRenderer.setKind(.class,ofToken: nameToken)
                 return(try self.parseInstanciationTerm(ofClass: clazz.class))
                 }
             let literal = LiteralExpression(.class(clazz.class))
@@ -2126,6 +2136,12 @@ public class Parser: CompilerPass
             let read = SlotExpression(slot: aSymbol as! Slot)
             read.addReference(location)
             return(read)
+            }
+        else if aSymbol is Import
+            {
+            let expression = ImportExpression(import: aSymbol as! Import)
+            expression.addDeclaration(location)
+            return(expression)
             }
         else if self.token.isLeftPar
             {

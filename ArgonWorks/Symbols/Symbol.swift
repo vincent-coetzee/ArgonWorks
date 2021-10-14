@@ -25,6 +25,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
+    public var isLiteral: Bool
+        {
+        return(false)
+        }
+        
     public var isArgonModule: Bool
         {
         return(false)

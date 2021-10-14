@@ -9,6 +9,11 @@ import Foundation
 
 public class Constant:Slot
     {
+    public override var isLiteral: Bool
+        {
+        return(true)
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         return(LiteralExpression(.constant(self)))

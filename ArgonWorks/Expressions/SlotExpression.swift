@@ -51,9 +51,9 @@ public class SlotExpression: Expression
         self.isLValue = true
         }
         
-    public override func slotWithLabel(_ label: Label) -> Slot?
+    public override func lookup(label: Label) -> Symbol?
         {
-        return(self.slot.slotWithLabel(label))
+        return(self.slot.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
