@@ -30,7 +30,7 @@ public class Compiler
     internal var topModule: TopModule
     internal var tokenRenderer:SemanticTokenRenderer
     
-    init(source: String,reportingContext: ReportingContext = NullReportingContext.shared,tokenRenderer: SemanticTokenRenderer = NullTokenRenderer())
+    init(source: String,reportingContext: ReportingContext,tokenRenderer: SemanticTokenRenderer)
         {
         self.parser = nil
         self.currentPass = nil
@@ -43,7 +43,20 @@ public class Compiler
         self.tokenRenderer.update(source)
         }
         
-    init(tokens: Tokens,reportingContext: ReportingContext = NullReportingContext.shared,tokenRenderer: SemanticTokenRenderer = NullTokenRenderer())
+    init(source: String)
+        {
+        self.parser = nil
+        self.currentPass = nil
+        self.lastNode = nil
+        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        self.reportingContext = NullReportingContext()
+        self.tokenRenderer = NullTokenRenderer()
+        self.parser = Parser(compiler: self,source: source)
+        self.currentPass = self.parser
+        self.tokenRenderer.update(source)
+        }
+        
+    init(tokens: Tokens,reportingContext: ReportingContext,tokenRenderer: SemanticTokenRenderer)
         {
         self.parser = nil
         self.currentPass = nil
@@ -59,7 +72,7 @@ public class Compiler
         {
         self.completionWasCancelled = true
         }
-    
+
     @discardableResult
     public func compile(parseOnly: Bool = false) -> ParseNode?
         {

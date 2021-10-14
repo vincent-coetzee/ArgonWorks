@@ -133,23 +133,13 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         
     public func lookup(name: Name) -> Symbol?
         {
+        if name.isRooted
+            {
+            fatalError("This should have been caught earlier.")
+            }
         if name.isEmpty
             {
             return(nil)
-            }
-        else if name.isRooted
-            {
-            if name.count == 1
-                {
-                return(nil)
-                }
-            if let start = TopModule.shared.lookup(label: name.first)
-                {
-                if let symbol = start.lookup(name: name.withoutFirst)
-                    {
-                    return(symbol)
-                    }
-                }
             }
         else if name.count == 1
             {
@@ -164,6 +154,34 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
                 {
                 return(symbol)
                 }
+            }
+        return(self.parent.lookup(name: name))
+        }
+        
+    public func lookup(name: Name,topModule: TopModule) -> Symbol?
+        {
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let symbol = topModule.lookup(label: name.first)?.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
+            }
+        if name.count == 1,let symbol = self.lookup(label: name.first)
+            {
+            return(symbol)
+            }
+        if let symbol = self.lookup(label: name.first)?.lookup(name: name.withoutFirst)
+            {
+            return(symbol)
             }
         return(self.parent.lookup(name: name))
         }

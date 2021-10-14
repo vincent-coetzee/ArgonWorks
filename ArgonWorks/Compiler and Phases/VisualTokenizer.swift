@@ -68,8 +68,7 @@ public class VisualTokenizer: SemanticTokenRenderer
         print("Time to generate and process tokens = \(time)")
         let time2 = Timer().time
             {
-            let compiler = Compiler(tokens: someTokens)
-            compiler.reportingContext = self.reportingContext
+            let compiler = Compiler(tokens: someTokens,reportingContext: self.reportingContext,tokenRenderer: self)
             compiler.compile(parseOnly: true)
             }
         print("Time to create Compiler and parse = \(time2)")

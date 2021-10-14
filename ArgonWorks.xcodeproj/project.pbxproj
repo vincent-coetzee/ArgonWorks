@@ -59,8 +59,10 @@
 		BF26584226FBAEA20089D193 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF26584126FBAEA20089D193 /* BrowserView.swift */; };
 		BF27F7EC26FB17DE00A3B95D /* HierarchyCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27F7EB26FB17DE00A3B95D /* HierarchyCellView.swift */; };
 		BF27F7F226FB4AC500A3B95D /* SymbolBrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF27F7F126FB4AC500A3B95D /* SymbolBrowserView.swift */; };
+		BF3345A32717675600040AF9 /* Array+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3345A22717675600040AF9 /* Array+Extensions.swift */; };
 		BF384237270769FA00159FA1 /* CompilationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF384236270769FA00159FA1 /* CompilationEvent.swift */; };
 		BF3A46E02717316400D1E7C7 /* SemanticTokenRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3A46DF2717316400D1E7C7 /* SemanticTokenRenderer.swift */; };
+		BF3A46E3271750E000D1E7C7 /* DispatchStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3A46E2271750E000D1E7C7 /* DispatchStateMachine.swift */; };
 		BF3CB5DC26FB6828008DE031 /* Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3CB5DB26FB6828008DE031 /* Layout.swift */; };
 		BF3DEDAF27141B3800C91C75 /* Macro.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF3DEDAE27141B3800C91C75 /* Macro.swift */; };
 		BF57C9E626D406070016BA84 /* BTreePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF57C9E526D406070016BA84 /* BTreePage.swift */; };
@@ -365,8 +367,10 @@
 		BF26584126FBAEA20089D193 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
 		BF27F7EB26FB17DE00A3B95D /* HierarchyCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HierarchyCellView.swift; sourceTree = "<group>"; };
 		BF27F7F126FB4AC500A3B95D /* SymbolBrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolBrowserView.swift; sourceTree = "<group>"; };
+		BF3345A22717675600040AF9 /* Array+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Array+Extensions.swift"; sourceTree = "<group>"; };
 		BF384236270769FA00159FA1 /* CompilationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompilationEvent.swift; sourceTree = "<group>"; };
 		BF3A46DF2717316400D1E7C7 /* SemanticTokenRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticTokenRenderer.swift; sourceTree = "<group>"; };
+		BF3A46E2271750E000D1E7C7 /* DispatchStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DispatchStateMachine.swift; sourceTree = "<group>"; };
 		BF3CB5DB26FB6828008DE031 /* Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Layout.swift; sourceTree = "<group>"; };
 		BF3DEDAE27141B3800C91C75 /* Macro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Macro.swift; sourceTree = "<group>"; };
 		BF57C9E526D406070016BA84 /* BTreePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BTreePage.swift; sourceTree = "<group>"; };
@@ -672,6 +676,14 @@
 			path = "Code Generation";
 			sourceTree = "<group>";
 		};
+		BF3A46E12717509300D1E7C7 /* Dispatch */ = {
+			isa = PBXGroup;
+			children = (
+				BF3A46E2271750E000D1E7C7 /* DispatchStateMachine.swift */,
+			);
+			path = Dispatch;
+			sourceTree = "<group>";
+		};
 		BFA3ADA126CFFD9300F17CF6 /* Testing */ = {
 			isa = PBXGroup;
 			children = (
@@ -713,9 +725,10 @@
 		BFC1EC8026CFF9E9009B7C34 /* ArgonWorks */ = {
 			isa = PBXGroup;
 			children = (
-				BF178A6B271028DB00AE2D7F /* Code Generation */,
 				BFC1ED2426CFFAB1009B7C34 /* Blocks */,
+				BF178A6B271028DB00AE2D7F /* Code Generation */,
 				BFC1ED4B26CFFABA009B7C34 /* Compiler and Phases */,
+				BF3A46E12717509300D1E7C7 /* Dispatch */,
 				BFC1ED7026CFFAC0009B7C34 /* Error Handling */,
 				BFC1ECA626CFFA9F009B7C34 /* Execution */,
 				BFC1ED0726CFFAA7009B7C34 /* Expressions */,
@@ -1076,6 +1089,7 @@
 				BF24ED9F2705B63A004D76E9 /* FixedWidthInteger+Extensions.swift */,
 				BF24EDA12705B6B6004D76E9 /* Float.swift */,
 				BF24EDA32705B6F7004D76E9 /* Double+Extensions.swift */,
+				BF3345A22717675600040AF9 /* Array+Extensions.swift */,
 			);
 			path = SystemExtensions;
 			sourceTree = "<group>";
@@ -1240,6 +1254,7 @@
 				BFC1ED3C26CFFAB1009B7C34 /* SelectBlock.swift in Sources */,
 				BFC1ECF926CFFA9F009B7C34 /* Word.swift in Sources */,
 				BFC1EE3326CFFAF6009B7C34 /* LineNumberTextView.swift in Sources */,
+				BF3345A32717675600040AF9 /* Array+Extensions.swift in Sources */,
 				BFC1ECD726CFFA9F009B7C34 /* InnerDictionaryPointer.swift in Sources */,
 				BFA3ADCC26D008ED00F17CF6 /* MemoryBrowserViewController.swift in Sources */,
 				BF0564302715D2BE005E7688 /* ImportedClass.swift in Sources */,
@@ -1268,6 +1283,7 @@
 				BF24EDA42705B6F7004D76E9 /* Double+Extensions.swift in Sources */,
 				BFC1ED4A26CFFAB1009B7C34 /* SignalBlock.swift in Sources */,
 				BFC1EE1126CFFADC009B7C34 /* ObjectSlot.swift in Sources */,
+				BF3A46E3271750E000D1E7C7 /* DispatchStateMachine.swift in Sources */,
 				BFC1ED4226CFFAB1009B7C34 /* ReturnBlock.swift in Sources */,
 				BFC1ED4926CFFAB1009B7C34 /* WhileBlock.swift in Sources */,
 				BFC1ED6F26CFFABA009B7C34 /* Argon.swift in Sources */,

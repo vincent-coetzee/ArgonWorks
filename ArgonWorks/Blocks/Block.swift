@@ -185,7 +185,7 @@ public class Block:NSObject,NamingContext,NSCoding
         {
         if name.isRooted
             {
-            return(self.primaryContext.lookup(name: name.withoutFirst))
+            return(name.topModule.lookup(name: name.withoutFirst))
             }
         else if name.isEmpty
             {

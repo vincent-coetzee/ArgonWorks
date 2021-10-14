@@ -105,7 +105,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     internal var symbolList3: SymbolList!
     
     private var symbols: Array<Symbol> = []
-    private var compiler: Compiler! = nil
     private var currentSourceFileURL:URL? = nil
     private var currentSymbolFileURL:URL? = nil
     private var forwarderView: ForwarderView?
@@ -156,7 +155,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     override func windowDidLoad()
         {
         super.windowDidLoad()
-        self.compiler = Compiler(source:"" )
         self.window?.setFrame(self.firstFrame!, display: true, animate: true)
         let frame = self.firstFrame!
         let rectObject = RectObject(frame)
@@ -178,8 +176,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         NSColorPanel.shared.setAction(#selector(onColorSelected(_:)))
         }
         
-
-        
     @IBAction public func save(_ sender: Any?)
         {
         if let url = self.currentSourceFileURL
@@ -193,19 +189,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                 {
                 print(error)
                 }
-            }
-        }
-        
-    @IBAction public func sourceChangedNotification(_ event:NSNotification)
-        {
-        do
-            {
-            self.resetReporting()
-//            TopModule.shared.rollbackJournalTransaction()
-//            try self.compiler.parseChunk(self.sourceEditor.textStorage?.string ?? "")
-            }
-        catch
-            {
             }
         }
         
@@ -338,10 +321,9 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             self.currentSourceFileURL = url
             let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
             self.sourceEditor.textStorage?.setAttributedString(mutableString)
-            self.compiler = Compiler(source: self.sourceEditor.string,reportingContext: self,tokenRenderer: self.tokenizer)
-            self.compiler.compile()
             self.toolbar.delegate = self
             self.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
+            self.tokenizer.update(string)
             }
         else
             {
@@ -515,7 +497,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: self,tokenRenderer: self.tokenizer)
+                let aCompiler = Compiler(source: self.sourceEditor.string)
                 if let module = aCompiler.compile() as? Module
                     {
                     do
@@ -554,11 +536,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     @IBAction func onCompileFile(_ sender: Any?)
         {
         let source = self.sourceEditor.string
-        let compiler = Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer)
-        if let chunk = compiler.compile()
-            {
-            TopModule.shared.printContents()
-            }
+        Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer).compile()
         }
     ///
     ///
@@ -572,6 +550,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.sourceEditor.textStorage?.setAttributedString(mutableString)
         self.resetReporting()
         self.window?.title = "ArgonBrowser [ Untitled.argon ]"
+        self.currentSourceFileURL = nil
         }
     ///
     ///

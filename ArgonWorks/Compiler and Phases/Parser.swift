@@ -218,7 +218,6 @@ public class Parser: CompilerPass
         
     internal func parse() -> ParseNode?
         {
-        self.reportingContext.resetReporting()
         do
             {
             try self.nextToken()
@@ -595,7 +594,9 @@ public class Parser: CompilerPass
                 try self.nextToken()
                 }
             }
-        return(Import(label: label,path: path,loadPath: loadPath))
+        let anImport = Import(label: label,path: path,loadPath: loadPath)
+        self.currentContext.addSymbol(anImport)
+        return(anImport)
         }
         
     private func parseInitializer() throws -> Initializer
@@ -1212,16 +1213,19 @@ public class Parser: CompilerPass
             self.tokenRenderer.setKind(.type,ofToken: self.token)
             let lastPart = self.token.identifier
             name = Name("\\\\Argon\\" + lastPart)
+            name.topModule = self.compiler.topModule
             }
         else if self.token.isIdentifier
             {
             self.tokenRenderer.setKind(.type,ofToken: self.token)
             name = Name(self.token.identifier)
+            name.topModule = self.compiler.topModule
             }
         else if self.token.isName
             {
             self.tokenRenderer.setKind(.type,ofToken: self.token)
             name = self.token.nameLiteral
+            name.topModule = self.compiler.topModule
             }
         else if self.token.isLeftPar
             {
@@ -1231,10 +1235,12 @@ public class Parser: CompilerPass
             {
             self.dispatchError("A type name was expected but \(self.token) was found.")
             name = Name()
+            name.topModule = self.compiler.topModule
             }
         try self.nextToken()
         if name == Name("\\\\Argon\\Array")
             {
+            name.topModule = self.compiler.topModule
             ///
             ///
             /// At this stage do nothing but at a later stage we need to add

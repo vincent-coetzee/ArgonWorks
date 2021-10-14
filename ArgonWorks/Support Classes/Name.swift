@@ -22,7 +22,9 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     public static func +(lhs:Name,rhs:Label) -> Name
         {
         let components = lhs.components + [.piece(rhs)]
-        return(Name(components))
+        var newName = Name(components)
+        newName.topModule = lhs.topModule
+        return(newName)
         }
         
     private enum Component
@@ -82,13 +84,13 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         {
         if self.components.isEmpty
             {
-            return(Name())
+            return(Name().withTopModule(self.topModule))
             }
         if self.components.first!.isRoot
             {
-            return(Name(Array(self.components.dropFirst(2))))
+            return(Name(Array(self.components.dropFirst(2))).withTopModule(self.topModule))
             }
-        return(Name(Array(self.components.dropFirst(1))))
+        return(Name(Array(self.components.dropFirst(1))).withTopModule(self.topModule))
         }
         
     public var withoutLast: Name
@@ -97,7 +99,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
             {
             return(Name())
             }
-        return(Name(Array(self.components.dropLast())))
+        return(Name(Array(self.components.dropLast())).withTopModule(self.topModule))
         }
         
     public var isRooted: Bool
@@ -128,6 +130,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         }
         
     private let components: Array<Component>
+    public var topModule: TopModule!
     
     private init(_ bits:Array<Component>)
         {
@@ -137,6 +140,13 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     public init()
         {
         self.components = []
+        }
+        
+    public func withTopModule(_ topModule: TopModule) -> Name
+        {
+        var aName = self
+        aName.topModule = topModule
+        return(aName)
         }
         
     public func write(output: OutputFile) throws

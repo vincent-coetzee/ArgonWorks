@@ -73,6 +73,11 @@ public class MethodInstance:Function,StackFrame
         MethodSignature(parameters: self.parameters,instance: self)
         }
         
+    public var arity: Int
+        {
+        return(self.parameters.count)
+        }
+        
     public override var iconName: String
         {
         "IconMethodInstance"
@@ -355,6 +360,11 @@ public class MethodInstance:Function,StackFrame
     public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
         {
         return(self)
+        }
+        
+    public func type(atIndex: Int) -> Type
+        {
+        parameters[atIndex].type
         }
         
     public func dump()

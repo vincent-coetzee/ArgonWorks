@@ -26,6 +26,11 @@ public class Method:Symbol
             }
         }
         
+    public var maximumInstanceArity: Int
+        {
+        max(self.instances.map{$0.arity})
+        }
+        
     public override var canBecomeAType: Bool
         {
         return(true)
@@ -81,6 +86,11 @@ public class Method:Symbol
     public class func method(label:String) -> Method
         {
         return(Method(label:label))
+        }
+        
+    public func instancesWithArity(_ arity:Int) -> MethodInstances
+        {
+        self.instances.filter{$0.arity == arity}
         }
         
     public override var iconName: String
