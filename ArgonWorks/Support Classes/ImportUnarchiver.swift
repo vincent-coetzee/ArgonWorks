@@ -7,17 +7,34 @@
 
 import Foundation
 
-public class ArgonUnarchiver: NSKeyedUnarchiver
+public class ImportUnarchiver: NSKeyedUnarchiver
     {
-    }
+    public static var domain = Domain(label: "")
+    public static var loader: Loader = ImportUnarchiver.domain
+    public static var topModule: TopModule = ImportUnarchiver.domain.topModule
     
-public class ImportUnarchiver: ArgonUnarchiver
-    {
-    public static var importSymbol: Import?
-    
-    public static func unarchiveTopLevelObjectWithData(_ data: Data,import: Import) throws -> Any?
+    public private(set) var missingSymbols = Array<(String?,Name)>()
+    public var loader: Loader
         {
-        self.importSymbol = `import`
-        return(try self.unarchiveTopLevelObjectWithData(data))
+        Self.loader
+        }
+    public var topModule: TopModule
+        {
+        Self.topModule
+        }
+        
+    public override init(forReadingWith data: Data)
+        {
+        try super.init(forReadingWith: data)
+        }
+        
+    public override init()
+        {
+        super.init()
+        }
+        
+    public func noteMissingSymbol(named: Name,path: String?)
+        {
+        self.missingSymbols.append((path,named))
         }
     }

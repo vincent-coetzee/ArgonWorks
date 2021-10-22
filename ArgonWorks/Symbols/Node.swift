@@ -70,9 +70,9 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         return(nil)
         }
         
-    public var name: Name
+    public var fullName: Name
         {
-        return(self.parent.name + self.label)
+        return(self.parent.fullName + self.label)
         }
         
     public static func ==(lhs:Node,rhs:Node) -> Bool

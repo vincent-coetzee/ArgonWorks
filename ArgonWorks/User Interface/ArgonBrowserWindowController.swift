@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 internal enum UserDefaultsKey: String
     {
     case currentSourceFileURL
+    case currentSymbolFileURL
     case browserWindowRectangle
     case memoryWindowRectangle
     }
@@ -58,6 +59,16 @@ internal class RectObject
 
 extension UserDefaults
     {
+    fileprivate func removeObject(forKey: UserDefaultsKey)
+        {
+        self.removeObject(forKey: forKey.rawValue)
+        }
+        
+    fileprivate func setValue(_ value: Any?,forKey: UserDefaultsKey)
+        {
+        self.set(value, forKey: forKey.rawValue)
+        }
+        
     fileprivate func setValue(_ value: String,forKey: UserDefaultsKey)
         {
         self.set(value, forKey: forKey.rawValue)
@@ -150,6 +161,14 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         let rectObject = RectObject(frame)
         rectObject.setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
         return(size)
+        }
+        
+    public func windowWillClose(_ notification: Notification)
+        {
+        RectObject(self.window!.frame).setValue(forKey: UserDefaultsKey.browserWindowRectangle.rawValue,on: UserDefaults.standard)
+        UserDefaults.standard.setValue(nil,forKey: "junk")
+        UserDefaults.standard.setValue(self.currentSourceFileURL?.absoluteString,forKey: .currentSourceFileURL)
+        UserDefaults.standard.setValue(self.currentSymbolFileURL?.absoluteString,forKey: .currentSymbolFileURL)
         }
         
     override func windowDidLoad()
@@ -276,43 +295,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.sourceEditor.isAutomaticTextReplacementEnabled = false
         self.sourceEditor.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
         self.sourceEditor.sourceEditorDelegate = self
-        for item in self.toolbar.items
-            {
-            if item.label == "Open"
-                {
-                item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onOpenFile(_:))
-                item.isEnabled = true
-                }
-            else if item.label == "Compile"
-                {
-                item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onCompileFile(_:))
-                item.isEnabled = true
-                }
-            else if item.label == "Save"
-                {
-                item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onSaveFile(_:))
-                item.isEnabled = true
-                }
-            else if item.label == "Fonts"
-                {
-                item.isEnabled = true
-                }
-            else if item.label == "New"
-                {
-                item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onNewEditor(_:))
-                item.isEnabled = true
-                }
-            else if item.label == "Object"
-                {
-                item.target = self.forwarderView!
-                item.action = #selector(ForwarderView.onSaveObject(_:))
-                item.isEnabled = true
-                }
-            }
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
         if let aString = urlString,
         let url = URL(string: aString),
@@ -493,6 +475,14 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         panel.allowedContentTypes = [UTType("com.macsemantics.argon.object")!]
         panel.prompt = "Save Object"
         panel.message = "Select where the compiler must save the object file."
+        if self.currentSourceFileURL.isNotNil
+            {
+            var lastPart = self.currentSourceFileURL!.lastPathComponent
+            var string = lastPart as NSString
+            string = string.deletingPathExtension as NSString
+            lastPart = string.appendingPathExtension("argono")!
+            panel.nameFieldStringValue  = lastPart
+            }
         if panel.runModal() == .OK
             {
             if let theUrl = panel.url
@@ -503,10 +493,19 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                     do
                         {
                         let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
-                        let data = try ArgonArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
+//                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
+                        ImportArchiver.isSwappingSystemSymbols = true
+                        let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
                         try data.write(to: theUrl)
+//                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
+//                        print("\(exporter.swappedImportedSymbolNames.count) imported symbols swapped.")
+//                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
+//                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        let result = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(newData)
+                        ImportUnarchiver.topModule = TopModule.shared.clone()
+                        let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
+//                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
+//                        let result = importer.decodeObject(forKey: "root")
                         print(result!)
                         }
                     catch let error

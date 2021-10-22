@@ -22,6 +22,7 @@ public indirect enum Literal
     case enumerationCase(EnumerationCase)
     case method(Method)
     case constant(Constant)
+    case function(Function)
     
     init(coder: NSCoder)
         {
@@ -54,6 +55,8 @@ public indirect enum Literal
                 self = .method(coder.decodeObject(forKey: "method") as! Method)
             case 13:
                 self = .constant(coder.decodeObject(forKey: "constant") as! Constant)
+            case 14:
+                self = .function(coder.decodeObject(forKey: "function") as! Function)
             default:
                 self = .nil
             }
@@ -101,6 +104,9 @@ public indirect enum Literal
             case .enumerationCase(let aCase):
                 coder.encode(11,forKey:"kind")
                 coder.encode(aCase,forKey:"enumerationCase")
+            case .function(let aCase):
+                coder.encode(14,forKey:"kind")
+                coder.encode(aCase,forKey:"function")
             }
         }
     }
@@ -134,6 +140,28 @@ public class LiteralExpression: Expression
             }
         }
         
+    public var isClassLiteral: Bool
+        {
+        switch(self.literal)
+            {
+            case .class:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isMethodLiteral: Bool
+        {
+        switch(self.literal)
+            {
+            case .method:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
     public var isSymbolLiteral: Bool
         {
         switch(self.literal)
@@ -161,6 +189,28 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .string(let symbol):
+                return(symbol)
+            default:
+                fatalError("Should not have been called")
+            }
+        }
+        
+    public var methodLiteral: Method
+        {
+        switch(self.literal)
+            {
+            case .method(let symbol):
+                return(symbol)
+            default:
+                fatalError("Should not have been called")
+            }
+        }
+        
+    public var classLiteral: Class
+        {
+        switch(self.literal)
+            {
+            case .class(let symbol):
                 return(symbol)
             default:
                 fatalError("Should not have been called")
@@ -251,6 +301,8 @@ public class LiteralExpression: Expression
                 return(self.compiler.argonModule.enumerationCase.type)
             case .method:
                 return(self.compiler.argonModule.method.type)
+            case .function:
+                return(self.compiler.argonModule.function.type)
             case .constant(let constant):
                 return(constant.type)
             }
@@ -375,6 +427,8 @@ public class LiteralExpression: Expression
                  instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
                  instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
+            case .function(let constant):
+                 instance.append(nil,"LOAD",.relocatable(.function(constant)),.none,temp)
             }
         self._place = temp
         }

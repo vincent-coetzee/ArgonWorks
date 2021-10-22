@@ -18,11 +18,6 @@ import Foundation
 
 public class GenericClassParameter: Class
     {
-    public override class func classForKeyedUnarchiver() -> AnyClass
-        {
-        return(self.self)
-        }
-        
     public override var isGenericClassParameter: Bool
         {
         return(true)
@@ -46,6 +41,11 @@ public class GenericClassParameter: Class
     public required init?(coder: NSCoder)
         {
         super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
         }
         
     public static func ==(lhs:GenericClassParameter,rhs:GenericClassParameter) -> Bool
@@ -75,12 +75,6 @@ public class GenericClassParameter: Class
 ///
 public class GenericClassParameterInstance: Class
     {
-    private enum CodingKeys: String, CodingKey
-        {
-        case theType
-        case classParameter
-        }
-        
     public static func ==(lhs:GenericClassParameterInstance,rhs:GenericClassParameterInstance) -> Bool
         {
         return(lhs.theType == rhs.theType && lhs.classParameter == rhs.classParameter)

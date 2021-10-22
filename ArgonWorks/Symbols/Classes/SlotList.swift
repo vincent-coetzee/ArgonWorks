@@ -51,9 +51,11 @@ public class SlotList:NSObject,NSCoding,Collection,StorableObject
 //
     required public init?(coder: NSCoder)
         {
+//        print("START DECODE SLOT LIST")
         self.parent = coder.decodeObject(forKey: "parent") as? Symbol
         self.slots = coder.decodeObject(forKey: "slots") as! Array<Slot>
         super.init()
+//        print("END DECODE SLOT LIST")
         }
         
     public func encode(with coder:NSCoder)

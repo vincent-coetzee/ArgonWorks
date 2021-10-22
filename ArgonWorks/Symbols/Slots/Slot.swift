@@ -15,11 +15,6 @@ public class Slot:Symbol
         fatalError()
         }
         
-    public override class func classForKeyedUnarchiver() -> AnyClass
-        {
-        return(ImportedSlot.self)
-        }
-        
     public static func ==(lhs:Slot,rhs:Slot) -> Bool
         {
         return(lhs.index == rhs.index)
@@ -112,20 +107,22 @@ public class Slot:Symbol
 
     public required init?(coder: NSCoder)
         {
+//        print("START DECODE SLOT")
         self._type = coder.decodeType(forKey: "_type")
         self.offset = coder.decodeInteger(forKey: "offset")
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
         super.init(coder: coder)
+//        print("END DECODE SLOT \(self.label)")
         }
 
     public override func encode(with coder:NSCoder)
         {
-        super.encode(with: coder)
         coder.encodeType(self._type,forKey: "_type")
         coder.encode(self.offset,forKey: "offset")
         coder.encode(self.initialValue,forKey:"initialValue")
         coder.encode(self.isClassSlot,forKey: "isClassSlot")
+        super.encode(with: coder)
         }
         
     public override func clone() -> Slot
@@ -140,7 +137,7 @@ public class Slot:Symbol
         newSlot.isClassSlot = self.isClassSlot
         return(newSlot)
         }
-        
+    
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type.lookup(label: label))

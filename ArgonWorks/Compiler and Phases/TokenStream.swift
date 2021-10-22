@@ -513,7 +513,8 @@ public class TokenStream:Equatable, TokenSource
                 }
             else
                 {
-                return(.symbol(Token.Symbol(rawValue:"%")!,self.sourceLocation()))
+                self.rewindChar()
+                return(self.scanSymbol())
                 }
             }
         //

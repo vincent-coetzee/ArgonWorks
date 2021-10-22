@@ -67,6 +67,7 @@ public class MethodInstanceBlock: Block
         
     public override func encode(with coder: NSCoder)
         {
+        print("START ENCODE \(Swift.type(of: self))")
         coder.encode(self._methodInstance,forKey: "methodInstance")
         super.encode(with: coder)
         }

@@ -23,12 +23,14 @@ public class SlotAccessExpression: Expression
      
     required init?(coder: NSCoder)
         {
+//        print("START DECODE SLOT ACCESS EXPRESSION")
         self.receiver = coder.decodeObject(forKey: "receiver") as!Expression
         self.slotExpression = coder.decodeObject(forKey: "slotExpression") as? Expression
         self.slot = coder.decodeObject(forKey: "slot") as? Slot
         self.selector = coder.decodeString(forKey: "selector")
         self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
+//        print("END DECODE SLOT ACCESS EXPRESSION")
         }
         
     init(_ receiver:Expression,slot: Symbol)

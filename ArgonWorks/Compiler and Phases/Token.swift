@@ -260,6 +260,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case OTHERWISE
         case POSTFIX
         case PREFIX
+        case PRIMITIVE
         case PRIVATE
         case PROTECTED
         case PUBLIC
@@ -319,6 +320,11 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         init(_ string:String)
             {
             self.operatorName = string
+            }
+            
+        init(_ symbol: Symbol)
+            {
+            self.operatorName = symbol.rawValue
             }
         }
         
@@ -2617,6 +2623,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .PRIVATE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isPrimitive:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .PRIMITIVE)
             default:
                 return(false)
             }

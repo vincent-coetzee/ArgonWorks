@@ -40,7 +40,6 @@ extension NSCoder
             case 1:
                 return(.none)
             case 2:
-
                 return(.returnRegister)
             case 3:
                 return(.temporary(self.decodeInteger(forKey: forKey + "temporary")))
@@ -94,6 +93,9 @@ extension NSCoder
             case .relocatableIndex(let index):
                 self.encode(13,forKey: key + "kind")
                 self.encode(index,forKey: key + "index")
+            case .methodInstance(let instance):
+                self.encode(14,forKey: key + "kind")
+                self.encode(instance,forKey: key + "methodInstance")
             }
         }
         
@@ -128,6 +130,8 @@ extension NSCoder
                 return(.slot(self.decodeObject(forKey: key + "slot") as! Slot))
             case 13:
                 return(.relocatableIndex(self.decodeInteger(forKey: key + "index")))
+            case 14:
+                return(.methodInstance(self.decodeObject(forKey: key + "methodInstance") as! MethodInstance))
             default:
                 fatalError("This should not happen")
             }
@@ -160,6 +164,15 @@ extension NSCoder
             case .byte(let byte):
                 self.encode(7,forKey: key + "kind")
                 self.encode(Int32(byte),forKey: key + "byte")
+            case .array(let array):
+                self.encode(8,forKey: key + "kind")
+                self.encode(array.count,forKey: key + "count")
+                var index = 0
+                for item in array
+                    {
+                    self.encodeLiteralValue(item,forKey: "\(key)literal\(index)")
+                    index += 1
+                    }
             }
         }
         
@@ -184,6 +197,14 @@ extension NSCoder
                 return(.character(Argon.Character(self.decodeInt32(forKey: key + "character"))))
             case 7:
                 return(.byte(Argon.Byte(self.decodeInt32(forKey: key + "byte"))))
+            case 8:
+                let count = self.decodeInteger(forKey: key + "count")
+                var array = Array<T3AInstruction.LiteralValue>()
+                for index in 0..<count
+                    {
+                    array.append(self.decodeLiteralValue(forKey: "\(key)literal\(index)"))
+                    }
+                return(.array(array))
             default:
                 fatalError("This should not happen")
             }
@@ -416,29 +437,6 @@ extension NSCoder
                 case .enumeration(let aClass):
                     self.encode(2,forKey: forKey + "kind")
                     self.encode(aClass,forKey: forKey + "enumeration")
-                case .forwardReference(let name,let context):
-                    self.encode(4,forKey: forKey + "kind")
-                    if let value = context.lookup(name: name)
-                        {
-                        if value is Class
-                            {
-                            self.encode(1,forKey: forKey + "kind")
-                            self.encode(value as! Class,forKey: forKey + "class")
-                            }
-                        else if value is Enumeration
-                            {
-                            self.encode(2,forKey: forKey + "kind")
-                            self.encode(value as! Enumeration,forKey: forKey + "enumeration")
-                            }
-                        else
-                            {
-                            fatalError("FIX ME")
-                            }
-                        }
-                    else
-                        {
-                        fatalError("Using a forward reference here is a fuckup and needs to be fixed")
-                        }
                 case .methodApplication(let name,let types,let type):
                     self.encode(5,forKey: forKey + "kind")
                     self.encode(name,forKey:forKey + "name")
@@ -540,17 +538,6 @@ extension NSCoder
             arguments.append(self.decodeArgument(forKey: forKey + "argument\(index)"))
             }
         return(arguments)
-        }
-        
-    public func decodeName(forKey: String) -> Name
-        {
-        let string = self.decodeString(forKey: forKey + "name")! as Label
-        return(Name(string))
-        }
-        
-    public func encodeName(_ name:Name,forKey: String)
-        {
-        self.encode(name.string,forKey: forKey + "name")
         }
         
     public func decodeNodeLocation(forKey: String) -> NodeLocation

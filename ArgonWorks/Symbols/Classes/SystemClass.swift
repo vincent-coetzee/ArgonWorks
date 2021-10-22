@@ -68,8 +68,10 @@ public class SystemClass:Class
     
     public required init?(coder: NSCoder)
         {
+//        print("START DECODE SYSTEM CLASS")
         self._typeCode = .class
         super.init(coder: coder)
+//        print("END DECODE SYSTEM CLASS \(self.label)")
         }
         
  

@@ -10,6 +10,11 @@ import AppKit
 
 public class Symbol:Node,ParseNode
     {
+    public var allImportedSymbols: Symbols
+        {
+        []
+        }
+        
     public var asLiteralExpression: LiteralExpression?
         {
         return(nil)
@@ -19,12 +24,7 @@ public class Symbol:Node,ParseNode
         {
         return(false)
         }
-        
-    public var isImported: Bool
-        {
-        return(false)
-        }
-        
+
     public var isLiteral: Bool
         {
         return(false)
@@ -263,6 +263,9 @@ public class Symbol:Node,ParseNode
     internal var addresses = Addresses()
     internal var source: String?
     private var _selectionColor: NSColor?
+    public private(set) var isLoaded = false
+    public private(set) var isImported = false
+    public private(set) var loader: Loader?
     
     public override init(label: Label)
         {
@@ -271,16 +274,58 @@ public class Symbol:Node,ParseNode
         
     public required init?(coder: NSCoder)
         {
+//        #if DEBUG
+//        print("START DECODE SYMBOL")
+//        #endif
         self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
         super.init(coder: coder)
+//        #if DEBUG
+//        print("END DECODE SYMBOL \(self.label)")
+//        #endif
         }
         
     public override func encode(with coder:NSCoder)
         {
+//        #if DEBUG
+//        print("ENCODE SYMBOL \(self.label)")
+//        #endif
         super.encode(with: coder)
         coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
         coder.encode(self.source,forKey: "source")
+        }
+        
+//    public override func awakeAfter(using coder: NSCoder) -> Any?
+//        {
+//        if let unarchiver = coder as? ImportUnarchiver
+//            {
+//            self.isLoaded = true
+//            self.loader = unarchiver.loader
+//            }
+//        return(self)
+//        }
+        
+    public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
+        {
+        if let exporter = archiver as? ImportArchiver
+            {
+            if exporter.isSwappingSystemSymbols && self.isSystemSymbol
+                {
+                exporter.noteSwappedSystemSymbol(self)
+                if self.label == ""
+                    {
+                    print("halt")
+                    }
+                return(SystemSymbolPlaceholder(original: self))
+                }
+            if exporter.isSwappingImportedSymbols && self.isImported
+                {
+                assert(self.loader.isNotNil,"self.loader should not be nil")
+                exporter.noteSwappedImportedSymbol(self)
+                return(ImportedSymbolPlaceholder(original: self))
+                }
+            }
+        return(self)
         }
         
     public func clone() -> Symbol
@@ -290,11 +335,6 @@ public class Symbol:Node,ParseNode
         
     public func replaceSymbol(_ source: Symbol,with replacement: Symbol)
         {
-        }
-        
-    public func allImportedSymbols() -> Symbols
-        {
-        []
         }
         
     public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
@@ -340,11 +380,6 @@ public class Symbol:Node,ParseNode
             }
         cell.icon.contentTintColor = Palette.shared.headerTextColor
         cell.text.textColor = textColor
-        }
-
-    public func beginJournalTransaction()
-        {
-        self.resetJournalEntries()
         }
         
     public func invert(cell: HierarchyCellView)

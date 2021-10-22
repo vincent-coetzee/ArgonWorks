@@ -39,6 +39,8 @@ public struct Argon
         self.uuidIndex += 1
         return(index)
         }
+        
+    public static let kArgonDefaultObjectFileDirectory = "/Users/vincent/Desktop"
     
     public typealias Integer = Int64
     public typealias UInteger = UInt64

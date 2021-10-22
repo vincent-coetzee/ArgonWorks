@@ -18,11 +18,6 @@ public class Constant:Slot
         {
         return(LiteralExpression(.constant(self)))
         }
-        
-    public override var isSystemSymbol: Bool
-        {
-        return(true)
-        }
 
     public override var iconName: String
         {
@@ -76,6 +71,11 @@ public class Constant:Slot
 
 public class SystemConstant: Constant
     {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     init(label: Label,type: Type)
         {
         let expression = DeferredValueExpression(label,type: type)

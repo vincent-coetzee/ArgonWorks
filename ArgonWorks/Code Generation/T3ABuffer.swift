@@ -35,10 +35,12 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     required public init(coder: NSCoder)
         {
+//        print("START DECODE T3ABuffer")
         self.instructions = coder.decodeObject(forKey: "instructions") as! Array<T3AInstruction>
         self.currentOffset = coder.decodeInteger(forKey: "currentOffset")
         self.pendingLabel = nil
         super.init()
+//        print("END DECODE T3ABuffer")
         }
         
     public func encode(with coder:NSCoder)
@@ -65,6 +67,14 @@ public class T3ABuffer: NSObject,NSCoding,Collection
     public func nextLabel() -> T3ALabel
         {
         T3ALabel()
+        }
+        
+    public func append(comment: String)
+        {
+        let instruction = T3AInstruction(comment: comment)
+        instruction.offset = currentOffset
+        self.currentOffset += 1
+        self.instructions.append(instruction)
         }
         
     public func append(lineNumber: Int)

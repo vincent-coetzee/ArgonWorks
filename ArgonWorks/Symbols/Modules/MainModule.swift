@@ -9,12 +9,27 @@ import Foundation
 
 public class MainModule: Module
     {
+    public override var isMainModule: Bool
+        {
+        true
+        }
+
+    public override var firstMainModule: MainModule?
+        {
+        return(self)
+        }
+        
+    public override var firstMainMethod: Method?
+        {
+        return(self.mainMethod)
+        }
+        
     public override var typeCode:TypeCode
         {
         .mainModule
         }
         
-    public var mainMethod: Method = Method(label: "none")
+    public var mainMethod: Method?
     
     public override init(label: Label)
         {
@@ -23,7 +38,7 @@ public class MainModule: Module
         
     public required init?(coder: NSCoder)
         {
-        self.mainMethod = coder.decodeObject(forKey: "mainMethod") as! Method
+        self.mainMethod = coder.decodeObject(forKey: "mainMethod") as? Method
         super.init(coder: coder)
         }
         
@@ -35,9 +50,9 @@ public class MainModule: Module
         
     public override func addSymbol(_ symbol: Symbol)
         {
-        if symbol is Method && (symbol as! Method).isMain
+        if symbol is Method && (symbol as! Method).isMainMethod
             {
-            self.mainMethod = symbol as! Method
+            self.mainMethod = symbol as? Method
             }
         super.addSymbol(symbol)
         }

@@ -57,6 +57,20 @@ public enum JournalEntry
     
 public class ContainerSymbol:Symbol
     {
+    public override var allImportedSymbols: Symbols
+        {
+        var importedSymbols = Symbols()
+        for symbol in self.symbolsByLabel.values
+            {
+            if symbol.isImported
+                {
+                importedSymbols.append(symbol)
+                }
+            importedSymbols.append(contentsOf: symbol.allImportedSymbols)
+            }
+        return(importedSymbols)
+        }
+        
     internal var symbols: Symbols
         {
         Array(self.symbolsByLabel.values)
@@ -167,20 +181,6 @@ public class ContainerSymbol:Symbol
             return(symbol)
             }
         return(self.parent.lookup(label: label))
-        }
-        
-    public override func allImportedSymbols() -> Symbols
-        {
-        var symbols = Symbols()
-        for symbol in self.symbolsByLabel.values
-            {
-            if symbol.isImported
-                {
-                symbols.append(symbol)
-                }
-            symbols.append(contentsOf: symbol.allImportedSymbols())
-            }
-        return(symbols)
         }
         
     public override func removeSymbol(_ symbol: Symbol)

@@ -10,6 +10,28 @@ import AppKit
     
 public class Module:ContainerSymbol
     {
+    public var isMainModule: Bool
+        {
+        false
+        }
+        
+    public var firstMainModule: MainModule?
+        {
+        for symbol in self.symbols where symbol is Module
+            {
+            if let module = (symbol as! Module).firstMainModule
+                {
+                return(module)
+                }
+            }
+        return(nil)
+        }
+        
+    public var firstMainMethod: Method?
+        {
+        return(self.firstMainModule?.mainMethod)
+        }
+        
     public override var isLiteral: Bool
         {
         return(true)
@@ -25,7 +47,7 @@ public class Module:ContainerSymbol
         return(true)
         }
         
-    private var imports: Array<Import> = []
+    private var imports: Array<Importer> = []
     
     public override init(label: Label)
         {
@@ -34,8 +56,10 @@ public class Module:ContainerSymbol
         
     public required init?(coder: NSCoder)
         {
-        self.imports = coder.decodeObject(forKey: "imports") as! Array<Import>
+//        print("START DECODE MODULE")
+        self.imports = coder.decodeObject(forKey: "imports") as! Array<Importer>
         super.init(coder: coder)
+//        print("END DECODE MODULE \(self.label)")
         }
         
     public override func encode(with coder: NSCoder)
@@ -98,7 +122,7 @@ public class Module:ContainerSymbol
         {
         for method in self.symbols.flatMap({$0 as? Method})
             {
-            method.dump()
+//            method.dump()
             }
         for module in self.symbols.compactMap({$0 as? Module})
             {
@@ -140,9 +164,9 @@ public class Module:ContainerSymbol
         
     public override func addSymbol(_ symbol: Symbol)
         {
-        if symbol is Import
+        if symbol is Importer
             {
-            self.imports.append(symbol as! Import)
+            self.imports.append(symbol as! Importer)
             }
         super.addSymbol(symbol)
         }

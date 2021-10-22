@@ -17,6 +17,79 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(LiteralExpression(.class(self)))
         }
         
+    private func parentList(_ array: inout Array<Class>)
+        {
+        for superclass in self.superclasses
+            {
+            if !array.contains(superclass)
+                {
+                array.append(superclass)
+                superclass.parentList(&array)
+                }
+            }
+        }
+        
+    public var rawPrecedenceList: Classes
+        {
+        var array = Classes()
+        array += self.superclasses
+        for superclass in self.superclasses
+            {
+            array += superclass.rawPrecedenceList
+            }
+        return(array)
+        }
+        
+    public var allSuperclasses: Classes
+        {
+        var array = [self]
+        for superclass in self.superclasses
+            {
+            array += superclass.allSuperclasses
+            }
+        return(array)
+        }
+        
+    public func allSuperclasses(inClass aClass: Class) -> Array<(Int,Class)>
+        {
+        let index = aClass.superclasses.firstIndex(of: self)!
+        var array = [(aClass.superclasses.count - index - 1,self)]
+        for superclass in self.superclasses
+            {
+            array += superclass.allSuperclasses(inClass: self)
+            }
+        return(array)
+        }
+        
+    public var precedenceList: Classes
+        {
+        var array = [(0,self)]
+        for superclass in self.superclasses
+            {
+            array += superclass.allSuperclasses(inClass: self)
+            }
+        var list = Array<(Int,Class)>()
+        for element in array
+            {
+            var found = false
+            for item in list
+                {
+                if item.1 == element.1
+                    {
+                    found = true
+                    break
+                    }
+                }
+            if !found
+                {
+                list.append(element)
+                }
+            }
+        let sorted = list.sorted{"\($0.1.depth).\($0.0)" >= "\($1.1.depth).\($1.0)"}
+        let classes = sorted.map{$0.1}
+        return(classes)
+        }
+        
     public override var isType: Bool
         {
         return(true)
@@ -70,31 +143,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public static func <=(lhs: Class, rhs: Class) -> Bool
         {
         return(lhs.isInclusiveSubclass(of: rhs))
-        }
-    ///
-    ///
-    /// Return the distance between this class and the
-    /// Object class in the hieararchy.
-    ///
-    ///
-    public var hierarchicalDepth: Int
-        {
-        var depth = 0
-        var aClass = self
-        while aClass != self.topModule.argonModule.object
-            {
-            depth += 1
-            if depth > 2500
-                {
-                fatalError("Class '\(self.label)' has a depth in excess of 2500 which is likely incorrect, probably because Object is not in it's superclass tree.")
-                }
-            if aClass.superclasses.count < 1
-                {
-                break
-                }
-            aClass = aClass.superclasses.first!
-            }
-        return(depth)
         }
         
     public override func emitCode(using: CodeGenerator)
@@ -399,6 +447,33 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         1_000
         }
         
+    ///
+    ///
+    /// This looks like it doesn't work but the Object class ( the only instance
+    /// of RootClass in the system ) overrides depth to return 1. So this will recurse
+    /// until it hits the RootClass and then unwind with the correct answer. All object
+    /// hierarchies are expected to be rooted in the Object class so it should work for
+    /// all correctly contituted hierarchies. If a hierarchy is NOT rooted in Object for
+    /// some reason the answer will be incorrect.
+    ///
+    /// Because we have multiple inheritance there could be different answers to this query
+    /// depending upon what route is take to get to the RootClass. However this algorithm
+    /// will always take the first route it finds, which will depend on the order in
+    /// which superclasses are added to class. This uses the route recursively defined
+    /// defined by the FIRST superclass.
+    ///
+    ///
+    public var depth: Int
+        {
+        assert(!self.superclasses.isEmpty,"Superclasses should not be empty ( except for Object class) and it is empty in \(self.label) class.")
+        return(1 + self.superclasses[0].depth)
+        }
+        
+    public var isRootClass: Bool
+        {
+        return(false)
+        }
+        
     public var allSubclasses: Array<Class>
         {
         var list = Array<Class>()
@@ -427,7 +502,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     internal var mangledCode: Label
 //    internal var offsetOfClass: Dictionary<Class,Int> = [:]
     internal var hasBeenRealized = false
-    internal private(set) var depth:Int = -1
     
     public override init(label:Label)
         {
@@ -441,6 +515,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public required init?(coder: NSCoder)
         {
+//        print("START DECODE \(Swift.type(of: self))")
         self.superclassReferences = []
         self.subclasses = coder.decodeObject(forKey: "subclasses") as! Classes
         self.superclasses = coder.decodeObject(forKey: "superclasses") as! Classes
@@ -452,14 +527,13 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
         self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
-        self.depth = coder.decodeInteger(forKey: "depth")
         super.init(coder: coder)
+//        print("END DECODE SYMBOL \(self.label)")
         }
 
- 
-        
     public override func encode(with coder:NSCoder)
         {
+//        print("ENCODE CLASS \(self.label)")
         coder.encode(self.subclasses,forKey: "subclasses")
         coder.encode(self.superclasses,forKey: "superclasses")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
@@ -468,7 +542,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         coder.encode(self._metaclass,forKey: "_metaclass")
         coder.encode(self.mangledCode,forKey: "mangledCode")
         coder.encode(self.hasBeenRealized,forKey: "hasBeenRealized")
-        coder.encode(self.depth,forKey: "depth")
         super.encode(with: coder)
         }
         
@@ -503,7 +576,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass.mangledCode = self.mangledCode
 //        newClass.offsetOfClass = self.offsetOfClass
         newClass.hasBeenRealized = self.hasBeenRealized
-        newClass.depth = self.depth
         newClass.source = self.source
         newClass.addresses = self.addresses
         newClass.locations = self.locations
@@ -522,7 +594,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         self.journalEntries.append(.addSubclass(aClass,to: self))
         }
-        
+
     internal func layoutSlotKeys() -> Array<InnerInstancePointer.SlotKey>
         {
         var keys = Array<InnerInstancePointer.SlotKey>()
@@ -830,27 +902,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(nil)
         }
         
-    public func allSuperclasses() -> Array<Class>
-        {
-        var set = Array<Class>()
-        for aClass in self.superclasses
-            {
-            if !set.contains(aClass)
-                {
-                set.append(aClass)
-                }
-            let supers = aClass.allSuperclasses()
-            for aSuper in supers
-                {
-                if !set.contains(aSuper)
-                    {
-                    set.append(aSuper)
-                    }
-                }
-            }
-        return(set)
-        }
-        
     public func layoutObjectSlots()
         {
         guard !self.isSlotLayoutDone else
@@ -937,7 +988,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     public func printLayout()
         {
         print("-------------------------")
-        print("CLASS \(self.name.description)")
+        print("CLASS \(self.fullName.description)")
         print("")
         print("SizeInBytes: \(self.sizeInBytes)")
         print("")

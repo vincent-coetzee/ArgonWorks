@@ -44,7 +44,7 @@ public enum Parent:Storable
             }
         }
         
-    public var name: Name
+    public var fullName: Name
         {
         switch(self)
             {
@@ -53,7 +53,7 @@ public enum Parent:Storable
             case .expression:
                 fatalError("This should not happen")
             case .node(let node):
-                return(node.name)
+                return(node.fullName)
             case .block:
                 fatalError("This should not happen")
             }

@@ -9,6 +9,11 @@ import AppKit
 
 public class SymbolGroup:ContainerSymbol
     {
+    public override var fullName: Name
+        {
+        return(self.parent.fullName)
+        }
+        
     public override var isSymbolGroup: Bool
         {
         return(true)

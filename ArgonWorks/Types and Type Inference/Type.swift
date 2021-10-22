@@ -14,13 +14,35 @@ public enum TypeError:Int,Error,Equatable
     case undefined
     }
     
-public indirect enum Type: Equatable,Storable
+public indirect enum Type: Equatable,Hashable
     {
     public var canBecomeAClass: Bool
         {
         switch(self)
             {
             case .class:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isClass: Bool
+        {
+        switch(self)
+            {
+            case .class:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isMethod: Bool
+        {
+        switch(self)
+            {
+            case .method:
                 return(true)
             default:
                 return(false)
@@ -70,11 +92,6 @@ public indirect enum Type: Equatable,Storable
                 return(nil)
             }
         }
-        
-    public func write(output: OutputFile) throws
-        {
-        try output.write(self)
-        }
     
     public static func ==(lhs:Type,rhs:Type) -> Bool
         {
@@ -123,7 +140,6 @@ public indirect enum Type: Equatable,Storable
     case enumeration(Enumeration)
     case method(Method)
     case methodApplication(String,Types,Type)
-    case forwardReference(Name,Context)
     case typeAlias(TypeAlias)
     case genericClassParameter(GenericClassParameter)
     
@@ -174,8 +190,6 @@ public indirect enum Type: Equatable,Storable
             case .method:
                 fatalError()
             case .methodApplication:
-                fatalError()
-            case .forwardReference:
                 fatalError()
             }
         }
@@ -266,16 +280,16 @@ public indirect enum Type: Equatable,Storable
             }
         }
         
-    public var depth: Int
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.depth)
-            default:
-                return(0)
-            }
-        }
+//    public var depth: Int
+//        {
+//        switch(self)
+//            {
+//            case .class(let aClass):
+//                return(aClass.depth)
+//            default:
+//                return(0)
+//            }
+//        }
         
     public var isGenericClass: Bool
         {
@@ -391,6 +405,12 @@ public indirect enum Type: Equatable,Storable
         {
         switch(self,type)
             {
+            case (.typeAlias(let typeAlias),.class(let class2)):
+                return(typeAlias.isInclusiveSubclass(of: class2))
+            case (.typeAlias(let typeAlias),.enumeration(let class2)):
+                return(typeAlias.isSubtype(of: class2))
+            case (.typeAlias(let typeAlias),.typeAlias(let alias2)):
+                return(typeAlias.isSubtype(of: alias2))
             case (.class(let class1),.class(let class2)):
                 return(class1.isInclusiveSubclass(of: class2))
             case (.enumeration(let enum1),.enumeration(let enum2)):

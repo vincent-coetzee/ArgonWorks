@@ -24,18 +24,16 @@ struct ArgonWorxApp {
         print("FUNCTION <= BEHAVIOR: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.behavior))")
         print("FUNCTION <= OBJECT: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.object))")
         print("FUNCTION <= MAGNITUDE: \(functionClass.isInclusiveSubclass(of: small.topModule.argonModule.magnitude))")
-        let instance1 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.boolean.type),Parameter(label: "C",type: small.topModule.argonModule.typeClass.type)],returnType: .class(small.topModule.argonModule.integer))
-        let instance2 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.string.type),Parameter(label: "C",type: small.topModule.argonModule.enumeration.type)],returnType: .class(small.topModule.argonModule.integer))
-        let instance3 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.collection.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
-        let instance4 = MethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.array.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance1 = StandardMethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.boolean.type),Parameter(label: "C",type: small.topModule.argonModule.typeClass.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance2 = StandardMethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.string.type),Parameter(label: "C",type: small.topModule.argonModule.enumeration.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance3 = StandardMethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.collection.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
+        let instance4 = StandardMethodInstance(label:"methodA",parameters: [Parameter(label: "A", type: small.topModule.argonModule.integer.type),Parameter(label:"B",type: small.topModule.argonModule.array.type),Parameter(label: "C",type: small.topModule.argonModule.class.type)],returnType: .class(small.topModule.argonModule.integer))
         let method = Method(label: "MethodA")
         method.addInstance(instance1)
         method.addInstance(instance2)
         method.addInstance(instance3)
         method.addInstance(instance4)
-        let signatures = method.methodSignatures
-        let root = DispatchRootNode(signatures: signatures)
-        print(root)
+//        let signatures = method.methodSignatures
         let segment = small.managedSegment
         let string1 = segment.allocateString("This is a test string to see how it is allocated.")
         let string2 = string1

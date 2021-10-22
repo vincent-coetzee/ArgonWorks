@@ -18,9 +18,4 @@ public class GenericSystemClass:GenericClass
         {
         return(true)
         }
-        
-//    public override func replacementObject(for coder: NSCoder) -> Any?
-//        {
-//        return(SystemClassSurrogate(systemClassIndex: self.index))
-//        }
     }

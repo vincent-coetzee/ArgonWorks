@@ -9,9 +9,9 @@ import Foundation
 
 public class ImportExpression: Expression
     {
-    private let importSymbol: Import
+    private let importSymbol: Importer
     
-    init(import: Import)
+    init(import: Importer)
         {
         self.importSymbol = `import`
         super.init()
@@ -19,8 +19,10 @@ public class ImportExpression: Expression
         
     public required init?(coder: NSCoder)
         {
-        self.importSymbol = coder.decodeObject(forKey: "import") as! Import
+//        print("START DECODE IMPORT")
+        self.importSymbol = coder.decodeObject(forKey: "import") as! Importer
         super.init(coder: coder)
+//        print("END DECODE IMPORT")
         }
         
     public override func encode(with coder: NSCoder)

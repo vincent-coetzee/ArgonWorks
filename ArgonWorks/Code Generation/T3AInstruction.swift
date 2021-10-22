@@ -28,6 +28,7 @@ public class T3AInstruction: NSObject,NSCoding
         case boolean(Argon.Boolean)
         case character(Argon.Character)
         case byte(Argon.Byte)
+        case array([LiteralValue])
         }
 
     public enum RelocatableValue
@@ -41,6 +42,8 @@ public class T3AInstruction: NSObject,NSCoding
                 case .function(let symbol):
                     return(symbol)
                 case .method(let symbol):
+                    return(symbol)
+                case .methodInstance(let symbol):
                     return(symbol)
                 case .module(let symbol):
                     return(symbol)
@@ -70,6 +73,7 @@ public class T3AInstruction: NSObject,NSCoding
         case constant(Constant)
         case segmentDS
         case relocatableIndex(Int)
+        case methodInstance(MethodInstance)
         }
 
     public enum Operand
@@ -147,6 +151,22 @@ public class T3AInstruction: NSObject,NSCoding
         
     public var displayString: String
         {
+        if self.opcode == "CMT"
+            {
+            switch(self.operand1)
+                {
+                case .literal(let literal):
+                    switch(literal)
+                        {
+                        case .string(let string):
+                            return(";;  \(string)")
+                        default:
+                            return("")
+                        }
+                default:
+                    return("")
+                }
+            }
         if self.opcode == "LINE"
             {
             switch(self.operand1)
@@ -181,7 +201,7 @@ public class T3AInstruction: NSObject,NSCoding
         return(labelString + self.opcode + " " + string)
         }
         
-    public var offset: Int?
+    public var offset: Int = 0
     public var label: T3ALabel?
     public let opcode: String
     public var operand1: Operand = .none
@@ -192,6 +212,12 @@ public class T3AInstruction: NSObject,NSCoding
         {
         self.opcode = "LINE"
         self.operand1 = .literal(.integer(Argon.Integer(lineNumber)))
+        }
+        
+    init(comment: String)
+        {
+        self.opcode = "COMMENT"
+        self.operand1 = .literal(.string(comment))
         }
         
     init(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: Operand,_ operand2: Operand,_ result: Operand)
@@ -205,12 +231,14 @@ public class T3AInstruction: NSObject,NSCoding
         
     required public init(coder: NSCoder)
         {
+//        print("START DECODE T3AInstruction")
         self.offset = coder.decodeInteger(forKey: "offset")
         self.label = coder.decodeObject(forKey: "label") as? T3ALabel
         self.opcode = coder.decodeObject(forKey: "opcode") as! String
         self.operand1 = coder.decodeOperand(forKey: "operand1")
         self.operand2 = coder.decodeOperand(forKey: "operand2")
         self.result = coder.decodeOperand(forKey: "result")
+//        print("END DECODE T3AInstruction")
         }
         
     public func copy() -> Self
@@ -220,7 +248,8 @@ public class T3AInstruction: NSObject,NSCoding
         
     public func encode(with coder: NSCoder)
         {
-        coder.encode(self.offset!,forKey: "offset")
+//        print("ENCODE \(Swift.type(of: self)) OFFSET \(offset)")
+        coder.encode(self.offset,forKey: "offset")
         coder.encode(self.label,forKey: "label")
         coder.encode(self.opcode,forKey: "opcode")
         coder.encodeOperand(self.operand1,forKey: "operand1")

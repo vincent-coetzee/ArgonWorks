@@ -19,18 +19,6 @@ public class Block:NSObject,NamingContext,NSCoding
         return(self.parent.topModule)
         }
         
-    public var hasReturnBlock: Bool
-        {
-        for block in self.blocks
-            {
-            if block.isReturnBlock
-                {
-                return(true)
-                }
-            }
-        return(false)
-        }
-        
     public var declaration: Location?
         {
         self.locations.declaration
@@ -95,6 +83,7 @@ public class Block:NSObject,NamingContext,NSCoding
         
     public func encode(with coder: NSCoder)
         {
+        print("ENCODE \(Swift.type(of: self))")
         coder.encode(self.blocks,forKey: "blocks")
         coder.encode(self.localSlots,forKey: "localSlots")
         coder.encode(self.index,forKey: "index")
@@ -169,6 +158,30 @@ public class Block:NSObject,NamingContext,NSCoding
             }
         }
         
+    public func hasPrimitiveBlock() -> Bool
+        {
+        for block in self.blocks
+            {
+            if block.hasPrimitiveBlock()
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
+    public func hasReturnBlock() -> Bool
+        {
+        for block in self.blocks
+            {
+            if block.hasReturnBlock() || block.hasPrimitiveBlock()
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
     public func lookup(label: String) -> Symbol?
         {
         for slot in self.localSlots
@@ -183,23 +196,7 @@ public class Block:NSObject,NamingContext,NSCoding
         
     public func lookup(name: Name) -> Symbol?
         {
-        if name.isRooted
-            {
-            return(name.topModule.lookup(name: name.withoutFirst))
-            }
-        else if name.isEmpty
-            {
-            return(nil)
-            }
-        if let start = self.lookup(label: name.first)
-            {
-            if name.count == 1
-                {
-                return(start)
-                }
-            return(start.lookup(name: name.withoutFirst))
-            }
-        return(self.parent.lookup(name: name))
+        self.parent.lookup(name: name)
         }
         
         

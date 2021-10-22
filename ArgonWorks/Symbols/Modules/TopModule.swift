@@ -16,11 +16,6 @@ import Foundation
 ///
 public class TopModule: SystemModule
     {
-    public override class func classForKeyedUnarchiver() -> AnyClass
-        {
-        return(TopModule.self)
-        }
-    
     public override var typeCode:TypeCode
         {
         .topModule
@@ -49,7 +44,7 @@ public class TopModule: SystemModule
         
     public static let shared = TopModule()
         
-    public override var name: Name
+    public override var fullName: Name
         {
         return(Name(rooted:true))
         }
@@ -86,6 +81,12 @@ public class TopModule: SystemModule
         super.init(coder: coder)
         }
         
+    public override func clone() -> TopModule
+        {
+        let data = try! NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
+        return(try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! TopModule)
+        }
+        
     public override func resolveReferences(topModule: TopModule)
         {
         self.argonModule.resolveReferences(topModule: topModule)
@@ -105,23 +106,23 @@ public class TopModule: SystemModule
         
     public override func lookup(name: Name) -> Symbol?
         {
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        else if name.isRooted
+        if name.isRooted
             {
             if name.count == 1
                 {
-                return(nil)
+                return(self)
                 }
-            if let start = TopModule.shared.lookup(label: name.first)
+            if let start = self.lookup(label: name.first)
                 {
                 if let symbol = start.lookup(name: name.withoutFirst)
                     {
                     return(symbol)
                     }
                 }
+            }
+        if name.isEmpty
+            {
+            return(nil)
             }
         else if name.count == 1
             {

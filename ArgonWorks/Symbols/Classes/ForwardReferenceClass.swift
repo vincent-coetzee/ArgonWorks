@@ -37,7 +37,7 @@ public class ForwardReferenceClass: Class
         {
         let aContext = self.context.isNil ? Context.node(topModule.argonModule) : self.context!
         var newName = localName
-        newName.topModule = topModule
+//        newName.topModule = topModule
         self.theClass = aContext.lookup(name: newName) as? Class
         if self.theClass.isNil
             {

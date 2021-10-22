@@ -73,8 +73,10 @@ public class TypeAlias:Symbol
     
     public required init?(coder: NSCoder)
         {
+//        print("START DECODE TYPE ALIAS")
         self._type = coder.decodeType(forKey: "_type")!
         super.init(coder: coder)
+//        print("END DECODE TYPE ALIAS \(self.label)")
         }
         
     public override func encode(with coder:NSCoder)
@@ -91,5 +93,20 @@ public class TypeAlias:Symbol
     public override func isElement(ofType: Group.ElementType) -> Bool
         {
         return(ofType == .type)
+        }
+        
+    public func isSubtype(of alias: TypeAlias) -> Bool
+        {
+        return(self.type.isSubtype(of: alias.type))
+        }
+        
+    public func isSubtype(of enumeration: Enumeration) -> Bool
+        {
+        return(self._type == Type.enumeration(enumeration))
+        }
+        
+    public func isInclusiveSubclass(of aClass: Class) -> Bool
+        {
+        return(self.type.isSubtype(of: aClass.type))
         }
     }

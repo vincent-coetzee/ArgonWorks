@@ -23,8 +23,46 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         {
         let components = lhs.components + [.piece(rhs)]
         var newName = Name(components)
-        newName.topModule = lhs.topModule
+//        newName.topModule = lhs.topModule
         return(newName)
+        }
+        
+    public init(coder:NSCoder,forKey key:String)
+        {
+        let count = coder.decodeInteger(forKey: key + "count")
+        var pieces = Array<Component>()
+        for index in 0..<count
+            {
+            if coder.decodeInteger(forKey: key + "\(index)kind") == 1
+                {
+                pieces.append(.root)
+                }
+            else
+                {
+                let string = coder.decodeString(forKey: key + "\(index)string")!
+                pieces.append(.piece(string))
+                }
+            }
+        self.components = pieces
+        }
+        
+    public func encode(with coder:NSCoder,forKey key:String)
+        {
+        coder.encode(self.components.count,forKey: key+"count")
+        var index = 0
+        for component in self.components
+            {
+            switch(component)
+                {
+                case .root:
+                    coder.encode(1,forKey: key + "\(index)kind")
+                    index += 1
+                case .piece(let string):
+                    coder.encode(2,forKey: key + "\(index)kind")
+                    coder.encode(string,forKey: key + "\(index)string")
+                    index += 1
+                }
+            }
         }
         
     private enum Component
@@ -84,13 +122,13 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         {
         if self.components.isEmpty
             {
-            return(Name().withTopModule(self.topModule))
+            return(Name())
             }
         if self.components.first!.isRoot
             {
-            return(Name(Array(self.components.dropFirst(2))).withTopModule(self.topModule))
+            return(Name(Array(self.components.dropFirst(2))))
             }
-        return(Name(Array(self.components.dropFirst(1))).withTopModule(self.topModule))
+        return(Name(Array(self.components.dropFirst(1))))
         }
         
     public var withoutLast: Name
@@ -99,7 +137,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
             {
             return(Name())
             }
-        return(Name(Array(self.components.dropLast())).withTopModule(self.topModule))
+        return(Name(Array(self.components.dropLast())))
         }
         
     public var isRooted: Bool
@@ -130,7 +168,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         }
         
     private let components: Array<Component>
-    public var topModule: TopModule!
+//    public var topModule: TopModule!
     
     private init(_ bits:Array<Component>)
         {
@@ -142,12 +180,12 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         self.components = []
         }
         
-    public func withTopModule(_ topModule: TopModule) -> Name
-        {
-        var aName = self
-        aName.topModule = topModule
-        return(aName)
-        }
+//    public func withTopModule(_ topModule: TopModule) -> Name
+//        {
+//        var aName = self
+//        aName.topModule = topModule
+//        return(aName)
+//        }
         
     public func write(output: OutputFile) throws
         {

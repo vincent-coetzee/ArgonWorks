@@ -64,4 +64,32 @@ extension String
             }
         return(self)
         }
+        
+    public var hasFileExtension: Bool
+        {
+        let string = self as NSString
+        return(!string.pathExtension.isEmpty)
+        }
+        
+    public var fileExtension: String
+        {
+        let string = self as NSString
+        return(string.pathExtension)
+        }
+        
+    public var isAbsoluteFilePath: Bool
+        {
+        let string = self as NSString
+        return(!string.isAbsolutePath)
+        }
+        
+    public var isFilePath: Bool
+        {
+        return(self.contains("/"))
+        }
+        
+    public var fileComponents: Array<String>
+        {
+        return(self.components(separatedBy: "/"))
+        }
     }

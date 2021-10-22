@@ -7,70 +7,11 @@
 
 import Foundation
 
-///
-///
-/// A MethodSignature is used in generating the dispatch tree for a Method
-///
-///
-public struct MethodSignature:Displayable,CustomDebugStringConvertible,CustomStringConvertible
+public class MethodInstance: Function
     {
-    public var description: String
+    public var typeSignature: Types
         {
-        return(self.displayString)
-        }
-        
-    public var debugDescription: String
-        {
-        return(self.displayString)
-        }
-        
-    public var displayString: String
-        {
-        let parmString = "[" + self.parameters.map{$0.type.displayString}.joined(separator: ",") + "]"
-        return("\(self.instance.label) \(parmString)")
-        }
-        
-    public let parameters: Parameters
-    public let instance: MethodInstance
-    
-    public var isEmpty: Bool
-        {
-        self.parameters.isEmpty
-        }
-        
-    public var firstParameter: Parameter
-        {
-        self.parameters.first!
-        }
-        
-    public func withoutFirst() -> MethodSignature
-        {
-        MethodSignature(parameters: Parameters(self.parameters.dropFirst()),instance: self.instance)
-        }
-    }
-    
-public typealias MethodSignatures = Array<MethodSignature>
-
-///
-///
-/// A MethodInstance is the functional part of a method. A method has multiple
-/// instance of itself, but one of those instances will get selected based on the
-/// typesof the arguments and that instance will then execute. A Method is not
-/// directly executable. When the method instances are compiled code is actually
-/// generated for each method instance but not for the method.
-///
-/// A MethodInstance has an instruction buffer, which is a high level form
-/// of the generated code, that instruction buffer is translated into an
-/// InnerInstructionBufferPointer which contains the encoded form of the
-/// instructions and the buffer represented by the InnerInstructionBufferPointer
-/// will actually be used when this instance of a method is called.
-///
-///
-public class MethodInstance:Function,StackFrame
-    {
-    public var methodSignature: MethodSignature
-        {
-        MethodSignature(parameters: self.parameters,instance: self)
+        self.parameters.map{$0.type} + [self.returnType]
         }
         
     public var arity: Int
@@ -94,6 +35,89 @@ public class MethodInstance:Function,StackFrame
         return("\(self.label) \(parmString) -> \(self.returnType.displayString)")
         }
         
+    public var isGenericMethod = false
+    
+    public func printInstance()
+        {
+        let types = self.parameters.map{$0.type.displayString}.joined(separator: ",")
+        print("\(self.label)(\(types)) -> \(self.returnType.displayString)")
+        }
+        
+   private enum SpecificOrdering
+        {
+        case more
+        case unordered
+        case less
+        }
+        
+    public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
+        {
+        var orderings = Array<SpecificOrdering>()
+        for index in 0..<types.count
+            {
+            let argumentType = types[index]
+            let typeA = self.parameters[index].type
+            let typeB = instance.parameters[index].type
+            if typeA.isSubtype(of: typeB)
+                {
+                orderings.append(.more)
+                }
+            else if typeA.isClass && typeB.isClass && argumentType.isClass
+                {
+                let argumentClassList = argumentType.classValue.precedenceList
+                if let typeAIndex = argumentClassList.firstIndex(of: typeA.classValue),let typeBIndex = argumentClassList.firstIndex(of: typeB.classValue)
+                    {
+                    orderings.append(typeAIndex > typeBIndex ? .more : .less)
+                    }
+                else
+                    {
+                    orderings.append(.unordered)
+                    }
+                }
+            else
+                {
+                orderings.append(.unordered)
+                }
+            }
+        for ordering in orderings
+            {
+            if ordering == .more
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
+    public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
+        {
+        for (inType,myType) in zip(types,self.parameters.map{$0.type})
+            {
+            if !inType.isSubtype(of: myType)
+                {
+                return(false)
+                }
+            }
+        return(true)
+        }
+    }
+///
+///
+/// A MethodInstance is the functional part of a method. A method has multiple
+/// instance of itself, but one of those instances will get selected based on the
+/// typesof the arguments and that instance will then execute. A Method is not
+/// directly executable. When the method instances are compiled code is actually
+/// generated for each method instance but not for the method.
+///
+/// A MethodInstance has an instruction buffer, which is a high level form
+/// of the generated code, that instruction buffer is translated into an
+/// InnerInstructionBufferPointer which contains the encoded form of the
+/// instructions and the buffer represented by the InnerInstructionBufferPointer
+/// will actually be used when this instance of a method is called.
+///
+///
+public class StandardMethodInstance: MethodInstance, StackFrame
+    {        
     public var localSlots: Slots
         {
         self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
@@ -104,23 +128,21 @@ public class MethodInstance:Function,StackFrame
 
     private var _method:Method?
     public let buffer:T3ABuffer
-//    public var instructionsAddress: Word = 0
-    public var isGenericMethod = false
     public var genericParameters = GenericClassParameters()
         
     public required init?(coder: NSCoder)
         {
+//        print("START DECODE METHOD INSTANCE")
         self._method = coder.decodeObject(forKey: "method") as? Method
         self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
-//        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
-//        self.instructionsAddress = Word(coder.decodeInteger(forKey: "instructionsAddress"))
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
         super.init(coder: coder)
+//        print("END DECODE METHOD INSTANCE \(self.label)")
         }
 
     public override func encode(with coder:NSCoder)
         {
-        print("ENCODE METHOD INSTANCE \(self.label)")
+//        print("ENCODE METHOD INSTANCE \(self.label)")
         super.encode(with: coder)
         coder.encode(self.method,forKey: "method")
         coder.encode(self.buffer,forKey: "buffer")
@@ -134,30 +156,6 @@ public class MethodInstance:Function,StackFrame
             return(self._method!)
             }
         let method = SystemMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
-        }
-        
-    public var libraryMethod: ArgonWorks.Method
-        {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = LibraryMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
-        }
-        
-    public var intrinsicMethod: ArgonWorks.Method
-        {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = IntrinsicMethod(label: self.label)
         method.addInstance(self)
         self._method = method
         return(method)
