@@ -387,7 +387,7 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         {
         for symbol in scope.symbols
             {
-            self.localSymbols.append(symbol as! Symbol)
+            self.localSymbols.append(symbol)
             }
         }
     
@@ -425,18 +425,18 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         
     public override func emitCode(using generator: CodeGenerator) throws
         {
-        var stackOffset = MemoryLayout<Word>.size
-        for parameter in self.parameters
-            {
+//        var stackOffset = MemoryLayout<Word>.size
+//        for parameter in self.parameters
+//            {
 //            parameter.addresses.append(.stack(.BP,stackOffset))
-            stackOffset += MemoryLayout<Word>.size
-            }
-        stackOffset = 0
-        for slot in self.localSymbols
-            {
+//            stackOffset += MemoryLayout<Word>.size
+//            }
+//        stackOffset = 0
+//        for slot in self.localSymbols
+//            {
 //            slot.addresses.append(.stack(.BP,stackOffset))
-            stackOffset -= MemoryLayout<Word>.size
-            }
+//            stackOffset -= MemoryLayout<Word>.size
+//            }
         try block.emitCode(into: self.buffer,using: generator)
         }
         

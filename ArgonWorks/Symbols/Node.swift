@@ -12,7 +12,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
     {
     public var tag: Int = 0
     public var index: UUID
-    public let label: String
+    public var label: String
     public private(set) var parent: Parent = .none
     private var locations = NodeLocations()
     
@@ -30,7 +30,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         
     public var type: Type
         {
-        fatalError("This should have been implemented in a class")
+        fatalError("This should have been implemented in a class.")
         }
         
     public init(label: String)

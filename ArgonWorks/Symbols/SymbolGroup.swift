@@ -24,6 +24,10 @@ public class SymbolGroup:ContainerSymbol
         "IconGroup"
         }
         
+    public override var type: Type
+        {
+        return(self.parent.type)
+        }
     ///
     ///
     /// Essentially make a SymbolGroup transparent so that

@@ -24,20 +24,32 @@ public class Parameter:Slot,Displayable
         return(self.label)
         }
         
+    public override var label: Label
+        {
+        get
+            {
+            self.relabel.isNotNil ? self.relabel! : super.label
+            }
+        set
+            {
+            }
+        }
+
     public let isVisible:Bool
     public let isVariadic: Bool
     public var place: T3AInstruction.Operand = .none
+    public let relabel: Label?
     
-    init(label:Label,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
+    init(label:Label,relabel:Label? = nil,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
         {
         self.isVisible = isVisible
         self.isVariadic = isVariadic
+        self.relabel = relabel
         super.init(label: label,type: type)
         }
     
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
         {
-//        self.place = self.addresses.mostEfficientAddress.operand
         }
         
     required init(labeled: Label, ofType: Type) {
@@ -48,6 +60,7 @@ public class Parameter:Slot,Displayable
         {
         self.isVisible = coder.decodeBool(forKey: "isVisible")
         self.isVariadic = coder.decodeBool(forKey: "isVariadic")
+        self.relabel = coder.decodeString(forKey: "relabel")
         super.init(coder: coder)
         }
         
@@ -58,6 +71,7 @@ public class Parameter:Slot,Displayable
         super.encode(with: coder)
         coder.encode(self.isVisible,forKey: "isVisible")
         coder.encode(self.isVariadic,forKey: "isVariadic")
+        coder.encode(self.relabel,forKey: "relabel")
         }
 }
 

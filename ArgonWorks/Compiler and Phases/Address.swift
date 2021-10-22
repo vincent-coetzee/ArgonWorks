@@ -192,16 +192,16 @@ public struct Addresses
     
     public mutating func append(_ address:Address)
         {
-        let count = self.addresses.count
-        for index in 0..<count
-            {
-            let anAddress = self.addresses[index]
+//        let count = self.addresses.count
+//        for index in 0..<count
+//            {
+//            let anAddress = self.addresses[index]
 //            if anAddress.isSameKind(as: address)
 //                {
 //                self.addresses.remove(at: index)
 //                break
 //                }
-            }
+//            }
         self.addresses.append(address)
         }
     }

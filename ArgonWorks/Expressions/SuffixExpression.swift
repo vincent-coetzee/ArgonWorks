@@ -16,7 +16,7 @@ public class SuffixExpression: Expression
         
     public override var displayString: String
         {
-        return("\(self.expression.displayString) \(self.operation)")
+        return("\(self.expression.displayString) \(String(describing: self.operation))")
         }
         
     public let operationName: String

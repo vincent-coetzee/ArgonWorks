@@ -255,7 +255,6 @@
 		BFC1EDFD26CFFADC009B7C34 /* TypeAlias.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */; };
 		BFC1EDFE26CFFADC009B7C34 /* Initializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBA26CFFADC009B7C34 /* Initializer.swift */; };
 		BFC1EDFF26CFFADC009B7C34 /* NodeLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBB26CFFADC009B7C34 /* NodeLocation.swift */; };
-		BFC1EE0026CFFADC009B7C34 /* TypeConstraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */; };
 		BFC1EE0226CFFADC009B7C34 /* TypeCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */; };
 		BFC1EE0326CFFADC009B7C34 /* Importer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDBF26CFFADC009B7C34 /* Importer.swift */; };
 		BFC1EE0426CFFADC009B7C34 /* TopModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EDC126CFFADC009B7C34 /* TopModule.swift */; };
@@ -566,7 +565,6 @@
 		BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeAlias.swift; sourceTree = "<group>"; };
 		BFC1EDBA26CFFADC009B7C34 /* Initializer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Initializer.swift; sourceTree = "<group>"; };
 		BFC1EDBB26CFFADC009B7C34 /* NodeLocation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NodeLocation.swift; sourceTree = "<group>"; };
-		BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeConstraint.swift; sourceTree = "<group>"; };
 		BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeCode.swift; sourceTree = "<group>"; };
 		BFC1EDBF26CFFADC009B7C34 /* Importer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Importer.swift; sourceTree = "<group>"; };
 		BFC1EDC126CFFADC009B7C34 /* TopModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TopModule.swift; sourceTree = "<group>"; };
@@ -978,7 +976,6 @@
 				BFC1EDB626CFFADC009B7C34 /* SymbolGroup.swift */,
 				BFC1EDB926CFFADC009B7C34 /* TypeAlias.swift */,
 				BFC1EDBE26CFFADC009B7C34 /* TypeCode.swift */,
-				BFC1EDBC26CFFADC009B7C34 /* TypeConstraint.swift */,
 				BFC1EDB826CFFADC009B7C34 /* TypeParameter.swift */,
 			);
 			path = Symbols;
@@ -1306,7 +1303,6 @@
 				BFC1EDFE26CFFADC009B7C34 /* Initializer.swift in Sources */,
 				BF6ECBF026F90790005B9FCF /* ClassParm.swift in Sources */,
 				BFC1ED3926CFFAB1009B7C34 /* MethodInstanceBlock.swift in Sources */,
-				BFC1EE0026CFFADC009B7C34 /* TypeConstraint.swift in Sources */,
 				BFC1ED8A26CFFAD5009B7C34 /* ArgonDateTime.swift in Sources */,
 				BFC1EDFC26CFFADC009B7C34 /* TypeParameter.swift in Sources */,
 				BFC1ED3B26CFFAB1009B7C34 /* Block.swift in Sources */,

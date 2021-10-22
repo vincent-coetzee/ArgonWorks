@@ -58,7 +58,7 @@ public class TokenStream:Equatable, TokenSource
     private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@;")
     private let hexDigits = CharacterSet(charactersIn: "avbdefABCDEF0123456789_")
     private let binaryDigits = CharacterSet(charactersIn: "01_")
-    private let operatorSymbols = CharacterSet(charactersIn: "=<>-+*/%!&|^~@")
+    private let operatorSymbols = CharacterSet(charactersIn: "=>-+*/%!&|^~@")
     private let hashStringCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
     private var tokenStart:Int = 0
     private var tokenStop:Int = 0
@@ -432,7 +432,12 @@ public class TokenStream:Equatable, TokenSource
         if self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.peekChar(at:1))
             {
             self.nextChar()
-            return(.symbol(Token.Symbol(rawValue:"<")!,self.sourceLocation()))
+            return(.symbol(.leftBrocket,self.sourceLocation()))
+            }
+        else if self.currentChar == "<"
+            {
+            self.nextChar()
+            return(.symbol(.leftBrocket,self.sourceLocation()))
             }
         else if self.currentChar == "$" && self.peekChar(at: 0) == "{"
             {
@@ -1100,6 +1105,10 @@ public class TokenStream:Equatable, TokenSource
         {
         var operatorString = startString
         if startString == "<" && self.currentChar == "/" && self.alphanumerics.contains(self.peekChar(at:0))
+            {
+            return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
+            }
+        if self.currentChar == "<"
             {
             return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
             }

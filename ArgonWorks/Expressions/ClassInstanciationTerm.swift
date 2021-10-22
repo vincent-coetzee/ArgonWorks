@@ -73,10 +73,12 @@ public class ClassInstanciationTerm: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        if let location = self.declaration
+        guard let location = self.declaration else
             {
-            instance.append(lineNumber: location.line)
+            print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
+            return
             }
+        instance.append(lineNumber: location.line)
         instance.append(nil,"PUSH",.relocatable(.class(self._class)),.none,.none)
         for argument in self.arguments.reversed()
             {

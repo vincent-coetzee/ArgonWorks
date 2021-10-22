@@ -39,7 +39,7 @@ public class LetBlock: Block
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        let valueType = self.rhs.type
+//        let valueType = self.rhs.type
 //        if !valueType.isSubtype(of: slotType)
 //            {
 //            analyzer.compiler.reportingContext.dispatchError(at: self.location, message: "An instance of class \(valueType) can not be assigned to an instance of \(slotType).")

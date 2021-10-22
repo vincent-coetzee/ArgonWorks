@@ -52,7 +52,7 @@ public class StaticSegment:Segment
 
     public override func allocateAddress(sizeInBytes: Int) -> Address
         {
-        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
+//        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
 //        let address = Address.relative(self.segmentRegister,Int(newAddress - self.baseAddress))
 //        return(address)
         fatalError()

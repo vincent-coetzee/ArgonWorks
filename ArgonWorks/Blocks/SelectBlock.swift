@@ -61,12 +61,11 @@ public class SelectBlock: Block
         {
         let aClass = self.value.type
         try self.value.emitCode(into: buffer,using: generator)
-        var linksToBottom = Array<T3ALabel>()
         var nextWhen: T3ALabel?
         let endLabel = buffer.nextLabel()
         for when in whenBlocks
             {
-            var temp = buffer.nextTemporary()
+            let temp = buffer.nextTemporary()
             if aClass.isPrimitiveClass && !aClass.isStringClass
                 {
                 buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,temp)

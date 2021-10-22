@@ -59,6 +59,20 @@ public enum Parent:Storable
             }
         }
         
+    public var type: Type
+        {
+        switch(self)
+            {
+            case .none:
+                fatalError("This should not happen")
+            case .expression(let expression):
+                return(expression.type)
+            case .node(let node):
+                return(node.type)
+            case .block:
+                fatalError("Block's do not have types")
+            }
+        }
         
     public var topModule: TopModule
         {

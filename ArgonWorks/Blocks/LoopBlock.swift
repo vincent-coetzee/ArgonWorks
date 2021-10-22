@@ -82,13 +82,6 @@ public class LoopBlock: Block
             try expression.emitCode(into: buffer,using: using)
             }
         try self.endExpression.emitCode(into: buffer,using: using)
-        do
-            {
-            buffer.append(nil,"BRF",self.endExpression.place,.none,.label(label))
-            }
-        catch let error
-            {
-            using.compiler.reportingContext.dispatchError(at: .zero, message: "\(error) Code generator has caught a throws when attemping to dereference a label marker, this is because some idiot ( yes you Vincent ) used the marker incorrectly, fix it")
-            }
+        buffer.append(nil,"BRF",self.endExpression.place,.none,.label(label))
         }
     }

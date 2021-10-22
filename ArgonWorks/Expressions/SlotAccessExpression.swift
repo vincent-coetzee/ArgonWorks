@@ -11,7 +11,7 @@ public class SlotAccessExpression: Expression
     {
     public override var displayString: String
         {
-        return("\(self.receiver.displayString)->\(self.slotExpression?.displayString)")
+        return("\(self.receiver.displayString)->\(String(describing: self.slotExpression?.displayString))")
         }
 
     private let receiver: Expression
@@ -88,7 +88,7 @@ public class SlotAccessExpression: Expression
         let aClass = receiverType.class
         if self.slot.isNotNil
             {
-            return(slot!.type)
+            return(self.slot!.type)
             }
         if let identifier = (self.slotExpression as? SlotSelectorExpression)?.selector,let aSlot = aClass.slotWithLabel(identifier)
             {

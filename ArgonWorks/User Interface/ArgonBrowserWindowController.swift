@@ -183,7 +183,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         NotificationCenter.default.addObserver(self, selector: #selector(windowResizedNotification(_:)), name: NSWindow.didResizeNotification, object: self.window)
         self.window!.delegate = self
         self.toolbar.validateVisibleItems()
-        let content = self.window!.contentView
         }
     
     private func initObjectBrowser()
@@ -279,7 +278,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         for value in self.compilationEvents.values
             {
             let group = value as! CompilationEventGroup
-            let annotation = LineAnnotation(line: group.line.line, icon: NSImage(named: "IconLineMarkerYellow")!)
+            let annotation = LineAnnotation(line: group.line.line, icon: NSImage(named: "IconLineMarkerYellow2")!)
             self.sourceEditor.addAnnotation(annotation)
             }
         }
@@ -309,7 +308,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             }
         else
             {
-            print("WARNING: Unable to open file \(urlString)")
+            print("WARNING: Unable to open file \(String(describing: urlString))")
             }
         }
         

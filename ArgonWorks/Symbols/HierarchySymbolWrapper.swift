@@ -170,8 +170,8 @@ public class HierarchySymbolWrapper
         let image = NSImage(named: self.iconName)!
         image.isTemplate = true
         cell.icon.image = image
-        var iconColor = NSColor.black
-        var textColor = self.isContainerSymbol ? Palette.shared.hierarchyGroupTextColor :  Palette.shared.hierarchyTextColor
+//        var iconColor = NSColor.black
+        let textColor = self.isContainerSymbol ? Palette.shared.hierarchyGroupTextColor :  Palette.shared.hierarchyTextColor
         cell.icon.contentTintColor = self.defaultColor
         cell.text.textColor = textColor
         }

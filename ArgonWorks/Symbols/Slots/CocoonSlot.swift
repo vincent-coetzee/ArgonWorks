@@ -26,7 +26,7 @@ public class CocoonSlot: VirtualSlot
     required init(labeled: Label, ofType: Type)
         {
         fatalError()
-        super.init(labeled: labeled,ofType: ofType)
+//        super.init(labeled: labeled,ofType: ofType)
         }
     
     public override func encode(with coder:NSCoder)

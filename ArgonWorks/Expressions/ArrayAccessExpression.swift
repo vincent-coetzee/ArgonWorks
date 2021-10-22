@@ -91,7 +91,8 @@ public class ArrayAccessExpression: Expression
         try self.index.emitCode(into: instance,using: generator)
         instance.append(nil,"MOV",self.index.place,.none,offset)
         instance.append(nil,"MUL",offset,.literal(.integer(8)),offset)
-        self._place = offset
+        instance.append(nil,"IADD",offset,temp,temp)
+        self._place = temp
         }
         
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws

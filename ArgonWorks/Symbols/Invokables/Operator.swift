@@ -83,6 +83,31 @@ public class SystemPostfixOperator: PostfixOperator
     
 public class PrefixOperator: Operator
     {
+
+    }
+    
+public class Prefix
+    {
+    var method: SystemPrefixOperator
+        {
+        let method = SystemPrefixOperator(self.operation)
+        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left)], returnType: self.out)
+        method.addInstance(instance)
+        return(method)
+        }
+        
+    let left: Type
+    let operation: Token.Operator
+    let right: Type?
+    let out: Type
+    
+    init(_ op: String,_ left: Class,_ right: Class? = nil,out: Class)
+        {
+        self.left = .class(left)
+        self.operation = Token.Operator(op)
+        self.right = right.isNil ? nil : right!.type
+        self.out = out.type
+        }
     }
 
 public class SystemPrefixOperator: PrefixOperator

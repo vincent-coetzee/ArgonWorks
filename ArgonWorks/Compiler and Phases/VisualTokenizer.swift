@@ -100,7 +100,7 @@ public class VisualTokenizer: SemanticTokenRenderer
         if kind == .systemClass
             {
 //            let color = TokenRenderer.mapKindToForegroundColor(kind: kind)
-            let color = self.tokenColors[.systemClass]
+            let color = self.tokenColors[.systemClass]!
             let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
             self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
             }
@@ -113,6 +113,12 @@ public class VisualTokenizer: SemanticTokenRenderer
         else if kind == .class
             {
             let color = NSColor.argonStoneTerrace
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+            self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+            }
+        else if kind == .method
+            {
+            let color = NSColor(red: 156,green: 194, blue: 60)
             let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
             self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
             }

@@ -266,6 +266,7 @@ public class Symbol:Node,ParseNode
     public private(set) var isLoaded = false
     public private(set) var isImported = false
     public private(set) var loader: Loader?
+    public private(set) var compiler: Compiler!
     
     public override init(label: Label)
         {

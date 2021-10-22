@@ -226,10 +226,10 @@ public class Parser: CompilerPass
                 {
                 return(nil)
                 }
-            var directive: Token.Directive?
+//            var directive: Token.Directive?
             if self.token.isDirective
                 {
-                directive = token.directive
+//                directive = token.directive
                 try self.nextToken()
                 }
             if !self.token.isKeyword
@@ -418,6 +418,7 @@ public class Parser: CompilerPass
     /// again.
     ///
     ///
+    @discardableResult
     private func parseModule() throws -> Module
         {
         let location = self.token.location
@@ -506,7 +507,7 @@ public class Parser: CompilerPass
                     {
                     return
                     }
-                let modifier = try self.parsePrivacyScope()
+                _ = try self.parsePrivacyScope()
                 var directive: Token.Directive?
                 if self.token.isDirective
                     {
@@ -593,13 +594,19 @@ public class Parser: CompilerPass
         
     private func parseOperator(_ kind: OperatorKind) throws
         {
+        var isPrimitive = false
         let location = self.token.location
         try self.nextToken()
+        if self.token.isPrimitive
+            {
+            isPrimitive = true
+            try self.nextToken()
+            }
         var operation: Token.Operator
         if !(self.token.isOperator || self.token.isSymbol)
             {
             self.cancelCompletion()
-            self.dispatchError("Operator expected after PREFIX, POSTFIX or INFIX, but '\(self.token)' found.")
+            self.dispatchError("Operator expected after PREFIX, POSTFIX,INFIX or PRIMITIVE, but '\(self.token)' found.")
             operation = Token.Operator("%%")
             }
         else
@@ -613,7 +620,17 @@ public class Parser: CompilerPass
                 operation = self.token.operator
                 }
             }
+        let localScope = TemporaryLocalScope(label:  "")
+        var isGenericMethod = false
+        self.pushContext(localScope)
         try self.nextToken()
+        var types = GenericClassParameters()
+        if self.token.isLeftBrocket
+            {
+            types = try self.parseMethodGenericParameters()
+            localScope.addTemporaries(types)
+            isGenericMethod = true
+            }
         let parameters = try self.parseParameters([])
         if kind == .prefix || kind == .postfix
             {
@@ -638,7 +655,18 @@ public class Parser: CompilerPass
             }
         try self.nextToken()
         let returnType = try self.parseType()
-        let instance = StandardMethodInstance(label: operation.name,parameters: parameters,returnType: returnType)
+        var instance: MethodInstance
+        if isPrimitive
+            {
+            instance = PrimitiveMethodInstance(label: operation.name,parameters: parameters,returnType: returnType)
+            }
+        else
+            {
+            instance = StandardMethodInstance(label: operation.name,parameters: parameters,returnType: returnType)
+            (instance as! StandardMethodInstance).block.addParameters(parameters)
+            (instance as! StandardMethodInstance).mergeTemporaryScope(localScope)
+            (instance as! StandardMethodInstance).isGenericMethod = isGenericMethod
+            }
         var method: Operator
         if let existingOperator = self.currentContext.lookup(label: operation.name) as? Operator
             {
@@ -662,20 +690,30 @@ public class Parser: CompilerPass
             method.addDeclaration(location)
             self.addSymbol(method)
             method.addInstance(instance)
+            if self.currentContext.lookup(label: operation.name).isNotNil
+                {
+                self.cancelCompletion()
+                self.dispatchError(at: location,message: "Duplicate symbol \(operation.name) in this module.")
+                }
+            else
+                {
+                self.currentContext.addSymbol(method)
+                }
             }
-        instance.block.addParameters(parameters)
-        try self.parseBraces
+        if !isPrimitive
             {
-            self.pushContext(instance)
-            try self.parseBlock(into: instance.block)
-            self.popContext()
+            try self.parseBraces
+                {
+                self.pushContext(instance)
+                try self.parseBlock(into: (instance as! StandardMethodInstance).block)
+                self.popContext()
+                }
             }
         if method.hasInstanceWithSameSignature(as: instance)
             {
             self.dispatchWarning(at: location,"There is already an operator with this signature defined.")
             }
         }
-        
     ///
     ///
     /// PRIMITIVES DON'T HANDLE GENERICS YET, FIX IT
@@ -711,11 +749,6 @@ public class Parser: CompilerPass
         self.popContext()
         let instance = PrimitiveMethodInstance(label: name,parameters: list,returnType: returnType)
         instance.isGenericMethod = isGenericMethod
-//        if isGenericMethod
-//            {
-//            instance?.genericParameters = types
-//            }
-//        instance!.mergeTemporaryScope(localScope)
         instance.addDeclaration(location)
         var method: Method?
         if existingMethod.isNotNil
@@ -1415,7 +1448,7 @@ public class Parser: CompilerPass
             }
         else
             {
-            self.dispatchError("A type name was expected but \(self.token) was found.")
+            self.dispatchError(at: location, "A type name was expected but \(self.token) was found.")
             name = Name()
 //            name.topModule = self.compiler.topModule
             }
@@ -1433,7 +1466,7 @@ public class Parser: CompilerPass
         let resolvedSymbol = self.currentContext.lookup(name: name)
         if resolvedSymbol.isNil
             {
-            self.dispatchError("The identifier \(name) could not be resolved, a symbol couuld not be found")
+            self.dispatchError(at: location,"The identifier \(name) could not be resolved, a symbol with that label could not be found.")
             return(Type.class(self.compiler.argonModule.object))
             }
         else
@@ -1478,7 +1511,7 @@ public class Parser: CompilerPass
             }
         else
             {
-            self.dispatchError("A type was expected but was not found, the identifier '\(name)' was found.")
+            self.dispatchError(at: location,"A type was expected but was not found, the identifier '\(name)' was found.")
             try self.nextToken()
             return(.class(self.compiler.argonModule.object))
             }
@@ -1706,7 +1739,7 @@ public class Parser: CompilerPass
             if returnType != existingMethod!.returnType
                 {
                 self.cancelCompletion()
-                self.dispatchError("The multimethod '\(existingMethod!.label)' declared in line \(existingMethod!.declaration?.line) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
+                self.dispatchError("The multimethod '\(existingMethod!.label)' declared in line \(String(describing: existingMethod!.declaration?.line)) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
                 }
             for (yours,mine) in zip(list,existingMethod!.proxyParameters)
                 {
@@ -1891,6 +1924,7 @@ public class Parser: CompilerPass
                 }
             else
                 {
+                lhs.compiler = self.compiler
                 if let symbol = lhs.lookup(label: self.token.identifier)
                     {
                     if symbol.isLiteral
@@ -2020,9 +2054,26 @@ public class Parser: CompilerPass
     private func parseMultiplicativeExpression() throws -> Expression
         {
         let location = self.token.location
-        var lhs = try self.parseBitExpression()
+        var lhs = try self.parsePowerExpression()
         lhs.addDeclaration(location)
         while self.token.isMul || self.token.isDiv || self.token.isModulus
+            {
+            let symbol = token.symbol
+            try self.nextToken()
+            let rhs = try self.parsePowerExpression()
+            rhs.compiler = self.compiler
+            lhs = lhs.operation(symbol,rhs)
+            }
+        lhs.compiler = self.compiler
+        return(lhs)
+        }
+        
+    private func parsePowerExpression() throws -> Expression
+        {
+        let location = self.token.location
+        var lhs = try self.parseBitExpression()
+        lhs.addDeclaration(location)
+        while self.token.isPower
             {
             let symbol = token.symbol
             try self.nextToken()
@@ -2053,9 +2104,11 @@ public class Parser: CompilerPass
         
     private func parseUnaryExpression() throws -> Expression
         {
-        if self.token.isSub || self.token.isBitNot || self.token.isNot
+        if self.token.isSub || self.token.isBitNot || self.token.isNot || self.token.isBitAnd || self.token.isMul
             {
-            return(try self.parseUnaryExpression().unary(self.token.symbol))
+            let symbol = self.token.symbol
+            try self.nextToken()
+            return(try self.parsePrimary().unary(symbol))
             }
         else
             {
@@ -2264,7 +2317,7 @@ public class Parser: CompilerPass
         let nameToken = self.token
         let name = try self.parseName()
         let aSymbol = self.currentContext.lookup(name: name)
-        print(aSymbol?.label)
+//        print(aSymbol?.label)
         if let symbol = aSymbol as? Enumeration
             {
             self.tokenRenderer.setKind(.enumeration,ofToken: nameToken)
@@ -2739,17 +2792,17 @@ public class Parser: CompilerPass
         {
         self.startClip()
         let location = self.token.location
-        var variableName: Label?
-        var closure: Expression?
+//        var variableName: Label?
+//        var closure: Expression?
         try self.parseParentheses
             {
             if self.token.isIdentifier
                 {
-                variableName = self.token.identifier
+//                variableName = self.token.identifier
                 }
             else if self.token.isLeftBrace
                 {
-                let closure = try self.parseExpression()
+                _ = try self.parseExpression()
                 }
             else
                 {
@@ -2905,6 +2958,11 @@ public class Parser: CompilerPass
             try self.nextToken()
             }
         let tag = try self.parseLabel()
+        var relabel:Label? = nil
+        if !self.token.isGluon
+            {
+            relabel = try self.parseLabel()
+            }
         try self.parseGluon()
         let type = try self.parseType()
         var isVariadic = false
@@ -2913,7 +2971,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             isVariadic = true
             }
-        let parameter = Parameter(label: tag, type: type,isVisible: isHidden,isVariadic: isVariadic)
+        let parameter = Parameter(label: tag, relabel: relabel,type: type,isVisible: isHidden,isVariadic: isVariadic)
         parameter.addDeclaration(location)
         return(parameter)
         }

@@ -22,7 +22,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     public static func +(lhs:Name,rhs:Label) -> Name
         {
         let components = lhs.components + [.piece(rhs)]
-        var newName = Name(components)
+        let newName = Name(components)
 //        newName.topModule = lhs.topModule
         return(newName)
         }

@@ -25,7 +25,7 @@ public class ImportUnarchiver: NSKeyedUnarchiver
         
     public override init(forReadingWith data: Data)
         {
-        try super.init(forReadingWith: data)
+        super.init(forReadingWith: data)
         }
         
     public override init()

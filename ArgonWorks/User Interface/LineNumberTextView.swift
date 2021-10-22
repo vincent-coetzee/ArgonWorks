@@ -278,9 +278,9 @@ public class LineNumberTextView: NSTextView {
             currentIndex = string.index(currentIndex,offsetBy: 1)
             while currentIndex < string.endIndex && string[currentIndex].isWhitespace && string[currentIndex] != "\n"
                 {
-                if string[currentIndex] == " "
+                if string[currentIndex] == "\t"
                     {
-                    tabString += " "
+                    tabString += "\t"
                     }
                 currentIndex = string.index(after: currentIndex)
                 }

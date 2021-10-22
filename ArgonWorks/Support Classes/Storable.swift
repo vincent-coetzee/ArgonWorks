@@ -320,7 +320,7 @@ public class Archiver: OutputFile
                         }
                     else
                         {
-                        print("WARNING: Unhandled type with name \(label) and value \(value) of type(Swift.type(of: value))")
+                        print("WARNING: Unhandled type with name \(String(describing: label)) and value \(value) of type(Swift.type(of: value))")
                         }
                     }
                 }

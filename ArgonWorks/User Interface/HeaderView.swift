@@ -84,7 +84,6 @@ public class HeaderView: NSView,Pane
     
     public override func layout()
         {
-        let font = NSFont(name: "OpenSans-Bold",size: 24)!
         let frame = self.bounds
         let size = (NSAttributedString(string: self.label.stringValue,attributes: [.font: self.label.font!])).size()
         let y = (frame.size.height - size.height) / 2.0

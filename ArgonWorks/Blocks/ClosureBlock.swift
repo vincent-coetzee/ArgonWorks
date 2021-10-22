@@ -31,18 +31,18 @@ public class ClosureBlock: Block
         
     public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
-        var stackOffset = MemoryLayout<Word>.size
-        for parameter in self.parameters
-            {
-//            parameter.addresses.append(.stack(.BP,stackOffset))
-            stackOffset += MemoryLayout<Word>.size
-            }
-        stackOffset = -8
-        for slot in self.localSlots
-            {
-//            slot.addresses.append(.stack(.BP,stackOffset))
-            stackOffset -= MemoryLayout<Word>.size
-            }
+//        var stackOffset = MemoryLayout<Word>.size
+//        for parameter in self.parameters
+//            {
+////            parameter.addresses.append(.stack(.BP,stackOffset))
+//            stackOffset += MemoryLayout<Word>.size
+//            }
+//        stackOffset = -8
+//        for slot in self.localSlots
+//            {
+////            slot.addresses.append(.stack(.BP,stackOffset))
+//            stackOffset -= MemoryLayout<Word>.size
+//            }
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)

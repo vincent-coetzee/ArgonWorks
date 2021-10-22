@@ -120,10 +120,10 @@ public class Module:ContainerSymbol
         
     public func dumpMethods()
         {
-        for method in self.symbols.flatMap({$0 as? Method})
-            {
+//        for method in self.symbols.flatMap({$0 as? Method})
+//            {
 //            method.dump()
-            }
+//            }
         for module in self.symbols.compactMap({$0 as? Module})
             {
             module.dumpMethods()

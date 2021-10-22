@@ -908,7 +908,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             {
             return
             }
-        print("LAYING OUT CLASS \(self.label) DIRECTLY")
+//        print("LAYING OUT CLASS \(self.label) DIRECTLY")
         var offset:Int = 0
         var visitedClasses = Set<Class>()
         visitedClasses.insert(self)
@@ -950,7 +950,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             return
             }
         visitedClasses.insert(self)
-        print("LAYING OUT CLASS \(self.label) INDIRECTLY")
+//        print("LAYING OUT CLASS \(self.label) INDIRECTLY")
 //        inClass.offsetOfClass[self] = offset
         var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: TopModule.shared.argonModule.integer.type)
         slot.setOffset(offset)

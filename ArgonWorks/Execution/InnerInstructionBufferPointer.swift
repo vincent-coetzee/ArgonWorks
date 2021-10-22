@@ -61,8 +61,8 @@ public class InnerInstructionBufferPointer: InnerPointer
         
     public func append(_ instruction:Instruction)
         {
-        let index = 8 + Word(self.count)
-        let instructionPointer = WordPointer(address: self.address + index * Word(MemoryLayout<Word>.size))
+//        let index = 8 + Word(self.count)
+//        let instructionPointer = WordPointer(address: self.address + index * Word(MemoryLayout<Word>.size))
 //        instruction.write(to: instructionPointer!)
         self.count += 1
         }
