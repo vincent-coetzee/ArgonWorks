@@ -15,4 +15,9 @@ public class PrimitiveMethodInstance: MethodInstance
         self.parameters = parameters
         self.returnType = returnType ?? .class(VoidClass.voidClass)
         }
+        
+    public override func emitCode(into buffer: T3ABuffer, using: CodeGenerator) throws
+        {
+        buffer.append("PRIM",.literal(.string(self.label)),.none,.none)
+        }
     }

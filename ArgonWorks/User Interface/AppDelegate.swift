@@ -26,6 +26,9 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //                    }
 //                }
 //            }
+        TopModule.shared.resolveReferences(topModule: TopModule.shared)
+        let module = TopModule.shared.lookup(name: Name("\\\\Argon"))
+        assert(module.isNotNil,"Argon module should not be nil.")
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

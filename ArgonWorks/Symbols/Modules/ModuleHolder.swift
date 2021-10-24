@@ -11,7 +11,7 @@ public class ModuleHolder: Module
     {
     public override var defaultColor:NSColor
         {
-        Palette.shared.hierarchyPrimaryTintColor
+        Palette.shared.argonPrimaryColor
         }
     
     public override var iconName: String
@@ -67,7 +67,7 @@ public class ElementHolder: Symbol
     {
     public override var defaultColor:NSColor
         {
-        Palette.shared.hierarchyPrimaryTintColor
+        Palette.shared.argonPrimaryColor
         }
         
     public override var iconName: String

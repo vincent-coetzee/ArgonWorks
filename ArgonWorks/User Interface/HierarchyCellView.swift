@@ -9,22 +9,6 @@ import Cocoa
 
 public class HierarchyCellView: NSTableCellView
     {
-    public override var backgroundStyle:NSView.BackgroundStyle
-        {
-        didSet
-            {
-            self.wantsLayer = true
-            if backgroundStyle == .emphasized
-                {
-                self.layer!.backgroundColor = Palette.shared.hierarchySelectionColor.cgColor
-                }
-            else
-                {
-                self.layer!.backgroundColor = NSColor.clear.cgColor
-                }
-            }
-        }
-
     @IBOutlet var icon: NSImageView!
     @IBOutlet var text: NSTextField!
     @IBOutlet var trailer: NSTextField!

@@ -118,7 +118,7 @@ public class ContainerSymbol:Symbol
         
     public override var childCount: Int
         {
-        return(self.children!.count)
+        return(self.children.count)
         }
         
     public override var isSymbolContainer: Bool
@@ -131,7 +131,7 @@ public class ContainerSymbol:Symbol
         return(Array(self.symbols))
         }
         
-    public override var children: Symbols?
+    public override var children: Symbols
         {
         return(self.symbols.sorted{$0.label < $1.label})
         }
@@ -249,13 +249,6 @@ public class ContainerSymbol:Symbol
         
     public override func addSymbol(_ symbol:Symbol)
         {
-        for oldSymbol in self.symbols
-            {
-            if symbol.label ==  oldSymbol.label
-                {
-                fatalError("Duplicate symbol in Module")
-                }
-            }
         self.symbolsByLabel[symbol.label] = symbol
         self.journalEntries.append(.addSymbol(symbol,to: self))
         symbol.setParent(self)

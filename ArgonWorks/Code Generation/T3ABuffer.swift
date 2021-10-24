@@ -82,6 +82,11 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         self.append(nil,"LINE",.literal(.integer(Argon.Integer(lineNumber))),.none,.none)
         }
         
+    public func append(_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
+        {
+        self.append(nil,opcode,operand1,operand2,result)
+        }
+        
     public func append(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
         {
         if self.pendingLabel.isNotNil && label.isNotNil

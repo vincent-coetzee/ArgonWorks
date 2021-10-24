@@ -73,6 +73,7 @@ public class TokenStream:Equatable, TokenSource
     private var positionStack = Stack<StreamPosition>()
     private var _braceDepth = 0
     public var lineNumber:LineNumber = EmptyLineNumber()
+    private var withComments = false
     public var braceDepth:Int
         {
         return(self._braceDepth)
@@ -100,8 +101,9 @@ public class TokenStream:Equatable, TokenSource
         return(newline.contains(self.currentChar))
         }
     
-    init(source:String,context:ReportingContext)
+    init(source:String,context:ReportingContext,withComments: Bool = true)
         {
+        self.withComments = withComments
         self.reportingContext = context
         self.source = source
         self.initState()
@@ -412,6 +414,16 @@ public class TokenStream:Equatable, TokenSource
         }
         
     public func nextToken() -> Token
+        {
+        let token = self.scanToken()
+        if !self.withComments && token.isWhitespace
+            {
+            return(self.nextToken())
+            }
+        return(token)
+        }
+        
+    private func scanToken() -> Token
         {
         self.tokenLine = line
         if !self.tokenStack.isEmpty

@@ -29,16 +29,16 @@ public enum Parent:Storable
         try output.write(self)
         }
         
-    public var block: Block
+    public var block: Block?
         {
         switch(self)
             {
             case .none:
-                fatalError("This should not happen")
+                return(nil)
             case .node:
-                fatalError("This should not happen")
+                return(nil)
             case .expression:
-                fatalError("This should not happen")
+                return(nil)
             case .block(let block):
                 return(block)
             }

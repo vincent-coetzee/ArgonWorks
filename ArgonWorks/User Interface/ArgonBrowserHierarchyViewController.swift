@@ -30,7 +30,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.header1.headerColor = Palette.shared.headerColor
         self.symbolList1 = SymbolList()
         self.symbolList1!.childType = .class
-        self.symbolList1!.foregroundColor = Palette.shared.classBrowserTextColor
+        self.symbolList1!.foregroundColor = Palette.shared.argonPrimaryColor
         self.classBrowser.delegate = self.symbolList1
         self.classBrowser.dataSource = self.symbolList1
         self.symbolList1!.outliner = self.classBrowser
@@ -40,7 +40,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.header2.headerColor = Palette.shared.headerColor
         self.symbolList2 = SymbolList()
         self.symbolList2!.childType = .method
-        self.symbolList2!.foregroundColor = Palette.shared.methodBrowserTextColor
+        self.symbolList2!.foregroundColor = Palette.shared.argonPrimaryColor
         self.methodBrowser.delegate = self.symbolList2
         self.methodBrowser.dataSource = self.symbolList2
         self.symbolList2!.outliner = self.methodBrowser
@@ -50,7 +50,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.header3.headerColor = Palette.shared.headerColor
         self.symbolList3 = SymbolList()
         self.symbolList3!.childType = .any
-        self.symbolList3!.foregroundColor = Palette.shared.objectBrowserTextColor
+        self.symbolList3!.foregroundColor = Palette.shared.argonPrimaryColor
         self.objectBrowser.delegate = self.symbolList3
         self.objectBrowser.dataSource = self.symbolList3
         self.symbolList3!.outliner = self.objectBrowser

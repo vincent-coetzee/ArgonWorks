@@ -21,7 +21,7 @@ extension NSImage
             }
        copiedImage.lockFocus()
        tintColor.set()
-       let imageBounds = NSMakeRect(0, 0, copiedImage.size.width, copiedImage.size.height)
+       let imageBounds = NSMakeRect(0, 0, copiedImage.size.width+2, copiedImage.size.height)
        imageBounds.fill(using: .sourceAtop)
        copiedImage.unlockFocus()
        copiedImage.isTemplate = false

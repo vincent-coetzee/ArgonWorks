@@ -153,7 +153,7 @@ public class MethodInvocationExpression: Expression
         guard methodInstance.isNotNil else
             {
             generator.cancelCompletion()
-            generator.dispatchError(at: location, message: "Can not find a maching instance for this method, it can not be dispatched.")
+            generator.dispatchError(at: location, message: "Can not find a matching instance for this method, it can not be dispatched.")
             instance.append(comment: "METHOD \(self.method.label) TYPES \(types.map{$0.label})")
             return
             }

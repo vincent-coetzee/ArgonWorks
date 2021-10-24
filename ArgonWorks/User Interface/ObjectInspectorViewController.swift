@@ -110,7 +110,7 @@ public class ObjectFileSymbol: ObjectFileItem
         {
         if self.children.isEmpty
             {
-            self.children = self.symbol.children!.map{ObjectFileSymbol(symbol: $0)}.sorted{$0.displayString < $1.displayString}
+            self.children = self.symbol.children.map{ObjectFileSymbol(symbol: $0)}.sorted{$0.displayString < $1.displayString}
             }
         return(self.children[atIndex])
         }

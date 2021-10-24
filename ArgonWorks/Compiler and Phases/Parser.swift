@@ -18,6 +18,19 @@ public enum Context: Equatable
     case block(Block)
     case node(Node)
 
+    public var label: Label
+        {
+        switch(self)
+            {
+            case .none:
+                return("NONE")
+            case .block:
+                return("BLOCK")
+            case .node(let node):
+                return(node.label)
+            }
+        }
+        
     public var firstInitializer: Initializer?
         {
         switch(self)
@@ -91,7 +104,7 @@ public class Parser: CompilerPass
     public let compiler:Compiler
     private var namingContext: NamingContext
     private var contextStack = Stack<Context>()
-    private var currentContext:Context = .node(Node(label: ""))
+    private var currentContext:Context!
     private var node:ParseNode?
     private var source: String?
     public var wasCancelled = false
@@ -105,6 +118,7 @@ public class Parser: CompilerPass
     
     init(compiler:Compiler,source: String)
         {
+        self.currentContext = .node(compiler.topModule)
         self.tokenRenderer = compiler.tokenRenderer
         self.compiler = compiler
         self.namingContext = compiler.topModule
@@ -114,6 +128,7 @@ public class Parser: CompilerPass
         
     init(compiler:Compiler,tokens: Tokens)
         {
+        self.currentContext = .node(compiler.topModule)
         self.tokenRenderer = compiler.tokenRenderer
         self.compiler = compiler
         self.namingContext = compiler.topModule
@@ -142,12 +157,11 @@ public class Parser: CompilerPass
             self.lineNumber = self.tokenSource.lineNumber
             self.token = self.tokenSource.nextToken()
             }
-        while self.token.isComment || self.token.isInvisible
-            {
-            print(self.token)
-            self.token = self.tokenSource.nextToken()
-            }
-        print(token)
+//        while self.token.isComment || self.token.isInvisible
+//            {
+//            self.token = self.tokenSource.nextToken()
+//            }
+        print(self.token)
         return(self.token)
         }
         
@@ -188,6 +202,7 @@ public class Parser: CompilerPass
     private func addSymbol(_ symbol: Symbol)
         {
         self.currentContext.addSymbol(symbol)
+        print("ADDED \(symbol.label) TO \(self.currentContext.label)")
         }
     
     private func initParser(tokens: Tokens)
@@ -202,7 +217,7 @@ public class Parser: CompilerPass
         {
         self.source = source
         self.currentContext = .node(self.compiler.topModule)
-        self.tokenSource = TokenStream(source: source,context: self.reportingContext)
+        self.tokenSource = TokenStream(source: source,context: self.reportingContext,withComments: false)
         self.reportingContext = self.compiler.reportingContext
         }
         
@@ -688,7 +703,6 @@ public class Parser: CompilerPass
                 method = InfixOperator(operation)
                 }
             method.addDeclaration(location)
-            self.addSymbol(method)
             method.addInstance(instance)
             if self.currentContext.lookup(label: operation.name).isNotNil
                 {
@@ -753,7 +767,12 @@ public class Parser: CompilerPass
         var method: Method?
         if existingMethod.isNotNil
             {
+            if existingMethod!.hasInstanceWithSameSignature(as: instance)
+                {
+                self.dispatchWarning(at: location,"There is already a method instance with this signature defined.")
+                }
             existingMethod?.addInstance(instance)
+            method = existingMethod
             }
         else
             {
@@ -763,10 +782,6 @@ public class Parser: CompilerPass
             method?.tag = self.currentTag
             self.addSymbol(method!)
             method!.addInstance(instance)
-            }
-        if method!.hasInstanceWithSameSignature(as: instance)
-            {
-            self.dispatchWarning(at: location,"There is already a method instance with this signature defined.")
             }
         }
         
@@ -1143,8 +1158,10 @@ public class Parser: CompilerPass
                 {
                 try self.parseComma()
                 let name = try self.parseName()
+                let typeToken = self.token
                 if let parm = self.parameter(in: parameters, atName: name)
                     {
+                    self.tokenRenderer.setKind(.class, ofToken: typeToken)
                     types.append(.genericClassParameter(parm))
                     }
                 else if self.currentContext.lookup(name: name).isNil
@@ -1155,18 +1172,22 @@ public class Parser: CompilerPass
                     {
                     if let enumeration = type as? Enumeration
                         {
+                        self.tokenRenderer.setKind(.enumeration, ofToken: typeToken)
                         types.append(.enumeration(enumeration))
                         }
                     else if let aClass = type as? Class,!aClass.isGenericClassParameter
                         {
+                        self.tokenRenderer.setKind(.class, ofToken: typeToken)
                         types.append(.class(aClass))
                         }
                     else if let alias = type as? TypeAlias
                         {
+                        self.tokenRenderer.setKind(.type, ofToken: typeToken)
                         types.append(.typeAlias(alias))
                         }
                     else if let method = type as? Method
                         {
+                        self.tokenRenderer.setKind(.method, ofToken: typeToken)
                         types.append(.method(method))
                         }
                     else
@@ -1279,7 +1300,7 @@ public class Parser: CompilerPass
         repeat
             {
             try self.parseComma()
-            self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
+            self.tokenRenderer.setKind(.class,ofToken: self.token)
             let superclassName = try self.parseName()
             let symbol = self.currentContext.lookup(name: superclassName)
             if symbol.isNil
@@ -1767,9 +1788,10 @@ public class Parser: CompilerPass
             instance!.addDeclaration(location)
             }
         var method: Method?
-        if existingMethod.isNotNil && directive != .intrinsic
+        if existingMethod.isNotNil
             {
             existingMethod?.addInstance(instance!)
+            method = existingMethod
             }
         else
             {
@@ -1793,7 +1815,7 @@ public class Parser: CompilerPass
                 try self.parseBlock(into: instance!.block)
                 self.popContext()
                 }
-            if returnType != .class(VoidClass.voidClass) && !instance!.block.hasReturnBlock()
+            if returnType != .class(VoidClass.voidClass) && !instance!.block.hasInlineReturnBlock
                 {
                 self.cancelCompletion()
                 self.dispatchError(at: location,"This method has a return value but there is no RETURN statement in the body of the method.")
@@ -1885,29 +1907,29 @@ public class Parser: CompilerPass
         return(expression)
         }
         
-    private func parseAssociatedValues(with lhs: Expression) throws -> Expression
-        {
-        let theCase = lhs.enumerationCase
-        try self.nextToken()
-        if theCase.associatedTypes.isEmpty
-            {
-            self.reportingContext.dispatchError(at: self.token.location, message: "The case '\(theCase.label)' does not have any associated values.")
-            }
-        var values = Array<Expression>()
-        var index = 0
-        while index < theCase.associatedTypes.count && !self.token.isRightPar
-            {
-            values.append(try self.parseExpression())
-            try self.parseComma()
-            index += 1
-            }
-        if !self.token.isRightPar
-            {
-            self.reportingContext.dispatchError(at: self.token.location, message: "A ')' was expected after the associated values for '\(theCase.label)' but it was not found.")
-            }
-        try self.nextToken()
-        return(EnumerationInstanceExpression(caseLabel: theCase.label,enumeration: theCase.enumeration, enumerationCase: theCase, associatedValues: values))
-        }
+//    private func parseAssociatedValues(with lhs: Expression) throws -> Expression
+//        {
+//        let theCase = lhs.enumerationCase
+//        try self.nextToken()
+//        if theCase.associatedTypes.isEmpty
+//            {
+//            self.reportingContext.dispatchError(at: self.token.location, message: "The case '\(theCase.label)' does not have any associated values.")
+//            }
+//        var values = Array<Expression>()
+//        var index = 0
+//        while index < theCase.associatedTypes.count && !self.token.isRightPar
+//            {
+//            values.append(try self.parseExpression())
+//            try self.parseComma()
+//            index += 1
+//            }
+//        if !self.token.isRightPar
+//            {
+//            self.reportingContext.dispatchError(at: self.token.location, message: "A ')' was expected after the associated values for '\(theCase.label)' but it was not found.")
+//            }
+//        try self.nextToken()
+//        return(EnumerationInstanceExpression(caseLabel: theCase.label,enumeration: theCase.enumeration, enumerationCase: theCase, associatedValues: values))
+//        }
         
     private func parseSlotExpression() throws -> Expression
         {
@@ -1917,15 +1939,16 @@ public class Parser: CompilerPass
         while self.token.isRightArrow
             {
             try self.nextToken()
-            if !self.token.isIdentifier
+            if !(self.token.isIdentifier || self.token.isHashStringLiteral)
                 {
                 self.cancelCompletion()
                 self.dispatchError("Slot selector expected but '\(self.token)' was found.")
                 }
             else
                 {
+                let selector = self.token.isIdentifier ? self.token.identifier : self.token.hashStringLiteral
                 lhs.compiler = self.compiler
-                if let symbol = lhs.lookup(label: self.token.identifier)
+                if let symbol = lhs.lookup(label: selector)
                     {
                     if symbol.isLiteral
                         {
@@ -1943,9 +1966,35 @@ public class Parser: CompilerPass
                     }
                 }
             try self.nextToken()
+            if lhs.isEnumerationCaseExpression && lhs.enumerationCase.hasAssociatedTypes && self.token.isLeftPar
+                {
+                lhs = try self.parseAssociatedTypes(in: lhs)
+                }
             }
         lhs.compiler = self.compiler
         return(lhs)
+        }
+        
+    private func parseAssociatedTypes(in expression: Expression) throws -> Expression
+        {
+        let aCase = expression.enumerationCase
+        let types = aCase.associatedTypes
+        var values = Expressions()
+        try self.parseParentheses
+            {
+            repeat
+                {
+                try self.parseComma()
+                values.append(try self.parseExpression())
+                }
+            while self.token.isComma
+            }
+        if values.count != types.count
+            {
+            self.cancelCompletion()
+            self.dispatchError("The enumeration case \(aCase.label) expected \(types.count) associated values be found \(values.count).")
+            }
+        return(EnumerationInstanceExpression(lhs: expression,enumerationCase: aCase,associatedValues: values))
         }
         
     private func parseIncDecExpression() throws -> Expression
@@ -2120,16 +2169,16 @@ public class Parser: CompilerPass
             }
         }
         
-    private func parseGeneratorExpression() throws -> Expression
+    private func parseGeneratorSet() throws -> Expression
         {
-        try self.nextToken()
-//        let variables = self.parseGenerativeVariables()
-        while !self.token.isRightBracket
-            {
-            try self.nextToken()
-            }
-        try self.nextToken()
-        return(Expression())
+        fatalError()
+        ///
+        ///
+        ///
+        /// Define variables | define constraints
+        /// Commas separate variables and constraints
+        /// One loop through set, then freeze variables for iteration one
+        /// then another loop through etc until terminates
         }
         
     private func parseGenerativeVariables() -> Array<Label>
@@ -2139,9 +2188,22 @@ public class Parser: CompilerPass
         
     private func parsePrimary() throws -> Expression
         {
-        if self.token.isLeftBracket
+        if self.token.isRole
             {
-            return(try self.parseGeneratorExpression())
+            try self.nextToken()
+            let result = try self.parseParentheses
+                {
+                () -> RoleExpression in
+                let expression = try self.parseExpression()
+                try self.parseComma()
+                let type = try self.parseType()
+                return(RoleExpression(expression: expression,type: type))
+                }
+            return(result)
+            }
+        else if self.token.isLeftBracket
+            {
+            return(try self.parseGeneratorSet())
             }
         else if self.token.isIntegerLiteral
             {
@@ -2288,17 +2350,18 @@ public class Parser: CompilerPass
         
     private func parseEnumerationCaseExpression() throws -> Expression
         {
-        try self.nextToken()
-        if !self.token.isIdentifier
-            {
-            self.reportingContext.dispatchError(at: self.token.location, message: "When a gluon is used to begin an enumeration case, it must be followed by an identifier.")
-            try self.nextToken()
-            return(Expression())
-            }
-        self.tokenRenderer.setKind(.enumeration,ofToken: self.token)
-        let theCaseKey = self.token.identifier
-        try self.nextToken()
-        return(EnumerationInstanceExpression(caseLabel: theCaseKey,enumeration: nil, enumerationCase: nil, associatedValues: nil))
+//        try self.nextToken()
+//        if !self.token.isIdentifier
+//            {
+//            self.reportingContext.dispatchError(at: self.token.location, message: "When a gluon is used to begin an enumeration case, it must be followed by an identifier.")
+//            try self.nextToken()
+//            return(Expression())
+//            }
+//        self.tokenRenderer.setKind(.enumeration,ofToken: self.token)
+//        let theCaseKey = self.token.identifier
+//        try self.nextToken()
+//        return(EnumerationInstanceExpression(caseLabel: theCaseKey,enumeration: nil, enumerationCase: nil, associatedValues: nil))
+        fatalError()
         }
         
     private func parseSlotSelectorExpression() throws -> Expression
@@ -2321,26 +2384,6 @@ public class Parser: CompilerPass
         if let symbol = aSymbol as? Enumeration
             {
             self.tokenRenderer.setKind(.enumeration,ofToken: nameToken)
-            if self.token.isScope
-                {
-                try self.nextToken()
-                if !self.token.isHashStringLiteral
-                    {
-                    self.dispatchWarning("Symbol expected after descoping operator in the context of an enumeration.")
-                    }
-                else
-                    {
-                    if let aCase = symbol.caseWithLabel(self.token.hashStringLiteral)
-                        {
-                        try self.nextToken()
-                        return(LiteralExpression(.enumerationCase(aCase)))
-                        }
-                    else
-                        {
-                        self.dispatchWarning("'\(self.token.identifier)' is not a valid case of enumeration '\(symbol.label)'.")
-                        }
-                    }
-                }
             return(LiteralExpression(.enumeration(symbol)))
             }
         else if let symbol = aSymbol as? Class
@@ -2666,7 +2709,6 @@ public class Parser: CompilerPass
     private func parseElseIfBlock(into block: IfBlock) throws
         {
         self.startClip()
-        try self.nextToken()
         let location = self.token.location
         let expression = try self.parseExpression()
         let statement = ElseIfBlock(condition: expression)
@@ -2745,6 +2787,7 @@ public class Parser: CompilerPass
         try self.nextToken()
         let rhs = try self.parseExpression()
         let statement = LetBlock(location: self.token.location,lhs: lhs,rhs: rhs)
+        lhs.imposeType(rhs.type)
         rhs.setParent(statement)
         lhs.setParent(statement)
         statement.addDeclaration(location)

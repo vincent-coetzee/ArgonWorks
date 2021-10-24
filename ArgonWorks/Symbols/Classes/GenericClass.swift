@@ -46,7 +46,7 @@ public class GenericClass:Class
         return(true)
         }
 
-    private var instances = Array<GenericClassInstance>()
+    internal var instances = Array<GenericClassInstance>()
     public private(set) var genericClassParameters = Array<Class>()
     private let _typeCode:TypeCode
     

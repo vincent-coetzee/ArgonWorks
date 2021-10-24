@@ -117,3 +117,32 @@ public class SystemPrefixOperator: PrefixOperator
         return(true)
         }
     }
+
+public class Postfix
+    {
+    var method: SystemPostfixOperator
+        {
+        let method = SystemPostfixOperator(self.operation)
+        var parms = [Parameter(label: "a", type: self.left)]
+        if self.right.isNotNil
+            {
+            parms.append(Parameter(label: "b", type: self.right!))
+            }
+        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: parms, returnType: self.out)
+        method.addInstance(instance)
+        return(method)
+        }
+        
+    let left: Type
+    let operation: Token.Operator
+    let right: Type?
+    let out: Type
+    
+    init(_ op: String,_ left: Class,_ right: Class? = nil,out: Class)
+        {
+        self.left = .class(left)
+        self.operation = Token.Operator(op)
+        self.right = right.isNil ? nil : right!.type
+        self.out = out.type
+        }
+    }

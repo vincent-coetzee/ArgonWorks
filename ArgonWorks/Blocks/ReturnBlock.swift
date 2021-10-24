@@ -9,6 +9,11 @@ import Foundation
 
 public class ReturnBlock: Block
     {
+    public override var hasInlineReturnBlock: Bool
+        {
+        return(true)
+        }
+        
     public override var isReturnBlock: Bool
         {
         return(true)

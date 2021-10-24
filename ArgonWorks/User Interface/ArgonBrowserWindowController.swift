@@ -293,7 +293,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.sourceEditor.isAutomaticDashSubstitutionEnabled = false
         self.sourceEditor.isAutomaticTextReplacementEnabled = false
         self.sourceEditor.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
-        self.sourceEditor.sourceEditorDelegate = self
+//        self.sourceEditor.sourceEditorDelegate = self
         let urlString = UserDefaults.standard.stringValue(forKey: .currentSourceFileURL)
         if let aString = urlString,
         let url = URL(string: aString),
@@ -486,7 +486,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.sourceEditor.string)
+                let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: NullReportingContext.shared,tokenRenderer: NullTokenRenderer())
                 if let module = aCompiler.compile() as? Module
                     {
                     do
@@ -599,7 +599,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         }
     }
 
-extension ArgonBrowserWindowController: SourceEditorDelegate
+extension ArgonBrowserWindowController
     {
     public func sourceEditorGutter(_ view: LineNumberGutter, selectedAnnotationAtLine line: Int)
         {

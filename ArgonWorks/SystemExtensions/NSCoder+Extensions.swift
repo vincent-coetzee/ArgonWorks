@@ -96,6 +96,9 @@ extension NSCoder
             case .methodInstance(let instance):
                 self.encode(14,forKey: key + "kind")
                 self.encode(instance,forKey: key + "methodInstance")
+            case .type(let type):
+                self.encode(15,forKey: key + "kind")
+                self.encodeType(type,forKey: key + "type")
             }
         }
         
@@ -132,6 +135,8 @@ extension NSCoder
                 return(.relocatableIndex(self.decodeInteger(forKey: key + "index")))
             case 14:
                 return(.methodInstance(self.decodeObject(forKey: key + "methodInstance") as! MethodInstance))
+            case 15:
+                return(.type(self.decodeType(forKey: key + "type")!))
             default:
                 fatalError("This should not happen")
             }

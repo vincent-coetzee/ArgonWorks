@@ -44,10 +44,6 @@ public class SymbolBrowserView: NSScrollView,NSOutlineViewDataSource,NSOutlineVi
         {
         didSet
             {
-            if self.childType == .method
-                {
-                print("halt")
-                }
             self.outliner.reloadData()
             }
         }

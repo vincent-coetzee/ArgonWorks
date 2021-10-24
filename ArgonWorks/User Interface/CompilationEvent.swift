@@ -73,7 +73,7 @@ internal class CompilationWarningEvent: CompilationEvent
     {
     public override var tintColor: NSColor
         {
-        return(Palette.shared.compilationEventWarningColor)
+        return(Palette.shared.argonPrimaryColor)
         }
         
     public override var selectionColor: NSColor
@@ -96,7 +96,7 @@ internal class CompilationErrorEvent: CompilationEvent
         
     public override var tintColor: NSColor
         {
-        return(Palette.shared.compilationEventErrorColor)
+        return(Palette.shared.argonPrimaryColor)
         }
         
     public override var selectionColor: NSColor

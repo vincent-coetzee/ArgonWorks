@@ -295,7 +295,7 @@ class LineNumberGutter: NSRulerView {
         }
         let rect:NSRect = NSRect(x:4,y:y,width:15,height:15)
         let relativePoint    = self.convert(NSZeroPoint, from: textView)
-        let newRect = NSRect(x:rect.minX + 32,y:relativePoint.y + y - 1,width:rect.width,height:rect.height)
+        let newRect = NSRect(x:rect.minX + 31,y:relativePoint.y + y - 1,width:rect.width,height:rect.height)
         cartouche.icon.draw(in: newRect)
         cartouche.area = newRect
         let lineView = textView as! LineNumberTextView

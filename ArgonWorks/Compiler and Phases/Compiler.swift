@@ -36,35 +36,26 @@ public class Compiler
         self.currentPass = nil
         self.lastNode = nil
         self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
         self.parser = Parser(compiler: self,source: source)
         self.currentPass = self.parser
         self.tokenRenderer.update(source)
         }
-        
-    init(source: String)
-        {
-        self.parser = nil
-        self.currentPass = nil
-        self.lastNode = nil
-        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
-        self.reportingContext = NullReportingContext()
-        self.tokenRenderer = NullTokenRenderer()
-        self.parser = Parser(compiler: self,source: source)
-        self.currentPass = self.parser
-        self.tokenRenderer.update(source)
-        }
-        
+
     init(tokens: Tokens,reportingContext: ReportingContext,tokenRenderer: SemanticTokenRenderer)
         {
         self.parser = nil
         self.currentPass = nil
         self.lastNode = nil
         self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
+        self.topModule.printContents("\t")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
-        self.parser = Parser(compiler: self,tokens: tokens)
+        let cleanTokens = tokens.filter{!$0.isWhitespace}
+        self.parser = Parser(compiler: self,tokens: cleanTokens)
         self.currentPass = self.parser
         }
 

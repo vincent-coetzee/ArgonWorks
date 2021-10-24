@@ -30,6 +30,8 @@ import Cocoa
 internal protocol SourceEditorDelegate
     {
     func sourceEditorGutter(_ view: LineNumberGutter,selectedAnnotationAtLine: Int)
+    func sourceEditorKeyPressed(_ editor: LineNumberTextView)
+    func sourceEditor(_ editor: LineNumberTextView,changedLine: Int,offset: Int)
     }
     
 /// A NSTextView with a line number gutter attached to it.
@@ -186,6 +188,27 @@ public class LineNumberTextView: NSTextView {
         }
     }
 
+    public func scrollToLine(_ line:Int)
+        {
+        let lineCount = self.string.components(separatedBy: "\n").count
+        let lineHeight = self.lineNumberGutter!.lineHeight
+        var bottom = max(0,line - 1)
+        if line > 3
+            {
+            bottom = line - 3
+            }
+        var top = min(line,lineCount)
+        if line < lineCount - 3
+            {
+            top = line + 3
+            }
+        let delta = CGFloat(top - bottom)
+        let offset = self.lineNumberGutter!.lineHeight * CGFloat(bottom)
+        let rect = CGRect(x:0,y:offset,width: self.bounds.width,height: delta * lineHeight)
+        self.scrollToVisible(rect)
+        self.highlight(line: line)
+        }
+        
     public func highlight(line: Int)
         {
         let lineHeight = self.lineNumberGutter!.lineHeight
@@ -221,6 +244,20 @@ public class LineNumberTextView: NSTextView {
         self.selectedLineLayer.frame = frame
         self.selectedLineLayer.isHidden = self.downClickCount % 2 == 1
         super.mouseDown(with: event)
+        var location = self.selectedRanges.first!.rangeValue.location
+        line = 0
+        var offset = 0
+        let lines = self.string.components(separatedBy: "\n")
+        while offset + lines[line].count < location
+            {
+            offset += lines[line].count + 1
+            line += 1
+            }
+        location = self.selectedRanges.first!.rangeValue.location
+        print("LOCATION \(location)")
+        print("OFFSET \(offset)")
+        print("POSITION \(location - offset)")
+        self.sourceEditorDelegate?.sourceEditor(self,changedLine: line + 1,offset: location - offset)
         }
         
     public override func keyDown(with event: NSEvent)
@@ -235,37 +272,22 @@ public class LineNumberTextView: NSTextView {
             {
             self.interpretKeyEvents([event])
             }
+        var location = self.selectedRanges.first!.rangeValue.location
+        var line = 0
+        var offset = 0
+        let lines = self.string.components(separatedBy: "\n")
+        while offset + lines[line].count < location
+            {
+            offset += lines[line].count + 1
+            line += 1
+            }
+        location = self.selectedRanges.first!.rangeValue.location
+        print("LOCATION \(location)")
+        print("OFFSET \(offset)")
+        print("POSITION \(location - offset)")
+        self.sourceEditorDelegate?.sourceEditor(self,changedLine: line + 1,offset: location - offset)
         }
         
-//    public override func insertNewline(_ sender:Any?)
-//        {
-//        let location = self.selectedRanges[0].rangeValue.location
-//        var start = location
-//        let string = self.string
-//        let startIndex = string.startIndex
-//        var currentIndex = string.index(startIndex,offsetBy: location)
-//        var tabString = ""
-//        if currentIndex < string.endIndex
-//            {
-//            while currentIndex < string.endIndex && string[currentIndex] != "\n"
-//                {
-//                start += 1
-//                currentIndex = string.index(after: currentIndex)
-//                }
-//            while currentIndex < string.endIndex && string[currentIndex].isWhitespace
-//                {
-//                if string[currentIndex] == "\t"
-//                    {
-//                    tabString += "\t"
-//                    }
-//                start += 1
-//                currentIndex = string.index(after: currentIndex)
-//                }
-//            }
-//        let range = NSRange(location: location,length: 0)
-//        self.textStorage?.replaceCharacters(in: range, with: "\n\(tabString)")
-//        }
-
     public override func insertNewline(_ sender:Any?)
         {
         let location = self.selectedRanges[0].rangeValue.location

@@ -14,10 +14,6 @@ public class SystemSymbolPlaceholder: NSObject, NSCoding
     init(original: Symbol)
         {
         self.originalName = original.fullName
-        if self.originalName.displayString == ""
-            {
-            print("halt")
-            }
         }
         
     public required init(coder: NSCoder)

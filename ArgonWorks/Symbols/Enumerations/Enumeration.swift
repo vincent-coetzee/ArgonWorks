@@ -88,7 +88,6 @@ public class Enumeration:Class
             aCase.setParent(self)
             return
             }
-        fatalError("Attempt to add a symbol of type \(Swift.type(of: symbol)) to the enumeration called \(self.label)")
         }
         
     public override func isElement(ofType: Group.ElementType) -> Bool

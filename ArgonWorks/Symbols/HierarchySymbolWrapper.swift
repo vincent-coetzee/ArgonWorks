@@ -129,11 +129,11 @@ public class HierarchySymbolWrapper
         {
         if self.isGroup
             {
-            return(Palette.shared.hierarchyPrimaryTintColor)
+            return(Palette.shared.argonSecondaryColor)
             }
         else
             {
-            return(self.symbols.first!.defaultColor)
+            return(Palette.shared.argonPrimaryColor)
             }
         }
         
@@ -172,7 +172,7 @@ public class HierarchySymbolWrapper
         cell.icon.image = image
 //        var iconColor = NSColor.black
         let textColor = self.isContainerSymbol ? Palette.shared.hierarchyGroupTextColor :  Palette.shared.hierarchyTextColor
-        cell.icon.contentTintColor = self.defaultColor
+        cell.icon.contentTintColor = Palette.shared.argonPrimaryColor
         cell.text.textColor = textColor
         }
 

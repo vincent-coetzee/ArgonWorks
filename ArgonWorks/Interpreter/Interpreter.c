@@ -9,6 +9,7 @@
 
 char* _class_slot_names[19] = {"_header","_magicNumber","_classPointer","_TypeHeader","_TypeMagicNumber","_TypeClassPointer","_ObjectHeader","_ObjectMagicNumber","_ObjectClassPointer","hash","name","typeCode","extraSizeInBytes","hasBytes","instanceSizeInBytes","isValue","magicNumber","slots","superclasses"};
 SlotKey classSlotKeys[19];
+void InitClassPointerSlotKeys(void);
 
 void InitClassPointerSlotKeys()
     {

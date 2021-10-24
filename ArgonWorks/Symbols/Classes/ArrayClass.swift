@@ -54,4 +54,24 @@ public class ArrayClass:GenericSystemClass
         Self.allInstances.append(instance)
         return(instance)
         }
+        
+    public override func instanciate(withTypes types: Types,reportingContext: ReportingContext) -> Type
+        {
+        if self.genericClassParameters.count != types.count
+            {
+            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters(\(types.count)) does not match the number required by the class(\(self.genericClassParameters.count)) '\(self.label)'.")
+            return(.class(ArrayClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: [])))
+            }
+        let typeMappings:[Type] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withType: $0.0)}
+        for instance in self.instances
+            {
+            if instance.genericClassParameterInstances == typeMappings
+                {
+                return(.class(instance))
+                }
+            }
+        let classInstance = ArrayClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: typeMappings)
+        self.instances.append(classInstance)
+        return(.class(classInstance))
+        }
     }

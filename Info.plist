@@ -100,6 +100,38 @@
 			<key>NSDocumentClass</key>
 			<string>$(PRODUCT_MODULE_NAME).ArgonDocument</string>
 		</dict>
+		<dict>
+			<key>LSTypeIsPackage</key>
+			<true/>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>ARP</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>com.macsemantics.argon.project</string>
+			</array>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>arp</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>ProjectIcon</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
+			<key>CFBundleTypeName</key>
+			<string>Argon Project File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.macsemantics.argon.project</string>
+			</array>
+			<key>NSDocumentClass</key>
+			<string>$(PRODUCT_MODULE_NAME).ProjectDocument</string>
+		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
@@ -200,6 +232,31 @@
 				<key>public.mime-type</key>
 				<array>
 					<string>com.macsemantics.argon.bolt</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>com.apple.package</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Argon Project File</string>
+			<key>UTTypeIconFile</key>
+			<string>ProjectIcon</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>com.macsemantics.argon.project</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>arp</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>com.macsemantics.argon.project</string>
 				</array>
 			</dict>
 		</dict>

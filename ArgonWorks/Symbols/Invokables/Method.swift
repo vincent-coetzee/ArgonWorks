@@ -10,6 +10,11 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var isInvokable: Bool
+        {
+        return(true)
+        }
+        
     public override var isLiteral: Bool
         {
         return(true)
@@ -106,7 +111,7 @@ public class Method:Symbol
         .argonPink
         }
         
-    public override var children: Array<Symbol>?
+    public override var children: Array<Symbol>
         {
         return(self.instances)
         }

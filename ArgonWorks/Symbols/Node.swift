@@ -143,7 +143,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
                 {
                 return(nil)
                 }
-            if let start = TopModule.shared.lookup(label: name.first)
+            if let start = self.topModule.lookup(label: name.first)
                 {
                 if let symbol = start.lookup(name: name.withoutFirst)
                     {

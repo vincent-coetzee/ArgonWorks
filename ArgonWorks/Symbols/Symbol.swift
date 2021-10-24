@@ -25,6 +25,11 @@ public class Symbol:Node,ParseNode
         return(false)
         }
 
+    public var isInvokable: Bool
+        {
+        return(false)
+        }
+        
     public var isLiteral: Bool
         {
         return(false)
@@ -42,7 +47,7 @@ public class Symbol:Node,ParseNode
         
     public var defaultColor:NSColor
         {
-        Palette.shared.hierarchyPrimaryTintColor
+        Palette.shared.argonPrimaryColor
         }
         
     public var canBecomeAType: Bool
@@ -81,6 +86,11 @@ public class Symbol:Node,ParseNode
         }
         
     public var isEnumeration: Bool
+        {
+        return(false)
+        }
+        
+    public var isEnumerationCase: Bool
         {
         return(false)
         }
@@ -193,7 +203,7 @@ public class Symbol:Node,ParseNode
         
     public var childCount: Int
         {
-        return(self.children?.count ?? 0)
+        return(self.children.count)
         }
         
     public var isExpandable: Bool
@@ -211,9 +221,9 @@ public class Symbol:Node,ParseNode
         fatalError("TypeCode being called on Symbol which is not valid")
         }
         
-    public var children:Symbols?
+    public var children:Symbols
         {
-        return(nil)
+        return([])
         }
  
     public var allChildren: Symbols
@@ -313,10 +323,6 @@ public class Symbol:Node,ParseNode
             if exporter.isSwappingSystemSymbols && self.isSystemSymbol
                 {
                 exporter.noteSwappedSystemSymbol(self)
-                if self.label == ""
-                    {
-                    print("halt")
-                    }
                 return(SystemSymbolPlaceholder(original: self))
                 }
             if exporter.isSwappingImportedSymbols && self.isImported
@@ -404,7 +410,7 @@ public class Symbol:Node,ParseNode
         
     public func child(atIndex: Int) -> Symbol
         {
-        return(self.children![atIndex])
+        return(self.children[atIndex])
         }
         
     public override func removeSymbol(_ symbol: Symbol)

@@ -33,23 +33,7 @@ public class SystemModule: Module
         {
         return(self.symbols.compactMap{$0 as? SystemModule})
         }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        if let symbol = self.symbolsByLabel[label]
-            {
-            return(symbol)
-            }
-        for module in self.subModules
-            {
-            if let value = module.lookup(label: label)
-                {
-                return(value)
-                }
-            }
-        return(nil)
-        }
-        
+    
     public override func lookup(name:Name) -> Symbol?
         {
         if name.isEmpty
@@ -77,6 +61,22 @@ public class SystemModule: Module
             if let symbol = module.lookup(name: name)
                 {
                 return(symbol)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func lookup(label: Label) -> Symbol?
+        {
+        if let symbol = self.symbolsByLabel[label]
+            {
+            return(symbol)
+            }
+        for symbol in self.symbolsByLabel.values where symbol is SystemModule || symbol is SymbolGroup
+            {
+            if let innerSymbol = symbol.lookup(label: label)
+                {
+                return(innerSymbol)
                 }
             }
         return(nil)

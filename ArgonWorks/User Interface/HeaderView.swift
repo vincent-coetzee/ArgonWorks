@@ -26,6 +26,7 @@ public class HeaderView: NSView,Pane
     public var layoutFrame: LayoutFrame = .zero
     
     private let label: NSTextField
+    private let shapeLayer = CAShapeLayer()
     
     @IBInspectable
     public var headerColor: NSColor = Palette.shared.headerColor
@@ -88,20 +89,34 @@ public class HeaderView: NSView,Pane
         let size = (NSAttributedString(string: self.label.stringValue,attributes: [.font: self.label.font!])).size()
         let y = (frame.size.height - size.height) / 2.0
         self.label.frame = NSRect(x: 5,y: y,width: frame.size.width, height: size.height)
+        self.label.font = Palette.shared.argonHeaderFont
+        shapeLayer.backgroundColor = Palette.shared.argonSecondaryColor.cgColor
+        shapeLayer.path = NSBezierPath.init(roundedRect: self.bounds.insetBy(dx: 2, dy: 2), xRadius: 0, yRadius: 0).cgPath
+        shapeLayer.frame = self.bounds
         }
         
     private func initSubviews()
         {
         let palette = Palette.shared
         self.wantsLayer = true
-        self.layer?.backgroundColor = palette.headerColor.cgColor
+//        self.layer?.backgroundColor = palette.headerColor.cgColor
         self.label.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(label)
-        self.label.textColor = palette.headerTextColor
+        self.label.textColor = Palette.shared.argonContrastingTextColor
         self.label.font = palette.headerFont
         self.label.isEditable = false
         self.label.drawsBackground = false
         self.label.isSelectable = false
         self.label.isBezeled = false
+        self.wantsLayer = true
+        self.layer?.backgroundColor = Palette.shared.argonSecondaryColor.cgColor
+        self.layer?.cornerRadius = 2
+        self.layer?.addSublayer(shapeLayer)
+        shapeLayer.backgroundColor = Palette.shared.argonSecondaryColor.cgColor
+        shapeLayer.lineWidth = 1
+        shapeLayer.strokeColor = NSColor.black.cgColor
+        shapeLayer.fillColor = Palette.shared.argonSecondaryColor.cgColor
+        shapeLayer.path = NSBezierPath.init(roundedRect: self.bounds.insetBy(dx: 2, dy: 2), xRadius: 0, yRadius: 40).cgPath
+        shapeLayer.frame = self.bounds
         }
     }

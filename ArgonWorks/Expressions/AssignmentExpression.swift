@@ -41,7 +41,7 @@ public class AssignmentExpression: Expression
         
     public override var type: Type
         {
-        return(.unknown)
+        return(self.rhs.type)
         }
         
     init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)
@@ -50,6 +50,7 @@ public class AssignmentExpression: Expression
         self.lhs = lhs
         self.lhs.becomeLValue()
         self.operationName = operation.name
+        self.lhs.imposeType(self.rhs.type)
         super.init()
         }
         

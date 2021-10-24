@@ -44,6 +44,11 @@ public class TopModule: SystemModule
         
     public static let shared = TopModule()
         
+    public override var topModule: TopModule
+        {
+        return(self)
+        }
+        
     public override var fullName: Name
         {
         return(Name(rooted:true))
@@ -114,6 +119,10 @@ public class TopModule: SystemModule
                 }
             if let start = self.lookup(label: name.first)
                 {
+                if name.count == 2
+                    {
+                    return(start)
+                    }
                 if let symbol = start.lookup(name: name.withoutFirst)
                     {
                     return(symbol)

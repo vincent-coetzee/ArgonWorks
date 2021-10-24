@@ -127,6 +127,11 @@ extension NSColor
         return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
         }
         
+    public var darker: NSColor
+        {
+        return(self.darken(by: 0.5))
+        }
+        
     public func darken(by amount: CGFloat) -> NSColor
         {
 //        var colors = Array<CGFloat>(repeating: 0, count: 4)

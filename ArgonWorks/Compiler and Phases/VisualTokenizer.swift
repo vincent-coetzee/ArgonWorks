@@ -22,7 +22,7 @@ public class VisualTokenizer: SemanticTokenRenderer
         
     private let lineNumberView: LineNumberTextView
     private var tokenColors = Dictionary<TokenColor,NSColor>()
-    private let reportingContext: ReportingContext
+    public var reportingContext: ReportingContext
     private let systemClassNames: Array<String>
     private let font: NSFont
     

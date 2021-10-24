@@ -16,6 +16,8 @@ public class LineAnnotation
     init(line:Int,icon:NSImage)
         {
         self.line = line
-        self.icon = icon
+        icon.isTemplate = true
+        self.icon = icon.image(withTintColor: NSColor.controlAccentColor)
+        self.icon.isTemplate = true
         }
     }

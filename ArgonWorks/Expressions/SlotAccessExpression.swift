@@ -9,6 +9,29 @@ import Foundation
 
 public class SlotAccessExpression: Expression
     {
+    public override var enumerationCaseHasAssociatedTypes: Bool
+        {
+        if self.slot.isNotNil,let aCase = self.slot as? EnumerationCase,aCase.hasAssociatedTypes
+            {
+            return(true)
+            }
+        return(false)
+        }
+        
+    public override var enumerationCase: EnumerationCase
+        {
+        return(self.slot as! EnumerationCase)
+        }
+        
+    public override var isEnumerationCaseExpression: Bool
+        {
+        if self.slot.isNotNil
+            {
+            return(self.slot!.isEnumerationCase)
+            }
+        return(false)
+        }
+        
     public override var displayString: String
         {
         return("\(self.receiver.displayString)->\(String(describing: self.slotExpression?.displayString))")

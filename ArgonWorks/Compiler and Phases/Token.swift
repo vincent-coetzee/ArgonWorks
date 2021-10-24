@@ -270,6 +270,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case REPEAT
         case RETURN
         case RESUME
+        case ROLE
         case SEALED
         case SELECT
         case `self`
@@ -354,6 +355,19 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case directive
         case note
         case path
+        }
+        
+    public var isWhitespace: Bool
+        {
+        switch(self)
+            {
+            case .comment:
+                return(true)
+            case .invisible:
+                return(true)
+            default:
+                return(false)
+            }
         }
         
     public var tokenType:TokenType
@@ -2623,6 +2637,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .PRIVATE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isRole:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .ROLE)
             default:
                 return(false)
             }

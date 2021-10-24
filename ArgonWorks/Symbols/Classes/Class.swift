@@ -690,10 +690,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
         {
-        if archiver is ArgonArchiver
-            {
-            print("halt")
-            }
         return(super.replacementObject(for: archiver))
         }
         
@@ -974,10 +970,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                 {
                 let clonedSlot = slot.cloned
                 clonedSlot.setOffset(offset)
-                if inClass.layoutSlots.slots.map({$0.label}).contains(clonedSlot.label)
-                    {
-                    print("halt")
-                    }
                 clonedSlot.setParent(self)
                 inClass.layoutSlots.append(clonedSlot)
                 offset += clonedSlot.size

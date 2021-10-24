@@ -39,7 +39,7 @@ public class LocalSlot:Slot
         
     public override func lookup(label: String) -> Symbol?
         {
-        fatalError()
+        return(self.type.lookup(label: label))
         }
     }
 

@@ -74,6 +74,7 @@ public class T3AInstruction: NSObject,NSCoding
         case segmentDS
         case relocatableIndex(Int)
         case methodInstance(MethodInstance)
+        case type(Type)
         }
 
     public enum Operand

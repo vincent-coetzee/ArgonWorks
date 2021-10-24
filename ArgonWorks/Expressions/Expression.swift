@@ -9,6 +9,11 @@ import Foundation
 
 public class Expression: NSObject,NSCoding
     {
+    public var enumerationCaseHasAssociatedTypes: Bool
+        {
+        return(false)
+        }
+        
     public func operation(_ symbol:Token.Symbol,_ rhs:Expression) -> Expression
         {
         return(BinaryExpression(self,symbol,rhs))
@@ -173,6 +178,10 @@ public class Expression: NSObject,NSCoding
         {
         }
          
+    public func imposeType(_ type: Type)
+        {
+        }
+        
     public func lookup(label: Label) -> Symbol?
         {
         return(nil)

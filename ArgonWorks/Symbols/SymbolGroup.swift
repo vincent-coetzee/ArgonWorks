@@ -40,7 +40,7 @@ public class SymbolGroup:ContainerSymbol
             {
             return(symbol)
             }
-        for element in self.symbols
+        for element in self.symbolsByLabel.values
             {
             if let symbol = element.lookup(label: label)
                 {

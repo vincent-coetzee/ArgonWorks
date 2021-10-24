@@ -9,6 +9,11 @@ import AppKit
 
 public class Invokable: Symbol
     {
+    public override var isInvokable: Bool
+        {
+        return(true)
+        }
+        
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
@@ -37,7 +42,7 @@ public class Invokable: Symbol
         
     public override func encode(with coder: NSCoder)
         {
-        print("ENCODE INVOKABLE \(self.label)")
+//        print("ENCODE INVOKABLE \(self.label)")
         coder.encode(self.localSymbols,forKey: "localSymbols")
         super.encode(with: coder)
         coder.encode(self.cName,forKey: "cName")

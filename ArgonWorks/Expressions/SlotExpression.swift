@@ -56,6 +56,11 @@ public class SlotExpression: Expression
         return(self.slot.lookup(label: label))
         }
         
+    public override func imposeType(_ type: Type)
+        {
+        self.slot._type = type
+        }
+        
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         if slot.type.isGenericClass

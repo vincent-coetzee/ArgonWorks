@@ -14,6 +14,16 @@ public class EnumerationCase:Symbol
         LiteralExpression(.enumerationCase(self))
         }
         
+    public override var isEnumerationCase: Bool
+        {
+        return(true)
+        }
+        
+    public var hasAssociatedTypes: Bool
+        {
+        return(!self.associatedTypes.isEmpty)
+        }
+        
     public override var type: Type
         {
         return(self.enumeration.type)
