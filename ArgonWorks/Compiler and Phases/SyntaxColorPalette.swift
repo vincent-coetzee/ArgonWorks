@@ -75,7 +75,7 @@ extension SyntaxColorPalette
         palette[SyntaxColor.byte.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.character.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.type.rawValue] = NSColor.cyan
-        palette[SyntaxColor.method.rawValue] = NSColor.argonThemeBlueGreen
+        palette[SyntaxColor.method.rawValue] = NSColor.argonNeonOrange
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside
         palette[SyntaxColor.path.rawValue] = NSColor.argonZomp

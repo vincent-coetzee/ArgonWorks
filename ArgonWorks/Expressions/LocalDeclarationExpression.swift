@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class VariableExpression: Expression
+public class LocalDeclarationExpression: Expression
     {
     public override var isVariableExpression: Bool
         {

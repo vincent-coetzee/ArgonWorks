@@ -9,6 +9,11 @@ import Foundation
 
 public class SlotExpression: Expression
     {
+    public override var assignedSlots: Slots
+        {
+        return([self.localSlot])
+        }
+        
     public override var displayString: String
         {
         return("\(self.slot.label)")
@@ -75,6 +80,12 @@ public class SlotExpression: Expression
         return(self.slot.type)
         }
 
+    public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+        try value.emitCode(into: instance, using: using)
+        instance.append("MOV",value.place,.none,.relocatable(.slot(self.slot)))
+        }
+        
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
         let temp = instance.nextTemporary()

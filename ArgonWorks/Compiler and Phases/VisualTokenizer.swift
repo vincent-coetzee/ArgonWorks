@@ -118,7 +118,7 @@ public class VisualTokenizer: SemanticTokenRenderer
             }
         else if kind == .method
             {
-            let color = NSColor(red: 156,green: 194, blue: 60)
+            let color = NSColor.argonNeonOrange
             let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
             self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
             }

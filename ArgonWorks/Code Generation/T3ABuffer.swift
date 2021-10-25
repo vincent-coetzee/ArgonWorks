@@ -91,7 +91,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         {
         if self.pendingLabel.isNotNil && label.isNotNil
             {
-            fatalError("Clash of the labels - pedning label is not nil and so is incoming label")
+            fatalError("Clash of the labels - pending label is not nil and so is incoming label")
             }
         else if label.isNotNil
             {

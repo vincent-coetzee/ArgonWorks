@@ -9,6 +9,11 @@ import Foundation
 
 public class Expression: NSObject,NSCoding
     {
+    public var assignedSlots: Slots
+        {
+        fatalError()
+        }
+        
     public var enumerationCaseHasAssociatedTypes: Bool
         {
         return(false)
@@ -51,7 +56,7 @@ public class Expression: NSObject,NSCoding
         
     public func assign(_ operation: Token.Operator,_ index:Expression) -> Expression
         {
-        return(AssignmentExpression(self,operation,index))
+        return(AssignmentOperatorExpression(self,operation,index))
         }
         
     public func slot(_ index:Expression) -> Expression
@@ -200,6 +205,10 @@ public class Expression: NSObject,NSCoding
     public func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
 //        fatalError("This should have been implemented")
+        }
+        
+    public func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
+        {
         }
         
     public func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws

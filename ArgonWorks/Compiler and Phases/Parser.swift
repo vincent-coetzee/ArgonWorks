@@ -1862,9 +1862,23 @@ public class Parser: CompilerPass
         
     private func parseExpression() throws -> Expression
         {
-        let expression = try self.parseOperatorExpression()
+        let expression = try self.parseAssignExpression()
         expression.setContext(self.currentContext)
         return(expression)
+        }
+        
+    private func parseAssignExpression() throws -> Expression
+        {
+        let lhs = try self.parseOperatorExpression()
+        if self.token.isAssign
+            {
+            try self.nextToken()
+            let rhs = try self.parseOperatorExpression()
+            let expression = AssignmentExpression(lhs,rhs)
+            expression.compiler = self.compiler
+            return(expression)
+            }
+        return(lhs)
         }
         
     private func parseOperatorExpression() throws -> Expression
@@ -1988,8 +2002,8 @@ public class Parser: CompilerPass
                     }
                 else
                     {
-                    lhs = SlotAccessExpression(lhs,selector: self.token.identifier)
-                    self.dispatchWarning("The slot at selector '\(self.token.identifier)' can not be resolved, so the type of this expression can not be resolved.")
+                    lhs = SlotAccessExpression(lhs,selector: selector)
+                    self.dispatchWarning("The slot at selector '\(selector)' can not be resolved, so the type of this expression can not be resolved.")
                     }
                 }
             try self.nextToken()
@@ -2007,14 +2021,43 @@ public class Parser: CompilerPass
         let aCase = expression.enumerationCase
         let types = aCase.associatedTypes
         var values = Expressions()
+        var isInducing = false
+        var variableNames = Array<String>()
         try self.parseParentheses
             {
             repeat
                 {
                 try self.parseComma()
-                values.append(try self.parseExpression())
+                if self.token.isIdentifier && isInducing
+                    {
+                    variableNames.append(self.token.identifier)
+                    try self.nextToken()
+                    }
+                else if self.token.isIdentifier && self.currentContext.lookup(label: self.token.identifier).isNil
+                    {
+                    isInducing = true
+                    variableNames.append(self.token.identifier)
+                    try self.nextToken()
+                    }
+                else
+                    {
+                    values.append(try self.parseExpression())
+                    }
                 }
             while self.token.isComma
+            }
+        if isInducing
+            {
+            let newLeft = AssociatedValueInductionExpression(expression,variableNames)
+            for slot in newLeft.slots
+                {
+                self.addSymbol(slot)
+                }
+            if newLeft.enumerationCase.associatedTypes.count != newLeft.slots.count
+                {
+                fatalError()
+                }
+            return(newLeft)
             }
         if values.count != types.count
             {
@@ -2489,7 +2532,9 @@ public class Parser: CompilerPass
             }
         else
             {
-            let term = VariableExpression(label: name.last)
+            let localSlot = LocalSlot(label: name.last,type: .unknown,value: nil)
+            let term = SlotExpression(slot: localSlot)
+            localSlot.addDeclaration(location)
             term.addDeclaration(location)
             return(term)
             }
@@ -2799,24 +2844,13 @@ public class Parser: CompilerPass
         self.startClip()
         let location = self.token.location
         try self.nextToken()
-        var lhs = try self.parseExpression()
-        if lhs.isVariableExpression
+        let expression = try self.parseExpression()
+        let statement = LetBlock(location: location,expression: expression)
+        for slot in expression.assignedSlots
             {
-            let label = (lhs as! VariableExpression).label
-            let localSlot = LocalSlot(label: label,type:Type.unknown,value: nil)
-            self.currentContext.addSymbol(localSlot)
-            lhs = SlotExpression(slot: localSlot)
+            self.addSymbol(slot)
             }
-        if !self.token.isAssign
-            {
-            self.dispatchError("'=' expected after LET keyword.")
-            }
-        try self.nextToken()
-        let rhs = try self.parseExpression()
-        let statement = LetBlock(location: self.token.location,lhs: lhs,rhs: rhs)
-        lhs.imposeType(rhs.type)
-        rhs.setParent(statement)
-        lhs.setParent(statement)
+        expression.setParent(statement)
         statement.addDeclaration(location)
         block.addBlock(statement)
         self.stopClip(into: statement)
@@ -2947,18 +2981,18 @@ public class Parser: CompilerPass
                 self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
                 }
             try self.nextToken()
+            end = try self.parseExpression()
+            if !self.token.isSemicolon
+                {
+                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
+                }
+            try self.nextToken()
             repeat
                 {
                 try self.parseComma()
                 update.append(try self.parseExpression())
                 }
             while self.token.isComma
-            if !self.token.isSemicolon
-                {
-                self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
-                }
-            try self.nextToken()
-            end = try self.parseExpression()
             }
         return((start,end,update))
         }

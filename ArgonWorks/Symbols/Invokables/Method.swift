@@ -10,6 +10,11 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var allNamedInvokables: Array<NamedInvokable>
+        {
+        return(self.instances.map{NamedInvokable(fullName: $0.fullName, invokable: $0)})
+        }
+        
     public override var isInvokable: Bool
         {
         return(true)

@@ -408,4 +408,10 @@ public class InstructionItem: FileItem
         {
         self.instruction = instruction
         }
+        
+    public override func configure(cell: FileItemCellView)
+        {
+        super.configure(cell: cell)
+        cell.textField?.font = NSFont(name: "Menlo",size: 11)!
+        }
     }

@@ -9,31 +9,27 @@ import Foundation
 
 public class LetBlock: Block
     {
-    private let lhs:Expression
-    private let rhs:Expression
+    private let expression:Expression
     private let location:Location
     
-    public init(location:Location,lhs:Expression,rhs:Expression)
+    public init(location:Location,expression:Expression)
         {
         self.location = location
-        self.lhs = lhs
-        self.rhs = rhs
+        self.expression = expression
         super.init()
         }
         
     public required init?(coder: NSCoder)
         {
         self.location = coder.decodeLocation(forKey: "location")
-        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
-        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        self.expression = coder.decodeObject(forKey: "expression") as! Expression
         super.init(coder: coder)
         }
         
     public override func encode(with coder:NSCoder)
         {
         coder.encodeLocation(self.location,forKey: "location")
-        coder.encode(self.lhs,forKey: "lhs")
-        coder.encode(self.lhs,forKey: "rhs")
+        coder.encode(self.expression,forKey: "expression")
         super.encode(with: coder)
         }
         
@@ -48,10 +44,6 @@ public class LetBlock: Block
         
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-        try self.lhs.emitCode(into: buffer, using: generator)
-        try self.rhs.emitCode(into: buffer, using: generator)
-        
-//        let place = self.value.place
-//        buffer.append(.STORE,place,.none,self.slot.addresses.mostEfficientAddress.operand)
+        try self.expression.emitCode(into: buffer,using: generator)
         }
     }

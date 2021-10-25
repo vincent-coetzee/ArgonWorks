@@ -9,6 +9,11 @@ import Foundation
 
 public class SlotAccessExpression: Expression
     {
+    public override var assignedSlots: Slots
+        {
+        return([self.slot as! Slot])
+        }
+        
     public override var enumerationCaseHasAssociatedTypes: Bool
         {
         if self.slot.isNotNil,let aCase = self.slot as? EnumerationCase,aCase.hasAssociatedTypes
@@ -108,12 +113,11 @@ public class SlotAccessExpression: Expression
             {
             return(.unknown)
             }
-        let aClass = receiverType.class
         if self.slot.isNotNil
             {
             return(self.slot!.type)
             }
-        if let identifier = (self.slotExpression as? SlotSelectorExpression)?.selector,let aSlot = aClass.slotWithLabel(identifier)
+        if let aSelector = self.selector,let aSlot = receiverType.lookup(label: aSelector) as? Slot
             {
             return(aSlot.type)
             }

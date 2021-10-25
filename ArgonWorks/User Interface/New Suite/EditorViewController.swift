@@ -154,7 +154,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         self.bottomRightText.stringValue = ""
         self.currentItem.appendItem(self.warningItem)
         self.outliner.register(NSNib(nibNamed: "FileItemCellView", bundle: nil), forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FileItemCellView"))
-        self.outliner.rowHeight = 24
+        self.outliner.rowHeight = 20
         self.outliner.indentationPerLevel = 30
         self.outliner.intercellSpacing = CGSize(width: 0,height: 0)
         self.currentItem.appendItem(SourceItem(name:"LogicA",path: "/A/B"))
