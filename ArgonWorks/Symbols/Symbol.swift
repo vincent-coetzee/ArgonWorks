@@ -10,6 +10,11 @@ import AppKit
 
 public class Symbol:Node,ParseNode
     {
+    public var allNamedInvokables: Array<NamedInvokable>
+        {
+        []
+        }
+        
     public var allImportedSymbols: Symbols
         {
         []
@@ -441,7 +446,7 @@ public class Symbol:Node,ParseNode
         
     public func children(forChildType type: ChildType) -> Array<Symbol>
         {
-        let allKids = self.children ?? []
+        let allKids = self.children
         if type == .class
             {
             return(allKids.filter{$0 is Class || $0 is SymbolGroup}.sorted{$0.label < $1.label})

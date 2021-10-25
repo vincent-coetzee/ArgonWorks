@@ -28,4 +28,8 @@ public struct NullReportingContext:ReportingContext
         {
         print("Error Line \(at.line): \(message)")
         }
+        
+    public func status(_ string: String)
+        {
+        }
     }

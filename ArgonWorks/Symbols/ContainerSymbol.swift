@@ -57,6 +57,23 @@ public enum JournalEntry
     
 public class ContainerSymbol:Symbol
     {
+    public override var allNamedInvokables: Array<NamedInvokable>
+        {
+        var buffer = Array<NamedInvokable>()
+        for symbol in self.symbols
+            {
+            if symbol is Invokable
+                {
+                buffer.append(NamedInvokable(fullName: symbol.fullName, invokable: symbol as! Invokable))
+                }
+            else
+                {
+                buffer.append(contentsOf: symbol.allNamedInvokables)
+                }
+            }
+        return(buffer)
+        }
+        
     public override var allImportedSymbols: Symbols
         {
         var importedSymbols = Symbols()

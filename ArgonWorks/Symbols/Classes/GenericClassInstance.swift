@@ -62,5 +62,8 @@ public class GenericClassInstance:Class
         super.init(label:label)
         }
         
- 
+    public override func lookup(label: Label) -> Symbol?
+        {
+        return(self.sourceClass.lookup(label: label))
+        }
     }

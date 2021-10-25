@@ -10,6 +10,7 @@ import Foundation
 public protocol ReportingContext
     {
     func resetReporting()
+    func status(_ string:String)
     func dispatchWarning(at:Location,message:String)
     func dispatchError(at:Location,message:String)
     }

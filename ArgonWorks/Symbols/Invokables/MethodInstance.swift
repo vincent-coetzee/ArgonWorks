@@ -117,7 +117,12 @@ public class MethodInstance: Function
 ///
 ///
 public class StandardMethodInstance: MethodInstance, StackFrame
-    {        
+    {
+    public override var instructions: Array<T3AInstruction>
+        {
+        self.buffer.instructions
+        }
+        
     public var localSlots: Slots
         {
         self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})

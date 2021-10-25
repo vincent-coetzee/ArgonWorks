@@ -14,6 +14,11 @@ public class Invokable: Symbol
         return(true)
         }
         
+    public var instructions: Array<T3AInstruction>
+        {
+        fatalError()
+        }
+        
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters

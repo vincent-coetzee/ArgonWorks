@@ -244,7 +244,7 @@ Gw
                                         <menuItem title="Close" keyEquivalent="w" id="DVo-aG-piG"/>
                                         <menuItem title="Save…" keyEquivalent="s" id="pxx-59-PXV">
                                             <connections>
-                                                <action selector="save:" target="Ady-hI-5gd" id="hJZ-Kd-pw6"/>
+                                                <action selector="onSaveFile:" target="Ady-hI-5gd" id="4ib-4Z-34C"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem title="Save As…" keyEquivalent="S" id="Bw7-FT-i3A">
@@ -883,7 +883,7 @@ Gw
                 <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="0.0"/>
+            <point key="canvasLocation" x="1187" y="-729"/>
         </scene>
         <!--Window Controller-->
         <scene sceneID="RtZ-lX-Wyw">
@@ -1178,27 +1178,6 @@ Gw
             <point key="canvasLocation" x="1094.5" y="789.5"/>
         </scene>
         <!--Window Controller-->
-        <scene sceneID="R2V-B0-nI4">
-            <objects>
-                <windowController storyboardIdentifier="Document Window Controller" id="jGA-0Y-lOj" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Ckk-yw-fiv">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="196" y="240" width="480" height="270"/>
-                        <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
-                        <connections>
-                            <outlet property="delegate" destination="jGA-0Y-lOj" id="98r-iN-zZc"/>
-                        </connections>
-                    </window>
-                    <connections>
-                        <segue destination="5gI-5U-AMq" kind="relationship" relationship="window.shadowedContentViewController" id="nsd-lR-9xd"/>
-                    </connections>
-                </windowController>
-                <customObject id="6f7-a7-6o1" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-764" y="310"/>
-        </scene>
-        <!--Window Controller-->
         <scene sceneID="8Aa-7I-zIo">
             <objects>
                 <windowController storyboardIdentifier="MemoryWindowController" id="LmZ-zz-ovN" sceneMemberID="viewController">
@@ -1477,9 +1456,9 @@ Gw
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
                                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YZf-XW-Gf8">
-                                                <rect key="frame" x="0.0" y="0.0" width="189" height="194"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="169" height="194"/>
                                                 <clipView key="contentView" id="FbL-Tj-AHL">
-                                                    <rect key="frame" x="1" y="1" width="187" height="192"/>
+                                                    <rect key="frame" x="1" y="1" width="167" height="192"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
                                                         <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" viewBased="YES" indentationPerLevel="20" outlineTableColumn="UDu-Fz-Vv4" id="exe-dv-MsO">
@@ -1530,7 +1509,7 @@ Gw
                                                     </subviews>
                                                 </clipView>
                                                 <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="O2v-AQ-7xm">
-                                                    <rect key="frame" x="1" y="177" width="187" height="16"/>
+                                                    <rect key="frame" x="1" y="177" width="167" height="16"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </scroller>
                                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="4kg-ZU-qIf">
@@ -1539,7 +1518,7 @@ Gw
                                                 </scroller>
                                             </scrollView>
                                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="bYJ-6J-U0b" customClass="HeaderView" customModule="ArgonWorks" customModuleProvider="target">
-                                                <rect key="frame" x="0.0" y="190" width="169" height="30"/>
+                                                <rect key="frame" x="0.0" y="190" width="149" height="30"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="30" id="Hx8-2s-sCX"/>
                                                 </constraints>
@@ -3809,33 +3788,6 @@ Gw
                 <customObject id="OpP-Dy-j85" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="3324.5" y="1674"/>
-        </scene>
-        <!--View Controller-->
-        <scene sceneID="hIz-AP-VOD">
-            <objects>
-                <viewController id="5gI-5U-AMq" customClass="ViewController" customModule="ArgonWorks" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" id="ERx-hH-rdd">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
-                        <autoresizingMask key="autoresizingMask"/>
-                        <subviews>
-                            <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="246" translatesAutoresizingMaskIntoConstraints="NO" id="TyV-c9-G0C">
-                                <rect key="frame" x="117" y="125" width="246" height="21"/>
-                                <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="center" title="Your document contents here" id="Cc7-nU-5Mv">
-                                    <font key="font" metaFont="system" size="18"/>
-                                    <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
-                        </subviews>
-                        <constraints>
-                            <constraint firstAttribute="centerY" secondItem="TyV-c9-G0C" secondAttribute="centerY" id="Rxv-Yd-F43"/>
-                            <constraint firstAttribute="centerX" secondItem="TyV-c9-G0C" secondAttribute="centerX" id="Zn4-Y4-lbg"/>
-                        </constraints>
-                    </view>
-                </viewController>
-                <customObject id="2Tp-Fl-jBw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="-764" y="715"/>
         </scene>
     </scenes>
     <resources>

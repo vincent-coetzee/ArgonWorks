@@ -263,6 +263,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.errorListView?.reloadData()
         self.refreshSourceAnnotations()
         }
+        
+    public func status(_ string: String)
+        {
+        }
     
     public func resetReporting()
         {

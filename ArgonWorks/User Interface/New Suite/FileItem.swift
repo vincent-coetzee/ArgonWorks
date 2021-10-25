@@ -327,3 +327,85 @@ public class SymbolItem: FileItem
         self.kids = self.symbol.children.map{SymbolItem(symbol: $0)}
         }
     }
+
+public class InvokableItem: FileItem
+    {
+    public override var tintColor: NSColor
+        {
+        return(NSColor.argonThemeBlueGreen)
+        }
+        
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "bolt.circle", accessibilityDescription: nil)!)
+        }
+        
+    public override var displayString: String
+        {
+        self.invokable.fullName.displayString
+        }
+        
+    public override var childCount: Int
+        {
+        self.kids.count
+        }
+        
+    public override var isExpandable: Bool
+        {
+        self.kids.count > 0
+        }
+        
+    public override func child(atIndex: Int) -> FileItem
+        {
+        self.kids[atIndex]
+        }
+        
+    public let invokable: NamedInvokable
+    private var kids: FileItems = []
+    
+    init(invokable: NamedInvokable)
+        {
+        self.invokable = invokable
+        self.kids = invokable.instructions.map{InstructionItem(instruction: $0)}
+        }
+    }
+
+public class InstructionItem: FileItem
+    {
+    public override var tintColor: NSColor
+        {
+        return(NSColor.argonThemeBlueGreen)
+        }
+        
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "asterisk.circle", accessibilityDescription: nil)!)
+        }
+        
+    public override var displayString: String
+        {
+        self.instruction.displayString
+        }
+        
+    public override var childCount: Int
+        {
+        0
+        }
+        
+    public override var isExpandable: Bool
+        {
+        false
+        }
+        
+    public override func child(atIndex: Int) -> FileItem
+        {
+        fatalError()
+        }
+        
+    public let instruction: T3AInstruction
+    
+    init(instruction: T3AInstruction)
+        {
+        self.instruction = instruction
+        }
+    }

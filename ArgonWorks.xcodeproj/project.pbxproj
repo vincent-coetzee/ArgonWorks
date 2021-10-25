@@ -28,6 +28,7 @@
 		BF122B372724714B00B53083 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF122B362724714B00B53083 /* Date+Extensions.swift */; };
 		BF122B3927248E6500B53083 /* FileItemCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF122B3827248E6500B53083 /* FileItemCellView.swift */; };
 		BF122B3B27248E7800B53083 /* FileItemCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = BF122B3A27248E7800B53083 /* FileItemCellView.xib */; };
+		BF122B3D2726B26700B53083 /* NamedInvokable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF122B3C2726B26700B53083 /* NamedInvokable.swift */; };
 		BF178A6D271028FD00AE2D7F /* T3ABuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF178A6C271028FD00AE2D7F /* T3ABuffer.swift */; };
 		BF178A6F2710291B00AE2D7F /* T3ALabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF178A6E2710291B00AE2D7F /* T3ALabel.swift */; };
 		BF178A712710293D00AE2D7F /* T3AInstruction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF178A702710293D00AE2D7F /* T3AInstruction.swift */; };
@@ -325,6 +326,7 @@
 		BF122B362724714B00B53083 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
 		BF122B3827248E6500B53083 /* FileItemCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItemCellView.swift; sourceTree = "<group>"; };
 		BF122B3A27248E7800B53083 /* FileItemCellView.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FileItemCellView.xib; sourceTree = "<group>"; };
+		BF122B3C2726B26700B53083 /* NamedInvokable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedInvokable.swift; sourceTree = "<group>"; };
 		BF178A6C271028FD00AE2D7F /* T3ABuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = T3ABuffer.swift; sourceTree = "<group>"; };
 		BF178A6E2710291B00AE2D7F /* T3ALabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = T3ALabel.swift; sourceTree = "<group>"; };
 		BF178A702710293D00AE2D7F /* T3AInstruction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = T3AInstruction.swift; sourceTree = "<group>"; };
@@ -967,6 +969,7 @@
 				BF179A1F271D829700A07626 /* PrimitiveMethodInstance.swift */,
 				BFC1ED9926CFFADC009B7C34 /* SystemMethod.swift */,
 				BFC1ED9226CFFADC009B7C34 /* SystemMethodInstance.swift */,
+				BF122B3C2726B26700B53083 /* NamedInvokable.swift */,
 			);
 			path = Invokables;
 			sourceTree = "<group>";
@@ -1338,6 +1341,7 @@
 				BFC1EE2D26CFFAF6009B7C34 /* TokenMappedView.swift in Sources */,
 				BFC1ED5E26CFFABA009B7C34 /* Realizer.swift in Sources */,
 				BFC1ECF226CFFA9F009B7C34 /* ObjectPointer.swift in Sources */,
+				BF122B3D2726B26700B53083 /* NamedInvokable.swift in Sources */,
 				BFC1ED6326CFFABA009B7C34 /* Register.swift in Sources */,
 				BFC1EE0326CFFADC009B7C34 /* Importer.swift in Sources */,
 				BFC1ED7426CFFAC0009B7C34 /* NullReportingContext.swift in Sources */,

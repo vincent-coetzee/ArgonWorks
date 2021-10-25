@@ -115,6 +115,8 @@ public class Parser: CompilerPass
     private var lineNumber:LineNumber = EmptyLineNumber()
     private var reportingContext:ReportingContext = NullReportingContext.shared
     private var tokenRenderer: SemanticTokenRenderer!
+    private var warningCount = 0
+    private var errorCount = 0
     
     init(compiler:Compiler,source: String)
         {
@@ -235,6 +237,8 @@ public class Parser: CompilerPass
         {
         do
             {
+            self.warningCount = 0
+            self.errorCount = 0
             try self.nextToken()
             let modifier = try self.parseModifier()
             if self.token.isEnd
@@ -264,12 +268,14 @@ public class Parser: CompilerPass
                     parseNode = try self.parseModule()
                     }
                 parseNode?.privacyScope = modifier
+                self.reportingContext.status("Parsing complete: \(self.warningCount) warnings, \(self.errorCount) errors.")
                 return(parseNode)
                 }
             }
         catch
             {
             }
+        self.reportingContext.status("Parsing failed.")
         return(nil)
         }
         
@@ -1130,9 +1136,16 @@ public class Parser: CompilerPass
                 {
                 try self.parseComma()
                 let name = try self.parseName()
-                if self.currentContext.lookup(name: name).isNotNil
+                if let value = self.currentContext.lookup(name: name)
                     {
-                    self.dispatchError(at: self.token.location,"A concrete type '\(name.displayString) is not valid here.")
+                    if value.isGenericClassParameter
+                        {
+                        types.append(value as! GenericClassParameter)
+                        }
+                    else
+                        {
+                        self.dispatchError(at: self.token.location,"A concrete type '\(name.displayString) is not valid here.")
+                        }
                     }
                 else
                     {
@@ -1249,6 +1262,10 @@ public class Parser: CompilerPass
         aClass.addDeclaration(location)
         self.addSymbol(aClass)
         self.pushContext(aClass)
+        for parameter in parameters
+            {
+            self.addSymbol(parameter)
+            }
         if self.token.isGluon
             {
             aClass.isForwardReferenced = false
@@ -1264,7 +1281,7 @@ public class Parser: CompilerPass
             }
         try self.parseBraces
             {
-            while self.token.isSlot || self.token.isClass
+            while self.token.isSlot || self.token.isClass || self.token.isCocoon
                 {
                 if self.token.isCocoon
                     {
@@ -1279,9 +1296,15 @@ public class Parser: CompilerPass
                     }
                 else if self.token.isClass
                     {
-                    let slot = try self.parseClassSlot()
-                    slot.tag = self.currentTag
-                    aClass.metaclass?.addSymbol(slot)
+                    if try self.peekToken1().isSlot
+                        {
+                        let slot = try self.parseClassSlot()
+                        aClass.metaclass?.addSymbol(slot)
+                        }
+                    else
+                        {
+                        let innerClass = try self.parseClass()
+                        }
                     }
                 }
             }
@@ -1374,21 +1397,25 @@ public class Parser: CompilerPass
         
     private func dispatchWarning(at location: Location,_ message:String)
         {
+        self.warningCount += 1
         self.reportingContext.dispatchWarning(at: location,message: message)
         }
         
     private func dispatchError(_ message:String)
         {
+        self.errorCount += 1
         self.reportingContext.dispatchError(at: self.token.location,message: message)
         }
         
     private func dispatchWarning(_ message:String)
         {
+        self.warningCount += 1
         self.reportingContext.dispatchWarning(at: self.token.location,message: message)
         }
         
     private func dispatchError(at location: Location,_ message:String)
         {
+        self.errorCount += 1
         self.reportingContext.dispatchError(at: location,message: message)
         }
         
@@ -1755,22 +1782,22 @@ public class Parser: CompilerPass
             if list.count != existingMethod!.proxyParameters.count
                 {
                 self.cancelCompletion()
-                self.dispatchError("The multimethod '\(existingMethod!.label)' is defined,this parameter set is different to the existing one.")
+                self.dispatchError(at: location, "The multimethod '\(existingMethod!.label)' is defined,but this parameter set is different from the existing one.")
                 }
             if returnType != existingMethod!.returnType
                 {
                 self.cancelCompletion()
-                self.dispatchError("The multimethod '\(existingMethod!.label)' declared in line \(String(describing: existingMethod!.declaration?.line)) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
+                self.dispatchError(at: location,"The multimethod '\(existingMethod!.label)' declared in line \(String(describing: existingMethod!.declaration?.line)) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
                 }
             for (yours,mine) in zip(list,existingMethod!.proxyParameters)
                 {
                 if yours.tag != mine.tag
                     {
-                    self.dispatchError("The multimethod '\(existingMethod!.label)' has tag '\(mine.tag)' in the position of '\(yours.tag)', tags must match on multimethod instances.")
+                    self.dispatchError(at: location,"The multimethod '\(existingMethod!.label)' has tag '\(mine.tag)' in the position of '\(yours.tag)', tags must match on multimethod instances.")
                     }
                 if yours.isHidden != mine.isHidden
                     {
-                    self.dispatchError("The multimethod '\(existingMethod!.label)' has tag '\(mine.tag)' which differs in visibility from the tag '\(yours.tag)'.")
+                    self.dispatchError(at: location,"The multimethod '\(existingMethod!.label)' has tag '\(mine.tag)' which differs in visibility from the tag '\(yours.tag)'.")
                     }
                 }
             }

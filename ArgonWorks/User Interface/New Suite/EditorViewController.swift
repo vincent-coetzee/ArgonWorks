@@ -8,8 +8,71 @@
 import Cocoa
 import UniformTypeIdentifiers
 
-class EditorViewController: NSViewController,SourceEditorDelegate,ReportingContext
+public class Rectangle: NSObject,NSCoding
     {
+    internal let x: CGFloat
+    internal let y: CGFloat
+    internal let width: CGFloat
+    internal let height: CGFloat
+    
+    init(_ rect: NSRect)
+        {
+        self.x = rect.minX
+        self.y = rect.minY
+        self.width = rect.width
+        self.height = rect.height
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.x = coder.decodeDouble(forKey: "x")
+        self.y = coder.decodeDouble(forKey: "y")
+        self.width = coder.decodeDouble(forKey: "width")
+        self.height = coder.decodeDouble(forKey: "height")
+        }
+        
+    public func encode(with coder:NSCoder)
+        {
+        coder.encode(self.x,forKey: "x")
+        coder.encode(self.y,forKey: "y")
+        coder.encode(self.width,forKey: "width")
+        coder.encode(self.height,forKey: "height")
+        }
+    }
+    
+extension NSRect
+    {
+    init(_ rectangle: Rectangle)
+        {
+        self.init(x: rectangle.x,y: rectangle.y,width: rectangle.width,height: rectangle.height)
+        }
+    }
+    
+extension UserDefaults
+    {
+    func rectangle(forKey: String) -> NSRect?
+        {
+        let x = self.double(forKey: forKey + "x")
+        let y = self.double(forKey: forKey + "y")
+        let width = self.double(forKey: forKey + "width")
+        let height = self.double(forKey: forKey + "height")
+        return(NSRect(x:x,y:y,width:width,height: height))
+        }
+        
+    func set(_ rectangle: NSRect,forKey: String)
+        {
+        self.set(rectangle.minX,forKey: forKey + "x")
+        self.set(rectangle.minY,forKey: forKey + "y")
+        self.set(rectangle.width,forKey: forKey + "width")
+        self.set(rectangle.height,forKey: forKey + "height")
+        }
+    }
+    
+class EditorViewController: NSViewController,SourceEditorDelegate,ReportingContext,NSWindowDelegate
+    {
+    private static let kWindowFrameKey = "EditorViewControllerWindowFrame"
+    private static let kWindowURLKey = "EditorViewControllerWindowURL"
+    
     @IBOutlet var topBar: NSView!
     @IBOutlet var bottomBar: NSView!
     @IBOutlet var editorView: LineNumberTextView!
@@ -32,6 +95,51 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         super.viewDidLoad()
         self.initViews()
         self.initEditing()
+        }
+
+    override func viewDidAppear()
+        {
+        super.viewDidAppear()
+        self.view.window?.delegate = self
+        let defaults = UserDefaults.standard
+        if let rectangle = defaults.rectangle(forKey: Self.kWindowFrameKey)
+            {
+            self.view.window!.setFrame(rectangle,display: true,animate: true)
+            }
+        if let name = defaults.string(forKey: Self.kWindowURLKey)
+            {
+            self.currentSourceFileURL = URL(string: name)
+            if let url = currentSourceFileURL,let string = try? String(contentsOf: url)
+                {
+                self.resetReporting()
+                let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
+                self.editorView.textStorage?.setAttributedString(mutableString)
+                self.tokenizer.update(self.editorView.string)
+                self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
+                let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+                self.currentItem.appendItem(SymbolItem(symbol: node as! Symbol))
+                self.outliner.reloadData()
+                self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
+                }
+            }
+        }
+        
+    public func windowWillResize(_ window: NSWindow,to size: NSSize) -> NSSize
+        {
+        if UserDefaults.standard.rectangle(forKey: Self.kWindowFrameKey).isNil
+            {
+            UserDefaults.standard.set(self.view.window!.frame,forKey: Self.kWindowFrameKey)
+            }
+        var frame = self.view.window!.frame
+        frame.size = size
+        UserDefaults.standard.set(frame,forKey: Self.kWindowFrameKey)
+        return(size)
+        }
+        
+    public func windowWillClose(_ notification: Notification)
+        {
+        UserDefaults.standard.set(self.view.window!.frame,forKey: Self.kWindowFrameKey)
+        UserDefaults.standard.set(self.currentSourceFileURL?.absoluteString,forKey: Self.kWindowURLKey)
         }
         
     private func initViews()
@@ -75,6 +183,11 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
     private func scrollToLineNumber(_ line: Int)
         {
         self.editorView.scrollToLine(line)
+        }
+        
+    public func status(_ string: String)
+        {
+        self.topLeftText.stringValue = string
         }
         
     public func dispatchWarning(at: Location, message: String)
@@ -200,6 +313,11 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
                 let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
                 self.currentItem.appendItem(SymbolItem(symbol: node as! Symbol))
+                let named = (node as! Symbol).allNamedInvokables
+                for item in named
+                    {
+                    self.currentItem.appendItem(InvokableItem(invokable: item))
+                    }
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
                 }
@@ -298,7 +416,15 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         {
         let source = self.editorView.string
         self.resetReporting()
-        Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+        if let node = Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+            {
+            let named = (node as! Symbol).allNamedInvokables
+            for item in named
+                {
+                self.currentItem.appendItem(InvokableItem(invokable: item))
+                }
+            self.outliner.reloadData()
+            }
         }
     }
 
