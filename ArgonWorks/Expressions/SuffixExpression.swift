@@ -11,49 +11,49 @@ public class SuffixExpression: Expression
     {
     public override var type: Type
         {
-        return(self.expression.type)
+        return(self.slotExpression.type)
         }
         
     public override var displayString: String
         {
-        return("\(self.expression.displayString) \(String(describing: self.operation))")
+        return("\(self.slotExpression.displayString) \(String(describing: self.operation))")
         }
         
     public let operationName: String
-    public let expression: Expression
+    public let slotExpression: SlotExpression
     
     required init?(coder: NSCoder)
         {
         self.operationName = coder.decodeString(forKey: "operationName")!
-        self.expression = coder.decodeObject(forKey: "expression") as! Expression
+        self.slotExpression = coder.decodeObject(forKey: "slotExpression") as! SlotExpression
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.expression,forKey: "expression")
+        coder.encode(self.slotExpression,forKey: "slotExpression")
         coder.encode(self.operationName,forKey: "operationName")
         }
         
-    init(_ expression:Expression,_ operation:Token.Operator)
+    init(_ slotExpression:SlotExpression,_ operation:Token.Operator)
         {
         self.operationName = operation.name
-        self.expression = expression
+        self.slotExpression = slotExpression
         super.init()
-        self.expression.setParent(self)
+        self.slotExpression.setParent(self)
         }
         
  
         
     public override func realize(using realizer: Realizer)
         {
-        self.expression.realize(using: realizer)
+        self.slotExpression.realize(using: realizer)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        self.expression.analyzeSemantics(using: analyzer)
+        self.slotExpression.analyzeSemantics(using: analyzer)
         }
         
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
@@ -62,13 +62,13 @@ public class SuffixExpression: Expression
             {
             instance.append(lineNumber: location.line)
             }
-        try self.expression.emitCode(into: instance,using: using)
+//        try self.expression.emitCode(into: instance,using: using)
         switch(self.operationName)
             {
             case "++":
-                instance.append(nil,"INC",self.expression.place,.none,self.expression.place)
+                instance.append(nil,"INC",.relocatable(.slot(self.slotExpression.slot)),.none,.none)
             case "--":
-                instance.append(nil,"DEC",self.expression.place,.none,self.expression.place)
+                instance.append(nil,"DEC",.relocatable(.slot(self.slotExpression.slot)),.none,.none)
             default:
                 break
             }

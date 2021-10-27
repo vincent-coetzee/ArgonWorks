@@ -155,7 +155,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         self.currentItem.appendItem(self.warningItem)
         self.outliner.register(NSNib(nibNamed: "FileItemCellView", bundle: nil), forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "FileItemCellView"))
         self.outliner.rowHeight = 20
-        self.outliner.indentationPerLevel = 30
+        self.outliner.indentationPerLevel = 25
         self.outliner.intercellSpacing = CGSize(width: 0,height: 0)
         self.currentItem.appendItem(SourceItem(name:"LogicA",path: "/A/B"))
         self.currentItem.appendItem(SourceItem(name:"Reasoning",path: "/A/B"))
@@ -445,7 +445,7 @@ extension EditorViewController:NSOutlineViewDelegate,NSOutlineViewDataSource
         
     @objc public func outlineView(_ outlineView: NSOutlineView, heightOfRowByItem item: Any) -> CGFloat
         {
-        return(20)
+        return(18)
         }
         
     @objc public func outlineView(_ outlineView: NSOutlineView, child index: Int, ofItem item: Any?) -> Any

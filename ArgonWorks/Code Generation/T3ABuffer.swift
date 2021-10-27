@@ -9,6 +9,11 @@ import Foundation
 
 public class T3ABuffer: NSObject,NSCoding,Collection
     {
+    public var hasPendingLabel: Bool
+        {
+        self.pendingLabel.isNotNil
+        }
+        
     public var count: Int
         {
         return(self.instructions.count)
@@ -79,6 +84,10 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func append(lineNumber: Int)
         {
+        guard self.currentOffset > 0 && !self.instructions[self.currentOffset - 1].operand1.isInteger(lineNumber) else
+            {
+            return
+            }
         self.append(nil,"LINE",.literal(.integer(Argon.Integer(lineNumber))),.none,.none)
         }
         
@@ -89,18 +98,45 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func append(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
         {
-        if self.pendingLabel.isNotNil && label.isNotNil
+        if opcode != "LINE" && opcode != "CMT"
             {
-            fatalError("Clash of the labels - pending label is not nil and so is incoming label")
+            if self.pendingLabel.isNotNil && label.isNotNil
+                {
+                fatalError("Clash of the labels - pending label is not nil and so is incoming label")
+                }
+            else if label.isNotNil
+                {
+                self.pendingLabel = label
+                }
             }
-        else if label.isNotNil
+        var instruction: T3AInstruction
+        if opcode == "LINE" || opcode == "CMT"
             {
-            self.pendingLabel = label
+            instruction = T3AInstruction(nil,opcode,operand1,operand2,result)
             }
-        let instruction = T3AInstruction(self.pendingLabel,opcode,operand1,operand2,result)
+        else
+            {
+            instruction = T3AInstruction(self.pendingLabel,opcode,operand1,operand2,result)
+            }
         instruction.offset = currentOffset
         self.currentOffset += 1
         self.instructions.append(instruction)
-        self.pendingLabel = nil
+        if opcode != "LINE" && opcode != "CMT"
+            {
+            self.pendingLabel = nil
+            }
+        }
+        
+    public func appendEntry(temporaryCount: Int)
+        {
+        self.append("PUSH",.framePointer,.none,.none)
+        self.append("MOV",.stackPointer,.none,.framePointer)
+        self.append("SUB",.stackPointer,.literal(.integer(Argon.Integer(8*temporaryCount))),.stackPointer)
+        }
+        
+    public func appendExit()
+        {
+        self.append("MOV",.framePointer,.stackPointer,.none)
+        self.append("POP",.framePointer,.none,.none)
         }
     }

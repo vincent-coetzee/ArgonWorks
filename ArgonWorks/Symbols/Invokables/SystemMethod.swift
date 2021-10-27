@@ -86,6 +86,22 @@ public class Primitive
         self.out = .class(out)
         }
         
+    init(_ label: String,left: Class)
+        {
+        self.left = left.type
+        self.label = label
+        self.right = nil
+        self.out = .class(VoidClass.voidClass)
+        }
+        
+    init(_ label: String,left: Class,right: Class)
+        {
+        self.left = left.type
+        self.label = label
+        self.right = right.type
+        self.out = .class(VoidClass.voidClass)
+        }
+        
     init(_ label: String,_ left:Class,_ right:String,_ out: Class)
         {
         self.left = .class(left)

@@ -7,40 +7,23 @@
 
 import Foundation
 
-public class TypeConstraint
+public class TypeValue
     {
-    private let name: String
-    private let type: Type?
-    
-    init(name: String,type: Type?)
-        {
-        self.name = name
-        self.type = type
-        }
     }
     
-public class TypeSubstitution
+public class ConstantTypeValue: TypeValue
     {
-    private var variables = Dictionary<String,Class>()
     }
     
-public class TypeInferencer
+public class VariableTypeValue: TypeValue
     {
-    private var constraintStack:Array<TypeConstraint> = []
-    private var typeSubstitution: TypeSubstitution = TypeSubstitution()
+    }
     
-    public func push(constraint: TypeConstraint)
-        {
-        self.constraintStack.append(constraint)
-        }
-        
-    public func unify() -> TypeSubstitution
-        {
-        while !self.constraintStack.isEmpty
-            {
-//            let constraint = self.constraintStack.popLast()
-            
-            }
-        return(self.typeSubstitution)
-        }
+public class SlotTypeValue: TypeValue
+    {
+    
+    }
+
+public class FunctionTypeValue: TypeValue
+    {
     }

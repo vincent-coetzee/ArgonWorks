@@ -142,6 +142,10 @@ public class MethodInvocationExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
         {
+        if self.method.label == "format"
+            {
+            print("halt")
+            }
         guard let location = self.declaration else
             {
             print("ERROR: not not locate expression")
@@ -157,14 +161,20 @@ public class MethodInvocationExpression: Expression
             instance.append(comment: "METHOD \(self.method.label) TYPES \(types.map{$0.label})")
             return
             }
-        var backwards = self.arguments
-        backwards.reverse()
-        for argument in backwards
+        var count:Argon.Integer = 0
+        for argument in self.arguments.reversed()
             {
             try argument.value.emitCode(into: instance, using: generator)
+            if argument.value.place.isNone
+                {
+                print("ERROR")
+                }
             instance.append(nil,"PUSH",argument.value.place,.none,.none)
+            count += 1
             }
         instance.append(nil,"CALL",.relocatable(.methodInstance(methodInstance!)),.none,.none)
+        instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
+        self._place = .returnRegister
         }
     }
 
@@ -223,7 +233,7 @@ public class FunctionInvocationExpression: Expression
             }
         }
         
-    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator)
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         if let location = self.declaration
             {

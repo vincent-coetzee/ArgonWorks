@@ -11,7 +11,7 @@ public class T3ALabel: NSObject,NSCoding
     {
     public var displayString: String
         {
-        String(format: "L%05d:",self.index)
+        String(format: "L%05d",self.index)
         }
         
     private static var nextIndex = 1

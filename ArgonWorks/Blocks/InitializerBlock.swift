@@ -9,11 +9,6 @@ import Foundation
 
 public class InitializerBlock: Block
     {
-    public override var firstInitializer: Initializer?
-        {
-        return(self.initializer)
-        }
-        
     private let initializer: Initializer
     
     public init(initializer: Initializer)

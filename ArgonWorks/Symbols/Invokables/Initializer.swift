@@ -7,15 +7,16 @@
 
 import Foundation
 
-public class Initializer:Invokable
+public class Initializer:Function
     {
-    public override var firstInitializer: Initializer?
+    public override var instructions: Array<T3AInstruction>
         {
-        return(self)
+        self.buffer.instructions
         }
         
     internal private(set) var block = Block()
     internal var declaringClass: Class?
+    private let buffer = T3ABuffer()
     
     public override var typeCode:TypeCode
         {
@@ -26,6 +27,7 @@ public class Initializer:Invokable
         {
         super.init(label: label)
         self.block = InitializerBlock(initializer: self)
+        self.block.setParent(self)
         }
             
     public required init?(coder: NSCoder)
@@ -41,4 +43,18 @@ public class Initializer:Invokable
         coder.encode(self.declaringClass,forKey: "declaringClass")
         super.encode(with: coder)
         }
+        
+    public override func emitCode(using: CodeGenerator) throws
+        {
+        try self.emitCode(into: self.buffer,using: using)
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        buffer.appendEntry(temporaryCount: 0)
+        try self.block.emitCode(into: buffer, using: using)
+        buffer.appendExit()
+        buffer.append("RET",.none,.none,.none)
+        }
+        
 }

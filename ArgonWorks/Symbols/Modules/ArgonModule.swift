@@ -272,6 +272,11 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Character") as! Class)
         }
         
+    public var variadicParameter: Class
+        {
+        return(self.lookup(label: "VariadicParameter") as! Class)
+        }
+        
     public var enumeration: Class
         {
         return(self.lookup(label: "Enumeration") as! Class)
@@ -304,7 +309,7 @@ public class ArgonModule: SystemModule
     public override func resolveReferences(topModule: TopModule)
         {
         super.resolveReferences(topModule: topModule)
-        self.layout()
+//        self.layout()
         }
         
     private func initTypes()
@@ -364,6 +369,7 @@ public class ArgonModule: SystemModule
         self.addSymbol(SystemClass(label:"Tuple",typeCode:.tuple).superclass("\\\\Argon\\Type").mcode("v"))
         self.addSymbol(SystemClass(label:"Type",typeCode:.type).superclass("\\\\Argon\\Object"))
         self.addSymbol(TaggedPrimitiveClass.uIntegerClass.superclass("\\\\Argon\\Number").mcode("x"))
+        self.addSymbol(SystemClass(label:"VariadicParameter",typeCode:.symbol).superclass("\\\\Argon\\Object"))
         self.addSymbol(ArrayClass(label:"Vector",superclasses:["\\\\Argon\\Collection","\\\\Argon\\Iterable"],parameters:["INDEX","ELEMENT"]).slotClass(ArraySlot.self).mcode("y"))
         self.addSymbol(VoidClass.voidClass.superclass("\\\\Argon\\Object").mcode("z"))
         self.addSymbol(SystemClass(label:"WriteStream",typeCode:.stream).superclass("\\\\Argon\\Stream"))
@@ -455,17 +461,18 @@ public class ArgonModule: SystemModule
         mathGroup.addSymbol(Primitive("even",arg:self.integer,out:self.boolean).method)
         let formatGroup = SystemSymbolGroup(label: "Printing")
         self.addSymbol(formatGroup)
-        let method = Primitive("print",self.integer).method
+        formatGroup.addSymbol(Primitive("format",self.string,self.object,self.string).method)
+        let method = Primitive("print",left: self.integer).method
         formatGroup.addSymbol(method)
-        method.addInstance(Primitive("print",self.float).instance)
-        method.addInstance(Primitive("print",self.string).instance)
-        method.addInstance(Primitive("print",self.boolean).instance)
-        method.addInstance(Primitive("print",self.object).instance)
-        method.addInstance(Primitive("print",self.byte).instance)
-        method.addInstance(Primitive("print",self.character).instance)
-        method.addInstance(Primitive("print",self.uInteger).instance)
-        method.addInstance(Primitive("print",self.address).instance)
-        method.addInstance(Primitive("print",self.pointer).instance)
+        method.addInstance(Primitive("print",left: self.float).instance)
+        method.addInstance(Primitive("print",left: self.string).instance)
+        method.addInstance(Primitive("print",left: self.boolean).instance)
+        method.addInstance(Primitive("print",left: self.object).instance)
+        method.addInstance(Primitive("print",left: self.byte).instance)
+        method.addInstance(Primitive("print",left: self.character).instance)
+        method.addInstance(Primitive("print",left: self.uInteger).instance)
+        method.addInstance(Primitive("print",left: self.address).instance)
+        method.addInstance(Primitive("print",left: self.pointer).instance)
         let ioGroup = SystemSymbolGroup(label: "IO")
         self.addSymbol(ioGroup)
         ioGroup.addSymbol(Primitive("next",self.readStream,"TYPE",self.integer).method)
@@ -495,7 +502,6 @@ public class ArgonModule: SystemModule
         ioGroup.addSymbol(Primitive("nextPutTime",self.stream,self.time,self.void).method)
         let arrays = SystemSymbolGroup(label: "Arrays")
         self.addSymbol(arrays)
-        arrays.addSymbol(Primitive("append",self.array,self.void).method)
         arrays.addSymbol(Primitive("at",self.array,self.integer).method)
         arrays.addSymbol(Primitive("atPut",self.array,self.integer,self.void).method)
         arrays.addSymbol(Primitive("atPutAll",self.array,self.array,self.void).method)
@@ -503,8 +509,8 @@ public class ArgonModule: SystemModule
         arrays.addSymbol(Primitive("containsAll",self.array,self.array,self.boolean).method)
 //        arrays.addSymbol(Primitive("last",self.array,"TYPE").method)
 //        arrays.addSymbol(Primitive("first",self.array,"TYPE").method)
-        arrays.addSymbol(Primitive("add",self.array.of(ClassParm("TYPE")),ClassParm("TYPE")).method)
-        arrays.addSymbol(Primitive("addAll",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).method)
+        arrays.addSymbol(Primitive("append",self.array.of(ClassParm("TYPE")),ClassParm("TYPE")).method)
+        arrays.addSymbol(Primitive("appendAll",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).method)
         arrays.addSymbol(Primitive("removeAt",self.array.of(ClassParm("TYPE")),self.integer).method)
         arrays.addSymbol(Primitive("removeAll",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).method)
         arrays.addSymbol(Primitive("withoutFirst",self.array.of(ClassParm("TYPE")),self.array.of(ClassParm("TYPE"))).method)
@@ -524,26 +530,26 @@ public class ArgonModule: SystemModule
     /// We need a special layout algorithm because this module has
     /// complex dependencies.
     ///
-    ///
-    internal override func layout()
-        {
-        self.layoutSlots()
-        ///
-        ///
-        /// Now do layouts in a specific order
-        ///
-        let classes = self.classes
-        for aClass in classes
-            {
-            aClass.preallocateMemory(size: InnerPointer.kClassSizeInBytes)
-            }
-        for aClass in classes
-            {
-            aClass.layoutInMemory()
-            }
-        for instance in self.methodInstances
-            {
-            instance.layoutInMemory()
-            }
-        }
+//    ///
+//    internal override func layout()
+//        {
+//        self.layoutSlots()
+//        ///
+//        ///
+//        /// Now do layouts in a specific order
+//        ///
+//        let classes = self.classes
+//        for aClass in classes
+//            {
+//            aClass.preallocateMemory(size: InnerPointer.kClassSizeInBytes)
+//            }
+//        for aClass in classes
+//            {
+//            aClass.layoutInMemory()
+//            }
+//        for instance in self.methodInstances
+//            {
+//            instance.layoutInMemory()
+//            }
+//        }
     }

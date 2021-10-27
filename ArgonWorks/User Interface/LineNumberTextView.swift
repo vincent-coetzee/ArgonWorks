@@ -35,8 +35,18 @@ internal protocol SourceEditorDelegate
     }
     
 /// A NSTextView with a line number gutter attached to it.
-public class LineNumberTextView: NSTextView {
-
+public class LineNumberTextView: NSTextView
+    {
+    private let highlightAttributes =
+        {
+        () -> [NSAttributedString.Key:Any] in
+        var attributes:[NSAttributedString.Key:Any] = [:]
+        attributes[.foregroundColor] = NSColor.black
+        attributes[.backgroundColor] = NSColor.yellow
+        attributes[.font] = NSFont(name:"Menlo-Bold",size:20)!
+        return(attributes)
+        }()
+        
     internal var sourceEditorDelegate: SourceEditorDelegate?
         {
         didSet
@@ -254,10 +264,30 @@ public class LineNumberTextView: NSTextView {
             line += 1
             }
         location = self.selectedRanges.first!.rangeValue.location
-        print("LOCATION \(location)")
-        print("OFFSET \(offset)")
-        print("POSITION \(location - offset)")
         self.sourceEditorDelegate?.sourceEditor(self,changedLine: line + 1,offset: location - offset)
+        location = self.selectedRanges.first!.rangeValue.location
+        let string = self.string
+        var index = string.index(string.startIndex,offsetBy: location)
+        var character = string[index]
+        if character == "}"
+            {
+            while index > string.startIndex && character != "{"
+                {
+                index = string.index(before: index)
+                character = string[index]
+                location -= 1
+                }
+            if character == "{"
+                {
+                let range = NSRange(location: location, length: 1)
+                let old = self.textStorage?.attributes(at: location, effectiveRange: nil)
+                self.textStorage?.setAttributes(self.highlightAttributes, range: range)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
+                    {
+                    self.textStorage?.setAttributes(old, range: range)
+                    }
+                }
+            }
         }
         
     public override func keyDown(with event: NSEvent)

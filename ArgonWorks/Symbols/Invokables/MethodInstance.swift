@@ -370,24 +370,6 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         parameters[atIndex].type
         }
         
-    public func dump()
-        {
-        if self.isSystemMethodInstance
-            {
-            return
-            }
-        print(";; ====================================================")
-        print(";; CODE FOR \(self.label)")
-        print(";; \(self.buffer.count) INSTRUCTIONS")
-        print(";;")
-        print(";; LINE \(self.declaration!.line)")
-        print(";;")
-        for instruction in self.buffer.instructions
-            {
-            print(instruction.displayString)
-            }
-        }
-        
     public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
         {
         for symbol in scope.symbols
@@ -442,7 +424,10 @@ public class StandardMethodInstance: MethodInstance, StackFrame
 //            slot.addresses.append(.stack(.BP,stackOffset))
 //            stackOffset -= MemoryLayout<Word>.size
 //            }
+        self.buffer.appendEntry(temporaryCount: self.localSymbols.count)
         try block.emitCode(into: self.buffer,using: generator)
+        self.buffer.appendExit()
+        buffer.append("RET",.none,.none,.none)
         }
         
     public override func realize(using realizer: Realizer)

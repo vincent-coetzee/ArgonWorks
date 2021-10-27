@@ -11,7 +11,7 @@ public class Expression: NSObject,NSCoding
     {
     public var assignedSlots: Slots
         {
-        fatalError()
+        []
         }
         
     public var enumerationCaseHasAssociatedTypes: Bool
@@ -209,6 +209,11 @@ public class Expression: NSObject,NSCoding
         
     public func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
         {
+        }
+        
+    public func emitAddress(into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+        fatalError()
         }
         
     public func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws

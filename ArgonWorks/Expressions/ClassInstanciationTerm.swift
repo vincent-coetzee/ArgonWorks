@@ -78,14 +78,30 @@ public class ClassInstanciationTerm: Expression
             print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
             return
             }
+        var count:Argon.Integer = 1
         instance.append(lineNumber: location.line)
-        instance.append(nil,"PUSH",.relocatable(.class(self._class)),.none,.none)
         for argument in self.arguments.reversed()
             {
             try argument.value.emitCode(into: instance,using: generator)
             instance.append(nil,"PUSH",argument.value.place,.none,.none)
+            count += 1
             }
+        instance.append(nil,"PUSH",.relocatable(.class(self._class)),.none,.none)
         instance.append(nil,"CALL",.relocatable(.function(Function(label: "MAKE"))),.none,.none)
-        self._place = .returnRegister
+        instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
+        if !self._class.initializers.isEmpty
+            {
+            let temp = instance.nextTemporary()
+            instance.append("MOV",.returnRegister,.none,temp)
+            instance.append("PUSH",.returnRegister,.none,.none)
+            let initializer = self._class.initializers.first!
+            instance.append("CALL",.relocatable(.function(initializer)),.none,.none)
+            instance.append("ADD",.stackPointer,.literal(.integer(8)),.stackPointer)
+            self._place = temp
+            }
+        else
+            {
+            self._place = .returnRegister
+            }
         }
     }

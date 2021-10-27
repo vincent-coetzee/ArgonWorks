@@ -9,6 +9,12 @@ import AppKit
 
 public class Invokable: Symbol
     {
+    public var invocationLabel: Label
+        {
+        let labels = self.parameters.map{$0.type.displayString}.joined(separator: "_")
+        return(self.label + "_" + labels)
+        }
+        
     public override var isInvokable: Bool
         {
         return(true)

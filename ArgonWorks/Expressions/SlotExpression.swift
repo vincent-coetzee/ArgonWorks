@@ -24,7 +24,7 @@ public class SlotExpression: Expression
         return(self.slot)
         }
 
-    private let slot: Slot
+    public let slot: Slot
     private var isLValue = false
 
     required init?(coder: NSCoder)
@@ -82,6 +82,10 @@ public class SlotExpression: Expression
 
     public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
         {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
         try value.emitCode(into: instance, using: using)
         instance.append("MOV",value.place,.none,.relocatable(.slot(self.slot)))
         }

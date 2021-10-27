@@ -413,7 +413,7 @@ public class BinaryExpression: Expression
         try self.lhs.emitCode(into: instance, using: generator)
         instance.append(nil,"MOV",self.lhs.place,.none,temp)
         try self.rhs.emitCode(into: instance, using: generator)
-        instance.append(nil,opcode,temp,rhs.place,temp)
+        instance.append(nil,opcode,temp,rhs.place,.none)
         if rhs.place.isNone
             {
             print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")

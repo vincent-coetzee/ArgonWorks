@@ -9,6 +9,11 @@ import Foundation
 
 public class Block:NSObject,NamingContext,NSCoding
     {
+    public var enclosingClass: Class?
+        {
+        return(self.parent.enclosingClass)
+        }
+        
     public var hasInlineReturnBlock: Bool
         {
         var aBlock = self.lastBlock
@@ -79,11 +84,6 @@ public class Block:NSObject,NamingContext,NSCoding
     public func removeSymbol(_ symbol: Symbol) -> Symbol
         {
         fatalError("Attempt to remove a symbol n a block")
-        }
-        
-    public var firstInitializer: Initializer?
-        {
-        return(self.parent.firstInitializer)
         }
         
     public func setSymbol(_ symbol: Symbol,atName: Name)
@@ -235,7 +235,43 @@ public class Block:NSObject,NamingContext,NSCoding
         
     public func lookup(name: Name) -> Symbol?
         {
-        self.parent.lookup(name: name)
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = self.lookup(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start)
+                    }
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
+            }
+        else if let start = self.lookup(label: name.first)
+            {
+            if let symbol = start.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
+            }
+        return(nil)
         }
         
         

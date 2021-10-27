@@ -33,6 +33,43 @@ public class T3AInstruction: NSObject,NSCoding
 
     public enum RelocatableValue
         {
+        public var displayString: String
+            {
+            switch(self)
+                {
+                case .self:
+                    return("self")
+                case .Self:
+                    return("Self")
+                case .super:
+                    return("super")
+                case .slot(let slot):
+                    return(slot.label)
+                case .function(let slot):
+                    return(slot.invocationLabel)
+                case .method(let slot):
+                    return(slot.label)
+                case .module(let slot):
+                    return(slot.fullName.displayString)
+                case .class(let slot):
+                    return(slot.fullName.displayString)
+                case .enumeration(let slot):
+                    return(slot.label)
+                case .enumerationCase(let slot):
+                    return(slot.label)
+                case .constant(let slot):
+                    return(slot.label)
+                case .segmentDS:
+                    return("DS")
+                case .relocatableIndex(let slot):
+                    return("\(slot)")
+                case .methodInstance(let slot):
+                    return(slot.invocationLabel)
+                case .type(let slot):
+                    return("Type(\(slot.label))")
+                }
+            }
+            
         public var symbol: Symbol?
             {
             switch(self)
@@ -77,7 +114,7 @@ public class T3AInstruction: NSObject,NSCoding
         case type(Type)
         }
 
-    public enum Operand
+    public indirect enum Operand
         {
         public var relocatableValue: RelocatableValue
             {
@@ -130,24 +167,52 @@ public class T3AInstruction: NSObject,NSCoding
                 case .none:
                     return("NONE")
                 case .returnRegister:
-                    return("RET")
+                    return("RR")
                 case .temporary(let integer):
                     return("TEMP_\(integer)")
                 case .label(let label):
                     return(label.displayString)
                 case .relocatable(let relocatable):
-                    return("\(relocatable)")
+                    return(relocatable.displayString)
                 case .literal(let literal):
                     return("\(literal)")
+                case .framePointer:
+                    return("FRAME")
+                case .stackPointer:
+                    return("STACK")
+                case .indirect(let base,let offset):
+                    let string = offset == 0 ? "" : (offset > 0 ? "+\(offset)" : "\(offset)")
+                    return("[\(base.displayString)\(string)]")
                 }
             }
             
         case none
+        case indirect(Operand,Int)
         case returnRegister
+        case framePointer
+        case stackPointer
         case temporary(Int)
         case label(T3ALabel)
         case relocatable(RelocatableValue)
         case literal(LiteralValue)
+        
+        public func isInteger(_ integer:Int) -> Bool
+            {
+            switch(self)
+                {
+                case .literal(let literal):
+                    switch(literal)
+                        {
+                        case .integer(let anInt):
+                            return(Int(anInt) == integer)
+                        default:
+                            break
+                        }
+                default:
+                    break
+                }
+            return(false)
+            }
         }
         
     public var displayString: String
@@ -184,17 +249,17 @@ public class T3AInstruction: NSObject,NSCoding
                     return("")
                 }
             }
-        let labelString = self.label.isNil ? "       " : self.label!.displayString
+        let labelString = self.label.isNil ? "       " : (self.label!.displayString + ":")
         var columns:Array<String> = []
-        if operand1.isNotNone
+        if self.operand1.isNotNone
             {
             columns.append(self.operand1.displayString)
             }
-        if operand2.isNotNone
+        if self.operand2.isNotNone
             {
             columns.append(self.operand2.displayString)
             }
-        if result.isNotNone
+        if self.result.isNotNone
             {
             columns.append(self.result.displayString)
             }

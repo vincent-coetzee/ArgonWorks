@@ -20,7 +20,7 @@ public class SlotList:NSObject,NSCoding,Collection,StorableObject
         
     public var endIndex:Int
         {
-        return(self.slots.startIndex)
+        return(self.slots.endIndex)
         }
         
     public var count: Int

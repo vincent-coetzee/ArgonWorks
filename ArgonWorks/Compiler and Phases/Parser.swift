@@ -31,16 +31,16 @@ public enum Context: Equatable
             }
         }
         
-    public var firstInitializer: Initializer?
+    public var enclosingClass: Class?
         {
         switch(self)
             {
             case .none:
                 return(nil)
             case .block(let block):
-                return(block.firstInitializer)
+                return(block.enclosingClass)
             case .node(let node):
-                return(node.firstInitializer)
+                return(node.enclosingClass)
             }
         }
         
@@ -559,8 +559,6 @@ public class Parser: CompilerPass
                             try self.parseMacroDeclaration()
                         case .IMPORT:
                             try self.parseImport()
-                        case .INIT:
-                            try self.parseInitializer()
                         case .FUNCTION:
                             try self.parseFunction()
                         case .MAIN:
@@ -838,29 +836,24 @@ public class Parser: CompilerPass
             }
         }
         
-    private func parseInitializer() throws
+    private func parseInitializer(in aClass:Class) throws
         {
         let location = self.token.location
         try self.nextToken()
-        let label = try self.parseLabel()
-        if let theClass = self.currentContext.lookup(label: label) as? Class
+        let parameters = try self.parseParameters()
+        let initializer = Initializer(label: aClass.label)
+        initializer.parameters = parameters
+        aClass.addInitializer(initializer)
+        initializer.declaringClass = aClass
+        initializer.addDeclaration(location)
+        self.pushContext(initializer)
+        try parseBraces
             {
-            let parameters = try self.parseParameters()
-            let initializer = Initializer(label: label)
-            initializer.declaringClass = theClass
-            initializer.addDeclaration(location)
-            initializer.parameters = parameters
-            self.pushContext(initializer)
-            try parseBraces
-                {
-                try self.parseBlock(into: initializer.block)
-                }
+            self.pushContext(initializer.block)
+            try self.parseBlock(into: initializer.block)
             self.popContext()
             }
-        else
-            {
-            self.dispatchError("Initializer \(label) declaration but the class which should be defined for the initializer is not.")
-            }
+        self.popContext()
         }
         
     private func parseInterceptor() throws -> Interceptor
@@ -1281,9 +1274,13 @@ public class Parser: CompilerPass
             }
         try self.parseBraces
             {
-            while self.token.isSlot || self.token.isClass || self.token.isCocoon
+            while self.token.isSlot || self.token.isClass || self.token.isCocoon || self.token.isInit
                 {
-                if self.token.isCocoon
+                if self.token.isInit
+                    {
+                    try self.parseInitializer(in: aClass)
+                    }
+                else if self.token.isCocoon
                     {
                     let slot = try self.parseCocoonSlot()
                     aClass.addSymbol(slot)
@@ -1304,6 +1301,7 @@ public class Parser: CompilerPass
                     else
                         {
                         let innerClass = try self.parseClass()
+                        aClass.addSymbol(innerClass)
                         }
                     }
                 }
@@ -2076,7 +2074,17 @@ public class Parser: CompilerPass
             {
             let symbol = self.token.operator
             try self.nextToken()
-            return(SuffixExpression(expression,symbol))
+            if !(expression is SlotExpression)
+                {
+                self.cancelCompletion()
+                self.dispatchError(at: location, message: "Postfix increment or decrement operators can only be performed on slots.")
+                return(expression)
+                }
+            else
+                {
+                let slotExpression = expression as! SlotExpression
+                return(SuffixExpression(slotExpression,symbol))
+                }
             }
         expression.compiler = self.compiler
         return(expression)
@@ -2397,7 +2405,7 @@ public class Parser: CompilerPass
         else if self.token.isSelf
             {
             try self.nextToken()
-            return(PseudoVariableExpression(.vSelf))
+            return(PseudoVariableExpression(.vSelf,self.currentContext.enclosingClass))
             }
         else if self.token.isSELF
             {
@@ -2449,7 +2457,9 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
+        print("ATTEMPTING TO RESOLVE SYMBOL: \(name.displayString)")
         let aSymbol = self.currentContext.lookup(name: name)
+        print("\(name.displayString) RESOLVED TO \(aSymbol)")
 //        print(aSymbol?.label)
         if let symbol = aSymbol as? Enumeration
             {
@@ -2532,7 +2542,13 @@ public class Parser: CompilerPass
             }
         else
             {
-            let localSlot = LocalSlot(label: name.last,type: .unknown,value: nil)
+            var type: Type = .unknown
+            if self.token.isGluon
+                {
+                try self.nextToken()
+                type = try self.parseType()
+                }
+            let localSlot = LocalSlot(label: name.last,type: type,value: nil)
             let term = SlotExpression(slot: localSlot)
             localSlot.addDeclaration(location)
             term.addDeclaration(location)
@@ -2952,14 +2968,19 @@ public class Parser: CompilerPass
         self.startClip()
         try self.nextToken()
         let location = self.token.location
+        let statement = LoopBlock()
+        self.pushContext(statement)
         let (start,end,update) = try self.parseLoopConstraints()
-        let statement = LoopBlock(start: start,end: end,update: update)
+        statement.startExpressions = start
+        statement.endExpression = end
+        statement.updateExpressions = update
         statement.addDeclaration(location)
         block.addBlock(statement)
         try self.parseBraces
             {
             try self.parseBlock(into: statement)
             }
+        self.popContext()
         self.stopClip(into: statement)
         }
         
@@ -2976,6 +2997,10 @@ public class Parser: CompilerPass
                 start.append(try self.parseExpression())
                 }
             while self.token.isComma
+            for slot in start.flatMap({$0.assignedSlots})
+                {
+                self.addSymbol(slot)
+                }
             if !self.token.isSemicolon
                 {
                 self.reportingContext.dispatchError(at: self.token.location, message: "';' was expected between LOOP clauses.")
@@ -3023,13 +3048,7 @@ public class Parser: CompilerPass
         let location = self.token.location
         let start = self.token.location.tokenStart
         var expression = try self.parseExpression()
-        if self.token.isPlusPlus || self.token.isMinusMinus
-            {
-            let symbol = self.token.operator
-            try self.nextToken()
-            expression = SuffixExpression(expression,symbol)
-            }
-        else if self.token.isAddEquals || self.token.isSubEquals || self.token.isMulEquals || self.token.isDivEquals || self.token.isBitAndEquals || self.token.isBitOrEquals || self.token.isBitNotEquals || self.token.isBitXorEquals
+        if self.token.isAddEquals || self.token.isSubEquals || self.token.isMulEquals || self.token.isDivEquals || self.token.isBitAndEquals || self.token.isBitOrEquals || self.token.isBitNotEquals || self.token.isBitXorEquals
             {
             let symbol = self.token.operator
             try self.nextToken()

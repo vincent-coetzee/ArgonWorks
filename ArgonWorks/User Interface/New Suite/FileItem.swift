@@ -62,6 +62,11 @@ public class FileItem
     
 public class PackageItem: FileItem
     {
+    public override var icon: NSImage
+        {
+        return(NSImage(systemSymbolName: "cube.fill", accessibilityDescription: nil)!)
+        }
+        
     public override var tintColor: NSColor
         {
         return(NSColor.argonSizzlingRed)
@@ -283,19 +288,7 @@ public class SymbolItem: FileItem
         
     public override var icon: NSImage
         {
-        if self.symbol.isEnumerationCase || self.symbol.isSlot
-            {
-            return(NSImage(systemSymbolName: "circle.circle", accessibilityDescription: nil)!)
-            }
-        if self.symbol.isModule
-            {
-            return(NSImage(systemSymbolName: "circle.fill", accessibilityDescription: nil)!)
-            }
-        if self.symbol.isInvokable
-            {
-            return(NSImage(systemSymbolName: "bolt.circle", accessibilityDescription: nil)!)
-            }
-        return(NSImage(systemSymbolName: "circle.dashed", accessibilityDescription: nil)!)
+        return(NSImage(systemSymbolName: "cube", accessibilityDescription: nil)!)
         }
         
     public override var displayString: String
@@ -379,7 +372,7 @@ public class InstructionItem: FileItem
         
     public override var icon: NSImage
         {
-        return(NSImage(systemSymbolName: "asterisk.circle", accessibilityDescription: nil)!)
+        return(NSImage(systemSymbolName: "gear.circle", accessibilityDescription: nil)!)
         }
         
     public override var displayString: String

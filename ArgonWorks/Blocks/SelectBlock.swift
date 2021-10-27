@@ -65,17 +65,16 @@ public class SelectBlock: Block
         let endLabel = buffer.nextLabel()
         for when in whenBlocks
             {
-            let temp = buffer.nextTemporary()
             if aClass.isPrimitiveClass && !aClass.isStringClass
                 {
-                buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,temp)
+                buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,.none)
                 }
             else
                 {
-                buffer.append(nextWhen,"CMPO",self.value.place,when.condition.place,temp)
+                buffer.append(nextWhen,"CMPO",self.value.place,when.condition.place,.none)
                 }
             nextWhen = buffer.nextLabel()
-            buffer.append(nil,"BRNEQ",temp,.none,.label(nextWhen!))
+            buffer.append(nil,"BRNEQ",.none,.none,.label(nextWhen!))
             try when.emitCode(into: buffer,using: generator)
             buffer.append(nil,"BR",.none,.none,.label(endLabel))
             }

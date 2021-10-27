@@ -68,6 +68,24 @@ public class EnumerationInstanceExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        print("EnumerationInstanceExpression NEEDS TO GENERATE CODE")
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        var count:Argon.Integer = 1
+        instance.append("PUSH",.relocatable(.enumerationCase(self.theCase)),.none,.none)
+        if self.theCase.hasAssociatedTypes
+            {
+            let values = self.associatedValues!
+            for value in values
+                {
+                try value.emitCode(into: instance,using: generator)
+                instance.append("PUSH",value.place,.none,.none)
+                count += 1
+                }
+            }
+        instance.append("CALL",.relocatable(.function(Function(label: "MAKEEC"))),.none,.none)
+        instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
+        self._place = .returnRegister
         }
     }

@@ -11,7 +11,7 @@ public class SlotAccessExpression: Expression
     {
     public override var assignedSlots: Slots
         {
-        return([self.slot as! Slot])
+        return(self.slot.isNil ? [] : [self.slot as! Slot])
         }
         
     public override var enumerationCaseHasAssociatedTypes: Bool
@@ -162,6 +162,16 @@ public class SlotAccessExpression: Expression
 //            instance.append(nil,"IADD",temp,.integer(slot.offset),temp)
 //            self._place = temp
 //            }
+        }
+        
+    public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+        try value.emitCode(into: instance, using: using)
+        try self.receiver.emitAddress(into: instance,using: using)
+        let aSlot = self.slot as! Slot
+        let aClass = aSlot.parent.node as! Class
+        let actualSlot = aClass.layoutSlot(atLabel: aSlot.label)!
+        instance.append("STORE",value.place,.none,.indirect(self.receiver.place,actualSlot.offset))
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

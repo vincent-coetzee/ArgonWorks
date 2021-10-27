@@ -9,10 +9,15 @@ import Foundation
 
 public class LoopBlock: Block
     {
-    private let startExpressions: Array<Expression>
-    private let endExpression: Expression
-    private let updateExpressions: Array<Expression>
+    public var startExpressions: Array<Expression>!
+    public var endExpression: Expression!
+    public var updateExpressions: Array<Expression>!
     
+    override init()
+        {
+        super.init()
+        }
+        
     init(start: Array<Expression>,end: Expression,update: Array<Expression>)
         {
         self.startExpressions = start
@@ -82,6 +87,6 @@ public class LoopBlock: Block
             try expression.emitCode(into: buffer,using: using)
             }
         try self.endExpression.emitCode(into: buffer,using: using)
-        buffer.append(nil,"BRF",self.endExpression.place,.none,.label(label))
+        buffer.append(nil,"BRLT",.none,.none,.label(label))
         }
     }

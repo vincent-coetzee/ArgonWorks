@@ -235,20 +235,15 @@ public class Module:ContainerSymbol
         return(false)
         }
         
-    internal func layout()
+    public override func allocateAddresses(using: AddressAllocator)
         {
-        self.layoutSlots()
-        self.layoutInMemory()
-        }
-        
-    internal func layoutSlots()
-        {
-        print(self.classes)
         for aClass in self.classes
             {
-            aClass.layoutObjectSlots()
+            aClass.allocateAddresses(using: using)
             }
+        self.layoutInMemory()
         }
+
     }
 
 public typealias Modules = Array<Module>

@@ -68,7 +68,7 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="QaA-GX-RUA">
-                                                            <rect key="frame" x="18" y="0.0" width="477" height="24"/>
+                                                            <rect key="frame" x="8" y="0.0" width="477" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fIl-Yd-Ygl">
@@ -900,29 +900,28 @@ Gw
                         </view>
                         <toolbar key="toolbar" implicitIdentifier="3B864513-FD59-4A19-991B-CD7AA64F720C" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="cmm-fN-vzw">
                             <allowedToolbarItems>
-                                <toolbarItem implicitItemIdentifier="NSToolbarShowColorsItem" id="Fv4-Fd-6gt"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="jBo-wP-Dor"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="Esd-2F-0va"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="h4m-6t-vC3"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="BKO-sh-Ecr"/>
                                 <toolbarItem implicitItemIdentifier="084B08BD-8B19-4A8F-9F68-9CCA84BA7B80" label="New" paletteLabel="New" tag="-1" bordered="YES" id="rRv-wm-Dbw">
-                                    <imageReference key="image" image="doc" catalog="system" symbolScale="large"/>
+                                    <imageReference key="image" image="doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
                                     <size key="minSize" width="29" height="25"/>
                                     <size key="maxSize" width="29" height="25"/>
                                     <connections>
                                         <action selector="onNewFile:" target="hXe-wT-Ffw" id="rlN-2d-V5w"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="DAE89D2E-A740-40FA-AC7C-069A236164F2" label="Open..." paletteLabel="Open..." tag="-1" bordered="YES" id="ehJ-i3-L2M">
-                                    <imageReference key="image" image="arrow.up.doc" catalog="system" symbolScale="large"/>
+                                <toolbarItem implicitItemIdentifier="DAE89D2E-A740-40FA-AC7C-069A236164F2" label="Open" paletteLabel="Open" tag="-1" bordered="YES" id="ehJ-i3-L2M">
+                                    <imageReference key="image" image="arrow.up.doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
                                     <size key="minSize" width="29" height="25"/>
                                     <size key="maxSize" width="29" height="25"/>
                                     <connections>
                                         <action selector="onOpenFile:" target="hXe-wT-Ffw" id="fGt-m9-8OS"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="04656662-2DC6-4F87-BCCE-589659C91E72" label="Save..." paletteLabel="Save..." tag="-1" bordered="YES" id="lm6-AF-bqd">
-                                    <imageReference key="image" image="arrow.down.doc" catalog="system" symbolScale="large"/>
+                                <toolbarItem implicitItemIdentifier="04656662-2DC6-4F87-BCCE-589659C91E72" label="Save" paletteLabel="Save" tag="-1" bordered="YES" id="lm6-AF-bqd">
+                                    <imageReference key="image" image="arrow.down.doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
                                     <size key="minSize" width="29" height="25"/>
                                     <size key="maxSize" width="29" height="25"/>
                                     <connections>
@@ -930,32 +929,57 @@ Gw
                                     </connections>
                                 </toolbarItem>
                                 <toolbarItem implicitItemIdentifier="3F4132FA-3352-4C5B-9DA3-C92DD0A581BA" label="Compile" paletteLabel="Compile" tag="-1" bordered="YES" id="pN9-mz-yZn">
-                                    <imageReference key="image" image="gearshape.2.fill" catalog="system" symbolScale="large"/>
+                                    <imageReference key="image" image="gearshape.2" catalog="system" symbolScale="large" renderingMode="hierarchical-single"/>
                                     <size key="minSize" width="37" height="25"/>
                                     <size key="maxSize" width="37" height="25"/>
                                     <connections>
                                         <action selector="onCompileFile:" target="hXe-wT-Ffw" id="ayi-5c-TuX"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="D2107724-E1C1-489F-A132-748A9A04F1F6" label="Object..." paletteLabel="Object..." tag="-1" bordered="YES" id="okG-OX-a6d">
-                                    <imageReference key="image" image="cube.box" catalog="system" symbolScale="large"/>
+                                <toolbarItem implicitItemIdentifier="D2107724-E1C1-489F-A132-748A9A04F1F6" label="Objects" paletteLabel="Objects" tag="-1" bordered="YES" id="okG-OX-a6d">
+                                    <imageReference key="image" image="cube.box" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
                                     <size key="minSize" width="32" height="25"/>
                                     <size key="maxSize" width="32" height="25"/>
                                     <connections>
                                         <action selector="onSaveObjectFile:" target="hXe-wT-Ffw" id="Ocv-iW-4LG"/>
                                     </connections>
                                 </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="D58D5E4F-7135-4334-8F57-3FE175310525" label="Run" paletteLabel="Run" tag="-1" bordered="YES" id="Xtm-4P-zi0">
+                                    <imageReference key="image" image="bolt.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                        <hierarchicalColors>
+                                            <color red="1" green="0.039215686270000001" blue="0.42745098040000001" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                            <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                        </hierarchicalColors>
+                                    </imageReference>
+                                    <size key="minSize" width="32" height="25"/>
+                                    <size key="maxSize" width="32" height="25"/>
+                                </toolbarItem>
+                                <toolbarItem implicitItemIdentifier="E12771CE-75C9-4FA5-AC5E-4F444C5FECF4" label="Debug" paletteLabel="Debug" tag="-1" bordered="YES" id="SyN-A1-RbL">
+                                    <imageReference key="image" image="ant.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                        <hierarchicalColors>
+                                            <color red="1" green="0.039215686270000001" blue="0.42745098040000001" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                            <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                        </hierarchicalColors>
+                                    </imageReference>
+                                    <size key="minSize" width="32" height="25"/>
+                                    <size key="maxSize" width="32" height="25"/>
+                                </toolbarItem>
                             </allowedToolbarItems>
                             <defaultToolbarItems>
-                                <toolbarItem reference="Fv4-Fd-6gt"/>
-                                <toolbarItem reference="jBo-wP-Dor"/>
-                                <toolbarItem reference="BKO-sh-Ecr"/>
-                                <toolbarItem reference="Esd-2F-0va"/>
                                 <toolbarItem reference="pN9-mz-yZn"/>
+                                <toolbarItem reference="h4m-6t-vC3"/>
+                                <toolbarItem reference="Xtm-4P-zi0"/>
+                                <toolbarItem reference="SyN-A1-RbL"/>
+                                <toolbarItem reference="h4m-6t-vC3"/>
                                 <toolbarItem reference="okG-OX-a6d"/>
                                 <toolbarItem reference="lm6-AF-bqd"/>
                                 <toolbarItem reference="ehJ-i3-L2M"/>
                                 <toolbarItem reference="rRv-wm-Dbw"/>
+                                <toolbarItem reference="h4m-6t-vC3"/>
+                                <toolbarItem reference="Esd-2F-0va"/>
+                                <toolbarItem reference="jBo-wP-Dor"/>
                             </defaultToolbarItems>
                         </toolbar>
                         <connections>
@@ -1039,7 +1063,7 @@ Gw
                                                     </subviews>
                                                 </clipView>
                                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Mwn-vQ-Q3B">
-                                                    <rect key="frame" x="1" y="578" width="325" height="16"/>
+                                                    <rect key="frame" x="1" y="614" width="335" height="16"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </scroller>
                                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="tP2-W5-5Rp">
@@ -1389,7 +1413,7 @@ Gw
                                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                                     <prototypeCellViews>
                                                                         <tableCellView id="wQg-uT-5bT">
-                                                                            <rect key="frame" x="10" y="0.0" width="235" height="24"/>
+                                                                            <rect key="frame" x="0.0" y="0.0" width="235" height="24"/>
                                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                             <subviews>
                                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="5rl-XG-cg1">
@@ -1456,9 +1480,9 @@ Gw
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
                                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YZf-XW-Gf8">
-                                                <rect key="frame" x="0.0" y="0.0" width="169" height="194"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="149" height="194"/>
                                                 <clipView key="contentView" id="FbL-Tj-AHL">
-                                                    <rect key="frame" x="1" y="1" width="167" height="192"/>
+                                                    <rect key="frame" x="1" y="1" width="147" height="192"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
                                                         <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" viewBased="YES" indentationPerLevel="20" outlineTableColumn="UDu-Fz-Vv4" id="exe-dv-MsO">
@@ -1509,7 +1533,7 @@ Gw
                                                     </subviews>
                                                 </clipView>
                                                 <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="O2v-AQ-7xm">
-                                                    <rect key="frame" x="1" y="177" width="167" height="16"/>
+                                                    <rect key="frame" x="1" y="177" width="147" height="16"/>
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </scroller>
                                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="4kg-ZU-qIf">
@@ -1518,7 +1542,7 @@ Gw
                                                 </scroller>
                                             </scrollView>
                                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="bYJ-6J-U0b" customClass="HeaderView" customModule="ArgonWorks" customModuleProvider="target">
-                                                <rect key="frame" x="0.0" y="190" width="149" height="30"/>
+                                                <rect key="frame" x="0.0" y="190" width="129" height="30"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" constant="30" id="Hx8-2s-sCX"/>
                                                 </constraints>
@@ -1575,7 +1599,7 @@ Gw
                                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                                     <prototypeCellViews>
                                                                         <tableCellView id="wT7-Fy-kkA">
-                                                                            <rect key="frame" x="18" y="0.0" width="250" height="24"/>
+                                                                            <rect key="frame" x="8" y="0.0" width="250" height="24"/>
                                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                             <subviews>
                                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="pw4-ua-WSV">
@@ -1712,7 +1736,7 @@ Gw
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView id="i50-x4-ZQn">
-                                                            <rect key="frame" x="18" y="0.0" width="221" height="24"/>
+                                                            <rect key="frame" x="8" y="0.0" width="221" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L7U-ti-rTW">
@@ -1845,7 +1869,7 @@ Gw
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="MemorySlotCellView" id="dUR-Js-YsP" customClass="MemorySlotCellView" customModule="ArgonWorks" customModuleProvider="target">
-                                                            <rect key="frame" x="18" y="0.0" width="772" height="24"/>
+                                                            <rect key="frame" x="8" y="0.0" width="772" height="24"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="z47-xN-91c">
@@ -1995,7 +2019,7 @@ Gw
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="InstructionCellView" id="YlY-a8-KtJ" customClass="InstructionCellView" customModule="ArgonWorks" customModuleProvider="target">
-                                                            <rect key="frame" x="18" y="0.0" width="270" height="18"/>
+                                                            <rect key="frame" x="8" y="0.0" width="270" height="18"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7RY-iY-YEM">
@@ -3791,20 +3815,22 @@ Gw
         </scene>
     </scenes>
     <resources>
-        <image name="ant.circle" catalog="system" width="19" height="19"/>
-        <image name="arrow.down.doc" catalog="system" width="17" height="20"/>
-        <image name="arrow.up.doc" catalog="system" width="17" height="20"/>
-        <image name="bolt.fill" catalog="system" width="16" height="21"/>
+        <image name="ant.circle" catalog="system" width="20" height="20"/>
+        <image name="arrow.down.doc" catalog="system" width="18" height="21"/>
+        <image name="arrow.up.doc" catalog="system" width="18" height="21"/>
+        <image name="bolt.circle" catalog="system" width="20" height="20"/>
+        <image name="bolt.fill" catalog="system" width="17" height="22"/>
         <image name="chevron.forward.circle" catalog="system" width="15" height="15"/>
-        <image name="cube.box" catalog="system" width="20" height="20"/>
-        <image name="cube.fill" catalog="system" width="20" height="20"/>
-        <image name="doc" catalog="system" width="17" height="20"/>
+        <image name="cube.box" catalog="system" width="21" height="21"/>
+        <image name="cube.fill" catalog="system" width="21" height="21"/>
+        <image name="doc" catalog="system" width="18" height="21"/>
         <image name="doc.circle" catalog="system" width="15" height="15"/>
-        <image name="gearshape.2.fill" catalog="system" width="25" height="20"/>
-        <image name="list.bullet.rectangle" catalog="system" width="23" height="17"/>
-        <image name="minus.square" catalog="system" width="18" height="17"/>
-        <image name="plus.square" catalog="system" width="18" height="17"/>
-        <image name="shippingbox" catalog="system" width="20" height="20"/>
+        <image name="gearshape.2" catalog="system" width="26" height="21"/>
+        <image name="gearshape.2.fill" catalog="system" width="26" height="21"/>
+        <image name="list.bullet.rectangle" catalog="system" width="24" height="18"/>
+        <image name="minus.square" catalog="system" width="19" height="18"/>
+        <image name="plus.square" catalog="system" width="19" height="18"/>
+        <image name="shippingbox" catalog="system" width="21" height="21"/>
         <namedColor name="ArgonCheese">
             <color red="1" green="0.65100002288818359" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>

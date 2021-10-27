@@ -12,6 +12,24 @@ import FFI
 
 public class Class:ContainerSymbol,ObservableObject,Displayable
     {
+    public override var allNamedInvokables: Array<NamedInvokable>
+        {
+        var list = super.allNamedInvokables
+        var index = 0
+        for initializer in self.initializers
+            {
+            let name = self.fullName + "_INIT_\(index)"
+            list.append(NamedInvokable(fullName: name, invokable: initializer as! Invokable))
+            index += 1
+            }
+        return(list)
+        }
+        
+    public override var enclosingClass: Class?
+        {
+        return(self)
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         return(LiteralExpression(.class(self)))
@@ -145,8 +163,12 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(lhs.isInclusiveSubclass(of: rhs))
         }
         
-    public override func emitCode(using: CodeGenerator)
+    public override func emitCode(using: CodeGenerator) throws
         {
+        for initializer in self.initializers
+            {
+            try initializer.emitCode(using: using)
+            }
         }
         
 //    public static var integer: Class = ArgonModule.argonModule.integer
@@ -502,6 +524,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     internal var mangledCode: Label
 //    internal var offsetOfClass: Dictionary<Class,Int> = [:]
     internal var hasBeenRealized = false
+    internal var initializers = Array<Initializer>()
     
     public override init(label:Label)
         {
@@ -580,6 +603,12 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass.addresses = self.addresses
         newClass.locations = self.locations
         return(newClass)
+        }
+        
+    public func addInitializer(_ initializer: Initializer)
+        {
+        self.initializers.append(initializer)
+        initializer.setParent(self)
         }
         
     public func addSubclass(_ aClass: Class)
@@ -866,7 +895,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override func lookup(label: String) -> Symbol?
         {
-        for slot in self.localAndInheritedSlots
+        for slot in self.layoutSlots
             {
             if slot.label == label
                 {
@@ -898,8 +927,18 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(nil)
         }
         
+    public override func allocateAddresses(using: AddressAllocator)
+        {
+        for aClass in self.symbols.filter({$0 is Class})
+            {
+            aClass.allocateAddresses(using: using)
+            }
+        self.layoutObjectSlots()
+        }
+        
     public func layoutObjectSlots()
         {
+        print("LAYING OUT CLASS \(self.label)")
         guard !self.isSlotLayoutDone else
             {
             return
@@ -932,6 +971,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                 clonedSlot.setOffset(offset)
                 clonedSlot.setParent(self)
                 self.layoutSlots.append(clonedSlot)
+                print("LAID OUT SLOT \(clonedSlot.label) OFSET \(clonedSlot.offset) IN CLASS \(self.label)")
                 offset += clonedSlot.size
                 }
             }

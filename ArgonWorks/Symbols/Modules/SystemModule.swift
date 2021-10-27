@@ -82,15 +82,15 @@ public class SystemModule: Module
         return(nil)
         }
         
-    internal override func layout()
-        {
-        self.layoutSlots()
-        for aModule in self.symbols.compactMap({$0 as? SystemModule})
-            {
-            aModule.layout()
-            }
-        self.layoutInMemory()
-        }
+//    internal override func layout()
+//        {
+//        self.layoutSlots()
+//        for aModule in self.symbols.compactMap({$0 as? SystemModule})
+//            {
+//            aModule.layout()
+//            }
+//        self.layoutInMemory()
+//        }
         
     internal func resolveReferences(topModule: TopModule)
         {

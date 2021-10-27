@@ -44,6 +44,21 @@ public enum Parent:Storable
             }
         }
         
+    public var node: Node?
+        {
+        switch(self)
+            {
+            case .none:
+                return(nil)
+            case .node(let node):
+                return(node)
+            case .expression:
+                return(nil)
+            case .block:
+                return(nil)
+            }
+        }
+        
     public var fullName: Name
         {
         switch(self)
@@ -105,18 +120,18 @@ public enum Parent:Storable
             }
         }
         
-    public var firstInitializer: Initializer?
+    public var enclosingClass: Class?
         {
         switch(self)
             {
             case .none:
                 return(nil)
             case .node(let node):
-                return(node.firstInitializer)
+                return(node.enclosingClass)
             case .expression:
                 return(nil)
             case .block(let block):
-                return(block.firstInitializer)
+                return(block.enclosingClass)
             }
         }
         

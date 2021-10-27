@@ -65,9 +65,9 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         try output.write(self)
         }
     
-    public var firstInitializer: Initializer?
+    public var enclosingClass: Class?
         {
-        return(nil)
+        return(self.parent.enclosingClass)
         }
         
     public var fullName: Name

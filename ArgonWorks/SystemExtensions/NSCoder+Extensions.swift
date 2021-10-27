@@ -29,6 +29,14 @@ extension NSCoder
         case .literal(let literal):
             self.encode(6,forKey: forKey + "kind")
             self.encodeLiteralValue(literal,forKey: forKey + "literal")
+        case .framePointer:
+            self.encode(7,forKey: forKey + "kind")
+        case .stackPointer:
+            self.encode(8,forKey: forKey + "kind")
+        case .indirect(let base,let offset):
+            self.encode(9,forKey: forKey + "kind")
+            self.encodeOperand(base,forKey: forKey + "base")
+            self.encode(offset,forKey: forKey + "offset")
             }
         }
         
@@ -49,6 +57,12 @@ extension NSCoder
                 return(.relocatable(self.decodeRelocatableValue(forKey: forKey + "relocatable")))
             case 6:
                 return(.literal(self.decodeLiteralValue(forKey: forKey + "literal")))
+            case 7:
+                return(.framePointer)
+            case 8:
+                return(.stackPointer)
+            case 9:
+                return(.indirect(self.decodeOperand(forKey: forKey + "base"),self.decodeInteger(forKey: "offset")))
             default:
                 fatalError("This should not happen")
             }
@@ -215,48 +229,48 @@ extension NSCoder
             }
         }
         
-    public func encodeT3AOperand(_ operand: T3AInstruction.Operand,forKey key: String)
-        {
-        switch(operand)
-            {
-            case .none:
-                self.encode(0,forKey: key + "kind")
-            case .temporary(let index):
-                self.encode(1,forKey: key + "kind")
-                self.encode(index,forKey: key + "index")
-            case .label(let label):
-                self.encode(3,forKey: key + "kind")
-                self.encode(label,forKey: key + "label")
-            case .literal(let literal):
-                self.encode(4,forKey: key + "kind")
-                self.encodeLiteralValue(literal,forKey: key + "literal")
-            case .returnRegister:
-                self.encode(5,forKey: key + "kind")
-            case .relocatable(let relocatable):
-                self.encode(6,forKey: key + "kind")
-                self.encodeRelocatableValue(relocatable,forKey: key + "relocatable")
-            }
-        }
-        
-    public func decodeT3AOperand(forKey key: String) -> T3AInstruction.Operand
-        {
-        let kind = self.decodeInteger(forKey: key + "kind")
-        switch(kind)
-            {
-            case 0:
-                return(.none)
-            case 1:
-                return(.temporary(self.decodeInteger(forKey: key + "index")))
-            case 3:
-                return(.label(self.decodeObject(forKey: key + "label") as! T3ALabel))
-            case 4:
-                return(.literal(self.decodeLiteralValue(forKey: key + "literal")))
-            case 5:
-                return(.returnRegister)
-            default:
-                fatalError("This should not occur")
-            }
-        }
+//    public func encodeT3AOperand(_ operand: T3AInstruction.Operand,forKey key: String)
+//        {
+//        switch(operand)
+//            {
+//            case .none:
+//                self.encode(0,forKey: key + "kind")
+//            case .temporary(let index):
+//                self.encode(1,forKey: key + "kind")
+//                self.encode(index,forKey: key + "index")
+//            case .label(let label):
+//                self.encode(3,forKey: key + "kind")
+//                self.encode(label,forKey: key + "label")
+//            case .literal(let literal):
+//                self.encode(4,forKey: key + "kind")
+//                self.encodeLiteralValue(literal,forKey: key + "literal")
+//            case .returnRegister:
+//                self.encode(5,forKey: key + "kind")
+//            case .relocatable(let relocatable):
+//                self.encode(6,forKey: key + "kind")
+//                self.encodeRelocatableValue(relocatable,forKey: key + "relocatable")
+//            }
+//        }
+//        
+//    public func decodeT3AOperand(forKey key: String) -> T3AInstruction.Operand
+//        {
+//        let kind = self.decodeInteger(forKey: key + "kind")
+//        switch(kind)
+//            {
+//            case 0:
+//                return(.none)
+//            case 1:
+//                return(.temporary(self.decodeInteger(forKey: key + "index")))
+//            case 3:
+//                return(.label(self.decodeObject(forKey: key + "label") as! T3ALabel))
+//            case 4:
+//                return(.literal(self.decodeLiteralValue(forKey: key + "literal")))
+//            case 5:
+//                return(.returnRegister)
+//            default:
+//                fatalError("This should not occur")
+//            }
+//        }
         
     public func encodeArgument(_ argument: Argument,forKey: String)
         {
