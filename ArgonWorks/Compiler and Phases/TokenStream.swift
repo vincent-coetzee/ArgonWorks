@@ -36,7 +36,7 @@ public class TokenStream:Equatable, TokenSource
             }
         }
         
-    private var reportingContext:ReportingContext = NullReportingContext.shared
+    private var reportingContext:Reporter = NullReporter.shared
     private var source:String = ""
     private var line:Int = 0
     private var lineAtTokenStart = 0
@@ -101,7 +101,7 @@ public class TokenStream:Equatable, TokenSource
         return(newline.contains(self.currentChar))
         }
     
-    init(source:String,context:ReportingContext,withComments: Bool = true)
+    init(source:String,context:Reporter,withComments: Bool = true)
         {
         self.withComments = withComments
         self.reportingContext = context
@@ -117,7 +117,7 @@ public class TokenStream:Equatable, TokenSource
         self.initKeywords()
         }
         
-    public func allTokens(withComments:Bool,context:ReportingContext) -> [Token]
+    public func allTokens(withComments:Bool,context:Reporter) -> [Token]
         {
         self.reportingContext = context
         self.parseComments = withComments
@@ -449,6 +449,11 @@ public class TokenStream:Equatable, TokenSource
         else if self.currentChar == "<"
             {
             self.nextChar()
+            if self.currentChar == "="
+                {
+                self.nextChar()
+                return(.symbol(.leftBrocketEquals,self.sourceLocation()))
+                }
             return(.symbol(.leftBrocket,self.sourceLocation()))
             }
         else if self.currentChar == "$" && self.peekChar(at: 0) == "{"

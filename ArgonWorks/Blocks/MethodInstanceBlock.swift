@@ -9,17 +9,24 @@ import Foundation
 
 public class MethodInstanceBlock: Block
     {
-    private let _methodInstance: MethodInstance
+    private var _methodInstance: MethodInstance
     
     public override var methodInstance: MethodInstance
         {
         return(self._methodInstance)
         }
         
+    required init()
+        {
+        self._methodInstance = MethodInstance(label: "")
+        super.init()
+        }
+        
     init(methodInstance:MethodInstance)
         {
         self._methodInstance = methodInstance
         super.init()
+        self.setParent(methodInstance)
         }
         
     public required init?(coder: NSCoder)
@@ -40,24 +47,49 @@ public class MethodInstanceBlock: Block
         return(self.methodInstance.lookup(label: label))
         }
         
-    public override func realize(using realizer:Realizer)
-        {
-        for slot in self.localSlots
-            {
-            slot.realize(using: realizer)
-            }
-        for block in self.blocks
-            {
-            block.realize(using: realizer)
-            }
-        }
-        
     public func addParameters(_ parameters: Parameters)
         {
         for parameter in parameters
             {
             self.addLocalSlot(parameter)
             }
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
+        let returnBlocks = self.returnBlocks.filter{$0.enclosingScope.isMethodInstanceScope}
+        for block in returnBlocks
+            {
+            context.append(TypeConstraint(left: block.type, right: self.type, origin: .block(self)))
+            }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
+        self.type = self.methodInstance.returnType.freshTypeVariable(inContext: context)
+        }
+        
+    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
+        {
+        for block in self.blocks
+            {
+            block.analyzeSemantics(using: analyzer)
+            }
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        let newBlock = super.deepCopy()
+        newBlock._methodInstance = self.methodInstance
+        return(newBlock)
         }
         
     public override func addLocalSlot(_ slot:Slot)

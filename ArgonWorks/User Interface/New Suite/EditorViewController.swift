@@ -68,7 +68,7 @@ extension UserDefaults
         }
     }
     
-class EditorViewController: NSViewController,SourceEditorDelegate,ReportingContext,NSWindowDelegate
+class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate
     {
     private static let kWindowFrameKey = "EditorViewControllerWindowFrame"
     private static let kWindowURLKey = "EditorViewControllerWindowURL"
@@ -160,6 +160,9 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         self.currentItem.appendItem(SourceItem(name:"LogicA",path: "/A/B"))
         self.currentItem.appendItem(SourceItem(name:"Reasoning",path: "/A/B"))
         self.currentItem.appendItem(SourceItem(name:"Exploits",path: "/A/B"))
+        let width = self.view.bounds.size.width * 0.2
+        self.splitView.setPosition(width, ofDividerAt: 0)
+        self.splitView.delegate = self
         }
         
     private func updateStatusBar(_ text: String)
@@ -170,7 +173,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         
     private func initEditing()
         {
-        self.tokenizer = VisualTokenizer(lineNumberView: self.editorView,reportingContext: self)
+        self.tokenizer = VisualTokenizer(lineNumberView: self.editorView,reporter: self)
         self.editorView.gutterBackgroundColor = NSColor.black
         self.editorView.backgroundColor = NSColor.black
         self.editorView.gutterForegroundColor = NSColor.lightGray
@@ -188,6 +191,16 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
     public func status(_ string: String)
         {
         self.topLeftText.stringValue = string
+        }
+        
+    public func pushIssues()
+        {
+        self.outliner.reloadData()
+        self.refreshSourceAnnotations()
+        }
+        
+    public func cancelCompletion()
+        {
         }
         
     public func dispatchWarning(at: Location, message: String)
@@ -208,8 +221,6 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
             self.warningItem.appendIssue(issue)
             }
         self.warningItem.sort()
-        self.outliner.reloadData()
-        self.refreshSourceAnnotations()
         }
     
     public func dispatchError(at: Location, message: String)
@@ -230,8 +241,6 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
             self.warningItem.appendIssue(issue)
             }
         self.warningItem.sort()
-        self.outliner.reloadData()
-        self.refreshSourceAnnotations()
         }
     
     public func resetReporting()
@@ -241,7 +250,6 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
         self.warningItem = WarningGroupItem()
         self.currentItem.appendItem(self.warningItem)
         self.editorView.removeAllAnnotations()
-        self.outliner.reloadData()
         }
         
     public func refreshSourceAnnotations()
@@ -354,6 +362,24 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
             }
         }
         
+    @IBAction func onSaveFileAs(_ sender: Any?)
+        {
+        let text = self.editorView.textStorage!.string
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType("com.macsemantics.argon.source")!]
+        panel.prompt = "Save"
+        panel.message = "Select where the editor should save the Argon source."
+        panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Desktop")
+        if panel.runModal() == .OK,let url = panel.url
+            {
+            try? text.write(to: url, atomically: false, encoding: .utf8)
+//            UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
+            self.currentSourceFileURL = url
+            self.view.window?.title = "Argon Editor [ \(self.currentSourceFileURL!.path) ]"
+            self.updateStatusBar("SAVED FILE \(url.absoluteString)")
+            }
+        }
+        
     @IBAction func onSaveObjectFile(_ sender: Any?)
         {
         let panel = NSSavePanel()
@@ -372,7 +398,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReportingContext.shared,tokenRenderer: NullTokenRenderer())
+                let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
                 if let module = aCompiler.compile() as? Module
                     {
                     do
@@ -387,7 +413,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,ReportingConte
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = TopModule.shared.clone()
+                        ImportUnarchiver.topModule = TopModule.shared.deepCopy()
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")
@@ -511,5 +537,19 @@ extension EditorViewController:NSOutlineViewDelegate,NSOutlineViewDataSource
             return(view)
             }
         return(nil)
+        }
+    }
+
+extension EditorViewController: NSSplitViewDelegate
+    {
+    @objc func splitView(_ splitView: NSSplitView,constrainSplitPosition proposedPosition: CGFloat,ofSubviewAt dividerIndex: Int) -> CGFloat
+        {
+        guard dividerIndex == 0 else
+            {
+            return(proposedPosition)
+            }
+        let width = self.view.bounds.size.width
+        let newWidth = max(width * 0.2,proposedPosition)
+        return(newWidth)
         }
     }

@@ -248,30 +248,30 @@ public class InnerPointer:Addressable
         
     public func assignSystemSlots(from aClass:Class)
         {
-        var aKey = "_\(aClass.label)Header"
-        if self.hasSlot(atKey: aKey)
-            {
-            var header = Header(0)
-            header.tag = .header
-            header.hasBytes = aClass.hasBytes
-            header.isForwarded = false
-            header.flipCount = 1
-            header.sizeInWords = aClass.sizeInBytes / 8
-            self.setSlotValue(header, atKey: aKey)
-            }
-        aKey = "_\(aClass.label)MagicNumber"
-        if self.hasSlot(atKey: aKey)
-            {
-            self.setSlotValue(aClass.magicNumber,atKey: aKey)
-            }
-        aKey = "_\(aClass.label)ClassPointer"
-        if self.hasSlot(atKey: aKey)
-            {
-            self.setSlotValue(aClass.memoryAddress,atKey: aKey)
-            }
-        for superclass in aClass.localSuperclasses
-            {
-            self.assignSystemSlots(from: superclass)
-            }
+//        var aKey = "_\(aClass.label)Header"
+//        if self.hasSlot(atKey: aKey)
+//            {
+//            var header = Header(0)
+//            header.tag = .header
+//            header.hasBytes = aClass.hasBytes
+//            header.isForwarded = false
+//            header.flipCount = 1
+//            header.sizeInWords = aClass.sizeInBytes / 8
+//            self.setSlotValue(header, atKey: aKey)
+//            }
+//        aKey = "_\(aClass.label)MagicNumber"
+//        if self.hasSlot(atKey: aKey)
+//            {
+//            self.setSlotValue(aClass.magicNumber,atKey: aKey)
+//            }
+//        aKey = "_\(aClass.label)ClassPointer"
+//        if self.hasSlot(atKey: aKey)
+//            {
+//            self.setSlotValue(aClass.memoryAddress,atKey: aKey)
+//            }
+//        for superclass in aClass.localSuperclasses
+//            {
+//            self.assignSystemSlots(from: superclass)
+//            }
         }
     }

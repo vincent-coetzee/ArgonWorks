@@ -9,6 +9,11 @@ import Foundation
 
 public class ReturnBlock: Block
     {
+    public override var returnBlocks: Array<ReturnBlock>
+        {
+        [self]
+        }
+        
     public override var hasInlineReturnBlock: Bool
         {
         return(true)
@@ -20,22 +25,51 @@ public class ReturnBlock: Block
         }
         
     public var value: Expression = Expression()
-    
-    public override func realize(using realizer:Realizer)
+        
+    public init(expression: Expression)
         {
-        self.value.realize(using: realizer)
-        super.realize(using: realizer)
+        self.value = expression
+        super.init()
+        self.value.setParent(self)
+        }
+    
+    public required init?(coder: NSCoder)
+        {
+        self.value = coder.decodeObject(forKey: "value") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public required init()
+        {
+        self.value = Expression()
+        super.init()
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.value,forKey: "value")
+        super.encode(with:coder)
+        }
+    
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.value.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.value.initializeType(inContext: context)
+        self.type = self.value.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.value.initializeTypeConstraints(inContext: context)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        self.value.analyzeSemantics(using: analyzer)
-        let returnValue = self.methodInstance.type
-        let valueType = self.value.type
-        if !valueType.isEquivalent(to: returnValue)
-            {
-            analyzer.compiler.reportingContext.dispatchError(at: self.declaration!, message: "The type of the return expression \(valueType.label) does not match that of the method \(returnValue)")
-            }
         }
         
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws

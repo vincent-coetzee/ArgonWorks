@@ -38,41 +38,49 @@ public class AssignmentOperatorExpression: Expression
         coder.encode(self.lhs,forKey: "lhs")
         coder.encode(self.operationName,forKey: "operationName")
         }
-        
-    public override var type: Type
-        {
-        return(self.rhs.type)
-        }
-        
+
     init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)
         {
         self.rhs = rhs
         self.lhs = lhs
         self.lhs.becomeLValue()
         self.operationName = operation.name
-        self.lhs.imposeType(self.rhs.type)
         super.init()
         }
         
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.lhs.visit(visitor: visitor)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(AssignmentOperatorExpression(self.lhs.deepCopy(),Token.Operator(self.operationName),self.rhs.deepCopy()) as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: context)
+        try self.rhs.initializeType(inContext: context)
+        self.type = self.lhs.type
+        }
+
     public override var displayString: String
         {
         return("\(self.lhs.displayString) \(self.operationName) \(self.rhs.displayString)")
-        }
-
-    public override func realize(using realizer:Realizer)
-        {
-        self.lhs.realize(using: realizer)
-        self.rhs.realize(using: realizer)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.lhs.analyzeSemantics(using: analyzer)
         self.rhs.analyzeSemantics(using: analyzer)
-        if self.lhs.type.isUnknown && !self.rhs.type.isUnknown
-            {
-            self.lhs.setType(self.rhs.type)
-            }
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

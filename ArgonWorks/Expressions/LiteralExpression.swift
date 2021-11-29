@@ -7,8 +7,13 @@
 
 import Foundation
 
-public indirect enum Literal
+public indirect enum Literal:Hashable,Displayable
     {
+    public var type: Type
+        {
+        return(LiteralExpression(self).type)
+        }
+        
     case `nil`
     case integer(Argon.Integer)
     case float(Argon.Float)
@@ -24,6 +29,11 @@ public indirect enum Literal
     case constant(Constant)
     case function(Function)
     
+    init(type: Type)
+        {
+        self = type.literal
+        }
+        
     init(coder: NSCoder)
         {
         let kind = coder.decodeInteger(forKey: "kind")
@@ -59,6 +69,41 @@ public indirect enum Literal
                 self = .function(coder.decodeObject(forKey: "function") as! Function)
             default:
                 self = .nil
+            }
+        }
+        
+    public var displayString: String
+        {
+       switch(self)
+            {
+            case .nil:
+                return("nil")
+            case .integer(let integer):
+                return("\(integer)")
+            case .float(let float):
+                return("\(float)")
+            case .string(let string):
+                return("\(string)")
+            case .boolean(let boolean):
+                return("\(boolean)")
+            case .symbol(let symbol):
+                return("\(symbol)")
+            case .array(let array):
+                return("\(array.displayString)")
+            case .class(let aClass):
+                return("\(aClass.label)")
+            case .module(let module):
+                return("\(module.label)")
+            case .enumeration(let enumeration):
+                return("\(enumeration.label)")
+            case .enumerationCase(let aCase):
+                return("\(aCase.label)")
+            case .method(let method):
+                return("\(method.label)")
+            case .function(let function):
+                return("\(function.label)")
+            case .constant(let constant):
+                return("\(constant.label)")
             }
         }
         
@@ -273,46 +318,21 @@ public class LiteralExpression: Expression
         
     public let literal:Literal
 
-    public override var type: Type
+    init(_ type:Type)
         {
-        switch(self.literal)
-            {
-            case .nil:
-                return(self.compiler.argonModule.nilClass.type)
-            case .integer:
-                return(self.compiler.argonModule.integer.type)
-            case .float:
-                return(self.compiler.argonModule.float.type)
-            case .string:
-                return(self.compiler.argonModule.string.type)
-            case .boolean:
-                return(self.compiler.argonModule.boolean.type)
-            case .symbol:
-                return(self.compiler.argonModule.symbol.type)
-            case .array:
-                return(self.compiler.argonModule.array.type)
-            case .class:
-                return(self.compiler.argonModule.class.type)
-            case .module:
-                return(self.compiler.argonModule.module.type)
-            case .enumeration:
-                return(self.compiler.argonModule.enumeration.type)
-            case .enumerationCase:
-                return(self.compiler.argonModule.enumerationCase.type)
-            case .method:
-                return(self.compiler.argonModule.method.type)
-            case .function:
-                return(self.compiler.argonModule.function.type)
-            case .constant(let constant):
-                return(constant.type)
-            }
+        self.literal = Literal(type: type)
+        super.init()
         }
-
         
     init(_ literal:Literal)
         {
         self.literal = literal
         super.init()
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        LiteralExpression(self.literal) as! Self
         }
         
     required init?(coder: NSCoder)
@@ -325,6 +345,82 @@ public class LiteralExpression: Expression
         {
         super.encode(with: coder)
         self.literal.encode(with: coder)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try visitor.accept(self)
+        }
+    
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+       switch(self.literal)
+            {
+            case .nil:
+                context.append(TypeConstraint(left: self.type,right: context.nilType,origin: .expression(self)))
+            case .integer:
+                context.append(TypeConstraint(left: self.type,right: context.integerType,origin: .expression(self)))
+            case .float:
+                context.append(TypeConstraint(left: self.type,right: context.floatType,origin: .expression(self)))
+            case .string:
+                context.append(TypeConstraint(left: self.type,right: context.stringType,origin: .expression(self)))
+            case .boolean:
+                context.append(TypeConstraint(left: self.type,right: context.booleanType,origin: .expression(self)))
+            case .symbol:
+                context.append(TypeConstraint(left: self.type,right: context.symbolType,origin: .expression(self)))
+            case .array:
+                context.append(TypeConstraint(left: self.type,right: context.arrayType,origin: .expression(self)))
+            case .class(let aClass):
+                context.append(TypeConstraint(left: self.type,right: aClass.type,origin: .expression(self)))
+            case .module:
+                context.append(TypeConstraint(left: self.type,right: context.moduleType,origin: .expression(self)))
+            case .enumeration(let enumeration):
+                context.append(TypeConstraint(left: self.type,right: enumeration.type,origin: .expression(self)))
+            case .enumerationCase(let aCase):
+                context.append(TypeConstraint(left: self.type,right: aCase.type,origin: .expression(self)))
+            case .method(let method):
+                context.append(TypeConstraint(left: self.type,right: method.type,origin: .expression(self)))
+            case .function(let function):
+                context.append(TypeConstraint(left: self.type,right: function.type,origin: .expression(self)))
+            case .constant(let constant):
+                context.append(TypeConstraint(left: self.type,right: constant.type,origin: .expression(self)))
+            }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        switch(self.literal)
+            {
+            case .nil:
+                self.type = context.nilType
+            case .integer:
+                self.type = context.integerType
+            case .float:
+                self.type = context.floatType
+            case .string:
+                self.type = context.stringType
+            case .boolean:
+                self.type = context.booleanType
+            case .symbol:
+                self.type = context.symbolType
+            case .array:
+                self.type = context.arrayType
+            case .class(let aClass):
+                self.type = aClass.type
+            case .module:
+                self.type = context.moduleType
+            case .enumeration(let enumeration):
+                self.type = enumeration.type
+            case .enumerationCase(let aCase):
+                self.type = aCase.type
+            case .method(let method):
+                self.type = method.type
+            case .function(let function):
+                self.type = function.type
+            case .constant(let constant):
+                self.type = constant.type
+            }
         }
         
     public override func dump(depth: Int)

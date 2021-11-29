@@ -31,7 +31,7 @@ public class MainModule: Module
         
     public var mainMethod: Method?
     
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }

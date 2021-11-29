@@ -13,11 +13,11 @@ public class InnerDictionaryBucketPointer: InnerPointer
         {
         let address = vm.managedSegment.allocateObject(sizeInBytes: Self.kDictionaryBucketSizeInBytes)
         let pointer = InnerDictionaryBucketPointer(address: address)
-        pointer.setClass(vm.topModule.argonModule.dictionaryBucket)
+//        pointer.setClass(vm.topModule.argonModule.dictionaryBucket)
         pointer.key = key
         pointer.value = value
         pointer.next = next
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.dictionaryBucket)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.dictionaryBucket)
         pointer.headerTypeCode = .dictionaryBucket
         assert(pointer.key == key,"Pointer.key != key")
         assert(pointer.value == value,"Pointer.value != value")

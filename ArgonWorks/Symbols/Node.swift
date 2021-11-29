@@ -8,9 +8,13 @@
 import Foundation
 import SwiftUI
     
-public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
+public class Node:NSObject,NamingContext,Identifiable,NSCoding
     {
-    public var tag: Int = 0
+    public var enclosingScope: Scope
+        {
+        return(self.parent.enclosingScope)
+        }
+        
     public var index: UUID
     public var label: String
     public private(set) var parent: Parent = .none
@@ -28,12 +32,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
             }
         }
         
-    public var type: Type
-        {
-        fatalError("This should have been implemented in a class.")
-        }
-        
-    public init(label: String)
+    public required init(label: String)
         {
         self.index = UUID.newUUID()
         self.label = label
@@ -54,17 +53,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
-        
-//    public required init(input: InputFile) throws
-//        {
-//        fatalError("Not implemented")
-//        }
-    
-    public func write(output: OutputFile) throws
-        {
-        try output.write(self)
-        }
-    
+
     public var enclosingClass: Class?
         {
         return(self.parent.enclosingClass)
@@ -82,10 +71,11 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
 
     public func resetParent()
         {
+        fatalError()
         self.parent = .none
         }
         
-    public func setParent(_ node: Node)
+    public func setParent(_ node: Symbol)
         {
         self.parent = .node(node)
         }
@@ -111,10 +101,6 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding,StorableObject
             case .node(let node):
                 self.parent = .node(node)
             }
-        }
-        
-    public func realize(using realizer:Realizer)
-        {
         }
         
     ///

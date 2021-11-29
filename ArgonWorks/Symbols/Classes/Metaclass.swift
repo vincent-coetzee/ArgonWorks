@@ -43,4 +43,10 @@ public class Metaclass: Class
         self.theClass = coder.decodeObject(forKey: "theClass") as? Class
         super.init(coder: coder)
         }
+        
+    public required init(label: Label)
+        {
+        self.theClass = VoidClass.voidClass
+        super.init(label: label)
+        }
     }

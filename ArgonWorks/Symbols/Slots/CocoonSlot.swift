@@ -29,6 +29,12 @@ public class CocoonSlot: VirtualSlot
 //        super.init(labeled: labeled,ofType: ofType)
         }
     
+    public required init(label: Label)
+        {
+        self.rawLabel = label
+        super.init(label: label)
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.rawLabel,forKey: "rawLabel")

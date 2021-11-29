@@ -15,7 +15,7 @@ public class InnerStringPointer:InnerPointer
         {
         let newAddress = vm.managedSegment.allocateString(string)
         let pointer = InnerStringPointer(address: newAddress)
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.string)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.string)
         return(pointer)
         }
         

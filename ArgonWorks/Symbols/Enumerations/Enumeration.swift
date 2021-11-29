@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class Enumeration:Class
+public class Enumeration:Symbol
     {
     public override var isLiteral: Bool
         {
@@ -16,7 +16,7 @@ public class Enumeration:Class
         
     public override var asLiteralExpression: LiteralExpression?
         {
-        LiteralExpression(.enumeration(self))
+        LiteralExpression(Literal.enumeration(self))
         }
         
     public override var isType: Bool
@@ -28,31 +28,22 @@ public class Enumeration:Class
         {
         return(true)
         }
-        
-    public override var type: Type
-        {
-        get
-            {
-            return(.enumeration(self))
-            }
-        set
-            {
-            }
-        }
-        
+
     private var cases: EnumerationCases = []
     public var rawType: Type?
     
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
+        self.type = TypeEnumeration(enumeration: self,generics: [])
         }
     
     public required init?(coder: NSCoder)
         {
-        self.rawType = coder.decodeType(forKey: "rawType")
+        self.rawType = coder.decodeObject(forKey: "rawType") as? Type
         self.cases = coder.decodeObject(forKey: "cases") as! EnumerationCases
         super.init(coder: coder)
+        self.type = TypeEnumeration(enumeration: self,generics: [])
         }
     
     public override var isEnumeration: Bool
@@ -110,7 +101,7 @@ public class Enumeration:Class
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encodeType(self.rawType,forKey: "rawType")
+        coder.encode(self.rawType,forKey: "rawType")
         coder.encode(self.cases,forKey: "cases")
         }
         

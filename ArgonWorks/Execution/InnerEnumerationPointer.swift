@@ -13,7 +13,7 @@ public class InnerEnumerationPointer: InnerPointer
         {
         let address = vm.managedSegment.allocateObject(sizeInBytes: Self.kEnumerationSizeInBytes)
         let pointer = InnerEnumerationPointer(address: address)
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.enumeration)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.enumeration)
         return(pointer)
         }
         

@@ -26,7 +26,13 @@ public class SymbolGroup:ContainerSymbol
         
     public override var type: Type
         {
-        return(self.parent.type)
+        get
+            {
+            return(self.parent.type)
+            }
+        set
+            {
+            }
         }
     ///
     ///

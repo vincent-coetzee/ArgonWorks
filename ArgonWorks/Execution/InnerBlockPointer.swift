@@ -15,7 +15,7 @@ public class InnerBlockPointer: InnerPointer
         let totalSize = Self.kBlockSizeInBytes + (size * 8)
         let address = vm.managedSegment.allocateObject(sizeInBytes: totalSize)
         let pointer = InnerBlockPointer(address: address)
-        pointer.setClass(vm.topModule.argonModule.block)
+//        pointer.setClass(vm.topModule.argonModule.block)
         pointer.headerTypeCode = .block
         pointer.size = size
         pointer.count = 0

@@ -13,8 +13,8 @@ public class InnerMethodInstancePointer: InnerPointer
         {
         let address = vm.managedSegment.allocateObject(sizeInBytes: Self.kMethodInstanceSizeInBytes)
         let pointer = InnerMethodInstancePointer(address: address)
-        pointer.setClass(vm.topModule.argonModule.methodInstance)
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.methodInstance)
+//        pointer.setClass(vm.topModule.argonModule.methodInstance)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.methodInstance)
         pointer.headerTypeCode = TypeCode.methodInstance
         return(pointer)
         }

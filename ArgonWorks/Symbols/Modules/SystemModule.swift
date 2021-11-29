@@ -81,30 +81,4 @@ public class SystemModule: Module
             }
         return(nil)
         }
-        
-//    internal override func layout()
-//        {
-//        self.layoutSlots()
-//        for aModule in self.symbols.compactMap({$0 as? SystemModule})
-//            {
-//            aModule.layout()
-//            }
-//        self.layoutInMemory()
-//        }
-        
-    internal func resolveReferences(topModule: TopModule)
-        {
-        for symbol in self.symbols
-            {
-            if let aClass = symbol as? Class
-                {
-                aClass.realizeSuperclasses(topModule: topModule)
-                }
-            else if let aModule = symbol as? SystemModule
-                {
-                print("RESOLVING MODULE \(aModule.label)")
-                aModule.resolveReferences(topModule: topModule)
-                }
-            }
-        }
     }

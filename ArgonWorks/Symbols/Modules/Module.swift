@@ -8,8 +8,33 @@
 import Foundation
 import AppKit
     
-public class Module:ContainerSymbol
+public class Module:ContainerSymbol,Scope
     {
+    public var isSlotScope: Bool
+        {
+        false
+        }
+        
+    public var isMethodInstanceScope: Bool
+        {
+        false
+        }
+        
+    public var isClosureScope: Bool
+        {
+        false
+        }
+        
+    public var isInitializerScope: Bool
+        {
+        false
+        }
+    
+    public override var enclosingScope: Scope
+        {
+        return(self)
+        }
+        
     public var isMainModule: Bool
         {
         false
@@ -49,7 +74,7 @@ public class Module:ContainerSymbol
         
     private var imports: Array<Importer> = []
     
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }
@@ -75,15 +100,7 @@ public class Module:ContainerSymbol
             try symbol.emitCode(using: generator)
             }
         }
-
-    public override func realize(using realizer: Realizer)
-        {
-        for symbol in self.symbols
-            {
-            symbol.realize(using: realizer)
-            }
-        }
-        
+    
     public override var typeCode:TypeCode
         {
         .module
@@ -244,6 +261,28 @@ public class Module:ContainerSymbol
         self.layoutInMemory()
         }
 
+    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
+        {
+        do
+            {
+            for node in self.symbols
+                {
+                try node.initializeType(inContext: analyzer.typeContext)
+                try node.initializeTypeConstraints(inContext: analyzer.typeContext)
+                }
+            let substitution = try analyzer.typeContext.unify()
+            print(substitution)
+            }
+        catch let error as CompilerIssue
+            {
+            self.appendIssue(error)
+            print(error)
+            }
+        catch let error
+            {
+            self.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
+            }
+        }
     }
 
 public typealias Modules = Array<Module>

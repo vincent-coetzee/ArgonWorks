@@ -32,7 +32,10 @@ public class UnaryExpression: Expression
         super.init(coder: coder)
         }
         
- 
+    public override func deepCopy() -> Self
+        {
+        UnaryExpression(Token.Symbol(rawValue: self.operationName)!,self.rhs.deepCopy()) as! Self
+        }
         
     public override func encode(with coder: NSCoder)
         {
@@ -41,14 +44,16 @@ public class UnaryExpression: Expression
         coder.encode(self.operationName,forKey: "operationName")
         }
         
-    public override var type: Type
+    public override func visit(visitor: Visitor) throws
         {
-        return(self.rhs.type)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
         }
         
-    public override func realize(using realizer:Realizer)
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        self.rhs.realize(using: realizer)
+        try self.rhs.initializeType(inContext: context)
+        self.type = self.rhs.type
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

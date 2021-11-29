@@ -9,6 +9,11 @@ import Foundation
 
 public class Expression: NSObject,NSCoding
     {
+    public var enclosingScope: Scope
+        {
+        return(self.parent.enclosingScope)
+        }
+        
     public var assignedSlots: Slots
         {
         []
@@ -17,16 +22,6 @@ public class Expression: NSObject,NSCoding
     public var enumerationCaseHasAssociatedTypes: Bool
         {
         return(false)
-        }
-        
-    public func operation(_ symbol:Token.Symbol,_ rhs:Expression) -> Expression
-        {
-        return(BinaryExpression(self,symbol,rhs))
-        }
-        
-    public func unary(_ symbol:Token.Symbol) -> Expression
-        {
-        return(UnaryExpression(symbol, self))
         }
 
     public var isUnresolved: Bool
@@ -48,27 +43,7 @@ public class Expression: NSObject,NSCoding
         {
         return(false)
         }
-        
-    public func index(_ index:Expression) -> Expression
-        {
-        return(ArrayAccessExpression(array:self,index:index))
-        }
-        
-    public func assign(_ operation: Token.Operator,_ index:Expression) -> Expression
-        {
-        return(AssignmentOperatorExpression(self,operation,index))
-        }
-        
-    public func slot(_ index:Expression) -> Expression
-        {
-        return(SlotAccessExpression(self,slotExpression: index as! SlotSelectorExpression))
-        }
-        
-    public func cast(into: Type) -> Expression
-        {
-        return(AsExpression(self,into: into))
-        }
-        
+    
     public var rhsValue: Expression?
         {
         return(nil)
@@ -103,12 +78,7 @@ public class Expression: NSObject,NSCoding
         {
         return(false)
         }
-        
-    public var type: Type
-        {
-        .unknown
-        }
-    
+
     public var isEnumerationCaseExpression: Bool
         {
         return(false)
@@ -132,9 +102,8 @@ public class Expression: NSObject,NSCoding
     public private(set) var locations = SourceLocations()
     public internal(set) var _place: T3AInstruction.Operand = .none
     public private(set) var parent: Parent = .none
-    internal private(set) var context: Context = .none
-    internal var compiler: Compiler!
-    
+    internal var type: Type = .unknown
+    public private(set) var issues = CompilerIssues()
     public override init()
         {
         }
@@ -152,9 +121,21 @@ public class Expression: NSObject,NSCoding
         coder.encodeSourceLocations(self.locations,forKey:"locations")
         }
         
-    public func setContext(_ context: Context)
+    @discardableResult
+    public func inferType(context: TypeContext) throws -> Type
         {
-        self.context = context
+        self.type = context.voidType
+        return(self.type)
+        }
+        
+    public func initializeType(inContext context: TypeContext) throws
+        {
+        print("WARNING: initializeType not implemented in \(Swift.type(of: self))")
+        }
+        
+    public func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        print("WARNING: initializeTypeConstraints not implemented in \(Swift.type(of: self))")
         }
         
     public func addDeclaration(_ location:Location)
@@ -171,19 +152,7 @@ public class Expression: NSObject,NSCoding
         {
         }
         
-    public func realize(using: Realizer)
-        {
-        }
-        
-    public func setType(_ type:Type)
-        {
-        }
-        
     public func becomeLValue()
-        {
-        }
-         
-    public func imposeType(_ type: Type)
         {
         }
         
@@ -191,17 +160,27 @@ public class Expression: NSObject,NSCoding
         {
         return(nil)
         }
-        
-    public func scopedExpression(for child: String) -> Expression?
-        {
-        return(nil)
-        }
-        
+
     public func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         }
-        
 
+    public func appendIssue(at: Location,message: String,isWarning:Bool = false)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
+        }
+        
+    @discardableResult
+    public func appendIssues(_ issues: CompilerIssues) -> Expression
+        {
+        self.issues.append(contentsOf: issues)
+        return(self)
+        }
+
+    public func visit(visitor: Visitor) throws
+        {
+        }
+        
     public func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
 //        fatalError("This should have been implemented")
@@ -226,9 +205,9 @@ public class Expression: NSObject,NSCoding
         self.parent = .block(block)
         }
         
-    public func setParent(_ node: Node)
+    public func setParent(_ symbol: Symbol)
         {
-        self.parent = .node(node)
+        self.parent = .node(symbol)
         }
         
     public func setParent(_ expression: Expression)
@@ -241,7 +220,12 @@ public class Expression: NSObject,NSCoding
         return("")
         }
         
-   public func activate(context: Context,withInitialValue value: Expression)
+    public func deepCopy() -> Self
+        {
+        return(Expression() as! Self)
+        }
+        
+    public func substitute(from: TypeContext)
         {
         }
         
@@ -255,7 +239,41 @@ public class Expression: NSObject,NSCoding
         {
         return(nil)
         }
+        
+    public func operation(_ symbol:Token.Symbol,_ rhs:Expression) -> Expression
+        {
+        let expression = BinaryExpression(self,symbol,rhs)
+        self.setParent(expression)
+        rhs.setParent(expression)
+        return(expression)
+        }
+        
+    public func unary(_ symbol:Token.Symbol) -> Expression
+        {
+        let expression = UnaryExpression(symbol, self)
+        self.setParent(expression)
+        return(expression)
+        }
+        
+    public func index(_ index:Expression) -> Expression
+        {
+        let expression = ArrayAccessExpression(array:self,index:index)
+        self.setParent(expression)
+        index.setParent(expression)
+        return(expression)
+        }
     }
     
 
 public typealias Expressions = Array<Expression>
+
+extension Expressions
+    {
+    public func setParent(_ block: Block)
+        {
+        for element in self
+            {
+            element.setParent(block)
+            }
+        }
+    }

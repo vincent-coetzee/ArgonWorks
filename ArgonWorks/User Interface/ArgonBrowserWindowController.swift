@@ -90,7 +90,7 @@ extension UserDefaults
         }
     }
     
-class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,ReportingContext
+class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolbarDelegate,Reporter
     {
     public static let kCompilationEventCellIdentifier = NSUserInterfaceItemIdentifier(rawValue: ArgonBrowserWindowController.kCompilationEventCellName)
     public static let kCompilationEventCellName = "CompilationEventCell"
@@ -132,7 +132,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         {
         didSet
             {
-            self.tokenizer = VisualTokenizer(lineNumberView: self.sourceEditor,reportingContext: self)
+            self.tokenizer = VisualTokenizer(lineNumberView: self.sourceEditor,reporter: self)
             self.initSourceEditor()
             self.initFontManagement()
             }
@@ -264,6 +264,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.refreshSourceAnnotations()
         }
         
+    public func pushIssues()
+        {
+        }
+        
     public func status(_ string: String)
         {
         }
@@ -274,6 +278,10 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         self.compilationEventList = []
         self.sourceEditor.removeAllAnnotations()
         self.errorListView?.reloadData()
+        }
+        
+    public func cancelCompletion()
+        {
         }
         
     public func refreshSourceAnnotations()
@@ -404,26 +412,26 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     ///
     @objc func onGenerateLibraryStub(_ sender: Any?)
         {
-        let path = "/Users/vincent/Desktop/Library.c"
-        let selectedRow = self.objectBrowser.selectedRow
-        let selectedItem = objectBrowser.item(atRow: selectedRow)
-        if let elementHolder = selectedItem as? ElementHolder,let library = elementHolder.symbol as? LibraryModule
-            {
-            let mangler = NameMangler()
-            let file = fopen(path,"wt")
-            for function in library.functions
-                {
-                let name = mangler.mangle(function)
-                var string = "\t\(function.returnType.nativeCType.displayString) \(name)" + "("
-                let strings = function.parameters.map{"\($0.type.nativeCType.displayString) \($0.label)"}.joined(separator: ",") + ")"
-                string += strings
-                string += "\n"
-                string += "\t{\n\t}\n\n"
-                fputs(string,file)
-                }
-            fflush(file)
-            fclose(file)
-            }
+//        let path = "/Users/vincent/Desktop/Library.c"
+//        let selectedRow = self.objectBrowser.selectedRow
+//        let selectedItem = objectBrowser.item(atRow: selectedRow)
+//        if let elementHolder = selectedItem as? ElementHolder,let library = elementHolder.symbol as? LibraryModule
+//            {
+//            let mangler = NameMangler()
+//            let file = fopen(path,"wt")
+//            for function in library.functions
+//                {
+//                let name = mangler.mangle(function)
+//                var string = "\t\(function.returnType.nativeCType.displayString) \(name)" + "("
+//                let strings = function.parameters.map{"\($0.type.nativeCType.displayString) \($0.label)"}.joined(separator: ",") + ")"
+//                string += strings
+//                string += "\n"
+//                string += "\t{\n\t}\n\n"
+//                fputs(string,file)
+//                }
+//            fflush(file)
+//            fclose(file)
+//            }
         }
     ///
     ///
@@ -490,7 +498,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: NullReportingContext.shared,tokenRenderer: NullTokenRenderer())
+                let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
                 if let module = aCompiler.compile() as? Module
                     {
                     do
@@ -505,7 +513,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = TopModule.shared.clone()
+                        ImportUnarchiver.topModule = TopModule.shared.deepCopy()
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")

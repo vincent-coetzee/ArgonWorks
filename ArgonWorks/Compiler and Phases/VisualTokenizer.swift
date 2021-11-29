@@ -22,14 +22,14 @@ public class VisualTokenizer: SemanticTokenRenderer
         
     private let lineNumberView: LineNumberTextView
     private var tokenColors = Dictionary<TokenColor,NSColor>()
-    public var reportingContext: ReportingContext
+    public var reportingContext: Reporter
     private let systemClassNames: Array<String>
     private let font: NSFont
     
-    init(lineNumberView: LineNumberTextView,reportingContext: ReportingContext)
+    init(lineNumberView: LineNumberTextView,reporter: Reporter)
         {
         self.lineNumberView = lineNumberView
-        self.reportingContext = reportingContext
+        self.reportingContext = reporter
         self.systemClassNames = Compiler.systemClassNames
         self.font = NSFont(name: "Menlo",size: 12)!
         self.initColors()
@@ -60,8 +60,8 @@ public class VisualTokenizer: SemanticTokenRenderer
         var someTokens: Tokens = []
         let time = Timer().time
             {
-            let stream = TokenStream(source: string,context: NullReportingContext())
-            let tokens = stream.allTokens(withComments: true, context: NullReportingContext())
+            let stream = TokenStream(source: string,context: NullReporter())
+            let tokens = stream.allTokens(withComments: true, context: NullReporter())
             self.processTokens(tokens)
             someTokens = tokens
             }
@@ -70,6 +70,10 @@ public class VisualTokenizer: SemanticTokenRenderer
             {
             let compiler = Compiler(tokens: someTokens,reportingContext: self.reportingContext,tokenRenderer: self)
             compiler.compile(parseOnly: true)
+            }
+        DispatchQueue.main.async
+            {
+            self.reportingContext.pushIssues()
             }
         print("Time to create Compiler and parse = \(time2)")
         }
@@ -119,6 +123,14 @@ public class VisualTokenizer: SemanticTokenRenderer
         else if kind == .method
             {
             let color = NSColor.argonNeonOrange
+            let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
+            self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
+            }
+        else if kind == .genericClassParameter
+            {
+//            let color = NSColor.white
+            let color = NSColor.argonOpal
+//            let color = NSColor.argonSkyBlueCrayola
             let attributes:[NSAttributedString.Key:Any] = [.foregroundColor:color,.font: self.font]
             self.lineNumberView.textStorage?.setAttributes(attributes, range: token.location.range)
             }

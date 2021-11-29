@@ -2,28 +2,13 @@
 //  AssignmentExpression.swift
 //  ArgonWorks
 //
-//  Created by Vincent Coetzee on 25/10/21.
+//  Created by Vincent Coetzee on 25/11/21.
 //
 
 import Foundation
 
 public class AssignmentExpression: Expression
     {
-    public override var assignedSlots: Slots
-        {
-        return(self.lhs.assignedSlots)
-        }
-        
-    public override var lhsValue: Expression?
-        {
-        return(self.lhs)
-        }
-        
-    public override var rhsValue: Expression?
-        {
-        return(self.rhs)
-        }
-        
     private let rhs: Expression
     private let lhs: Expression
     
@@ -40,48 +25,46 @@ public class AssignmentExpression: Expression
         coder.encode(self.rhs,forKey: "rhs")
         coder.encode(self.lhs,forKey: "lhs")
         }
-        
-    public override var type: Type
-        {
-        return(self.rhs.type)
-        }
-        
+
     init(_ lhs:Expression,_ rhs:Expression)
         {
         self.rhs = rhs
         self.lhs = lhs
-        self.lhs.becomeLValue()
-        self.lhs.imposeType(self.rhs.type)
         super.init()
         }
         
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.lhs.visit(visitor: visitor)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(AssignmentExpression(self.lhs.deepCopy(),self.rhs.deepCopy()) as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: context)
+        try self.rhs.initializeType(inContext: context)
+        self.type = context.voidType
+        }
+
     public override var displayString: String
         {
         return("\(self.lhs.displayString) = \(self.rhs.displayString)")
-        }
-
-    public override func realize(using realizer:Realizer)
-        {
-        self.lhs.realize(using: realizer)
-        self.rhs.realize(using: realizer)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.lhs.analyzeSemantics(using: analyzer)
         self.rhs.analyzeSemantics(using: analyzer)
-        if self.lhs.type.isUnknown && !self.rhs.type.isUnknown
-            {
-            self.lhs.setType(self.rhs.type)
-            }
-        }
-        
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
-        {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        try self.lhs.emitAssign(value: self.rhs, into: instance, using: generator)
         }
     }

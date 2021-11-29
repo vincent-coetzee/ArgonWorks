@@ -24,7 +24,7 @@ public class InnerInstructionBufferPointer: InnerPointer
         let sizeInBytes = 8 * MemoryLayout<Word>.size + 4 * bufferCount * MemoryLayout<Word>.size
         let address = vm.managedSegment.allocateObject(sizeInBytes: sizeInBytes)
         let wordPointer = WordPointer(address: address)
-        wordPointer![4] = Word(bitPattern: Int64(vm.topModule.argonModule.object.magicNumber))
+//        wordPointer![4] = Word(bitPattern: Int64(vm.topModule.argonModule.object.magicNumber))
         wordPointer![5] = vm.topModule.argonModule.object.memoryAddress
         wordPointer![7] = 0
         return(InnerInstructionBufferPointer(address: address))

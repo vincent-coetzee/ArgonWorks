@@ -34,7 +34,7 @@ public class SlotList:NSObject,NSCoding,Collection,StorableObject
         self.slots = []
         for slot in slotList.slots
             {
-            self.slots.append(slot.clone())
+            self.slots.append(slot.deepCopy())
             }
         }
         

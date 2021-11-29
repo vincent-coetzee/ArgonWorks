@@ -79,49 +79,49 @@ public class StaticSegment:Segment
 
     public override func allocateString(_ input:String) -> Word
         {
-        let extraBytes = ((input.utf8.count / 7) + 1) * 8
-        let theClass = self.virtualMachine.topModule.argonModule.string
-        let totalBytes = theClass.sizeInBytes + extraBytes
-        let address = self.allocateObject(sizeInBytes: totalBytes)
-        if address.isZero
-            {
-            print("ERROR IN ManagedSegment.allocateString")
-            print("ERROR ALLOCATING STRING AT \(address.addressString)")
-            return(0)
-            }
-        let object = WordPointer(address: address)!
-        object[1] = Word(bitPattern: Int64(theClass.magicNumber))      // WRITE THE _magicNumber
-        object[2] = theClass.memoryAddress                             // WRITE THE _classPointer
-        let objectClass = self.virtualMachine.topModule.argonModule.object
-        object[3] = Word(bitPattern: Int64(0))                         // WRITE THE _ObjectHeader
-        object[4] = Word(bitPattern: Int64(objectClass.magicNumber))   // WRITE THE _ObjectMagicNumber
-        object[5] = objectClass.memoryAddress                          // WRITE THE _ObjectClassPointer
-        let offset = UInt(address) + UInt(theClass.sizeInBytes)
-        let offsetOfCount = theClass.layoutSlot(atLabel: "count")!.offset
-        let bytePointer = UnsafeMutablePointer<UInt8>(bitPattern: offset)!
-        let countAddress = Word(offsetOfCount) + address
-        let wordPointer = WordPointer(address: countAddress)!          // WRITE THE count
-        wordPointer[0] = Word(input.utf8.count)
-        let string = input.utf8
-        var position = 0
-        var index = string.startIndex
-        var count = string.count
-        while position < count
-            {
-            if position % 7 == 0
-                {
-                bytePointer[position] = Self.kBitsByte
-                position += 1
-                count += 1
-                }
-            else
-                {
-                bytePointer[position] = string[index]
-                position += 1
-                index = string.index(after: index)
-                }
-            }
-        return(address)
+//        let extraBytes = ((input.utf8.count / 7) + 1) * 8
+//        let theClass = self.virtualMachine.topModule.argonModule.string
+//        let totalBytes = theClass.sizeInBytes + extraBytes
+//        let address = self.allocateObject(sizeInBytes: totalBytes)
+//        if address.isZero
+//            {
+//            print("ERROR IN ManagedSegment.allocateString")
+//            print("ERROR ALLOCATING STRING AT \(address.addressString)")
+//            return(0)
+//            }
+//        let object = WordPointer(address: address)!
+//        object[1] = Word(bitPattern: Int64(theClass.magicNumber))      // WRITE THE _magicNumber
+//        object[2] = theClass.memoryAddress                             // WRITE THE _classPointer
+//        let objectClass = self.virtualMachine.topModule.argonModule.object
+//        object[3] = Word(bitPattern: Int64(0))                         // WRITE THE _ObjectHeader
+//        object[4] = Word(bitPattern: Int64(objectClass.magicNumber))   // WRITE THE _ObjectMagicNumber
+//        object[5] = objectClass.memoryAddress                          // WRITE THE _ObjectClassPointer
+//        let offset = UInt(address) + UInt(theClass.sizeInBytes)
+//        let offsetOfCount = theClass.layoutSlot(atLabel: "count")!.offset
+//        let bytePointer = UnsafeMutablePointer<UInt8>(bitPattern: offset)!
+//        let countAddress = Word(offsetOfCount) + address
+//        let wordPointer = WordPointer(address: countAddress)!          // WRITE THE count
+//        wordPointer[0] = Word(input.utf8.count)
+//        let string = input.utf8
+//        var position = 0
+//        var index = string.startIndex
+//        var count = string.count
+//        while position < count
+//            {
+//            if position % 7 == 0
+//                {
+//                bytePointer[position] = Self.kBitsByte
+//                position += 1
+//                count += 1
+//                }
+//            else
+//                {
+//                bytePointer[position] = string[index]
+//                position += 1
+//                index = string.index(after: index)
+//                }
+//            }
+        return(.zero)
         }
         
     }

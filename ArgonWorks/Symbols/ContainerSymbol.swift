@@ -6,55 +6,8 @@
 //
 
 import Foundation
+import Collections
 
-public struct JournalTransaction
-    {
-    internal typealias JournalEntries = Array<JournalEntry>
-    
-    private var entries: JournalEntries
-    
-    init(entries: JournalEntries)
-        {
-        self.entries = entries
-        }
-        
-    public func rollback()
-        {
-        for entry in self.entries
-            {
-            switch(entry)
-                {
-                case .addSymbol(let symbol,let toSymbol):
-                    toSymbol.removeSymbol(symbol)
-                case .addSuperclass(let aClass,let toClass):
-                    toClass.removeSuperclass(aClass)
-                case .addSubclass(let aClass,let toClass):
-                    toClass.removeSubclass(aClass)
-                }
-            }
-        }
-    }
-    
-public enum JournalEntry
-    {
-    public var displayString: String
-        {
-        switch(self)
-            {
-            case .addSymbol(let symbol,let toSymbol):
-                return("ADD \(symbol.label) TO \(toSymbol.label)")
-            case .addSuperclass(let symbol,let toSymbol):
-                return("ADD SUPERCLASS \(symbol.label) TO CLASS \(toSymbol.label)")
-            case .addSubclass(let symbol,let toSymbol):
-                return("ADD SUBCLASS \(symbol.label) TO CLASS \(toSymbol.label)")
-            }
-        }
-        
-    case addSymbol(Symbol,to: Symbol)
-    case addSuperclass(Class,to: Class)
-    case addSubclass(Class,to: Class)
-    }
-    
 public class ContainerSymbol:Symbol
     {
     public override var allNamedInvokables: Array<NamedInvokable>
@@ -62,9 +15,9 @@ public class ContainerSymbol:Symbol
         var buffer = Array<NamedInvokable>()
         for symbol in self.symbols
             {
-            if symbol is Invokable
+            if symbol is Invocable
                 {
-                buffer.append(NamedInvokable(fullName: symbol.fullName, invokable: symbol as! Invokable))
+                buffer.append(NamedInvokable(fullName: symbol.fullName, invokable: symbol as! Invocable))
                 }
             else
                 {
@@ -98,35 +51,7 @@ public class ContainerSymbol:Symbol
         return(true)
         }
         
-    public func commitJournalTransaction()
-        {
-        self.resetJournalEntries()
-        }
-        
-    public func rollbackJournalTransaction()
-        {
-        self.journalTransaction.rollback()
-        self.resetJournalEntries()
-        }
-        
-    public override var journalTransaction: JournalTransaction
-        {
-        return(JournalTransaction(entries: self.allJournalEntries))
-        }
-        
-    public override var allJournalEntries: Array<JournalEntry>
-        {
-        var entries = Array<JournalEntry>()
-        for symbol in self.symbols
-            {
-            entries.append(contentsOf: symbol.allJournalEntries)
-            }
-        entries.append(contentsOf: self.journalEntries)
-        return(entries)
-        }
-        
-    internal var symbolsByLabel = Dictionary<Label,Symbol>()
-    internal var journalEntries = Array<JournalEntry>()
+    internal var symbolsByLabel = OrderedDictionary<Label,Symbol>()
     
     public override var isExpandable: Bool
         {
@@ -172,11 +97,11 @@ public class ContainerSymbol:Symbol
         
     public required init?(coder: NSCoder)
         {
-        self.symbolsByLabel = coder.decodeObject(forKey: "symbolsByLabel") as! Dictionary<Label,Symbol>
+        self.symbolsByLabel = coder.decodeObject(forKey: "symbolsByLabel") as! OrderedDictionary<Label,Symbol>
         super.init(coder: coder)
         }
         
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }
@@ -214,38 +139,43 @@ public class ContainerSymbol:Symbol
         fatalError()
         }
         
-    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        for node in self.symbols
+        for symbol in self.symbolsByLabel.values
             {
-            node.analyzeSemantics(using: analyzer)
+            try symbol.initializeType(inContext: context)
             }
+        self.type = context.voidType
         }
         
-    public override func realize(using realizer: Realizer)
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        guard !realizer.hasRealizedSymbol(self) else
+        for symbol in self.symbolsByLabel.values
             {
-            return
+            try symbol.initializeTypeConstraints(inContext: context)
             }
-        realizer.markSymbolAsRealized(self)
-        for child in self.symbols
+        self.type = context.voidType
+        }
+
+    public override func visit(visitor: Visitor) throws
+        {
+        for symbol in self.symbolsByLabel.values
             {
-            if !realizer.hasRealizedSymbol(child)
-                {
-                realizer.markSymbolAsRealized(child)
-                child.realize(using: realizer)
-                }
+            try symbol.visit(visitor: visitor)
             }
+        try visitor.accept(self)
         }
         
-    public override func resetJournalEntries()
+    public override func deepCopy() -> Self
         {
+        let container = super.deepCopy()
+        var newSymbols = OrderedDictionary<Label,Symbol>()
         for symbol in self.symbols
             {
-            symbol.resetJournalEntries()
+            newSymbols[symbol.label] = symbol.deepCopy()
             }
-        self.journalEntries = []
+        container.symbolsByLabel = newSymbols
+        return(container)
         }
         
     public override func emitCode(using generator: CodeGenerator) throws
@@ -256,19 +186,11 @@ public class ContainerSymbol:Symbol
             }
         }
         
-    public override func realizeSuperclasses(topModule: TopModule)
-        {
-        for element in self.symbols
-            {
-            element.realizeSuperclasses(topModule: topModule)
-            }
-        }
-        
     public override func addSymbol(_ symbol:Symbol)
         {
         self.symbolsByLabel[symbol.label] = symbol
-        self.journalEntries.append(.addSymbol(symbol,to: self))
         symbol.setParent(self)
+        print("ADDED \(symbol.fullName.displayString) TO \(self.fullName.displayString)")
         }
         
     public func addSymbols(_ symbols:Array<Symbol>) -> ContainerSymbol
@@ -278,18 +200,6 @@ public class ContainerSymbol:Symbol
             self.addSymbol(symbol)
             }
         return(self)
-        }
-        
-    public override func removeObject(taggedWith: Int)
-        {
-        for element in self.symbols
-            {
-            element.removeObject(taggedWith: taggedWith)
-            if element.tag == taggedWith
-                {
-                self.symbolsByLabel[element.label] = nil
-                }
-            }
         }
         
     public override func printContents(_ offset: String = "")

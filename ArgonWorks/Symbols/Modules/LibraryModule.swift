@@ -34,6 +34,11 @@ public class LibraryModule: Module
         super.init(coder: coder)
         }
 
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
     public override func encode(with coder: NSCoder)
         {
         coder.encode(self.path,forKey: "path")

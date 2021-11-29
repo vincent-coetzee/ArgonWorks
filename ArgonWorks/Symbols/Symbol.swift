@@ -45,7 +45,7 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
-    public var isGenericClassParameter: Bool
+    public var isGenericType: Bool
         {
         return(false)
         }
@@ -125,11 +125,6 @@ public class Symbol:Node,ParseNode
         return(false)
         }
         
-    public var isClassParameter: Bool
-        {
-        return(false)
-        }
-        
     public var selectionColor: NSColor
         {
         get
@@ -170,17 +165,7 @@ public class Symbol:Node,ParseNode
         {
         return(false)
         }
-        
-    public var allJournalEntries: Array<JournalEntry>
-        {
-        return([])
-        }
-        
-    public var journalTransaction: JournalTransaction
-        {
-        return(JournalTransaction(entries: []))
-        }
-        
+
     public var declaration: Location?
         {
         self.locations.declaration
@@ -249,25 +234,16 @@ public class Symbol:Node,ParseNode
             }
         }
         
-    public func realizeSuperclasses(topModule: TopModule)
+    public var type: Type
         {
-        }
-        
-   public func allocateAddresses(using: AddressAllocator)
-        {
-        }
-        
-    public func emitCode(using: CodeGenerator) throws
-        {
-        }
-        
-    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
-        {
-//        fatalError("Should not have been called")
-        }
-        
-    public func analyzeSemantics(using: SemanticAnalyzer)
-        {
+        get
+            {
+            self._type
+            }
+        set
+            {
+            self._type = newValue
+            }
         }
         
     internal var frame: StackFrame?
@@ -282,8 +258,10 @@ public class Symbol:Node,ParseNode
     public private(set) var isImported = false
     public private(set) var loader: Loader?
     public private(set) var compiler: Compiler!
+    public private(set) var issues = CompilerIssues()
+    public var _type: Type!
     
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }
@@ -321,6 +299,56 @@ public class Symbol:Node,ParseNode
 //        return(self)
 //        }
         
+   public func allocateAddresses(using: AddressAllocator)
+        {
+        }
+        
+    public func emitCode(using: CodeGenerator) throws
+        {
+        }
+        
+    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
+        {
+//        fatalError("Should not have been called")
+        }
+        
+    public func analyzeSemantics(using: SemanticAnalyzer)
+        {
+        }
+        
+    public func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        }
+        
+    public func initializeType(inContext context: TypeContext) throws
+        {
+        }
+        
+    public func appendWarningIssue(at: Location,message: String)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: true))
+        }
+        
+    public func appendIssue(at: Location,message: String)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: false))
+        }
+        
+    public func appendIssue(at: Location,message: String,isWarning:Bool = false)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
+        }
+        
+    public func appendIssue(_ issue: CompilerIssue)
+        {
+        self.issues.append(issue)
+        }
+        
+    public func appendIssues(_ issues: CompilerIssues)
+        {
+        self.issues.append(contentsOf: issues)
+        }
+        
     public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
         {
         if let exporter = archiver as? ImportArchiver
@@ -340,9 +368,23 @@ public class Symbol:Node,ParseNode
         return(self)
         }
         
-    public func clone() -> Symbol
+    public func deepCopy() -> Self
         {
-        return(Symbol(label: self.label))
+        let copy = Self.init(label: self.label)
+        copy.setParent(self.parent)
+        copy.index = self.index
+        copy.isLoaded = self.isLoaded
+        copy.isImported = self.isImported
+        copy.source = self.source
+        copy.loader = self.loader
+        copy.compiler = self.compiler
+        return(copy)
+        }
+        
+    public func dump(depth: Int)
+        {
+        let string = String(repeating: "\t", count: depth)
+        print("\(string)\(Swift.type(of: self)) \(self.label)")
         }
         
     public func replaceSymbol(_ source: Symbol,with replacement: Symbol)
@@ -392,6 +434,11 @@ public class Symbol:Node,ParseNode
             }
         cell.icon.contentTintColor = Palette.shared.headerTextColor
         cell.text.textColor = textColor
+        }
+        
+    public func visit(visitor: Visitor) throws
+        {
+        try visitor.accept(self)
         }
         
     public func invert(cell: HierarchyCellView)

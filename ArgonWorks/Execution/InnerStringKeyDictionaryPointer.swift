@@ -38,7 +38,7 @@ public class InnerStringKeyDictionaryPointer: InnerDictionaryPointer
         let address = vm.managedSegment.allocateObject(sizeInBytes: totalSize)
         let pointer = InnerStringKeyDictionaryPointer(address: address)
         pointer.prime = prime
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.dictionary)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.dictionary)
         pointer.virtualMachine = vm
         assert(pointer.prime == prime,"Pointer.prime != prime")
         return(pointer)

@@ -11,13 +11,14 @@ public class SemanticAnalyzer: CompilerPass
     {
     public let compiler:Compiler
     public var wasCancelled = false
+    public let typeContext: TypeContext
     
-    @discardableResult
-    public static func analyze(_ node:ParseNode,in compiler:Compiler) -> Bool
-        {
-        let analyzer = SemanticAnalyzer(compiler: compiler)
-        return(analyzer.analyze(node))
-        }
+//    @discardableResult
+//    public static func analyzeModule(_ module: Module) -> Bool
+//        {
+//        let analyzer = SemanticAnalyzer(compiler: self.compiler)
+//        return(analyzer.analyze(node))
+//        }
         
     public var virtualMachine: VirtualMachine
         {
@@ -27,6 +28,7 @@ public class SemanticAnalyzer: CompilerPass
     init(compiler: Compiler)
         {
         self.compiler = compiler
+        self.typeContext = TypeContext(scope: compiler.topModule.argonModule)
         }
         
     public func cancelCompletion()
@@ -34,10 +36,11 @@ public class SemanticAnalyzer: CompilerPass
         self.wasCancelled = true
         }
         
-    private func analyze(_ node:ParseNode) -> Bool
+    public static func analyzeModule(_ module: Module,in compiler: Compiler) -> Bool
         {
-        node.analyzeSemantics(using: self)
-        return(!self.wasCancelled)
+        let analyzer = SemanticAnalyzer(compiler: compiler)
+        module.analyzeSemantics(using: analyzer)
+        return(!analyzer.wasCancelled)
         }
     }
 

@@ -7,9 +7,9 @@
 
 import Foundation
 
-public struct NullReportingContext:ReportingContext
+public struct NullReporter:Reporter
     {
-    public static let shared = NullReportingContext()
+    public static let shared = NullReporter()
 
     public func resetReporting()
         {
@@ -30,6 +30,10 @@ public struct NullReportingContext:ReportingContext
         }
         
     public func status(_ string: String)
+        {
+        }
+        
+    public func pushIssues()
         {
         }
     }

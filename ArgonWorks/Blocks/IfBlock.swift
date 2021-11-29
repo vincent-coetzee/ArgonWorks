@@ -9,7 +9,13 @@ import Foundation
 
 public class IfBlock: Block
     {
-    private let condition:Expression
+    public override var displayString: String
+        {
+        "IFBlock " + self.condition.displayString  + " " + self.elseBlock.displayString
+        }
+        
+    private var condition:Expression
+    
     internal var elseBlock: Block?
         {
         didSet
@@ -30,16 +36,11 @@ public class IfBlock: Block
         self.condition = Expression()
         super.init(coder: coder)
         }
-    
-    public override func realize(using realizer:Realizer)
+        
+    public required init()
         {
-        super.realize(using: realizer)
-        self.condition.realize(using: realizer)
-        for block in self.blocks
-            {
-            block.realize(using: realizer)
-            }
-        self.elseBlock?.realize(using: realizer)
+        self.condition = Expression()
+        super.init()
         }
         
     public override func dump(depth: Int)
@@ -51,6 +52,49 @@ public class IfBlock: Block
             {
             block.dump(depth: depth + 1)
             }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.condition.initializeType(inContext: context)
+        for block in self.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
+        self.type = context.voidType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.condition.initializeTypeConstraints(inContext: context)
+        for block in self.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
+        try self.elseBlock?.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.condition.visit(visitor: visitor)
+        try self.elseBlock?.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        let copy = super.deepCopy()
+        copy.condition = self.condition.deepCopy()
+        copy.elseBlock = self.elseBlock?.deepCopy()
+        return(copy)
+        }
+        
+    public override func substitute(from context: TypeContext)
+        {
+        super.substitute(from: context)
+        self.condition.substitute(from: context)
+        self.elseBlock?.substitute(from: context)
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

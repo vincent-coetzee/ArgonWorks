@@ -12,17 +12,15 @@ public class Compiler
     {
     public static var systemClassNames: Array<String>
         {
-        TopModule.shared.argonModule.classes.map{$0.label}
+        TopModule().argonModule.classes.map{$0.label}
         }
-    
-    public static let cleanData = try! NSKeyedArchiver.archivedData(withRootObject: TopModule.shared, requiringSecureCoding: false)
-    
+
     public var argonModule: ArgonModule
         {
         return(self.topModule.argonModule)
         }
         
-    internal var reportingContext:ReportingContext
+    internal var reportingContext:Reporter
     private var parser: Parser!
     internal var lastNode: ParseNode?
     internal var currentPass: CompilerPass?
@@ -30,12 +28,12 @@ public class Compiler
     internal var topModule: TopModule
     internal var tokenRenderer:SemanticTokenRenderer
     
-    init(source: String,reportingContext: ReportingContext,tokenRenderer: SemanticTokenRenderer)
+    init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
         self.parser = nil
         self.currentPass = nil
         self.lastNode = nil
-        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        self.topModule = TopModule()
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
@@ -44,12 +42,12 @@ public class Compiler
         self.tokenRenderer.update(source)
         }
 
-    init(tokens: Tokens,reportingContext: ReportingContext,tokenRenderer: SemanticTokenRenderer)
+    init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
         self.parser = nil
         self.currentPass = nil
         self.lastNode = nil
-        self.topModule = try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(Self.cleanData) as! TopModule
+        self.topModule = TopModule()
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.topModule.printContents("\t")
         self.reportingContext = reportingContext
@@ -68,16 +66,20 @@ public class Compiler
     public func compile(parseOnly: Bool = false) -> ParseNode?
         {
         self.reportingContext.resetReporting()
-        if let node = self.parser.parse(),!parseOnly
+        if let module = self.parser.parse(),!parseOnly
             {
-            self.topModule.resolveReferences(topModule: self.topModule)
-            Realizer.realize(node,in:self)
-            SemanticAnalyzer.analyze(node,in:self)
-            AddressAllocator.allocateAddresses(node,in: self)
-            CodeGenerator.emit(into: node,in:self)
-            Optimizer.optimize(node,in:self)
-            return(node)
+            let visitor = TestVisitor()
+            visitor.startVisit()
+            try! module.visit(visitor: visitor)
+            visitor.endVisit()
+            self.reportingContext.pushIssues()
+            SemanticAnalyzer.analyzeModule(module,in:self)
+            AddressAllocator.allocateAddresses(module,in: self)
+            CodeGenerator.emit(into: module,in:self)
+            Optimizer.optimize(module,in:self)
+            return(module)
             }
+        self.reportingContext.pushIssues()
         return(nil)
         }
     }

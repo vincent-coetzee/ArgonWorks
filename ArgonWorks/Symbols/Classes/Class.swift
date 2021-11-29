@@ -10,8 +10,13 @@ import AppKit
 import SwiftUI
 import FFI
 
-public class Class:ContainerSymbol,ObservableObject,Displayable
+public class Class:ContainerSymbol
     {
+    public var genericSourceClass: Class
+        {
+        return(self)
+        }
+        
     public override var allNamedInvokables: Array<NamedInvokable>
         {
         var list = super.allNamedInvokables
@@ -19,7 +24,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         for initializer in self.initializers
             {
             let name = self.fullName + "_INIT_\(index)"
-            list.append(NamedInvokable(fullName: name, invokable: initializer as! Invokable))
+            list.append(NamedInvokable(fullName: name, invokable: initializer as Invocable))
             index += 1
             }
         return(list)
@@ -32,28 +37,28 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public override var asLiteralExpression: LiteralExpression?
         {
-        return(LiteralExpression(.class(self)))
+        return(LiteralExpression(Literal.class(self)))
         }
         
-    private func parentList(_ array: inout Array<Class>)
-        {
-        for superclass in self.superclasses
-            {
-            if !array.contains(superclass)
-                {
-                array.append(superclass)
-                superclass.parentList(&array)
-                }
-            }
-        }
+//    private func parentList(_ array: inout Array<Class>)
+//        {
+//        for superclass in self.superclasses
+//            {
+//            if !array.contains(superclass)
+//                {
+//                array.append(superclass)
+//                superclass.parentList(&array)
+//                }
+//            }
+//        }
         
     public var rawPrecedenceList: Classes
         {
         var array = Classes()
-        array += self.superclasses
+        array += self.superclasses.map{($0 as! TypeClass).theClass}
         for superclass in self.superclasses
             {
-            array += superclass.rawPrecedenceList
+            array += (superclass as! TypeClass).theClass.rawPrecedenceList
             }
         return(array)
         }
@@ -63,18 +68,18 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         var array = [self]
         for superclass in self.superclasses
             {
-            array += superclass.allSuperclasses
+            array += (superclass as! TypeClass).theClass.allSuperclasses
             }
         return(array)
         }
         
     public func allSuperclasses(inClass aClass: Class) -> Array<(Int,Class)>
         {
-        let index = aClass.superclasses.firstIndex(of: self)!
+        let index = aClass.superclasses.firstIndex(of: self.type)!
         var array = [(aClass.superclasses.count - index - 1,self)]
         for superclass in self.superclasses
             {
-            array += superclass.allSuperclasses(inClass: self)
+            array += (superclass as! TypeClass).theClass.allSuperclasses(inClass: self)
             }
         return(array)
         }
@@ -84,7 +89,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         var array = [(0,self)]
         for superclass in self.superclasses
             {
-            array += superclass.allSuperclasses(inClass: self)
+            array += (superclass as! TypeClass).theClass.allSuperclasses(inClass: self)
             }
         var list = Array<(Int,Class)>()
         for element in array
@@ -235,10 +240,10 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(self.localSlots.sorted{$0.label<$1.label} + self.subclasses.sorted{$0.label<$1.label})
         }
         
-    public var internalClass: Class
-        {
-        return(self.topModule.argonModule.class)
-        }
+//    public var internalClass: Class
+//        {
+//        return(self.topModule.argonModule.class)
+//        }
         
     public var metaclass: Metaclass?
         {
@@ -246,7 +251,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             {
             self._metaclass = Metaclass(label: "\(self.label) class",class: self)
             self._metaclass?.setParent(self.parent)
-            self._metaclass?.superclasses = self.superclasses.map{$0.metaclass!}
+            self._metaclass?.superclasses = self.superclasses.map{($0 as! TypeClass).theClass.metaclass!.type}
             }
         return(self._metaclass!)
         }
@@ -300,11 +305,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
-    public override var type:Type
-        {
-        return(.class(self))
-        }
-        
     public var isClassClass: Bool
         {
         return(self.label == "Class")
@@ -340,20 +340,15 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
-    public override var asType: Type
-        {
-        return(.class(self))
-        }
-        
     public var containsUninstanciatedParameterics: Bool
         {
         return(false)
         }
         
-    public var containedClassParameters: Array<GenericClassParameter>
-        {
-        return([])
-        }
+//    public var containedClassParameters: Array<GenericType>
+//        {
+//        return([])
+//        }
         
     public override var iconName: String
         {
@@ -423,12 +418,12 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         leaderCell.textField?.stringValue = text
         }
         
-    public var localSuperclasses: Array<Class>
+    public var localSuperclasses: Types
         {
         return(self.superclasses)
         }
         
-    public var localSubclasses: Array<Class>
+    public var localSubclasses: Types
         {
         return(self.subclasses)
         }
@@ -496,9 +491,9 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         return(false)
         }
         
-    public var allSubclasses: Array<Class>
+    public var allSubclasses: Types
         {
-        var list = Array<Class>()
+        var list = Types()
         for aClass in self.subclasses
             {
             if !list.contains(aClass)
@@ -511,22 +506,18 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         }
         
     internal var isForwardReferenced: Bool = false
-    internal var superclassReferences = Array<ForwardReferenceClass>()
-    private var subclasses = Classes()
-    private var superclasses = Classes()
+    private var subclasses = Types()
+    internal var superclasses = Types()
     private var layoutSlots: SlotList
     internal var magicNumber:Int
     internal var slotClassType:Slot.Type = Slot.self
     internal var isMemoryPreallocated = false
-//    internal var header = Header(0)
     internal var hasBytes = false
     internal var _metaclass: Metaclass?
     internal var mangledCode: Label
-//    internal var offsetOfClass: Dictionary<Class,Int> = [:]
-    internal var hasBeenRealized = false
     internal var initializers = Array<Initializer>()
     
-    public override init(label:Label)
+    public required init(label:Label)
         {
         self.layoutSlots = SlotList()
         self.magicNumber = label.polynomialRollingHash
@@ -534,14 +525,14 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         super.init(label: label)
         self.addDeclaration(.zero)
         self.layoutSlots.parent = self
+        self.type = TypeClass(class: self,generics: [])
         }
         
     public required init?(coder: NSCoder)
         {
 //        print("START DECODE \(Swift.type(of: self))")
-        self.superclassReferences = []
-        self.subclasses = coder.decodeObject(forKey: "subclasses") as! Classes
-        self.superclasses = coder.decodeObject(forKey: "superclasses") as! Classes
+        self.subclasses = coder.decodeObject(forKey: "subclasses") as! Types
+        self.superclasses = coder.decodeObject(forKey: "superclasses") as! Types
         self.layoutSlots = coder.decodeObject(forKey: "layoutSlots") as! SlotList
         self.magicNumber = coder.decodeInteger(forKey: "magicNumber")
         self.slotClassType = Slot.self
@@ -549,8 +540,8 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         self.hasBytes = coder.decodeBool(forKey: "hasBytes")
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
-        self.hasBeenRealized = coder.decodeBool(forKey: "hasBeenRealized")
         super.init(coder: coder)
+        self.type = TypeClass(class: self,generics: [])
 //        print("END DECODE SYMBOL \(self.label)")
         }
 
@@ -564,7 +555,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         coder.encode(self.hasBytes,forKey: "hasBytes")
         coder.encode(self._metaclass,forKey: "_metaclass")
         coder.encode(self.mangledCode,forKey: "mangledCode")
-        coder.encode(self.hasBeenRealized,forKey: "hasBeenRealized")
         super.encode(with: coder)
         }
         
@@ -584,9 +574,11 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
     /// that take place.
     ///
     ///
-    public func deepCopy() -> Class
+    public override func deepCopy() -> Self
         {
-        let newClass = Class(label: self.label)
+        fatalError()
+        let newClass = super.deepCopy()
+        newClass.type = TypeClass(class: newClass,generics: [])
         newClass.subclasses = Array(self.subclasses)
         newClass.superclasses = Array(self.superclasses)
         newClass.layoutSlots = SlotList(self.layoutSlots)
@@ -598,7 +590,6 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         newClass._metaclass = self._metaclass
         newClass.mangledCode = self.mangledCode
 //        newClass.offsetOfClass = self.offsetOfClass
-        newClass.hasBeenRealized = self.hasBeenRealized
         newClass.source = self.source
         newClass.addresses = self.addresses
         newClass.locations = self.locations
@@ -613,15 +604,22 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public func addSubclass(_ aClass: Class)
         {
-        if !self.subclasses.contains(aClass)
+        if !self.subclasses.contains(aClass.type)
             {
-            self.subclasses.append(aClass)
+            self.subclasses.append(aClass.type)
             }
-        if !aClass.superclasses.contains(self)
+        if !aClass.superclasses.contains(self.type)
             {
-            aClass.superclasses.append(self)
+            aClass.superclasses.append(self.type)
             }
-        self.journalEntries.append(.addSubclass(aClass,to: self))
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        for slot in self.localSlots
+            {
+            try slot.initializeType(inContext: context)
+            }
         }
 
     internal func layoutSlotKeys() -> Array<InnerInstancePointer.SlotKey>
@@ -643,32 +641,33 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         }
         
-    public func addSuperclass(_ aClass: Class)
+    public func addSuperclass(_ type: Type)
         {
-        if !self.superclasses.contains(aClass)
+        if !self.superclasses.contains(type)
             {
-            self.superclasses.append(aClass)
+            self.superclasses.append(type)
             }
-        if !aClass.subclasses.contains(self)
+        if !(type as! TypeClass).theClass.subclasses.contains(self.type)
             {
-            aClass.subclasses.append(self)
+            (type as! TypeClass).theClass.subclasses.append(self.type)
             }
-        self.journalEntries.append(.addSuperclass(aClass,to: self))
         }
         
-    public func removeSuperclass(_ aClass: Class)
+    public func removeSuperclass(_ type: Type)
         {
-        self.superclasses.removeAll(where: { aClass == $0})
-        if aClass.subclasses.contains(self)
+        let aClass = (type as! TypeClass).theClass
+        self.superclasses.removeAll(where: { type == $0})
+        if aClass.subclasses.contains(self.type)
             {
             aClass.subclasses.removeAll(where: { self == $0})
             }
         }
         
-    public func removeSubclass(_ aClass: Class)
+    public func removeSubclass(_ type: Type)
         {
-        self.subclasses.removeAll(where: { aClass == $0})
-        if aClass.superclasses.contains(self)
+        let aClass = (type as! TypeClass).theClass
+        self.subclasses.removeAll(where: { type == $0})
+        if aClass.superclasses.contains(self.type)
             {
             aClass.superclasses.removeAll(where: { self == $0})
             }
@@ -676,9 +675,24 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public func isSubclass(of superclass:Class) -> Bool
         {
-        return(superclass.isSuperclass(of: self))
+        if self.fullName == superclass.fullName
+            {
+            return(true)
+            }
+        for aClass in self.superclasses
+            {
+            if aClass.fullName == superclass.fullName
+                {
+                return(true)
+                }
+            if (aClass as! TypeClass).theClass.isSubclass(of: superclass)
+                {
+                return(true)
+                }
+            }
+        return(false)
         }
-        
+
     public override func isElement(ofType: Group.ElementType) -> Bool
         {
         return(ofType == .class)
@@ -692,7 +706,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         for clazz in self.superclasses
             {
-            if clazz.isInclusiveSubclass(of: someClass)
+            if (clazz as! TypeClass).theClass.isInclusiveSubclass(of: someClass)
                 {
                 return(true)
                 }
@@ -750,17 +764,24 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         {
         for aClass in self.subclasses
             {
-            if aClass == subclass
+            if aClass.fullName == subclass.fullName
+                {
+                return(true)
+                }
+            }
+        for aClass in self.superclasses
+            {
+            if (aClass as! TypeClass).theClass.isSuperclass(of: subclass)
                 {
                 return(true)
                 }
             }
         return(false)
         }
-        
-    public override func superclass(_ string:String) -> Class
+
+    public func superclass(_ type:Type) -> Class
         {
-        self.superclassReferences.append(ForwardReferenceClass(name: Name(string)))
+        self.addSuperclass(type)
         return(self)
         }
         
@@ -910,7 +931,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         fatalError("A non parametric class should not be instanciated")
         }
         
-    public func instanciate(withTypes: Types,reportingContext: ReportingContext) -> Type
+    public func instanciate(withTypes: Types,reportingContext: Reporter) -> Type
         {
         fatalError("A non parametric class should not be instanciated")
         }
@@ -938,7 +959,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         
     public func layoutObjectSlots()
         {
-        print("LAYING OUT CLASS \(self.label)")
+//        print("LAYING OUT CLASS \(self.label)")
         guard !self.isSlotLayoutDone else
             {
             return
@@ -961,7 +982,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         offset += slot.size
         for aClass in self.superclasses
             {
-            aClass.layoutObjectSlots(in: self,offset: &offset,visitedClasses: &visitedClasses)
+            (aClass as! TypeClass).theClass.layoutObjectSlots(in: self,offset: &offset,visitedClasses: &visitedClasses)
             }
         for slot in self.localSlots
             {
@@ -971,7 +992,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
                 clonedSlot.setOffset(offset)
                 clonedSlot.setParent(self)
                 self.layoutSlots.append(clonedSlot)
-                print("LAID OUT SLOT \(clonedSlot.label) OFSET \(clonedSlot.offset) IN CLASS \(self.label)")
+//                print("LAID OUT SLOT \(clonedSlot.label) OFSET \(clonedSlot.offset) IN CLASS \(self.label)")
                 offset += clonedSlot.size
                 }
             }
@@ -1002,7 +1023,7 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         offset += slot.size
         for aClass in self.superclasses
             {
-            aClass.layoutObjectSlots(in: inClass,offset: &offset,visitedClasses: &visitedClasses)
+            (aClass as! TypeClass).theClass.layoutObjectSlots(in: inClass,offset: &offset,visitedClasses: &visitedClasses)
             }
         for slot in self.localSlots
             {
@@ -1048,47 +1069,55 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
             }
         }
         
-    public override func realizeSuperclasses(topModule: TopModule)
-        {
-        guard !self.hasBeenRealized else
-            {
-            return
-            }
-        for reference in self.superclassReferences
-            {
-            reference.realizeClass(topModule: topModule)
-            if let symbol = reference.theClass
-                {
-                self.addSuperclass(symbol)
-                symbol.realizeSuperclasses(topModule: topModule)
-                }
-            else
-                {
-                print("ERROR could not realize \(reference)")
-                }
-            }
-        for aClass in self.superclasses
-            {
-            _ = aClass.metaclass
-            }
-        self.hasBeenRealized = true
-        }
-        
-    public func resetHierarchy()
-        {
-        self.hasBeenRealized = false
-        self.superclasses = []
-        for subclass in self.subclasses
-            {
-            subclass.resetHierarchy()
-            }
-        self.subclasses = []
-        }
+//    public override func realizeSuperclasses(topModule: TopModule)
+//        {
+//        guard !self.hasBeenRealized else
+//            {
+//            return
+//            }
+//        for reference in self.superclassReferences
+//            {
+//            reference.realizeClass(topModule: topModule)
+//            if let symbol = reference.theClass
+//                {
+//                self.addSuperclass(symbol)
+//                symbol.realizeSuperclasses(topModule: topModule)
+//                }
+//            else
+//                {
+//                print("ERROR could not realize \(reference)")
+//                }
+//            }
+//        for aClass in self.superclasses
+//            {
+//            _ = aClass.metaclass
+//            }
+//        self.hasBeenRealized = true
+//        }
+//
+//    public func resetHierarchy()
+//        {
+//        self.hasBeenRealized = false
+//        self._superclasses = []
+//        for subclass in self.subclasses
+//            {
+//            subclass.resetHierarchy()
+//            }
+//        self.subclasses = []
+//        }
         
     @discardableResult
     public func slot(_ slotLabel:Label,_ theClass:Class) -> Class
         {
         let slot = theClass.slotClassType.init(labeled:slotLabel,ofType:theClass.type)
+        self.addSymbol(slot)
+        return(self)
+        }
+        
+    @discardableResult
+    public func slot(_ slotLabel:Label,_ type:Type) -> Class
+        {
+        let slot = (type as! TypeClass).theClass.slotClassType.init(labeled:slotLabel,ofType:type)
         self.addSymbol(slot)
         return(self)
         }
@@ -1101,9 +1130,9 @@ public class Class:ContainerSymbol,ObservableObject,Displayable
         }
         
     @discardableResult
-    public func virtual(_ slotLabel:Label,_ theClass:Class) -> Class
+    public func virtual(_ slotLabel:Label,_ type:Type) -> Class
         {
-        self.addSymbol(VirtualSlot(label:slotLabel,type:theClass.type))
+        self.addSymbol(VirtualSlot(label:slotLabel,type: type))
         return(self)
         }
         

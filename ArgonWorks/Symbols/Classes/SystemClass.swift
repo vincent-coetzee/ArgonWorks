@@ -59,11 +59,14 @@ public class SystemClass:Class
     /// for the use of the ArgonModule.
     ///
     ///
-    init(label:Label,superclasses:Array<Label>,typeCode:TypeCode = .none)
+    init(label:Label,superclasses: Types,typeCode:TypeCode = .none)
         {
         self._typeCode = typeCode
         super.init(label:label)
-        self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
+        for aClass in superclasses
+            {
+            self.addSuperclass(aClass)
+            }
         }
     
     public required init?(coder: NSCoder)
@@ -74,5 +77,9 @@ public class SystemClass:Class
 //        print("END DECODE SYSTEM CLASS \(self.label)")
         }
         
- 
+     public required init(label: Label)
+        {
+        self._typeCode = .class
+        super.init(label: label)
+        }
 }

@@ -125,6 +125,12 @@ public class PrimitiveClass:Class
         super.init(coder: coder)
         }
         
+    public required init(label: Label)
+        {
+        self.primitiveType = .integer
+        super.init(label: label)
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(Int32(self.primitiveType.rawValue),forKey: "primitiveType")

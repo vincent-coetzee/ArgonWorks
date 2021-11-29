@@ -62,10 +62,10 @@ public class InnerArrayPointer:InnerPointer,Collection,Sequence
         pointer.elementClassValue = elementClass.memoryAddress
         Self.allocatedArrays.insert(address)
         pointer.headerTypeCode = TypeCode.array
-        pointer.setClass(vm.topModule.argonModule.array)
+//        pointer.setClass(vm.topModule.argonModule.array)
         pointer.count = 0
         pointer.size = arraySize
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.array)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.array)
         return(pointer)
         }
         

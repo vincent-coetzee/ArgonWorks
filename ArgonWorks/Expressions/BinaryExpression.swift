@@ -6,180 +6,6 @@
 //
 
 import Foundation
-
-public enum TypeResult
-    {
-    public var isPrimitiveClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isPrimitiveClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isObjectClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isObjectClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isEnumerationClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isEnumeration)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isNotClass: Bool
-        {
-        switch(self)
-            {
-            case .class:
-                return(false)
-            default:
-                return(true)
-            }
-        }
-        
-    public var isMismatch: Bool
-        {
-        switch(self)
-            {
-            case .mismatch:
-                return(true)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isUndefined: Bool
-        {
-        switch(self)
-            {
-            case .undefined:
-                return(true)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isClass: Bool
-        {
-        switch(self)
-            {
-            case .class:
-                return(true)
-            default:
-                return(false)
-            }
-        }
-        
-    case `class`(Class)
-    case mismatch(Class,Class)
-    case undefined
-    
-    public static func ==(lhs:TypeResult,rhs:TypeResult) -> Bool
-        {
-        switch(lhs,rhs)
-            {
-            case (.class(let classA),.class(let classB)):
-                return(classA == classB)
-            default:
-                return(false)
-            }
-        }
-        
-    public static func +(lhs:TypeResult,rhs:TypeResult) -> TypeResult
-        {
-        switch(lhs,rhs)
-            {
-            case (.class(let class1),.class(let class2)):
-                if class1 == class2
-                    {
-                    return(.class(class1))
-                    }
-                return(.mismatch(class1,class2))
-            case (.mismatch,_):
-                fallthrough
-            case (_,.mismatch):
-                return(.undefined)
-            case (.undefined,_):
-                fallthrough
-            case (_,.undefined):
-                return(.undefined)
-            default:
-                return(.undefined)
-            }
-        }
-        
-    public static func ==(lhs:TypeResult,rhs:Class) -> Bool
-        {
-        switch(lhs)
-            {
-            case .class(let aClass):
-                return(aClass == rhs)
-            default:
-                return(false)
-            }
-        }
-        
-    public func isSubclass(of: Class) -> Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isSubclass(of: of))
-            default:
-                return(false)
-            }
-        }
-        
-    public func isSameClass(_ aClass: Class) -> Bool
-        {
-        switch(self)
-            {
-            case .class(let theClass):
-                return(aClass == theClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public func isInclusiveSubclass(of: Class) -> Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isInclusiveSubclass(of: of))
-            default:
-                return(false)
-            }
-        }
-        
-    public var `class`: Class?
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass)
-            default:
-                return(nil)
-            }
-        }
-    
-    }
     
 public class BinaryExpression: Expression
     {
@@ -193,9 +19,9 @@ public class BinaryExpression: Expression
         return(self.rhs)
         }
         
-    private let operation: Token.Symbol
-    private let rhs: Expression
-    private let lhs: Expression
+    internal let operation: Token.Symbol
+    internal let rhs: Expression
+    internal let lhs: Expression
     
     init(_ lhs:Expression,_ operation:Token.Symbol,_ rhs:Expression)
         {
@@ -211,87 +37,54 @@ public class BinaryExpression: Expression
         {
         return("\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)")
         }
-        
-    public override var type: Type
-        {
-        let left = self.lhs.type
-        let right = self.rhs.type
-        switch(self.operation)
-            {
-            case .leftBrocket:
-                fallthrough
-            case .leftBrocketEquals:
-                fallthrough
-            case .equals:
-                fallthrough
-            case .rightBrocket:
-                fallthrough
-            case .rightBrocketEquals:
-                return(.class(self.compiler.argonModule.boolean))
-            default:
-                return(left + right)
-            }
-        }
-        
+
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        let left = self.lhs.type
-        let right = self.rhs.type
-        if left.isNotClass || right.isNotClass
-            {
-            analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration!, message: "The type of this expression can not be ascertained.")
-            return
-            }
-        switch(self.operation)
-            {
-            case .and:
-                fallthrough
-            case .or:
-                if left.isSameClass(self.compiler.argonModule.boolean) && right.isSameClass(self.compiler.argonModule.boolean)
-                    {
-                    break
-                    }
-                analyzer.cancelCompletion()
-                analyzer.dispatchError(at: self.declaration!,message: "Invalid argument types for \(self.operation).")
-            case .leftBrocket:
-                fallthrough
-            case .leftBrocketEquals:
-                fallthrough
-            case .equals:
-                fallthrough
-            case .rightBrocket:
-                fallthrough
-            case .rightBrocketEquals:
-                if left.isPrimitiveClass && right.isPrimitiveClass
-                    {
-                    break
-                    }
-                if left.isEnumeration && right.isEnumeration
-                    {
-                    break
-                    }
-                if left.isObjectClass && right.isObjectClass
-                    {
-                    break
-                    }
-                analyzer.cancelCompletion()
-                analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
-                return
-        default:
-            if left == right
-                {
-                break
-                }
-            analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
-            }
-        }
-        
-    public override func realize(using realizer:Realizer)
-        {
-        self.lhs.realize(using: realizer)
-        self.rhs.realize(using: realizer)
+//        let left = self.lhs.type
+//        let right = self.rhs.type
+//        switch(self.operation)
+//            {
+//            case .and:
+//                fallthrough
+//            case .or:
+//                if left.isSameClass(self.enclosingScope.topModule.argonModule.boolean) && right.isSameClass(self.enclosingScope.topModule.argonModule.boolean)
+//                    {
+//                    break
+//                    }
+//                analyzer.cancelCompletion()
+//                analyzer.dispatchError(at: self.declaration!,message: "Invalid argument types for \(self.operation).")
+//            case .leftBrocket:
+//                fallthrough
+//            case .leftBrocketEquals:
+//                fallthrough
+//            case .equals:
+//                fallthrough
+//            case .rightBrocket:
+//                fallthrough
+//            case .rightBrocketEquals:
+//                if left.isPrimitiveClass && right.isPrimitiveClass
+//                    {
+//                    break
+//                    }
+//                if left.isEnumeration && right.isEnumeration
+//                    {
+//                    break
+//                    }
+//                if left.isObjectClass && right.isObjectClass
+//                    {
+//                    break
+//                    }
+//                analyzer.cancelCompletion()
+//                analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
+//                return
+//        default:
+//            if left == right
+//                {
+//                break
+//                }
+//            analyzer.cancelCompletion()
+//            analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
+//            }
         }
         
     required init?(coder: NSCoder)
@@ -300,6 +93,13 @@ public class BinaryExpression: Expression
         self.lhs = coder.decodeObject(forKey:"lhs") as! Expression
         self.rhs = coder.decodeObject(forKey:"rhs") as! Expression
         super.init(coder: coder)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.lhs.visit(visitor: visitor)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
         }
         
      public override func becomeLValue()
@@ -315,6 +115,47 @@ public class BinaryExpression: Expression
         coder.encode(self.rhs,forKey: "rhs")
         }
         
+    public override func deepCopy() -> Self
+        {
+        return(BinaryExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
+        }
+        
+    public override func substitute(from context: TypeContext)
+        {
+        self.lhs.substitute(from: context)
+        self.rhs.substitute(from: context)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: context)
+        try self.rhs.initializeType(inContext: context)
+        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Method
+            {
+            let instance = method.mostSpecificInstance(forTypes: [self.lhs.type,self.rhs.type])
+            print(instance)
+            }
+        else
+            {
+            self.appendIssue(at: self.declaration!, message: "The method \(self.operation) can not be resolved.")
+            }
+        }
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Method
+            {
+            try self.lhs.initializeTypeConstraints(inContext: context)
+            try self.rhs.initializeTypeConstraints(inContext: context)
+            let argTypes = [self.lhs.type,self.rhs.type]
+            let functionType = TypeFunction(types: argTypes, returnType: method.returnType)
+            context.append(TypeConstraint(left: self.type, right: functionType, origin: .expression(self)))
+            }
+        else
+            {
+            self.appendIssue(at: self.declaration!, message: "Unable to resolve binary operation '\(self.operation)' so method can not be dispatched.")
+            }
+        }
+        
     public override func dump(depth: Int)
         {
         let padding = String(repeating: "\t", count: depth)
@@ -326,98 +167,142 @@ public class BinaryExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        var opcode: String = "NOP"
-        switch(self.operation)
-            {
-            case .add:
-                if self.type == generator.argonModule.float.type
-                    {
-                    opcode = "FADD"
-                    }
-                else
-                    {
-                    opcode = "IADD"
-                    }
-            case .sub:
-                if self.type == generator.argonModule.float.type
-                    {
-                    opcode = "FSUB"
-                    }
-                else
-                    {
-                    opcode = "ISUB"
-                    }
-            case .mul:
-                if self.type == generator.argonModule.float.type
-                    {
-                    opcode = "FMUL"
-                    }
-                else
-                    {
-                    opcode = "IMUL"
-                    }
-            case .div:
-                if self.type == generator.argonModule.float.type
-                    {
-                    opcode = "FDIV"
-                    }
-                else
-                    {
-                    opcode = "IDIV"
-                    }
-            case .modulus:
-                if self.type == generator.argonModule.float.type
-                    {
-                    opcode = "FMOD"
-                    }
-                else
-                    {
-                    opcode = "IMOD"
-                    }
-            case .and:
-                opcode = "AND"
-            case .or:
-                opcode = "OR"
-            case .rightBrocket:
-                fallthrough
-            case .rightBrocketEquals:
-                fallthrough
-            case .equals:
-                fallthrough
-            case .leftBrocket:
-                fallthrough
-            case .leftBrocketEquals:
-                if self.type.isNotClass
-                    {
-                    print(self.rhs.displayString)
-                    generator.dispatchError(at: self.declaration!, message: "The type of this expression is not defined.")
-                    generator.cancelCompletion()
-                    break
-                    }
-                if self.type.isPrimitiveClass
-                    {
-                    opcode = "CMPW"
-                    }
-                else
-                    {
-                    opcode = "CMPO"
-                    }
-            default:
-                break
-            }
-        let temp = instance.nextTemporary()
-        try self.lhs.emitCode(into: instance, using: generator)
-        instance.append(nil,"MOV",self.lhs.place,.none,temp)
-        try self.rhs.emitCode(into: instance, using: generator)
-        instance.append(nil,opcode,temp,rhs.place,.none)
-        if rhs.place.isNone
-            {
-            print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")
-            }
-        self._place = temp
+//        if let location = self.declaration
+//            {
+//            instance.append(lineNumber: location.line)
+//            }
+//        var opcode: String = "NOP"
+//        switch(self.operation)
+//            {
+//            case .add:
+//                if self.type == generator.argonModule.float.type
+//                    {
+//                    opcode = "FADD"
+//                    }
+//                else
+//                    {
+//                    opcode = "IADD"
+//                    }
+//            case .sub:
+//                if self.type == generator.argonModule.float.type
+//                    {
+//                    opcode = "FSUB"
+//                    }
+//                else
+//                    {
+//                    opcode = "ISUB"
+//                    }
+//            case .mul:
+//                if self.type == generator.argonModule.float.type
+//                    {
+//                    opcode = "FMUL"
+//                    }
+//                else
+//                    {
+//                    opcode = "IMUL"
+//                    }
+//            case .div:
+//                if self.type == generator.argonModule.float.type
+//                    {
+//                    opcode = "FDIV"
+//                    }
+//                else
+//                    {
+//                    opcode = "IDIV"
+//                    }
+//            case .modulus:
+//                if self.type == generator.argonModule.float.type
+//                    {
+//                    opcode = "FMOD"
+//                    }
+//                else
+//                    {
+//                    opcode = "IMOD"
+//                    }
+//            case .and:
+//                opcode = "AND"
+//            case .or:
+//                opcode = "OR"
+//            case .rightBrocket:
+//                fallthrough
+//            case .rightBrocketEquals:
+//                fallthrough
+//            case .equals:
+//                fallthrough
+//            case .leftBrocket:
+//                fallthrough
+//            case .leftBrocketEquals:
+//                if self.type.isNotClass
+//                    {
+//                    print(self.rhs.displayString)
+//                    generator.dispatchError(at: self.declaration!, message: "The type of this expression is not defined.")
+//                    generator.cancelCompletion()
+//                    break
+//                    }
+//                if self.type.isPrimitiveClass
+//                    {
+//                    opcode = "CMPW"
+//                    }
+//                else
+//                    {
+//                    opcode = "CMPO"
+//                    }
+//            default:
+//                break
+//            }
+//        let temp = instance.nextTemporary()
+//        try self.lhs.emitCode(into: instance, using: generator)
+//        instance.append(nil,"MOV",self.lhs.place,.none,temp)
+//        try self.rhs.emitCode(into: instance, using: generator)
+//        instance.append(nil,opcode,temp,rhs.place,.none)
+//        if rhs.place.isNone
+//            {
+//            print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")
+//            }
+//        self._place = temp
+        }
+    }
+
+public class ComparisonExpression: BinaryExpression
+    {
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: context)
+        try self.rhs.initializeType(inContext: context)
+        self.type = context.booleanType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(ComparisonExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
+        }
+    }
+
+public class BooleanExpression: BinaryExpression
+    {
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: context)
+        try self.rhs.initializeType(inContext: context)
+        self.type = context.booleanType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: context.booleanType,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(BooleanExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
         }
     }

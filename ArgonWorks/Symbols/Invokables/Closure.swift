@@ -7,12 +7,38 @@
 
 import Foundation
 
-public class Closure:Invokable
+public class Closure:Invocable,Scope
     {
+    public var isSlotScope: Bool
+        {
+        false
+        }
+        
+    public override var enclosingScope: Scope
+        {
+        return(self)
+        }
+        
+    public var isMethodInstanceScope: Bool
+        {
+        return(false)
+        }
+        
+    public var isClosureScope: Bool
+        {
+        return(true)
+        }
+        
+    public var isInitializerScope: Bool
+        {
+        return(false)
+        }
+        
     public let block: Block
     public let buffer: T3ABuffer
+    public var symbols = Symbols()
     
-    required override init(label:Label)
+    required init(label:Label)
         {
         self.block = Block()
         self.buffer = T3ABuffer()
@@ -22,26 +48,34 @@ public class Closure:Invokable
     public required init?(coder: NSCoder)
         {
         self.block = coder.decodeObject(forKey: "block") as! Block
+        self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
         self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
+        coder.encode(self.symbols,forKey: "symbols")
         coder.encode(self.block,forKey: "block")
         coder.encode(self.buffer,forKey: "buffer")
         super.encode(with: coder)
         }
         
+    public override func lookup(label: Label) -> Symbol?
+        {
+        for symbol in self.symbols
+            {
+            if symbol.label == label
+                {
+                return(symbol)
+                }
+            }
+        return(self.parent.lookup(label: label))
+        }
+        
     public override func allocateAddresses(using allocator:AddressAllocator)
         {
         super.allocateAddresses(using: allocator)
-        }
-        
-    public override func realize(using: Realizer)
-        {
-        super.realize(using: using)
-        self.block.realize(using: using)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

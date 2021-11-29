@@ -7,10 +7,12 @@
 
 import Foundation
 
-public protocol ReportingContext
+public protocol Reporter
     {
+    func cancelCompletion()
     func resetReporting()
     func status(_ string:String)
     func dispatchWarning(at:Location,message:String)
     func dispatchError(at:Location,message:String)
+    func pushIssues()
     }

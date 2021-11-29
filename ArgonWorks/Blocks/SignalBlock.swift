@@ -23,9 +23,20 @@ public class SignalBlock: Block
         super.init(coder: coder)
         }
         
+    public required init()
+        {
+        self.symbol = ""
+        super.init()
+        }
+        
      public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
         buffer.append(nil,"SIG",.literal(.symbol(self.symbol)),.none,.none)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        self.type = context.symbolType
         }
     }
 

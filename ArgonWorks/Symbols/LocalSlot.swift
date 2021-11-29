@@ -13,7 +13,7 @@ public class LocalSlot:Slot
     
     init(label:Label,type:Type?,value:Expression?)
         {
-        super.init(label: label, type: type)
+        super.init(label: label,type: type.isNil ? TypeContext.freshTypeVariable() : type!)
         self.initialValue = value
         }
     
@@ -26,8 +26,12 @@ public class LocalSlot:Slot
         super.init(coder: coder)
         }
     
- 
-        
+     public required init(label: Label)
+        {
+        super.init(label: label)
+        }
+    
+    
     public override var typeCode:TypeCode
         {
         .localSlot

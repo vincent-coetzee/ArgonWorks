@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class Invokable: Symbol
+public class Invocable: Symbol
     {
     public var invocationLabel: Label
         {
@@ -28,23 +28,18 @@ public class Invokable: Symbol
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
-    public var returnType: Type = .class(VoidClass.voidClass)
-    
-    public override var type: Type
-        {
-        return(self.returnType)
-        }
+    public var returnType: Type = VoidClass.voidClass.type
         
     public required init?(coder: NSCoder)
         {
         self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
-        self.returnType = coder.decodeType(forKey: "returnType")!
+        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         super.init(coder: coder)
         }
         
-    override init(label:Label)
+    required init(label:Label)
         {
         self.cName = ""
         self.parameters = Parameters()
@@ -58,12 +53,7 @@ public class Invokable: Symbol
         super.encode(with: coder)
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
-        coder.encodeType(self.returnType,forKey: "returnType")
-        }
-
-    public func curried() -> Array<SingleParameterInvokable>
-        {
-        return(SingleParameterInvokable.with(label: self.label, parameters: self.parameters, returnType: self.returnType))
+        coder.encode(self.returnType,forKey: "returnType")
         }
         
     public override func isElement(ofType: Group.ElementType) -> Bool
@@ -108,6 +98,13 @@ public class SingleParameterInvokable: Symbol
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    public required init(label: Label)
+        {
+        self.result = Parameter(label:"")
+        self.parameter = Parameter(label:"")
+        super.init(label: label)
+        }
 }
 
 extension Array where Element == Parameter

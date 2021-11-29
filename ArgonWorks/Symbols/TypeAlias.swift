@@ -26,13 +26,13 @@ public class TypeAlias:Symbol
         
     public override var classValue: Class
         {
-        self._type.classValue
+        self.type.classValue
         }
-        
-    public override var canBecomeAClass: Bool
-        {
-        return(self._type.canBecomeAClass)
-        }
+//        
+//    public override var canBecomeAClass: Bool
+//        {
+//        return(self._type.canBecomeAClass)
+//        }
         
     public override var canBecomeAType: Bool
         {
@@ -46,7 +46,7 @@ public class TypeAlias:Symbol
         
     public var mangledName: String
         {
-        return(self._type.mangledName)
+        return(self.type.mangledName)
         }
         
     public override var iconName: String
@@ -56,33 +56,37 @@ public class TypeAlias:Symbol
         
     public override var asType: Type
         {
-        return(self._type)
+        return(self.type)
         }
         
     public override func emitCode(using: CodeGenerator)
         {
         }
         
-    private let _type:Type
-    
     init(label:Label,type:Type)
         {
-        self._type = type
         super.init(label: label)
+        self.type = type
         }
     
     public required init?(coder: NSCoder)
         {
 //        print("START DECODE TYPE ALIAS")
-        self._type = coder.decodeType(forKey: "_type")!
         super.init(coder: coder)
+        self.type = coder.decodeObject(forKey: "_type") as! Type
 //        print("END DECODE TYPE ALIAS \(self.label)")
+        }
+        
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        self.type = Type()
         }
         
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encodeType(self._type,forKey: "_type")
+        coder.encode(self.type,forKey: "_type")
         }
         
     public override var typeCode:TypeCode
@@ -102,7 +106,7 @@ public class TypeAlias:Symbol
         
     public func isSubtype(of enumeration: Enumeration) -> Bool
         {
-        return(self._type == Type.enumeration(enumeration))
+        return(self.type == enumeration.type)
         }
         
     public func isInclusiveSubclass(of aClass: Class) -> Bool

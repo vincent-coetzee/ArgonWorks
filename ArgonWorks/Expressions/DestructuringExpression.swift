@@ -14,12 +14,7 @@ public class DestructuringExpression: Expression
         let string = "(" + self.expressions.map{$0.displayString}.joined(separator: ",") + ")"
         return("TUPLE\(string)")
         }
-        
-    public override var type: Type
-        {
-        return(.class(Tuple(label: Argon.nextName("1TUPLE"))))
-        }
-        
+
     private var expressions = Expressions()
     public var isArrayDestructure: Bool = false
     
@@ -42,6 +37,23 @@ public class DestructuringExpression: Expression
         coder.encode(self.isArrayDestructure,forKey: "isArrayDestructure")
         }
         
+    public override func deepCopy() -> Self
+        {
+        let expression = DestructuringExpression()
+        expression.expressions = self.expressions.map{$0.deepCopy()}
+        expression.isArrayDestructure = self.isArrayDestructure
+        return(expression as! Self)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        for expression in self.expressions
+            {
+            try expression.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
+        }
+        
      public override func becomeLValue()
         {
         for expression in self.expressions
@@ -57,14 +69,6 @@ public class DestructuringExpression: Expression
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        }
-        
-    public override func realize(using realizer:Realizer)
-        {
-        for expression in self.expressions
-            {
-            expression.realize(using: realizer)
-            }
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

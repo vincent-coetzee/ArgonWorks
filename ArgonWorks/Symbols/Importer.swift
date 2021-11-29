@@ -62,6 +62,13 @@ public class Importer: Symbol,Loader
 //        print("END DECODE IMPORT \(self.label)")
         }
 
+    public required init(label: Label)
+        {
+        self.path = ""
+        self.canonicalPath = ""
+        super.init(label: label)
+        }
+        
     public func isPathEquivalent(to input: String) -> Bool
         {
         return(self.canonicalPath == input.canonicalPath)
@@ -94,7 +101,7 @@ public class Importer: Symbol,Loader
         return(input)
         }
         
-    public static func tryLoadingPath(_ path: String?,topModule: TopModule,reportingContext: ReportingContext,location: Location) -> String?
+    public static func tryLoadingPath(_ path: String?,topModule: TopModule,reportingContext: Reporter,location: Location) -> String?
         {
 //        guard let filePath = path else
 //            {

@@ -51,4 +51,13 @@ public class CodeGenerator: CompilerPass
             return(false)
             }
         }
+        
+    public func start()
+        {
+        }
+        
+    public func finish()
+        {
+        self.compiler.reportingContext.pushIssues()
+        }
     }

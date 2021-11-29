@@ -11,7 +11,7 @@ public class MacroParameter: Symbol
     {
     public var value: String = ""
 
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }
@@ -53,6 +53,12 @@ public class Macro: Symbol
         self.text = coder.decodeString(forKey: "text")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! MacroParameters
         super.init(coder: coder)
+        }
+        
+    public required init(label: Label)
+        {
+        self.text = ""
+        super.init(label: label)
         }
         
     public override func encode(with coder: NSCoder)

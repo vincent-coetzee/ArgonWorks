@@ -214,6 +214,23 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case cast = "to"
         case backslash = "\\"
 
+        public var isOperator: Bool
+            {
+            switch(self)
+                {
+                case .macroStart,.macroStop,.noteStart,.noteEnd,.semicolon,.colon:
+                    break
+                case .none,.doubleBackSlash,.leftParenthesis,.rightParenthesis,.leftBracket,.rightBracket,.leftBrace,.rightBrace:
+                    break
+                case .gluon,.stop,.comma,.dollar,.hash,.at,.assign,.rightArrow,.doubleQuote,.singleQuote,.leftBrocket,.rightBrocket:
+                    break
+                case .halfRange,.fullRange,.not,.other,.cast,.backslash:
+                    break
+                default:
+                    return(true)
+                }
+            return(false)
+            }
         }
 
     public enum Keyword:String,CaseIterable,Equatable
@@ -233,7 +250,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case ENUMERATION
         case EXPORTED
         case EXTENSION
-        case LOOP
+        case FOR
         case FORK
         case FROM
         case FUNCTION
@@ -247,6 +264,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case LET
         case LOADED
         case LOCAL
+        case LOOP
         case MACRO
         case MAIN
         case MAKE
@@ -946,6 +964,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         {
         switch(self)
             {
+            case .symbol(let symbol,_):
+                return(Operator(symbol))
             case .operator(let name,_):
                 return(Operator(name))
             default:
@@ -1336,6 +1356,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         {
         switch(self)
             {
+            case .symbol(let symbol,_):
+                return(symbol.isOperator)
             case .operator:
                 return(true)
             default:
@@ -2648,6 +2670,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .ROLE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isFor:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .FOR)
             default:
                 return(false)
             }

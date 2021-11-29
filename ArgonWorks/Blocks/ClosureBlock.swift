@@ -10,7 +10,7 @@ import Foundation
 public class ClosureBlock: Block
     {
     public var parameters = Parameters()
-    public var returnType:Type = .class(VoidClass.voidClass)
+//    public var returnType:Type = VoidClass.voidClass.type
     public var buffer: T3ABuffer = T3ABuffer()
         
     public func addParameter(label:String,type: Type)

@@ -19,7 +19,7 @@ public class InnerSlotPointer:InnerPointer
         let pointer = InnerSlotPointer(address: address)
         Self.allocatedSlots.insert(address)
         pointer.setSlotValue(vm.topModule.argonModule.slot.memoryAddress,atKey:"_classPointer")
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.slot)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.slot)
         pointer.headerTypeCode = .slot
         return(pointer)
         }

@@ -29,10 +29,10 @@ public class Domain: Loader
     init(label: Label)
         {
         self.label = label
-        self.topModule = TopModule.shared.clone()
+        self.topModule = TopModule.shared.deepCopy()
         }
         
-    public func compileIn(source:String,reportingContext: ReportingContext)
+    public func compileIn(source:String,reportingContext: Reporter)
         {
         }
         

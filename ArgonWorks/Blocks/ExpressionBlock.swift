@@ -9,13 +9,14 @@ import Foundation
 
 public class ExpressionBlock: Block
     {
-    private let expression:Expression
+    private var expression:Expression
     public var place: T3AInstruction.Operand = .none
     
     init(_ expression:Expression)
         {
         self.expression = expression
         super.init()
+        expression.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -24,16 +25,29 @@ public class ExpressionBlock: Block
         super.init(coder: coder)
         }
         
-    public override func realize(using realizer:Realizer)
+    public required init()
         {
-        super.realize(using: realizer)
-        self.expression.realize(using: realizer)
+        self.expression = Expression()
+        super.init()
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        let newBlock = super.deepCopy()
+        newBlock.expression = self.expression.deepCopy()
+        return(newBlock)
+        }
+        
+    internal override func substitute(from: TypeContext)
+        {
+        super.substitute(from: from)
+        self.expression.substitute(from: from)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         super.analyzeSemantics(using: analyzer)
-//        let type = self.expression.resultType
+        self.expression.analyzeSemantics(using: analyzer)
         }
         
     public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
@@ -47,5 +61,21 @@ public class ExpressionBlock: Block
         let padding = String(repeating: "\t", count: depth)
         print("\(padding)EXPRESSION BLOCK")
         self.expression.dump(depth: depth+1)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.expression.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    public override func initializeType(inContext: TypeContext) throws
+        {
+        try self.expression.initializeType(inContext: inContext)
+        }
+        
+    public override func initializeTypeConstraints(inContext: TypeContext) throws
+        {
+        try self.expression.initializeTypeConstraints(inContext: inContext)
         }
     }

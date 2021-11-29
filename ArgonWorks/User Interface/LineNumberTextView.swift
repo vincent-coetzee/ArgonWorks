@@ -268,23 +268,26 @@ public class LineNumberTextView: NSTextView
         location = self.selectedRanges.first!.rangeValue.location
         let string = self.string
         var index = string.index(string.startIndex,offsetBy: location)
-        var character = string[index]
-        if character == "}"
+        if index != string.endIndex
             {
-            while index > string.startIndex && character != "{"
+            var character = string[index]
+            if character == "}"
                 {
-                index = string.index(before: index)
-                character = string[index]
-                location -= 1
-                }
-            if character == "{"
-                {
-                let range = NSRange(location: location, length: 1)
-                let old = self.textStorage?.attributes(at: location, effectiveRange: nil)
-                self.textStorage?.setAttributes(self.highlightAttributes, range: range)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
+                while index > string.startIndex && character != "{"
                     {
-                    self.textStorage?.setAttributes(old, range: range)
+                    index = string.index(before: index)
+                    character = string[index]
+                    location -= 1
+                    }
+                if character == "{"
+                    {
+                    let range = NSRange(location: location, length: 1)
+                    let old = self.textStorage?.attributes(at: location, effectiveRange: nil)
+                    self.textStorage?.setAttributes(self.highlightAttributes, range: range)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5)
+                        {
+                        self.textStorage?.setAttributes(old, range: range)
+                        }
                     }
                 }
             }

@@ -12,12 +12,12 @@ public class SymbolHolder:Symbol
     private static var list:Array<SymbolHolder> = []
     private let symbolName: Name
     private let context: NamingContext?
-    private let reporter: ReportingContext
+    private let reporter: Reporter
     private let location: Location
     public private(set) var symbol: Symbol?
     private let types: Classes?
     
-    init(name:Name,location:Location,namingContext:NamingContext?,reporter:ReportingContext,types:Classes? = nil)
+    init(name:Name,location:Location,namingContext:NamingContext?,reporter:Reporter,types:Classes? = nil)
         {
         self.symbolName = name
         self.types = types
@@ -33,7 +33,15 @@ public class SymbolHolder:Symbol
         fatalError("init(coder:) has not been implemented")
         }
     
- 
+     public required init(label: Label)
+        {
+        self.symbolName = Name()
+        self.context = nil
+        self.reporter = NullReporter.shared
+        self.location = .zero
+        self.types = Classes()
+        super.init(label: label)
+        }
         
     @discardableResult
     public func reify() -> Symbol?

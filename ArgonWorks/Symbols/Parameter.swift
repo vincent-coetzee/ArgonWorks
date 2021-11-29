@@ -11,7 +11,7 @@ public class Parameter:Slot,Displayable
     {
     public override var displayString: String
         {
-        return("\(self.label)::\(type.label)")
+        return("\(self.label)::\(type.displayString)")
         }
         
     public override var typeCode:TypeCode
@@ -22,6 +22,11 @@ public class Parameter:Slot,Displayable
     public var valueTag: Label
         {
         return(self.label)
+        }
+        
+    public var tag: Label?
+        {
+        self.isVisible ? self.label : nil
         }
         
     public override var label: Label
@@ -64,7 +69,13 @@ public class Parameter:Slot,Displayable
         super.init(coder: coder)
         }
         
- 
+     public required init(label: Label)
+        {
+        self.isVisible = true
+        self.isVariadic = false
+        self.relabel = nil
+        super.init(label: label)
+        }
         
     public override func encode(with coder:NSCoder)
         {
@@ -73,7 +84,35 @@ public class Parameter:Slot,Displayable
         coder.encode(self.isVariadic,forKey: "isVariadic")
         coder.encode(self.relabel,forKey: "relabel")
         }
-}
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> Parameter
+        {
+        let newType = self.type is TypeVariable ? context.freshTypeVariable() : self.type
+        let newParameter = Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic)
+        return(newParameter)
+        }
+        
+    public func substitute(from context: TypeContext)
+        {
+        self.type = self.type.substitute(from: context)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(Parameter(label: self.label, relabel: self.relabel, type: self.type.deepCopy(), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
+        }
+        
+    public func flatten() -> Parameter
+        {
+        Parameter(label: self.label, relabel: self.relabel, type: self.type.type, isVisible: self.isVisible, isVariadic: self.isVariadic)
+        }
+        
+//    public func withSolution(_ solution: SolutionSpace) -> Parameter
+//        {
+//        let newType = self._type!.withSolution(solution)
+//        return(Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic))
+//        }
+    }
 
 public typealias Parameters = Array<Parameter>
 
@@ -82,5 +121,16 @@ extension Array where Element == Displayable
     public var displayString: String
         {
         return("[" + self.map{$0.displayString}.joined(separator: ",") + "]")
+        }
+    }
+
+extension Parameters
+    {
+    public func visit(visitor: Visitor) throws
+        {
+        for element in self
+            {
+            try element.visit(visitor: visitor)
+            }
         }
     }

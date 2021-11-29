@@ -35,22 +35,27 @@ public class AssociatedValueInductionExpression: Expression
         coder.encode(self.expression,forKey: "expression")
         coder.encode(self.slots,forKey: "slots")
         }
-        
-    public override var type: Type
-        {
-        return(.unknown)
-        }
-        
+
     init(_ expression:Expression,_ names:Array<String>)
         {
-        self.slots = names.map{LocalSlot(label: $0,type:.unknown,value: nil)}
+        self.slots = names.map{LocalSlot(label: $0,type: TypeContext.freshTypeVariable(),value: nil)}
         self.expression = expression
         super.init()
         }
-
-    public override func realize(using realizer:Realizer)
+        
+    public override func visit(visitor: Visitor) throws
         {
-        self.expression.realize(using: realizer)
+        try self.expression.visit(visitor: visitor)
+        for slot in self.slots
+            {
+            try slot.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(AssociatedValueInductionExpression(self.expression.deepCopy(),self.slots.map{$0.label}) as! Self)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

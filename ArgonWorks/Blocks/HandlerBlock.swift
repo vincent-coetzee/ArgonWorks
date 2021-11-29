@@ -11,14 +11,6 @@ public class HandlerBlock: ClosureBlock
     {
     public var symbols = Array<String>()
     
-    public override func realize(using realizer: Realizer)
-        {
-        for block in self.blocks
-            {
-            block.realize(using: realizer)
-            }
-        }
-        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         for block in self.blocks

@@ -9,11 +9,6 @@ import Foundation
 
 public class EnumerationInstanceExpression: Expression
     {
-    public override var type: Type
-        {
-        return(self.theCase.enumeration.type)
-        }
-        
     public override var displayString: String
         {
         "ERROR"
@@ -31,7 +26,10 @@ public class EnumerationInstanceExpression: Expression
         super.init(coder: coder)
         }
         
- 
+     public override func deepCopy() -> Self
+        {
+        EnumerationInstanceExpression(lhs: self.lhs.deepCopy(),enumerationCase: self.enumerationCase,associatedValues: self.associatedValues.isNil ? nil : self.associatedValues!.map{$0.deepCopy()}) as! Self
+        }
         
     public override func encode(with coder: NSCoder)
         {
@@ -49,16 +47,15 @@ public class EnumerationInstanceExpression: Expression
         super.init()
         }
         
-    public override func realize(using realizer: Realizer)
+    public override func visit(visitor: Visitor) throws
         {
-        self.lhs.realize(using: realizer)
-        if self.associatedValues.isNotNil
+        try self.lhs.visit(visitor: visitor)
+        try self.theCase.visit(visitor: visitor)
+        for expression in self.associatedValues!
             {
-            for value in self.associatedValues!
-                {
-                value.realize(using: realizer)
-                }
+            try expression.visit(visitor: visitor)
             }
+        try visitor.accept(self)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

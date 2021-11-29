@@ -20,3 +20,13 @@ public func max<T>(_ array: Array<T>) -> T where T:Comparable
         }
     return(value!)
     }
+    
+extension Array
+    {
+    public func appending(_ element:Element) -> Self
+        {
+        var newArray = self
+        newArray.append(element)
+        return(newArray)
+        }
+    }

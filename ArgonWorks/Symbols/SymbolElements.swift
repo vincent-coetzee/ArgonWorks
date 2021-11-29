@@ -89,7 +89,12 @@ public class Group: Symbol
         fatalError("init(coder:) has not been implemented")
         }
         
- 
+     public required init(label: Label)
+        {
+        self.elements = []
+        self.elementType = .none
+        super.init(label: label)
+        }
     }
 
 public class SymbolElement: Symbol
@@ -136,7 +141,11 @@ public class SymbolElement: Symbol
         fatalError("init(coder:) has not been implemented")
     }
     
- 
+     public required init(label: Label)
+        {
+        self.symbol = Symbol(label: "")
+        super.init(label: label)
+        }
     }
     
 public class ClassElement: SymbolElement
@@ -185,7 +194,11 @@ public class ModuleElement: SymbolElement
         fatalError("init(coder:) has not been implemented")
     }
     
- 
+     public required init(label: Label)
+        {
+        self.elementType = .none
+        super.init(label: label)
+        }
         
     public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {

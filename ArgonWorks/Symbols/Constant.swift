@@ -45,6 +45,11 @@ public class Constant:Slot
         }
 
  
+    public required init(label: Label)
+        {
+        self.value = Expression()
+        super.init(label: label)
+        }
         
     public override func encode(with coder:NSCoder)
         {
@@ -67,6 +72,10 @@ public class Constant:Slot
         try self.value.emitCode(into: instance,using: using)
         self.place = self.value.place
         }
+        
+    public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
+        {
+        }
     }
 
 public class SystemConstant: Constant
@@ -78,8 +87,8 @@ public class SystemConstant: Constant
         
     init(label: Label,type: Type)
         {
-        let expression = DeferredValueExpression(label,type: type)
-        super.init(label: label,type: type,value: expression)
+//        let expression = DeferredValueExpression(label,type: type)
+        super.init(label: label,type: type,value: Expression())
         }
         
         required init(labeled: Label, ofType: Type) {
@@ -90,6 +99,10 @@ public class SystemConstant: Constant
         {
         super.init(coder: coder)
         }
-    
+
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        }
  
 }

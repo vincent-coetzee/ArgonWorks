@@ -23,7 +23,7 @@ public class InnerVectorPointer:InnerPointer,Collection
         pointer.count = 0
         pointer.size = arraySize
         pointer.startBlockPointer = block
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.vector)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.vector)
         return(pointer)
         }
         

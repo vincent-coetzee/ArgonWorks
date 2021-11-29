@@ -44,7 +44,7 @@ public enum TokenKind
         case enumeration
         case systemClass
         case typeAlias
-        case classParameter
+        case genericClassParameter
         }
         
 public protocol SemanticTokenRenderer
@@ -55,6 +55,8 @@ public protocol SemanticTokenRenderer
 
 public class NullTokenRenderer: SemanticTokenRenderer
     {
+    public static let shared = NullTokenRenderer()
+    
     public func setKind(_ kind: TokenKind,ofToken token: Token)
         {
         }

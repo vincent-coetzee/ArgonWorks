@@ -7,6 +7,31 @@
 
 import Foundation
 
+public typealias ParameterTuple = (Label,Type)
+
+//public enum OperatorParameter
+//    {
+//    public var type: Type
+//        {
+//        switch(self)
+//            {
+//            case .class(let aClass):
+//                return(aClass.type)
+//            case .enumeration(let enumeration):
+//                return(enumeration.type)
+//            case .generic(let generic):
+//                return(GenericType(generic).type)
+//            default:
+//                fatalError()
+//            }
+//        }
+//        
+//    case `class`(Class)
+//    case enumeration(Enumeration)
+//    case generic(String)
+//    case classes([Class])
+//    }
+    
 public class Operator: Method
     {
     private let operation: Token.Operator
@@ -30,6 +55,92 @@ public class Operator: Method
         coder.encode(self.operation.name,forKey:"operation")
         super.encode(with: coder)
         }
+        
+    public required init(label: Label)
+        {
+        self.operation = Token.Operator("")
+        super.init(label: label)
+        }
+
+    @discardableResult
+    public func instance(_ types: Array<Type>,_ type: Type? = nil) -> MethodInstance
+        {
+        let typeParameter = TypeContext.freshTypeVariable()
+        let parameters = [Parameter(label: "a", relabel: nil, type: typeParameter, isVisible: false, isVariadic: false),Parameter(label: "b", relabel: nil, type: typeParameter, isVisible: false, isVariadic: false)]
+        let instance = MethodInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = type.isNil ? typeParameter : type!
+        instance.conditionalTypes = types
+        self.addInstance(instance)
+        return(instance)
+        }
+        
+    @discardableResult
+    public func instance(_ class1: Type,_ class2:Type,_ class3:Type) -> MethodInstance
+        {
+        let parameters = [Parameter(label: "a", relabel: nil, type: class1, isVisible: false, isVariadic: false),Parameter(label: "b", relabel: nil, type: class2, isVisible: false, isVariadic: false)]
+        let instance = MethodInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = class3
+        self.addInstance(instance)
+        return(instance)
+        }
+        
+    @discardableResult
+    public func binary(_ classes:Type...) -> Method
+        {
+        for aClass in classes
+            {
+            let parameters = [Parameter(label: "lhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false),Parameter(label: "rhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false)]
+            let instance = MethodInstance(label: self.label)
+            instance.parameters = parameters
+            instance.returnType = aClass
+            self.addInstance(instance)
+            }
+        return(self)
+        }
+        
+    @discardableResult
+    public func binary(_ classes:Type...,result: Type) -> Method
+        {
+        for aClass in classes
+            {
+            let parameters = [Parameter(label: "lhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false),Parameter(label: "rhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false)]
+            let instance = MethodInstance(label: self.label)
+            instance.parameters = parameters
+            instance.returnType = result
+            self.addInstance(instance)
+            }
+        return(self)
+        }
+        
+    @discardableResult
+    public func unary(_ classes:Type...) -> Method
+        {
+        for aClass in classes
+            {
+            let parameters = [Parameter(label: "lhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false)]
+            let instance = MethodInstance(label: self.label)
+            instance.parameters = parameters
+            instance.returnType = aClass
+            self.addInstance(instance)
+            }
+        return(self)
+        }
+        
+    @discardableResult
+    public func unary(_ classes:Type...,result: Type) -> Method
+        {
+        for aClass in classes
+            {
+            let parameters = [Parameter(label: "lhs", relabel: nil, type: aClass, isVisible: false, isVariadic: false)]
+            let instance = MethodInstance(label: self.label)
+            instance.parameters = parameters
+            instance.returnType = result
+            self.addInstance(instance)
+            }
+        return(self)
+        }
     }
     
 public class InfixOperator: Operator
@@ -48,24 +159,37 @@ public class Infix
     {
     var method: SystemInfixOperator
         {
-        let classParameter = GenericClassParameter(self.left)
         let method = SystemInfixOperator(self.operation)
-        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: .genericClassParameter(classParameter)),Parameter(label: "b", type: .genericClassParameter(classParameter))], returnType: .genericClassParameter(classParameter))
+        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left),Parameter(label: "b", type: self.right)], returnType: self.out)
         method.addInstance(instance)
         return(method)
         }
         
-    let left: String
+    var instance: MethodInstance
+        {
+        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left),Parameter(label: "b", type: self.right)], returnType: self.out)
+        return(instance)
+        }
+        
+    let left: Type
     let operation: Token.Operator
-    let right: String
-    let out: String
+    let right: Type
+    let out: Type
     
     init(left: String,_ op: String,right: String,out: String)
         {
-        self.left = left
+        self.left = TypeVariable(label: left)
         self.operation = Token.Operator(op)
-        self.right = right
-        self.out = out
+        self.right = right == left ? self.left : TypeVariable(label: right)
+        self.out = out == left ? self.left : ( out == right ? self.right : TypeVariable(label: out))
+        }
+        
+    init(_ a:Type,_ op:String,_ b:Type,_ out:Type)
+        {
+        self.left = a
+        self.right = b == a ? a : b
+        self.out = out == a ? a : (out == b ? b : out)
+        self.operation = Token.Operator(op)
         }
     }
     
@@ -101,11 +225,12 @@ public class Prefix
     let right: Type?
     let out: Type
     
-    init(_ op: String,_ left: Class,_ right: Class? = nil,out: Class)
+    init(_ op: String,_ left: Type,_ right: Type? = nil,out: Class)
         {
-        self.left = .class(left)
+        let r = right == left ? left : right
+        self.left = left
         self.operation = Token.Operator(op)
-        self.right = right.isNil ? nil : right!.type
+        self.right = right.isNil ? nil : r
         self.out = out.type
         }
     }
@@ -138,11 +263,11 @@ public class Postfix
     let right: Type?
     let out: Type
     
-    init(_ op: String,_ left: Class,_ right: Class? = nil,out: Class)
+    init(_ op: String,_ left: Type,_ right: Type? = nil,out: Type)
         {
-        self.left = .class(left)
+        self.left = left
         self.operation = Token.Operator(op)
-        self.right = right.isNil ? nil : right!.type
-        self.out = out.type
+        self.right = right.isNil ? nil : (right! == left ? left : right!)
+        self.out = out
         }
     }

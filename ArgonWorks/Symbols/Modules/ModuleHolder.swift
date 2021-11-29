@@ -48,7 +48,11 @@ public class ModuleHolder: Module
             fatalError("init(coder:) has not been implemented")
         }
         
- 
+     public required init(label: Label)
+        {
+        self.module = Module(label: "")
+        super.init(label: label)
+        }
         
     public override func invert(cell: HierarchyCellView)
         {
@@ -117,6 +121,12 @@ public class ElementHolder: Symbol
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+        
+    public required init(label: Label)
+        {
+        self.symbol = Symbol(label: "")
+        super.init(label: label)
+        }
         
     public override func invert(cell: HierarchyCellView)
         {

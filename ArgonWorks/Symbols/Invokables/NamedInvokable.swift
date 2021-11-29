@@ -15,9 +15,9 @@ public struct NamedInvokable
         }
         
     public let fullName: Name
-    public let invokable: Invokable
+    public let invokable: Invocable
     
-    init(fullName: Name,invokable: Invokable)
+    init(fullName: Name,invokable: Invocable)
         {
         self.fullName = fullName
         self.invokable = invokable

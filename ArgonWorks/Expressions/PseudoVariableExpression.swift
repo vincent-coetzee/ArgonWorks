@@ -49,13 +49,7 @@ public class PseudoVariableExpression: Expression
         return(variable == .vSuper)
         }
         
-    public override var type: Type
-        {
-        return(self._type)
-        }
-        
     private let variable: PseudoVariable
-    private var _type: Type = .unknown
     
     init(_ variable: PseudoVariable)
         {
@@ -66,7 +60,6 @@ public class PseudoVariableExpression: Expression
     init(_ variable: PseudoVariable,_ aClass:Class?)
         {
         self.variable = variable
-        self._type = aClass.isNil ? .unknown : aClass!.type
         super.init()
         }
         
@@ -78,7 +71,31 @@ public class PseudoVariableExpression: Expression
         
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self._type.lookup(label: label))
+        fatalError()
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        fatalError()
+        }
+        
+    public override func inferType(context: TypeContext) throws -> Type
+        {
+        var scope:Scope? = self.enclosingScope
+        while scope.isNotNil && !scope!.isInitializerScope
+            {
+            scope = scope!.enclosingScope
+            }
+        if scope.isNil
+            {
+            throw(TypeError.notImplemented)
+            }
+        let aClass = scope as! Class
+        return(TypeClass(class: aClass))
+        }
+        
+    public override func substitute(from context: TypeContext)
+        {
         }
         
     public override func encode(with coder:NSCoder)
@@ -89,12 +106,6 @@ public class PseudoVariableExpression: Expression
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        if self._type == .unknown
-            {
-            analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration!, message: "'\(self.variable.displayString)' is not available in the current context.")
-            fatalError()
-            }
         }
         
     public override func emitAddress(into instance: T3ABuffer,using: CodeGenerator) throws

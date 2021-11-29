@@ -106,11 +106,22 @@ public class Stack<T>:Collection
         
     public subscript(_ index:Int) -> T
         {
-        if index < 0 || index >= self.elements.count
+        get
             {
-            fatalError("Invalid index \(index) to subscript")
+            if index < 0 || index >= self.elements.count
+                {
+                fatalError("Invalid index \(index) to subscript")
+                }
+            return(self.elements[index])
             }
-        return(self.elements[index])
+        set
+            {
+            if index < 0 || index >= self.elements.count
+                {
+                fatalError("Invalid index \(index) to subscript")
+                }
+            self.elements[index] = newValue
+            }
         }
         
     public func entryMatching(_ matching: (T) -> Bool) -> T?

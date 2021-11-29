@@ -30,17 +30,6 @@ public class Method:Symbol
         return(LiteralExpression(.method(self)))
         }
         
-    public override var type: Type
-        {
-        get
-            {
-            return(.method(self))
-            }
-        set
-            {
-            }
-        }
-        
     public var maximumInstanceArity: Int
         {
         max(self.instances.map{$0.arity})
@@ -56,8 +45,14 @@ public class Method:Symbol
         return(false)
         }
 
+    public var genericMethodInstances: MethodInstances
+        {
+//        self.instances.filter{$0.hasGenericParameter}
+        fatalError()
+        }
+        
     public var isMainMethod: Bool = false
-    public var returnType: Type = .class(VoidClass.voidClass)
+    public var returnType: Type = Type.unknown
     public var proxyParameters = Parameters()
     public var isGenericMethod = false
     public var isIntrinsic = false
@@ -68,7 +63,7 @@ public class Method:Symbol
         {
 //        print("START DECODE METHOD")
         self.isMainMethod = coder.decodeBool(forKey: "isMainMethod")
-        self.returnType = coder.decodeType(forKey: "returnType")!
+        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         self.proxyParameters = coder.decodeObject(forKey: "proxyParameters") as! Parameters
         self.isGenericMethod = coder.decodeBool(forKey: "isGenericMethod")
         self.isIntrinsic = coder.decodeBool(forKey: "isIntrinsic")
@@ -77,7 +72,7 @@ public class Method:Symbol
 //        print("END DECODE METHOD \(self.label)")
         }
         
-    public override init(label: Label)
+    public required init(label: Label)
         {
         super.init(label: label)
         }
@@ -88,7 +83,7 @@ public class Method:Symbol
 //        print("ENCODE METHOD \(self.label)")
         #endif
         coder.encode(self.isMainMethod,forKey: "isMainMethod")
-        coder.encodeType(self.returnType,forKey: "returnType")
+        coder.encode(self.returnType,forKey: "returnType")
         coder.encode(self.proxyParameters,forKey: "proxyParameters")
         coder.encode(self.isGenericMethod,forKey: "isGenericMethod")
         coder.encode(self.isIntrinsic,forKey: "isIntrinsic")
@@ -131,20 +126,21 @@ public class Method:Symbol
         return(self.instances.count > 0)
         }
         
-    public override func realize(using realizer: Realizer)
-        {
-        for instance in self.instances
-            {
-            instance.realize(using: realizer)
-            }
-        }
-        
     public override func analyzeSemantics(using: SemanticAnalyzer)
         {
         for instance in self.instances
             {
             instance.analyzeSemantics(using: using)
             }
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        for instance in self.instances
+            {
+            try instance.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
         }
         
     public override func emitCode(using generator: CodeGenerator) throws
@@ -155,7 +151,17 @@ public class Method:Symbol
             }
         }
         
-    public func instance(_ types:Type...,returnType:Type = .class(VoidClass.voidClass)) -> Method
+    public override func dump(depth: Int)
+        {
+        let string = String(repeating: "\t", count: depth)
+        print("\(string)\(Swift.type(of: self)) \(self.label)")
+        for instance in self.instances
+            {
+            instance.dump(depth: depth + 1)
+            }
+        }
+        
+    public func instance(_ types:Type...,returnType:Type = VoidClass.voidClass.type) -> Method
         {
         let instance = MethodInstance(label: self.label)
         var parameters = Parameters()
@@ -170,27 +176,7 @@ public class Method:Symbol
         self.addInstance(instance)
         return(self)
         }
-        
-    @discardableResult
-    public func validateInvocation(location:Location,arguments:Arguments,reportingContext: ReportingContext) -> Bool
-        {
-//        var parameterSetMatchCount = 0
-//        for instance in self.instances
-//            {
-//            if instance.parameters.count != arguments.count
-//                {
-//                reportingContext.dispatchError(at: location,message: "Invocation of multimethod '\(self.label)' has a different parameter count to the definition.")
-//                }
-//            parameterSetMatchCount += instance.isParameterSetCoherent(with: arguments) ? 1 : 0
-//            }
-//        if parameterSetMatchCount == 0
-//            {
-//            reportingContext.dispatchError(at: location,message: "A specific instance of the multimethod '\(self.label)' can not be found, therefore this invocation can not be dispatched.")
-//            return(false)
-//            }
-        return(true)
-        }
-        
+
     public func hasInstanceWithSameSignature(as instance: MethodInstance) -> Bool
         {
         let signature = instance.typeSignature
@@ -203,34 +189,12 @@ public class Method:Symbol
             }
         return(false)
         }
-        
-    public func mostSpecificMethodInstance(forTypes: Types) -> MethodInstance?
+
+    public func mostSpecificInstance(forTypes: Types) -> MethodInstance?
         {
-        print("ALL INSTANCES")
-        print("=============")
-        let possibleInstances = self.eliminateImpossibleMethodInstances(forTypes: forTypes)
-        for instance in self.instances
-            {
-            instance.printInstance()
-            }
-        if possibleInstances.isEmpty
-            {
-            return(nil)
-            }
-        print("POSSIBLE INSTANCES")
-        print("==================")
-        for instance in possibleInstances
-            {
-            instance.printInstance()
-            }
-        let sorted = possibleInstances.sorted{$0.moreSpecific(than: $1,forTypes: forTypes)}
-        print("SPECIFICALLY ORDERED INSTANCES")
-        print("==============================")
-        for instance in sorted
-            {
-            instance.printInstance()
-            }
-        return(sorted.last)
+        var actualInstances = self.eliminateImpossibleMethodInstances(forTypes: forTypes)
+        actualInstances.sort{$0.moreSpecific(than: $1, forTypes: forTypes)}
+        return(actualInstances.last)
         }
         
     private func eliminateImpossibleMethodInstances(forTypes types: Types) -> MethodInstances
@@ -251,62 +215,43 @@ public class Method:Symbol
             }
         instance.setParent(self)
         self.proxyParameters = instance.parameters
+        self.returnType = instance.returnType
         }
         
-//    public func mostSpecificInstance(for arguments:Arguments) -> MethodInstance?
-//        {
-//        if self.instances.isEmpty
-//            {
-//            return(nil)
-//            }
-//        let types = arguments.resultTypes
-//        if types.isUnknown
-//            {
-//            return(nil)
-//            }
-//        let classes = types.map{$0}
-//        let scores = self.instances.map{$0.dispatchScore(for: classes)}
-//        var lowest:Int? = nil
-//        var selectedInstance:MethodInstance?
-//        for (instance,score) in zip(self.instances,scores)
-//            {
-//            if lowest.isNil
-//                {
-//                lowest = score
-//                selectedInstance = instance
-//                }
-//            else if score < lowest!
-//                {
-//                lowest = score
-//                selectedInstance = instance
-//                }
-//            }
-//        return(selectedInstance)
-//        }
+    public func filledInTagSignature(forArguments: Arguments) -> TagSignature?
+        {
+        let incoming = TagSignature(arguments: forArguments)
+        let some = self.instances.filter{$0.tagSignature == incoming}
+        guard !some.isEmpty else
+            {
+            return(nil)
+            }
+        return(some.first!.tagSignature.withArguments(forArguments))
+        }
         
-//    public func dump()
-//        {
-//        for instance in self.instances
-//            {
-//            instance.dump()
-//            }
-//        }
+    public override func initializeType(inContext: TypeContext) throws
+        {
+        for instance in self.instances
+            {
+            try instance.initializeType(inContext: inContext)
+            }
+        }
+        
+    public override func initializeTypeConstraints(inContext: TypeContext) throws
+        {
+        for instance in self.instances
+            {
+            try instance.initializeTypeConstraints(inContext: inContext)
+            }
+        }
     }
 
+extension Array
+    {
+    func containsNil<Item>() -> Bool where Element == Optional<Item>
+        {
+        self.filter{$0.isNil}.count > 0
+        }
+    }
     
 public typealias Methods = Array<Method>
-
-extension Types
-    {
-    public var isUnknown: Bool
-        {
-        for type in self
-            {
-            if type.isUnknown
-                {
-                return(true)
-                }
-            }
-        return(false)
-        }
-    }

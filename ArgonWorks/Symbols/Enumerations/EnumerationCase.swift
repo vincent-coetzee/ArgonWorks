@@ -26,7 +26,13 @@ public class EnumerationCase:Symbol
         
     public override var type: Type
         {
-        return(self.enumeration.type)
+        get
+            {
+            return(self.enumeration.type)
+            }
+        set
+            {
+            }
         }
         
     public override var iconName: String
@@ -59,8 +65,15 @@ public class EnumerationCase:Symbol
         self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
         self.symbol = coder.decodeObject(forKey: "symbol") as! Argon.Symbol
         self.rawValue = coder.decodeObject(forKey: "rawValue") as? LiteralExpression
-        self.associatedTypes = coder.decodeTypes(forKey: "associatedTypes")
+        self.associatedTypes = coder.decodeObject(forKey: "associatedTypes") as! Types
         super.init(coder: coder)
+        }
+        
+    public required init(label: Label)
+        {
+        self.associatedTypes = Types()
+        self.symbol = ""
+        super.init(label: label)
         }
         
     public override func encode(with coder:NSCoder)
@@ -69,7 +82,7 @@ public class EnumerationCase:Symbol
         coder.encode(self.enumeration,forKey: "enumeration")
         coder.encode(self.symbol,forKey: "symbol")
         coder.encode(self.rawValue,forKey: "rawValue")
-        coder.encodeTypes(self.associatedTypes,forKey: "associatedTypes")
+        coder.encode(self.associatedTypes,forKey: "associatedTypes")
         }
     
     public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)

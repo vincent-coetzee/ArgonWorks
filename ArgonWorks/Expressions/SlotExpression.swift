@@ -9,11 +9,6 @@ import Foundation
 
 public class SlotExpression: Expression
     {
-    public override var assignedSlots: Slots
-        {
-        return([self.localSlot])
-        }
-        
     public override var displayString: String
         {
         return("\(self.slot.label)")
@@ -47,10 +42,26 @@ public class SlotExpression: Expression
         super.init()
         }
 
-    public override func realize(using realizer:Realizer)
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.slot.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        self.type = self.slot.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         }
-
+        
+    public override func deepCopy() -> Self
+        {
+        SlotExpression(slot: self.slot) as! Self
+        }
+        
     public override func becomeLValue()
         {
         self.isLValue = true
@@ -61,11 +72,6 @@ public class SlotExpression: Expression
         return(self.slot.lookup(label: label))
         }
         
-    public override func imposeType(_ type: Type)
-        {
-        self.slot._type = type
-        }
-        
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         if slot.type.isGenericClass
@@ -73,11 +79,6 @@ public class SlotExpression: Expression
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
             }
-        }
-
-    public override var type: Type
-        {
-        return(self.slot.type)
         }
 
     public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws

@@ -26,9 +26,15 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //                    }
 //                }
 //            }
-        TopModule.shared.resolveReferences(topModule: TopModule.shared)
-        let module = TopModule.shared.lookup(name: Name("\\\\Argon"))
-        assert(module.isNotNil,"Argon module should not be nil.")
+//        let source = try! String(contentsOfFile: "/Users/vincent/Desktop/Argon.Base.Primitives.argon")
+//        let compiler = Compiler(source: source,reportingContext: NullReportingContext.shared,tokenRenderer: NullTokenRenderer.shared)
+//        compiler.compile()
+        let type1 = TypeVariable(index: 2000)
+        let type2 = TypeVariable(index: 2000)
+        assert(type1 == type2,"Type1 should == type2")
+        let type3 = TypeVariable(index: 2001)
+        assert(type1 != type3,"Type3 should not == type1")
+        print("hello")
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

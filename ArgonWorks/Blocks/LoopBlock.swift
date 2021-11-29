@@ -10,10 +10,30 @@ import Foundation
 public class LoopBlock: Block
     {
     public var startExpressions: Array<Expression>!
+        {
+        didSet
+            {
+            self.startExpressions.setParent(self)
+            }
+        }
+        
     public var endExpression: Expression!
+        {
+        didSet
+            {
+            self.endExpression.setParent(self)
+            }
+        }
+        
     public var updateExpressions: Array<Expression>!
+        {
+        didSet
+            {
+            self.updateExpressions.setParent(self)
+            }
+        }
     
-    override init()
+    required init()
         {
         super.init()
         }
@@ -32,6 +52,50 @@ public class LoopBlock: Block
         self.endExpression = Expression()
         self.updateExpressions = []
         super.init(coder: coder)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.startExpressions.visit(visitor: visitor)
+        try self.endExpression?.visit(visitor: visitor)
+        try self.updateExpressions.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
+        for expression in self.startExpressions
+            {
+            try expression.initializeTypeConstraints(inContext: context)
+            }
+        for expression in self.updateExpressions
+            {
+            try expression.initializeTypeConstraints(inContext: context)
+            }
+        try self.endExpression.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
+        for expression in self.startExpressions
+            {
+            try expression.initializeType(inContext: context)
+            }
+       for expression in self.updateExpressions
+            {
+            try expression.initializeType(inContext: context)
+            }
+        try endExpression.initializeType(inContext: context)
+        self.type = context.voidType
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -88,5 +152,16 @@ public class LoopBlock: Block
             }
         try self.endExpression.emitCode(into: buffer,using: using)
         buffer.append(nil,"BRLT",.none,.none,.label(label))
+        }
+    }
+
+extension Array where Element:Expression
+    {
+    public func visit(visitor: Visitor) throws
+        {
+        for expression in self
+            {
+            try expression.visit(visitor: visitor)
+            }
         }
     }

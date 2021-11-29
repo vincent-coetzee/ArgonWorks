@@ -7,8 +7,28 @@
 
 import Foundation
 
-public class Block:NSObject,NamingContext,NSCoding
+public class Block:NSObject,NamingContext,NSCoding,Displayable
     {
+    public var displayString: String
+        {
+        "Block" + self.blocks.displayString
+        }
+        
+    public var returnBlocks: Array<ReturnBlock>
+        {
+        var returnBlocks = Array<ReturnBlock>()
+        for block in self.blocks
+            {
+            returnBlocks.append(contentsOf: block.returnBlocks)
+            }
+        return(returnBlocks)
+        }
+        
+    public var enclosingScope: Scope
+        {
+        return(self.parent.enclosingScope)
+        }
+        
     public var enclosingClass: Class?
         {
         return(self.parent.enclosingClass)
@@ -48,6 +68,7 @@ public class Block:NSObject,NamingContext,NSCoding
         self.locations.declaration
         }
         
+    public var type: Type = Type.unknown
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
     internal var localSlots = Slots()
@@ -58,6 +79,7 @@ public class Block:NSObject,NamingContext,NSCoding
     private weak var lastBlock: Block?
     private weak var nextBlock: Block?
     private weak var previousBlock: Block?
+    public var issues: CompilerIssues = []
     
     public var methodInstance: MethodInstance
         {
@@ -67,17 +89,6 @@ public class Block:NSObject,NamingContext,NSCoding
     public var primaryContext: NamingContext
         {
         return(self.parent.primaryContext)
-        }
-    
-    @discardableResult
-    public func addSymbol(_ symbol: Symbol) -> Symbol
-        {
-        if !(symbol is LocalSlot)
-            {
-            fatalError("Attempt to add a symbol to a block")
-            }
-        self.addLocalSlot(symbol as! LocalSlot)
-        return(symbol)
         }
     
     @discardableResult
@@ -91,7 +102,7 @@ public class Block:NSObject,NamingContext,NSCoding
         self.parent.setSymbol(symbol,atName: atName)
         }
         
-    override init()
+    required override init()
         {
         self.index = UUID()
         }
@@ -108,6 +119,18 @@ public class Block:NSObject,NamingContext,NSCoding
         self.firstBlock = coder.decodeObject(forKey: "firstBlock") as? Block
         }
         
+    public func appendIssue(at: Location,message: String,isWarning:Bool = false)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
+        }
+        
+    public func appendIssues(_ issues: CompilerIssues)
+        {
+        self.issues.append(contentsOf: issues)
+        }
+        
+
+        
     public func encode(with coder: NSCoder)
         {
         print("ENCODE \(Swift.type(of: self))")
@@ -119,6 +142,27 @@ public class Block:NSObject,NamingContext,NSCoding
         coder.encode(self.firstBlock,forKey: "firstBlock")
         coder.encode(self.lastBlock,forKey: "lastBlock")
         coder.encode(self.nextBlock,forKey: "nextBlock")
+        }
+        
+    public func visit(visitor: Visitor) throws
+        {
+        for block in self.blocks
+            {
+            try block.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
+        }
+        
+    public func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        }
+        
+    internal func substitute(from: TypeContext)
+        {
+        for block in self.blocks
+            {
+            block.substitute(from: from)
+            }
         }
         
     public func addBlock(_ block:Block)
@@ -145,9 +189,9 @@ public class Block:NSObject,NamingContext,NSCoding
         self.parent = .block(block)
         }
         
-    public func setParent(_ node:Node)
+    public func setParent(_ symbol:Symbol)
         {
-        self.parent = .node(node)
+        self.parent = .node(symbol)
         }
         
     public func setParent(_ context: Context)
@@ -171,6 +215,13 @@ public class Block:NSObject,NamingContext,NSCoding
             }
         }
         
+    public func deepCopy() -> Self
+        {
+        let newBlock = Self.init()
+        newBlock.blocks = self.blocks.map{$0.deepCopy()}
+        return(newBlock)
+        }
+        
     public func addDeclaration(_ location:Location)
         {
         self.locations.append(.declaration(location))
@@ -181,12 +232,13 @@ public class Block:NSObject,NamingContext,NSCoding
         self.locations.append(.reference(location))
         }
         
-    public func realize(using realizer: Realizer)
+    public func initializeType(inContext context: TypeContext) throws
         {
         for block in self.blocks
             {
-            block.realize(using: realizer)
+            try block.initializeType(inContext: context)
             }
+        self.type = context.voidType
         }
         
     public func analyzeSemantics(using analyzer:SemanticAnalyzer)

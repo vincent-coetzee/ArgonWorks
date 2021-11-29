@@ -10,7 +10,7 @@ import Foundation
 public enum Parent:Storable
     {
     case none
-    case node(Node)
+    case node(Symbol)
     case block(Block)
     case expression(Expression)
 
@@ -27,6 +27,21 @@ public enum Parent:Storable
     public func write(output: OutputFile) throws
         {
         try output.write(self)
+        }
+        
+    public var enclosingScope: Scope
+        {
+        switch(self)
+            {
+            case .none:
+                fatalError()
+            case .node(let node):
+                return(node.enclosingScope)
+            case .expression(let expression):
+                return(expression.enclosingScope)
+            case .block(let block):
+                return(block.enclosingScope)
+            }
         }
         
     public var block: Block?
@@ -150,20 +165,20 @@ public enum Parent:Storable
             }
         }
         
-    public func addSymbol(_ symbol:Symbol)
-        {
-        switch(self)
-            {
-            case .none:
-                fatalError("Attempt to addSymbol to a .none parent")
-            case .node(let node):
-                node.addSymbol(symbol)
-            case .expression(let expression):
-                expression.parent.addSymbol(symbol)
-            case .block(let block):
-                block.addSymbol(symbol)
-            }
-        }
+//    public func addSymbol(_ symbol:Symbol)
+//        {
+//        switch(self)
+//            {
+//            case .none:
+//                fatalError("Attempt to addSymbol to a .none parent")
+//            case .node(let node):
+//                node.addSymbol(symbol)
+//            case .expression(let expression):
+//                expression.parent.addSymbol(symbol)
+//            case .block(let block):
+//                block.addSymbol(symbol)
+//            }
+//        }
         
     public var primaryContext: NamingContext
         {

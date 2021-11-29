@@ -142,6 +142,10 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
         
     public var isRooted: Bool
         {
+        if self.components.isEmpty
+            {
+            return(false)
+            }
         return(self.components.first!.isRoot)
         }
         

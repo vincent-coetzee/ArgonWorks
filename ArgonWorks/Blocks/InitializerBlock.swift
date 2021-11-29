@@ -23,6 +23,12 @@ public class InitializerBlock: Block
         super.init(coder: coder)
         }
         
+    public required init()
+        {
+        self.initializer = Initializer(label: "")
+        super.init()
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.initializer,forKey: "initializer")

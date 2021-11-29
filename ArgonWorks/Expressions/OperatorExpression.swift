@@ -25,6 +25,11 @@ public class OperatorExpression: Expression
 //        print("END DECODE OPERATOR EXPRESSION")
         }
         
+    public override func deepCopy() -> Self
+        {
+        fatalError()
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.operation,forKey: "operation")
@@ -66,20 +71,30 @@ public class InfixExpression: OperatorExpression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func realize(using realizer:Realizer)
+    public override func visit(visitor: Visitor) throws
         {
-        self.lhs.realize(using: realizer)
-        self.rhs.realize(using: realizer)
+        try self.lhs.visit(visitor: visitor)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func initializeType(inContext: TypeContext) throws
+        {
+        try self.lhs.initializeType(inContext: inContext)
+        try self.rhs.initializeType(inContext: inContext)
+        self.type = self.lhs.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
     }
 
 public class PrefixExpression: OperatorExpression
     {
-    public override var type: Type
-        {
-        fatalError()
-        }
-        
     private let rhs: Expression
     
     init(operation: Operator,rhs: Expression)
@@ -107,9 +122,10 @@ public class PrefixExpression: OperatorExpression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func realize(using realizer:Realizer)
+    public override func visit(visitor: Visitor) throws
         {
-        self.rhs.realize(using: realizer)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
         }
     }
 
@@ -142,8 +158,9 @@ public class PostfixExpression: OperatorExpression
         self.lhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func realize(using realizer:Realizer)
+    public override func visit(visitor: Visitor) throws
         {
-        self.lhs.realize(using: realizer)
+        try self.lhs.visit(visitor: visitor)
+        try visitor.accept(self)
         }
     }

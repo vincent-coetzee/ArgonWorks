@@ -14,7 +14,7 @@ public class ArrayClass:GenericSystemClass
         return(true)
         }
         
-    private static var allInstances = Array<ArrayClassInstance>()
+    private static var allInstances = Array<ArrayClass>()
     
     public override var mangledName: String
         {
@@ -25,53 +25,41 @@ public class ArrayClass:GenericSystemClass
         {
         return(NativeCType.arrayPointerType)
         }
-        
-    public override var internalClass: Class
-        {
-        return(self.topModule.argonModule.generic)
-        }
+//
+//    public override var internalClass: Class
+//        {
+//        return(self.topModule.argonModule.generic)
+//        }
         
     public override var isArrayClass: Bool
         {
         return(true)
         }
         
-    public func withElement(_ type: Type) -> ArrayClassInstance
+    public func withElement(_ type: Type) -> Type
         {
-        let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withType: type)
-        let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
-        Self.allInstances.append(instance)
-        return(instance)
+        TypeClass(class: self,generics: [type])
         }
         
-   public override func of(_ type:Class) -> ArrayClassInstance
+   public override func of(_ type:Type) -> Type
         {
-        let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withType: type.type)
-        let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
-        instance.slotClassType = self.slotClassType
-        Self.allInstances.append(instance)
-        return(instance)
+        TypeClass(class: self,generics: [type])
         }
         
-    public override func instanciate(withTypes types: Types,reportingContext: ReportingContext) -> Type
+    public override func instanciate(withTypes types: Types,reportingContext: Reporter) -> Type
         {
-        if self.genericClassParameters.count != types.count
-            {
-            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters(\(types.count)) does not match the number required by the class(\(self.genericClassParameters.count)) '\(self.label)'.")
-            return(.class(ArrayClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: [])))
-            }
-        let typeMappings:[Type] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withType: $0.0)}
-        for instance in self.instances
-            {
-            if instance.genericClassParameterInstances == typeMappings
-                {
-                return(.class(instance))
-                }
-            }
-        let classInstance = ArrayClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: typeMappings)
-        self.instances.append(classInstance)
-        return(.class(classInstance))
+        TypeClass(class: self,generics: types)
+//        if self.types.count != types.count
+//            {
+//            let location = self.declaration.isNil ? Location(line: 0, lineStart: 0, lineStop: 0, tokenStart: 0, tokenStop: 0) : self.declaration!
+//            reportingContext.dispatchError(at: location, message: "The given number of generic parameters(\(types.count)) does not match the number required by the class(\(self.types.count)) '\(self.label)'.")
+//            let instance = self.deepCopy()
+//            instance.types = types
+//            return(TypeClass(class: instance))
+//            }
+//        let classInstance = self.deepCopy()
+//        classInstance.types = types
+//        self.instances.append(classInstance)
+//        return(TypeClass(label: classInstance.label,class: classInstance))
         }
     }

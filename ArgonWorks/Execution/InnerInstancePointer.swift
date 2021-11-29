@@ -100,7 +100,7 @@ public class InnerInstancePointer:InnerPointer
         self.setSlotValue(aClass.magicNumber,forKey: "_magicNumber")
         for someClass in aClass.localSuperclasses
             {
-            self.setClassSlots(inClass: aClass,forClass: someClass)
+//            self.setClassSlots(inClass: aClass,forClass: someClass)
             }
         }
         
@@ -126,9 +126,9 @@ public class InnerInstancePointer:InnerPointer
                 self.setSlotValue(forClass.memoryAddress,forKey: aSlot.label)
                 }
             }
-        for aClass in forClass.localSuperclasses
-            {
-            self.setClassSlots(inClass: inClass,forClass: aClass)
-            }
+//        for aClass in forClass.localSuperclasses
+//            {
+//            self.setClassSlots(inClass: inClass,forClass: aClass)
+//            }
         }
     }

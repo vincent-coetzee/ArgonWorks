@@ -31,3 +31,17 @@ extension Optional
             }
         }
     }
+
+extension Optional where Wrapped:Displayable
+    {
+    public var displayString: String
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.displayString)
+            default:
+                return("")
+            }
+        }
+    }

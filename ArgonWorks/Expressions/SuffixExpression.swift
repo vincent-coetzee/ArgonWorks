@@ -9,11 +9,6 @@ import Foundation
 
 public class SuffixExpression: Expression
     {
-    public override var type: Type
-        {
-        return(self.slotExpression.type)
-        }
-        
     public override var displayString: String
         {
         return("\(self.slotExpression.displayString) \(String(describing: self.operation))")
@@ -44,16 +39,30 @@ public class SuffixExpression: Expression
         self.slotExpression.setParent(self)
         }
         
- 
-        
-    public override func realize(using realizer: Realizer)
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        self.slotExpression.realize(using: realizer)
+        try self.slotExpression.initializeType(inContext: context)
+        self.type = self.slotExpression.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.slotExpression.visit(visitor: visitor)
+        try visitor.accept(self)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.slotExpression.analyzeSemantics(using: analyzer)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        fatalError()
         }
         
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws

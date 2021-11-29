@@ -46,7 +46,6 @@ public class SlotAccessExpression: Expression
     private var slotExpression: Expression?
     private var slot: Symbol?
     private var isLValue = false
-    private var _type: Type?
     private var selector: String?
      
     required init?(coder: NSCoder)
@@ -78,9 +77,27 @@ public class SlotAccessExpression: Expression
         coder.encode(self.selector,forKey: "selector")
         }
         
-    public override func setType(_ type:Type)
+    public override func visit(visitor: Visitor) throws
         {
-        self._type = type
+        try self.receiver.visit(visitor: visitor)
+        try self.slotExpression?.visit(visitor: visitor)
+        try self.slot?.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func inferType(context: TypeContext) throws -> Type
+        {
+        self.slot!.type
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        fatalError()
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        self.type = self.slot!.type
         }
         
     public override func becomeLValue()
@@ -88,45 +105,24 @@ public class SlotAccessExpression: Expression
         self.isLValue = true
         }
         
-    init(_ receiver: Expression,slotExpression: SlotSelectorExpression)
-        {
-        self.receiver = receiver
-        self.slotExpression = slotExpression
-        super.init()
-        self.receiver.setParent(self)
-        self.slotExpression?.setParent(self)
-        }
+//    init(_ receiver: Expression,slotExpression: SlotSelectorExpression)
+//        {
+//        self.receiver = receiver
+//        self.slotExpression = slotExpression
+//        super.init()
+//        self.receiver.setParent(self)
+//        self.slotExpression?.setParent(self)
+//        }
+//        
+//    init(_ receiver: Expression,selector: String)
+//        {
+//        self.receiver = receiver
+//        self.slotExpression = nil
+//        super.init()
+//        self.receiver.setParent(self)
+//        self.selector = selector
+//        }
         
-    init(_ receiver: Expression,selector: String)
-        {
-        self.receiver = receiver
-        self.slotExpression = nil
-        super.init()
-        self.receiver.setParent(self)
-        self.selector = selector
-        }
-        
-    public override var type: Type
-        {
-        let receiverType = self.receiver.type
-        if receiverType.isUnknown
-            {
-            return(.unknown)
-            }
-        if self.slot.isNotNil
-            {
-            return(self.slot!.type)
-            }
-        if let aSelector = self.selector,let aSlot = receiverType.lookup(label: aSelector) as? Slot
-            {
-            return(aSlot.type)
-            }
-        if self._type.isNotNil
-            {
-            return(self._type!)
-            }
-        return(.unknown)
-        }
         
     public override func lookup(label: Label) -> Symbol?
         {
@@ -143,12 +139,6 @@ public class SlotAccessExpression: Expression
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "Slot '\(selector)' was not found on the receiver, unable to resolve the slot, the receiver may need to have it's type defined.")
             }
-        }
-        
-    public override func realize(using realizer:Realizer)
-        {
-        self.receiver.realize(using: realizer)
-        self.slotExpression?.realize(using: realizer)
         }
         
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws

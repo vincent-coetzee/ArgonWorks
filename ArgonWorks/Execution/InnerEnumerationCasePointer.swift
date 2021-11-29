@@ -13,7 +13,7 @@ public class InnerEnumerationCasePointer: InnerPointer
         {
         let address = vm.managedSegment.allocateObject(sizeInBytes: Self.kEnumerationCaseSizeInBytes)
         let pointer = InnerEnumerationCasePointer(address: address)
-        pointer.assignSystemSlots(from: vm.topModule.argonModule.enumerationCase)
+//        pointer.assignSystemSlots(from: vm.topModule.argonModule.enumerationCase)
         return(pointer)
         }
         

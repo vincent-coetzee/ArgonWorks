@@ -7,11 +7,108 @@
 
 import Foundation
 
-public class MethodInstance: Function
-    {
-    public var typeSignature: Types
+   public enum SpecificOrdering
         {
-        self.parameters.map{$0.type} + [self.returnType]
+        case more
+        case unordered
+        case less
+        }
+        
+public struct TagSignature: Equatable
+    {
+    internal let tags: Array<Label?>
+    
+    init(tags:  Array<Label?>)
+        {
+        self.tags = tags
+        }
+        
+    init(arguments: Arguments)
+        {
+        self.tags = arguments.map{$0.tag}
+        }
+        
+    internal func withArguments(_ arguments: Arguments) -> TagSignature
+        {
+        var newTags = Array<Label>()
+        var index = 0
+        for argument in arguments
+            {
+            if argument.tag.isNil
+                {
+                newTags.append(self.tags[index]!)
+                }
+            else
+                {
+                newTags.append(argument.tag!)
+                }
+            index += 1
+            }
+        return(TagSignature(tags: newTags))
+        }
+    }
+    
+public class MethodInstance: Function,Scope
+    {
+    public var isSlotScope: Bool
+        {
+        false
+        }
+        
+    public var typeSignature:TypeSignature
+        {
+        TypeSignature(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
+        }
+        
+    public var mangledName: String
+        {
+        let start = self.label
+        let next = self.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let end = "=" + self.returnType.mangledName
+        return(start + "." + next + end)
+        }
+        
+    ///
+    ///
+    /// A method instance is concrete if all the parameters and the return type
+    /// have types that contain a concrete type, i.e. there are no type variables
+    /// in place of types anywhere.
+    ///
+    ///
+    public var isConcreteInstance: Bool
+        {
+        if self.returnType.isTypeVariable
+            {
+            return(false)
+            }
+        for parameter in self.parameters
+            {
+            if parameter.type.isTypeVariable
+                {
+                return(false)
+                }
+            }
+        return(true)
+        }
+        
+    public var isMethodInstanceScope: Bool
+        {
+        return(true)
+        }
+        
+    public var isClosureScope: Bool
+        {
+        return(false)
+        }
+        
+    public var isInitializerScope: Bool
+        {
+        return(false)
+        }
+        
+    public override var enclosingScope: Scope
+        {
+        return(self)
         }
         
     public var arity: Int
@@ -29,25 +126,62 @@ public class MethodInstance: Function
         return(false)
         }
         
+    public var tagSignature: TagSignature
+        {
+        TagSignature(tags: self.parameters.map{$0.tag})
+        }
+        
     public override var displayString: String
         {
         let parmString = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
-        return("\(self.label) \(parmString) -> \(self.returnType.displayString)")
+        return("\(self.label)\(parmString) -> \(self.returnType.displayString)")
         }
         
     public var isGenericMethod = false
+    public var conditionalTypes: Types = []
     
+    public required init?(coder: NSCoder)
+        {
+        self.isGenericMethod = coder.decodeBool(forKey: "isGeneric")
+        self.conditionalTypes = coder.decodeObject(forKey: "conditionalTypes") as! Types
+        super.init(coder: coder)
+        }
+    
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        }
+    
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.isGenericMethod,forKey: "isGeneric")
+        coder.encode(self.conditionalTypes,forKey: "conditionalTypes")
+        super.encode(with: coder)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        let instance = super.deepCopy()
+        instance.parameters = self.parameters.map{$0.deepCopy()}
+        instance.returnType = self.returnType.deepCopy()
+        instance.conditionalTypes = self.conditionalTypes
+        return(instance)
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> MethodInstance
+        {
+        let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
+        let newReturnType = self.returnType.freshTypeVariable(inContext: context)
+        let newInstance = Self(label: self.label)
+        newInstance.parameters = newParameters
+        newInstance.returnType = newReturnType
+        return(newInstance)
+        }
+        
     public func printInstance()
         {
         let types = self.parameters.map{$0.type.displayString}.joined(separator: ",")
         print("\(self.label)(\(types)) -> \(self.returnType.displayString)")
-        }
-        
-   private enum SpecificOrdering
-        {
-        case more
-        case unordered
-        case less
         }
         
     public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
@@ -88,6 +222,34 @@ public class MethodInstance: Function
             }
         return(false)
         }
+
+    public func parametersAreCongruent(withArguments arguments: TaggedTypes) -> Bool
+        {
+        guard self.parameters.count == arguments.count else
+            {
+            return(false)
+            }
+        for (parameter,argument) in zip(self.parameters,arguments)
+            {
+            if argument.tag.isNil && parameter.isVisible
+                {
+                return(false)
+                }
+            if argument.tag.isNotNil && argument.tag! != parameter.label
+                {
+                return(false)
+                }
+            if argument.type.isClass && parameter.type.isClass && !argument.type.isSubtype(of: parameter.type)
+                {
+                return(false)
+                }
+            if argument.type.isEnumeration && parameter.type.isEnumeration && argument.type != parameter.type
+                {
+                return(false)
+                }
+            }
+        return(true)
+        }
         
     public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
         {
@@ -100,378 +262,56 @@ public class MethodInstance: Function
             }
         return(true)
         }
-    }
-///
-///
-/// A MethodInstance is the functional part of a method. A method has multiple
-/// instance of itself, but one of those instances will get selected based on the
-/// typesof the arguments and that instance will then execute. A Method is not
-/// directly executable. When the method instances are compiled code is actually
-/// generated for each method instance but not for the method.
-///
-/// A MethodInstance has an instruction buffer, which is a high level form
-/// of the generated code, that instruction buffer is translated into an
-/// InnerInstructionBufferPointer which contains the encoded form of the
-/// instructions and the buffer represented by the InnerInstructionBufferPointer
-/// will actually be used when this instance of a method is called.
-///
-///
-public class StandardMethodInstance: MethodInstance, StackFrame
-    {
-    public override var instructions: Array<T3AInstruction>
+        
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        self.buffer.instructions
+        self.type = context.freshTypeVariable()
         }
         
-    public var localSlots: Slots
+    public func instanciate() -> MethodInstance
         {
-        self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
+        fatalError()
         }
         
-    internal private(set) var block: MethodInstanceBlock! = nil
-    
-
-    private var _method:Method?
-    public let buffer:T3ABuffer
-    public var genericParameters = GenericClassParameters()
-        
-    public required init?(coder: NSCoder)
+    public func flatten() -> MethodInstance
         {
-//        print("START DECODE METHOD INSTANCE")
-        self._method = coder.decodeObject(forKey: "method") as? Method
-        self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
-        self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! GenericClassParameters
-        super.init(coder: coder)
-//        print("END DECODE METHOD INSTANCE \(self.label)")
-        }
-
-    public override func encode(with coder:NSCoder)
-        {
-//        print("ENCODE METHOD INSTANCE \(self.label)")
-        super.encode(with: coder)
-        coder.encode(self.method,forKey: "method")
-        coder.encode(self.buffer,forKey: "buffer")
-        coder.encode(self.genericParameters,forKey: "genericParameters")
-        }
-        
-    public var systemMethod: ArgonWorks.Method
-        {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = SystemMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
-        }
-        
-    public var method: ArgonWorks.Method
-        {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = Method(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
-        }
-        
-    override init(label:Label)
-        {
-        self.buffer = T3ABuffer()
-        super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
-        }
-        
-    public init(_ label:Label)
-        {
-        self.buffer = T3ABuffer()
-        super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
-        }
-        
-    convenience init(left:String,_ operation:Token.Symbol,right:String,out:String)
-        {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = Class(label:out)
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:String,_ operation:String,right:String,out:String)
-        {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = Class(label:out)
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:String,_ operation:String,right:String,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:Class,_ operation:Token.Symbol,right:Class,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: .class(left),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(right),isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-   convenience init(left:Class,_ operation: String,right:Class,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: left.type,isVisible: false)
-        let rightParm = Parameter(label: "right", type: right.type,isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-   convenience init(_ operation: String,arg:Class,out:Class)
-        {
-        let rightParm = Parameter(label: "arg", type: arg.type,isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:String,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: Class(label:op2).type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ out:String)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let result = Class(label:out)
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(VoidClass.voidClass)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:String,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: Class(label:op3).type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: op3.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:String)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let result = Class(label:out)
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(label: Label,parameters: Parameters,returnType:Type? = nil)
-        {
-        self.init(label: label)
-        self.parameters = parameters
-        self.returnType = returnType ?? .class(VoidClass.voidClass)
-        for parameter in parameters
-            {
-            self.addLocalSlot(parameter)
-            }
-        }
-        
-    public override func addSymbol(_ symbol: Symbol)
-        {
-        self.localSymbols.append(symbol)
-        symbol.frame = self
-        }
-        
-    public func generic(_ name:String) -> Self
-        {
-        self.parameters.append(Parameter(label: name,type: GenericType(label: name).type))
-        return(self)
-        }
-        
-    public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
-        {
-        return(self)
-        }
-        
-    public func type(atIndex: Int) -> Type
-        {
-        parameters[atIndex].type
-        }
-        
-    public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
-        {
-        for symbol in scope.symbols
-            {
-            self.localSymbols.append(symbol)
-            }
-        }
-    
-    public func hasSameReturnType(_ clazz: Class) -> Bool
-        {
-        return(self.returnType == Type.class(clazz))
-        }
-        
-    public override func lookup(label: String) -> Symbol?
-        {
-        for slot in self.localSymbols
-            {
-            if slot.label == label
-                {
-                return(slot)
-                }
-            }
-        return(self.parent.lookup(label: label))
-        }
-        
-    public func layoutSymbol(in vm: VirtualMachine)
-        {
-//        guard !self.isMemoryLayoutDone else
-//            {
-//            return
-//            }
-//        let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
-//        for instruction in self.buffer.instructions
-//            {
-//            pointer.append(instruction)
-//            }
-//        self.addresses.append(Address.absolute(pointer.address))
-//        self.isMemoryLayoutDone = true
-        }
-        
-    public override func emitCode(using generator: CodeGenerator) throws
-        {
-//        var stackOffset = MemoryLayout<Word>.size
-//        for parameter in self.parameters
-//            {
-//            parameter.addresses.append(.stack(.BP,stackOffset))
-//            stackOffset += MemoryLayout<Word>.size
-//            }
-//        stackOffset = 0
-//        for slot in self.localSymbols
-//            {
-//            slot.addresses.append(.stack(.BP,stackOffset))
-//            stackOffset -= MemoryLayout<Word>.size
-//            }
-        self.buffer.appendEntry(temporaryCount: self.localSymbols.count)
-        try block.emitCode(into: self.buffer,using: generator)
-        self.buffer.appendExit()
-        buffer.append("RET",.none,.none,.none)
-        }
-        
-    public override func realize(using realizer: Realizer)
-        {
-        for parameter in self.parameters
-            {
-            parameter.realize(using: realizer)
-            }
-        self.returnType.realize(using: realizer)
-        self.block.realize(using: realizer)
-        }
-
-    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
-        {
-        self.block.analyzeSemantics(using: analyzer)
-        }
-    
-        
-    public func isParameterSetCoherent(with input: Arguments) -> Bool
-        {
-        if self.parameters.count != input.count
-            {
-            return(false)
-            }
-        for (mine,yours) in zip(self.parameters,input)
-            {
-            if !yours.value.type.isEquivalent(to: mine.type)
-                {
-                return(false)
-                }
-            }
-        return(true)
-        }
-        
-    public func dispatchScore(for classes:Types) -> Int
-        {
-//        var answer = 0
-//        for (mine,theirs) in zip(self.parameters.map{$0.type},classes)
-//            {
-//            answer  += theirs.depth - mine.depth
-//            }
-//        return(answer)
-        return(0)
+        let instance = MethodInstance(label: self.label)
+        instance.parameters = self.parameters.map{$0.flatten()}
+        instance.returnType = self.returnType.type
+        return(instance)
         }
     }
 
 public typealias MethodInstances = Array<MethodInstance>
+
+public protocol NSCodable
+    {
+    init(coder: NSCoder,forKey: String)
+    func encode(with coder: NSCoder,forKey: String)
+    }
+    
+extension NSCoder
+    {
+    func encode<T:NSCodable>(_ array:Array<T>,forKey: String)
+        {
+        self.encode(array.count,forKey: forKey + "count")
+        var index = 0
+        for element in array
+            {
+            element.encode(with: self,forKey: forKey + "\(index)")
+            index += 1
+            }
+        }
+        
+    func decode<T>(_ type:Array<T>.Type,forKey: String) -> Array<T> where T:NSCodable
+        {
+        let theCount = self.decodeInteger(forKey: forKey + "count")
+        var elements = Array<T>()
+        for index in 0..<theCount
+            {
+            let element = T(coder: self,forKey: forKey + "\(index)")
+            elements.append(element)
+            }
+        return(elements)
+        }
+    }

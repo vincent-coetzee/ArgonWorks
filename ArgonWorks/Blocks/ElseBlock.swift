@@ -9,7 +9,10 @@ import Foundation
 
 public class ElseBlock: Block
     {
-    
+    public override var displayString: String
+        {
+        "Else\n" + self.blocks.displayString
+        }
     }
 
 public class ElseIfBlock: IfBlock

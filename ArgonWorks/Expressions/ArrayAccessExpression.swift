@@ -9,6 +9,11 @@ import Foundation
 
 public class ArrayAccessExpression: Expression
     {
+//    public override var typeConstraints: TypeTerms
+//        {
+//        return(self.array.typeConstraints)
+//        }
+        
     public override var displayString: String
         {
         return("\(self.array.displayString)[\(self.index.displayString)]")
@@ -40,19 +45,45 @@ public class ArrayAccessExpression: Expression
         self.index = index
         super.init()
         }
-    
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.array.visit(visitor: visitor)
+        try self.index.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        return(ArrayAccessExpression(array: self.array.deepCopy(),index: self.index.deepCopy()) as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.array.initializeTypeConstraints(inContext: context)
+        try self.index.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: index.type,right: context.integerType,origin: .expression(self)))
+//        guard let typeClass = self.array.type as? TypeClass else
+//            {
+//            throw(CompilerIssue(location: self.declaration!, message: "Array access type should be an array but is not."))
+//            }
+//        guard typeClass.theClass.fullName.displayString == "\\\\Argon\\Array" else
+//            {
+//            throw(CompilerIssue(location: self.declaration!, message: "The target of an array access must be an instance of \\\\Argon\\Array and this is not."))
+//            }
+        context.append(TypeConstraint(left: self.type,right: self.array.type,origin: .expression(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.array.initializeType(inContext: context)
+        try self.index.initializeType(inContext: context)
+        self.type = self.array.type
+        }
+        
     public override func becomeLValue()
         {
         self.isLValue = true
-        }
-        
-    public override var type: Type
-        {
-        if self.array.type.isUnknown
-            {
-            return(.unknown)
-            }
-        return((self.array.type.classValue as! ArrayClassInstance).elementType)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -70,12 +101,6 @@ public class ArrayAccessExpression: Expression
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type.lookup(label: label))
-        }
-        
-    public override func realize(using realizer:Realizer)
-        {
-        self.array.realize(using: realizer)
-        self.index.realize(using: realizer)
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

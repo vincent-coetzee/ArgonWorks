@@ -11,7 +11,7 @@ public class GenericClass:Class
     {
     public override var completeName: String
         {
-        let names = self.genericClassParameters.map{$0.displayString}
+        let names = self.types.map{$0.displayString}
         let string = names.isEmpty ? "" : "<" + names.joined(separator: ",") + ">"
         return("\(self.label)\(string)")
         }
@@ -25,63 +25,78 @@ public class GenericClass:Class
         {
         _typeCode
         }
-        
-    public override var parametricClasses: Classes?
+
+    public override var displayString: String
         {
-        return(self.genericClassParameters)
+        let names = self.types.map{$0.displayString}
+        let string = names.isEmpty ? "" : "<" + names.joined(separator: ",") + ">"
+        return("\(self.label)\(string)")
         }
-        
-    public override var containedClassParameters: Array<GenericClassParameter>
-        {
-        var parameters = Array<GenericClassParameter>()
-        for slot in self.symbols.filter({$0 is Slot}).map({$0 as! Slot})
-            {
-            parameters.append(contentsOf: slot.containedClassParameters)
-            }
-        return(parameters)
-        }
+//        
+//    public override var containedClassParameters: Array<Type>
+//        {
+//        var parameters = Array<GenericType>()
+//        for slot in self.symbols.filter({$0 is Slot}).map({$0 as! Slot})
+//            {
+//            parameters.append(contentsOf: slot.containedClassParameters)
+//            }
+//        return(parameters)
+//        }
         
     public override var containsUninstanciatedParameterics: Bool
         {
         return(true)
         }
-
-    internal var instances = Array<GenericClassInstance>()
-    public private(set) var genericClassParameters = Array<Class>()
-    private let _typeCode:TypeCode
+        
+    internal var instances = Array<GenericClass>()
+    internal var types = Types()
+    private var _typeCode:TypeCode
     
     init(label: Label,typeCode: TypeCode)
         {
         self._typeCode = typeCode
         super.init(label: label)
+        self.type = TypeClass(class: self,generics: self.types)
         }
         
-    override init(label: Label)
+    required init(label: Label)
         {
         self._typeCode = .other
         super.init(label: label)
+        self.type = TypeClass(class: self,generics: self.types)
         }
         
-    init(label: Label,genericClassParameters: Array<Class>)
+    init(label: Label,types: Types)
         {
-        self.genericClassParameters = genericClassParameters
+        self.types = types
         self._typeCode = .other
         super.init(label: label)
+        self.type = TypeClass(class: self,generics: self.types)
         }
         
     required init?(coder: NSCoder)
         {
-        self.genericClassParameters = coder.decodeObject(forKey: "genericClassParameters") as! Array<Class>
-        self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClassInstance>
+        self.types = coder.decodeObject(forKey: "types") as! Types
+        self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClass>
         self._typeCode = .array
         super.init(coder: coder)
+        self.type = TypeClass(class: self,generics: self.types)
         }
         
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(instances,forKey: "instances")
-        coder.encode(genericClassParameters,forKey: "genericClassParameters")
+        coder.encode(self.instances,forKey: "instances")
+        coder.encode(self.types,forKey: "types")
         super.encode(with: coder)
+        }
+        
+    public override func deepCopy() -> Self
+        {
+        let copy = super.deepCopy()
+        copy.type = TypeClass(class: copy,generics: self.types)
+        copy.types = self.types
+        copy._typeCode = self._typeCode
+        return(copy)
         }
     ///
     ///
@@ -89,57 +104,91 @@ public class GenericClass:Class
     /// for the use of the ArgonModule.
     ///
     ///
-    init(label:Label,superclasses:Array<Label>,parameters: Classes,typeCode:TypeCode = .other)
+    init(label:Label,superclasses: Types,types: Types,typeCode:TypeCode = .other)
         {
         self._typeCode = typeCode
         super.init(label:label)
-        self.genericClassParameters = parameters
-        self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
-        for parameter in parameters
+        self.types = types
+        self.type = TypeClass(class: self,generics: self.types)
+        for aClass in superclasses
             {
-            self.addSymbol(parameter)
+            self.addSuperclass(aClass)
+            if aClass.isGenericClass
+                {
+                for newType in ((aClass as! TypeClass).theClass as! GenericClass).types
+                    {
+                    if !self.containsType(withLabel: newType.label)
+                        {
+                        self.types.append(newType)
+                        }
+                    }
+                }
             }
+        for type in self.types
+            {
+            if type.isGenericType
+                {
+                self.addSymbol(type)
+                }
+            }
+        }
+        
+    private func containsType(withLabel: Label) -> Bool
+        {
+        for type in self.types
+            {
+            if type.label == withLabel
+                {
+                return(true)
+                }
+            }
+        return(false)
         }
     ///
     ///
     /// See the comment above
     ///
     /// 
-    convenience init(label:Label,superclasses:Array<Label>,parameters: Array<String>,typeCode:TypeCode = .other)
-        {
-        self.init(label:label,typeCode: .other)
-        self.genericClassParameters = parameters.map{GenericClassParameter(label: $0)}
-        self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
-        }
-    
- 
+//    convenience init(label:Label,superclasses:Array<Label>,types: Array<String>,typeCode:TypeCode = .other)
+//        {
+//        self.init(label:label,typeCode: .other)
+//        self.types = types.map{TypeParameterType(TypeParameter(label: $0))}
+//        self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
+//        }
         
-   public func of(_ type:Class) -> GenericClassInstance
+   public func of(_ type:Type) -> Type
         {
-        let classParameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = classParameter.instanciate(withType: type.type)
-        let instance = GenericClassInstance(label: Argon.nextName("_PARAMCLASS"), sourceClass: self, genericClassParameterInstances: [concreteClass])
-        self.instances.append(instance)
-        return(instance)
+        TypeClass(class: self,generics: [type])
         }
         
-    public override func instanciate(withTypes types: Types,reportingContext: ReportingContext) -> Type
+    public override func instanciate(withType: Type) -> Type
         {
-        if self.genericClassParameters.count != types.count
-            {
-            reportingContext.dispatchError(at: self.declaration!, message: "The given number of generic parameters(\(types.count)) does not match the number required by the class(\(self.genericClassParameters.count)) '\(self.label)'.")
-            return(.class(GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: [])))
-            }
-        let typeMappings:[Type] = zip(types,self.genericClassParameters).map{$0.1.instanciate(withType: $0.0)}
+        TypeClass(class: self,generics: [type])
+        }
+        
+    public override func instanciate(withTypes types: Types,reportingContext: Reporter) -> Type
+        {
+        TypeClass(class: self,generics: types)
+        }
+        
+    private func congruentInstance(matchingTypes: Types) -> GenericClass?
+        {
         for instance in self.instances
             {
-            if instance.genericClassParameterInstances == typeMappings
+            var matches = true
+            for (instanceType,incomingType) in zip(instance.types,matchingTypes)
                 {
-                return(.class(instance))
+                if instanceType != incomingType
+                    {
+                    matches = false
+                    break
+                    }
+                }
+            if matches
+                {
+                return(instance)
                 }
             }
-        let classInstance = GenericClassInstance(label: self.label, sourceClass: self, genericClassParameterInstances: typeMappings)
-        self.instances.append(classInstance)
-        return(.class(classInstance))
+        return(nil)
         }
     }

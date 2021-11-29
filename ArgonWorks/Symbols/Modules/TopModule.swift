@@ -86,15 +86,9 @@ public class TopModule: SystemModule
         super.init(coder: coder)
         }
         
-    public override func clone() -> TopModule
+    public required init(label: Label)
         {
-        let data = try! NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
-        return(try! NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as! TopModule)
-        }
-        
-    public override func resolveReferences(topModule: TopModule)
-        {
-        self.argonModule.resolveReferences(topModule: topModule)
+        super.init(label: label)
         }
         
     public override func replaceSymbol(_ source: Symbol,with replacement: Symbol)

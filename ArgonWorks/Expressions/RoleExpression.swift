@@ -15,31 +15,29 @@ public class RoleExpression: Expression
         }
 
     private let expression: Expression
-    private var _type: Type
 
     required init?(coder: NSCoder)
         {
         self.expression = coder.decodeObject(forKey: "expression") as! Expression
-        self._type = coder.decodeType(forKey: "type")!
         super.init(coder: coder)
         }
 
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encodeType(self._type,forKey:"type")
         coder.encode(self.expression,forKey:"expression")
         }
 
     init(expression: Expression,type: Type)
         {
-        self._type = type
         self.expression = expression
         super.init()
+        self.type = type
         }
 
-    public override func realize(using realizer:Realizer)
+    public override func deepCopy() -> Self
         {
+        fatalError()
         }
         
     public override func lookup(label: Label) -> Symbol?
@@ -47,13 +45,13 @@ public class RoleExpression: Expression
         return(self.type.lookup(label: label))
         }
         
+    public override func substitute(from context: TypeContext)
+        {
+        self.expression.substitute(from: context)
+        }
+        
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        }
-
-    public override var type: Type
-        {
-        return(self._type)
         }
 
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
