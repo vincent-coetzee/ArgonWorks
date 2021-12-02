@@ -31,17 +31,9 @@ public class ExpressionBlock: Block
         super.init()
         }
         
-    public override func deepCopy() -> Self
+    internal override func substitute(from: TypeContext.Substitution) -> Self
         {
-        let newBlock = super.deepCopy()
-        newBlock.expression = self.expression.deepCopy()
-        return(newBlock)
-        }
-        
-    internal override func substitute(from: TypeContext)
-        {
-        super.substitute(from: from)
-        self.expression.substitute(from: from)
+        ExpressionBlock(from.substitute(self.expression)) as! Self
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

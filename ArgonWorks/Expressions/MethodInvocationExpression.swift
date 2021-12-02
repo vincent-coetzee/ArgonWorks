@@ -39,15 +39,35 @@ public class MethodInvocationExpression: Expression
         coder.encode(self.method,forKey: "method")
         }
         
-    public override func deepCopy() -> Self
-        {
-        MethodInvocationExpression(method: self.method,arguments: self.arguments) as! Self
-        }
-        
     public override func initializeType(inContext context: TypeContext) throws
         {
         self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
         self.type = self.method.returnType.freshTypeVariable(inContext: context)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let expression = MethodInvocationExpression(method: self.method,arguments: self.arguments.map{substitution.substitute($0)})
+        if let instance = self.methodInstance
+            {
+            expression.methodInstance = substitution.substitute(instance)
+            }
+        return(expression as! Self)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)METHOD INVOCATION EXPRESSION: \(self.method.label)")
+        print("\(indent)ARGUMENTS:")
+        for argument in self.arguments
+            {
+            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type.displayString)")
+            }
+        if let instance = self.methodInstance
+            {
+            print("\(indent)\tSELECTED METHOD INSTANCE:")
+            instance.display(indent: indent + "\t\t")
+            }
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -68,16 +88,21 @@ public class MethodInvocationExpression: Expression
                     {
                     newContext.append(TypeConstraint(left: parameter.type,right: argument.value.type,origin: .expression(self)))
                     }
-                let substitution = try newContext.unify()
+                let substitution = newContext.unify()
                 let newInstance = substitution.substitute(freshInstance)
                 inferredInstances.append(newInstance)
                 }
             }
         inferredInstances = inferredInstances.filter{$0.isConcreteInstance}
         let types = self.arguments.map{$0.value.type}
-        if let mostSpecificInstance = inferredInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).first
+        if let mostSpecificInstance = inferredInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
             {
             self.methodInstance = mostSpecificInstance
+            self.type = self.methodInstance!.returnType
+            for (argument,parameter) in zip(self.arguments,self.methodInstance!.parameters)
+                {
+                context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
+                }
             }
         else
             {
@@ -107,11 +132,6 @@ public class MethodInvocationExpression: Expression
             {
             print(error)
             }
-        }
-        
-    public override func substitute(from context: TypeContext)
-        {
-        self.arguments = self.arguments.map{$0.substitute(from: context)}
         }
         
     private func mapLabels(from: Array<Label>,to: TaggedTypes) -> TaggedTypes

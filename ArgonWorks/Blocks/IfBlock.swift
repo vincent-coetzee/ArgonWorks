@@ -54,6 +54,11 @@ public class IfBlock: Block
             }
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        IfBlock(condition: substitution.substitute(self.condition)) as! Self
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.condition.initializeType(inContext: context)
@@ -80,21 +85,6 @@ public class IfBlock: Block
         try self.condition.visit(visitor: visitor)
         try self.elseBlock?.visit(visitor: visitor)
         try super.visit(visitor: visitor)
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        let copy = super.deepCopy()
-        copy.condition = self.condition.deepCopy()
-        copy.elseBlock = self.elseBlock?.deepCopy()
-        return(copy)
-        }
-        
-    public override func substitute(from context: TypeContext)
-        {
-        super.substitute(from: context)
-        self.condition.substitute(from: context)
-        self.elseBlock?.substitute(from: context)
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

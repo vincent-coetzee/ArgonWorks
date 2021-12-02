@@ -19,12 +19,9 @@ public class ForBlock: Block
         super.init()
         }
         
-    public override func deepCopy() -> Self
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let copy = super.deepCopy()
-        copy.inductionSlot = self.inductionSlot.deepCopy()
-        copy.elements = self.elements.deepCopy()
-        return(copy)
+        ForBlock(inductionSlot: substitution.substitute(self.inductionSlot) as! LocalSlot, elements: substitution.substitute(self.elements)) as! Self
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -50,13 +47,13 @@ public class ForBlock: Block
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
         }
         
-    public override func substitute(from context: TypeContext)
+    public override func visit(visitor: Visitor) throws
         {
-        super.substitute(from: context)
-        self.inductionSlot.type = self.inductionSlot.type.substitute(from: context)
-        self.elements.substitute(from: context)
+        try self.inductionSlot.visit(visitor: visitor)
+        try self.elements.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
         }
-        
+
     public required init?(coder: NSCoder)
         {
         self.inductionSlot = coder.decodeObject(forKey:"inductionSlot") as! LocalSlot

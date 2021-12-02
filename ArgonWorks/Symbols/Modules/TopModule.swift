@@ -41,9 +41,8 @@ public class TopModule: SystemModule
         {
         return(self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label})
         }
-        
-    public static let shared = TopModule()
-        
+
+
     public override var topModule: TopModule
         {
         return(self)
@@ -64,11 +63,11 @@ public class TopModule: SystemModule
         return(self.symbols.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
         }
     
-    init()
+    init(compiler: Compiler)
         {
         super.init(label: "Root")
         self.index = UUID(index: 0)
-        self.addSymbol(ArgonModule())
+        self.addSymbol(ArgonModule(compiler: compiler))
         }
         
     init(_ array:Array<Module>)

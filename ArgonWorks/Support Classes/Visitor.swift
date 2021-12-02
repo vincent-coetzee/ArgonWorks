@@ -7,8 +7,14 @@
 
 import Foundation
 
+public protocol VisitorReceiver
+    {
+    func visit(visitor: Visitor) throws
+    }
+    
 public protocol Visitor
     {
+    init()
     func startVisit()
     func endVisit()
     func accept(_ block: Block) throws
@@ -22,4 +28,23 @@ public protocol Visitor
     func accept(_ expression: Expression) throws
     
     func accept(_ argument: Argument) throws
+    }
+
+extension Visitor
+    {
+    public static func visit(_ receiver: VisitorReceiver) -> Self
+        {
+        let visitor = Self()
+        do
+            {
+            visitor.startVisit()
+            try receiver.visit(visitor: visitor)
+            visitor.endVisit()
+            }
+        catch let error
+            {
+            fatalError("\(error)")
+            }
+        return(visitor)
+        }
     }

@@ -90,9 +90,16 @@ public class SlotAccessExpression: Expression
         self.slot!.type
         }
         
-    public override func deepCopy() -> Self
+    public override func display(indent: String)
         {
-        fatalError()
+        print("\(indent)SLOT EXPRESSION:")
+        self.receiver.display(indent: indent + "\t")
+        print("\(indent)\tSLOT \(self.slot!.label) \(self.slot!.type.displayString)")
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        SlotAccessExpression(substitution.substitute(self.receiver),slot: substitution.substitute(self.slot!)) as! Self
         }
         
     public override func initializeType(inContext context: TypeContext) throws

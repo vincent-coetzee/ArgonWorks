@@ -232,7 +232,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         
     public func dispatchWarning(at: Location, message: String)
         {
-        if let group = self.compilationEvents[at.lineNumber.primaryLine] as? CompilationEventGroup
+        if let group = self.compilationEvents[at.line] as? CompilationEventGroup
             {
             group.addEvent(CompilationWarningEvent(location: at,message: message))
             }
@@ -240,7 +240,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             let group = CompilationEventGroup(location: at, message: message)
             group.isWarning = true
-            self.compilationEvents[group.line.primaryLine] = group
+            self.compilationEvents[group.line] = group
             }
         self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
@@ -249,7 +249,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     
     public func dispatchError(at: Location, message: String)
         {
-        if let group = self.compilationEvents[at.lineNumber.primaryLine] as? CompilationEventGroup
+        if let group = self.compilationEvents[at.line] as? CompilationEventGroup
             {
             group.addEvent(CompilationErrorEvent(location: at,message: message))
             }
@@ -257,14 +257,14 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             {
             let group = CompilationEventGroup(location: at, message: message)
             group.isWarning = false
-            self.compilationEvents[group.line.primaryLine] = group
+            self.compilationEvents[group.line] = group
             }
         self.compilationEventList = self.compilationEvents.values.sorted{$0.line < $1.line}
         self.errorListView?.reloadData()
         self.refreshSourceAnnotations()
         }
         
-    public func pushIssues()
+    public func pushIssues(_ issues: CompilerIssues)
         {
         }
         
@@ -290,8 +290,8 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
         for value in self.compilationEvents.values
             {
             let group = value as! CompilationEventGroup
-            let annotation = LineAnnotation(line: group.line.line, icon: NSImage(named: "IconLineMarkerYellow2")!)
-            self.sourceEditor.addAnnotation(annotation)
+//            let annotation = LineAnnotation(line: group.line.line, symbolName: group.isWarning ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill",tintColor: value.tintColor)
+//            self.sourceEditor.addAnnotation(annotation)
             }
         }
         
@@ -513,7 +513,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = TopModule.shared.deepCopy()
+                        ImportUnarchiver.topModule = aCompiler.topModule
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")

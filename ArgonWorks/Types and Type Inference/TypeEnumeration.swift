@@ -79,14 +79,4 @@ public class TypeEnumeration: TypeConstructor
         {
         self.enumeration.lookup(label: label)
         }
-        
-    public override func instanciate(withTypes: Types) -> Type
-        {
-        TypeEnumeration(enumeration: self.enumeration,generics: withTypes)
-        }
-        
-    public override func replace(_ id:Int,with: Type)
-        {
-        self.generics.forEach{$0.replace(id,with: with)}
-        }
     }

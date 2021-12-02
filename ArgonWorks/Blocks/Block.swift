@@ -7,8 +7,23 @@
 
 import Foundation
 
-public class Block:NSObject,NamingContext,NSCoding,Displayable
+public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
     {
+    public var allIssues: CompilerIssues
+        {
+        var myIssues = self.issues
+        for block in self.blocks
+            {
+            myIssues.append(contentsOf: block.allIssues)
+            }
+        return(myIssues)
+        }
+        
+    public var isEmpty: Bool
+        {
+        self.blocks.isEmpty
+        }
+        
     public var displayString: String
         {
         "Block" + self.blocks.displayString
@@ -68,7 +83,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable
         self.locations.declaration
         }
         
-    public var type: Type = Type.unknown
+    public var type: Type = Type()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
     internal var localSlots = Slots()
@@ -129,7 +144,10 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable
         self.issues.append(contentsOf: issues)
         }
         
-
+    public func appendIssue(_ issue: CompilerIssue)
+        {
+        self.issues.append(issue)
+        }
         
     public func encode(with coder: NSCoder)
         {
@@ -157,11 +175,25 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable
         {
         }
         
-    internal func substitute(from: TypeContext)
+    internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
+        let newBlock = Self.init()
         for block in self.blocks
             {
-            block.substitute(from: from)
+            newBlock.addBlock(substitution.substitute(block))
+            }
+        newBlock.type = substitution.substitute(self.type)
+        newBlock.setParent(self.parent)
+        newBlock.issues = self.issues
+        return(newBlock)
+        }
+        
+    public func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self))")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
             }
         }
         
@@ -192,6 +224,11 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable
     public func setParent(_ symbol:Symbol)
         {
         self.parent = .node(symbol)
+        }
+        
+    public func setParent(_ parent:Parent)
+        {
+        self.parent = parent
         }
         
     public func setParent(_ context: Context)

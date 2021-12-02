@@ -170,7 +170,7 @@ public class Parser: CompilerPass
             }
         self.lastToken = self.token
         self.token = self.tokenSource.nextToken()
-        self.token = self.token.withLocation(self.token.location.with(self.lineNumber.suffixed(by: token.location.lineNumber)))
+        self.token = self.token.withLocation(self.token.location)
         if self.token.isEnd && !self.sourceStack.isEmpty
             {
             self.tokenSource = self.sourceStack.pop()
@@ -606,11 +606,11 @@ public class Parser: CompilerPass
             try self.parseComma()
             elements = try self.parseExpression()
             }
-        if !elements.type.isSubtype(of: self.compiler.topModule.argonModule.iterable.type)
-            {
-            self.cancelCompletion()
-            issues.appendIssue(at: location,"To be used in a FOR loop, the source of the iteration must inherit from Iterable.")
-            }
+//        if !elements.type.isSubtype(of: self.compiler.topModule.argonModule.iterable.type)
+//            {
+//            self.cancelCompletion()
+//            issues.appendIssue(at: location,"To be used in a FOR loop, the source of the iteration must inherit from Iterable.")
+//            }
         let forBlock = ForBlock(inductionSlot: slot,elements: elements)
         block.addBlock(forBlock)
         self.pushContext(block)
@@ -1947,8 +1947,9 @@ public class Parser: CompilerPass
                     }
                 if literal.isMethodLiteral
                     {
-                    let method = literal.methodLiteral
-                    return(MethodInvocationExpression(method: method, arguments: arguments))
+                    let method = literal.methodInstanceLiteral
+//                    return(MethodInvocationExpression(method: method.method, arguments: arguments))
+                    fatalError()
                     }
                 else
                     {
@@ -2063,6 +2064,7 @@ public class Parser: CompilerPass
         if self.token.isPlusPlus || self.token.isMinusMinus
             {
             let symbol = self.token.operator
+            let operation = self.enclosingScope.lookup(label: symbol.name) as! Operator
             try self.nextToken()
             if !(expression is SlotExpression)
                 {
@@ -2073,7 +2075,7 @@ public class Parser: CompilerPass
             else
                 {
                 let slotExpression = expression as! SlotExpression
-                return(SuffixExpression(slotExpression,symbol))
+                return(PostfixExpression(operation: operation,lhs: slotExpression))
                 }
             }
         return(expression)
@@ -2089,6 +2091,7 @@ public class Parser: CompilerPass
             let symbol = token.symbol
             try self.nextToken()
             lhs = BooleanExpression(lhs,symbol,try self.parseInfixExpression())
+            lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2104,6 +2107,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parseComparisonExpression()
             lhs = InfixExpression(operation: operation,lhs: lhs,rhs: rhs)
+            lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2119,6 +2123,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parseArithmeticExpression()
             lhs = ComparisonExpression(lhs, symbol, rhs)
+            lhs.addDeclaration(location)
             return(lhs)
             }
         return(lhs)
@@ -2135,6 +2140,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parseMultiplicativeExpression()
             lhs = lhs.operation(symbol,rhs)
+            lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2150,6 +2156,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parsePowerExpression()
             lhs = lhs.operation(symbol,rhs)
+            lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2165,6 +2172,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parseBitExpression()
             lhs = lhs.operation(symbol,rhs)
+        lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2180,6 +2188,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let rhs = try self.parseUnaryExpression()
             lhs = lhs.operation(symbol,rhs)
+            lhs.addDeclaration(location)
             }
         return(lhs)
         }
@@ -2483,6 +2492,10 @@ public class Parser: CompilerPass
                 }
             if self.token.isLeftPar && type.isClass
                 {
+                if type.isSystemClass
+                    {
+                    self.tokenRenderer.setKind(.systemClass,ofToken: nameToken)
+                    }
                 return(try self.parseInstanciationTerm(ofType: type))
                 }
             let expression = LiteralExpression(type.literal)
@@ -2551,7 +2564,8 @@ public class Parser: CompilerPass
                 self.tokenRenderer.setKind(.methodInvocation,ofToken: nameToken)
                 return(try self.parseMethodInvocationTerm(symbol))
                 }
-            return(LiteralExpression(.method(symbol)))
+//            return(LiteralExpression(.method(symbol)))
+            fatalError()
             }
         ///
         /// Or a Function ?
@@ -2646,12 +2660,6 @@ public class Parser: CompilerPass
             {
             try self.parseArguments()
             }
-//        let instances = method.instances(withTagSignature: TagSignature(arguments: args))
-//        if instances.isEmpty
-//            {
-//            self.cancelCompletion()
-//            self.dispatchError(at: location,message: "An instance of the method '\(method.fullName.displayString)' with a tag signature matching this invocation can not be found.")
-//            }
         let expression = MethodInvocationExpression(method: method,arguments: args)
         expression.addDeclaration(location)
         return(expression)
@@ -2983,6 +2991,12 @@ public class Parser: CompilerPass
             try self.nextToken()
             lhs = AssignmentOperatorExpression(lhs, symbol, try self.parseExpression())
             }
+        else if self.token.isAssign
+            {
+            try self.nextToken()
+            let rhs = try self.parseExpression()
+            lhs = AssignmentExpression(lhs, rhs)
+            }
         lhs.addDeclaration(location)
         let stop = self.token.location.tokenStop
         let newBlock = ExpressionBlock(lhs)
@@ -3169,6 +3183,10 @@ public class Parser: CompilerPass
             try self.parseBlock(into: statement)
             }
         self.popContext()
+        if statement.isEmpty
+            {
+            statement.appendIssue(at: location, message: "LOOP block does nothing and can be removed.",isWarning: true)
+            }
         self.stopClip(into: statement)
         }
         
@@ -3264,8 +3282,17 @@ public class Parser: CompilerPass
         let tag = try self.parseLabel()
         var relabel:Label? = nil
         var isVariadic = false
-        var type:Type = Type.unknown
+        var type:Type = Type()
         var issues = CompilerIssues()
+        if !self.token.isGluon && self.token.isIdentifier
+            {
+            relabel = try self.parseLabel()
+            }
+        if !self.token.isGluon
+            {
+            issues.appendIssue(at: location, message: "Gluon expected after tag/tag label.")
+            }
+        try self.nextToken()
         if self.token.isFullRange
             {
             try self.nextToken()
@@ -3273,11 +3300,6 @@ public class Parser: CompilerPass
             }
         else
             {
-            if !self.token.isGluon
-                {
-                relabel = try self.parseLabel()
-                }
-            try self.parseGluon()
             type = try self.parseType(&issues)
             }
         let parameter = Parameter(label: tag, relabel: relabel,type: type,isVisible: !isHidden,isVariadic: isVariadic)

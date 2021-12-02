@@ -31,7 +31,7 @@ class CompilationEventCell: NSTableCellView
         self.iconView.image = image
         self.iconView.image?.isTemplate = true
         self.iconView.contentTintColor = event.tintColor
-        self.lineNumberView.stringValue = "Line \(event.line.displayString) Column \(event.tokenStartOffset) :: \(event.tokenStopOffset)"
+        self.lineNumberView.stringValue = "Line \(event.line) Column \(event.tokenStartOffset) :: \(event.tokenStopOffset)"
         self.diagnosticView.stringValue = event.diagnostic
         self.diagnosticView.textColor = event.tintColor
         }

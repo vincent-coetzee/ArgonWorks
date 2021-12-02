@@ -330,7 +330,7 @@ extension NSCoder
         
     public func encodeLocation(_ location:Location,forKey: String)
         {
-        self.encode(location.lineNumber,forKey: forKey + "lineNumber")
+        self.encode(location.line,forKey: forKey + "lineNumber")
         self.encode(location.lineStart,forKey: forKey + "lineStart")
         self.encode(location.lineStop,forKey: forKey + "lineStop")
         self.encode(location.tokenStart,forKey: forKey + "tokenStart")
@@ -339,12 +339,12 @@ extension NSCoder
         
     public func decodeLocation(forKey: String) -> Location
         {
-        let lineNumber = self.decodeObject(forKey: forKey + "lineNumber") as! LineNumber
+        let lineNumber = self.decodeInteger(forKey: forKey + "lineNumber")
         let lineStart = self.decodeInteger(forKey: forKey + "lineStart")
         let lineStop = self.decodeInteger(forKey: forKey + "lineStop")
         let tokenStart = self.decodeInteger(forKey: forKey + "tokenStart")
         let tokenStop = self.decodeInteger(forKey: forKey + "tokenStop")
-        return(Location(lineNumber: lineNumber, lineStart: lineStart, lineStop: lineStop, tokenStart: tokenStart, tokenStop: tokenStop))
+        return(Location(line: lineNumber, lineStart: lineStart, lineStop: lineStop, tokenStart: tokenStart, tokenStop: tokenStop))
         }
         
 

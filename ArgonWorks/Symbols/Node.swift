@@ -34,7 +34,7 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         
     public required init(label: String)
         {
-        self.index = UUID.newUUID()
+        self.index = UUID()
         self.label = label
         }
         

@@ -9,6 +9,11 @@ import AppKit
 
 public class Invocable: Symbol
     {
+    public var arity: Int
+        {
+        self.parameters.count
+        }
+        
     public var invocationLabel: Label
         {
         let labels = self.parameters.map{$0.type.displayString}.joined(separator: "_")
@@ -28,7 +33,7 @@ public class Invocable: Symbol
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
-    public var returnType: Type = VoidClass.voidClass.type
+    public var returnType: Type = TypeVoid()
         
     public required init?(coder: NSCoder)
         {
@@ -64,6 +69,15 @@ public class Invocable: Symbol
     public func addLocalSlot(_ localSlot:Slot)
         {
         self.localSymbols.append(localSlot)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = self.deepCopy()
+        copy.parameters = self.parameters.map{substitution.substitute($0)}
+        copy.returnType = substitution.substitute(self.returnType)
+        copy.cName = self.cName
+        return(copy)
         }
     }
     

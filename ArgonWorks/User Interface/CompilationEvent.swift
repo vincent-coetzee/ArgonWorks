@@ -27,9 +27,9 @@ internal class CompilationEvent
         return(self.location.tokenStop - self.location.lineStart)
         }
 
-    public var line: LineNumber
+    public var line: Int
         {
-        return(self.location.lineNumber)
+        return(self.location.line)
         }
         
     public var selectionColor: NSColor
@@ -137,7 +137,7 @@ internal class CompilationEventGroup: CompilationEvent
         
     public override func child(atIndex: Int) -> CompilationEvent
         {
-        let children = self.events.sorted{$0.line.displayString < $1.line.displayString}
+        let children = self.events.sorted{$0.line < $1.line}
         return(children[atIndex])
         }
         

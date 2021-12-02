@@ -44,11 +44,6 @@ public class ClosureExpression: Expression
         coder.encodeArguments(self.arguments,forKey: "arguments")
         super.encode(with: coder)
         }
-        
-    public override func deepCopy() -> Self
-        {
-        fatalError()
-        }
 
     public override func visit(visitor: Visitor) throws
         {

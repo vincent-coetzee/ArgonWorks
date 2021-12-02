@@ -10,6 +10,7 @@ import Foundation
 public class TypeInstanciationTerm: Expression
     {
     private var arguments: Arguments
+    private var initializer: Initializer?
     
     required init?(coder: NSCoder)
         {
@@ -37,6 +38,21 @@ public class TypeInstanciationTerm: Expression
             argument.value.setParent(self)
             }
         self.type = type
+        if self._type.isClass && !self._type.classValue.initializers.isEmpty
+            {
+            self.initializer = self._type.classValue.mostSpecificInitializer(forArguments: self.arguments)
+            }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)TYPE INSTANCIATION \(self._type.displayString)")
+        print("\(indent)ARGUMENTS:")
+        for argument in self.arguments
+            {
+            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type.displayString)")
+            argument.value.display(indent: indent + "\t")
+            }
         }
         
     public override var displayString: String
@@ -45,15 +61,33 @@ public class TypeInstanciationTerm: Expression
         return("MAKE(\(self.type.displayString),\(string))")
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        TypeInstanciationTerm(type: substitution.substitute(self._type),arguments: self.arguments.map{substitution.substitute($0)}) as! Self
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
+        if self.initializer.isNotNil
+            {
+            try self.initializer!.initializeType(inContext: context)
+            try self.initializer!.parameters.forEach{try $0.initializeType(inContext: context)}
+            }
         self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
-        self.type = self._type
+        self.type = self._type.freshTypeVariable(inContext: context)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        print(" ")
+        try self.arguments.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        if self.initializer.isNotNil
+            {
+            for (argument,parameter) in zip(self.arguments,self.initializer!.parameters)
+                {
+                context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
+                }
+            }
+        context.append(TypeConstraint(left: self.type,right: self._type,origin: .expression(self)))
         }
         
     public override func visit(visitor: Visitor) throws
@@ -62,14 +96,11 @@ public class TypeInstanciationTerm: Expression
             {
             try argument.visit(visitor: visitor)
             }
+        if self.initializer.isNotNil
+            {
+            try initializer!.visit(visitor: visitor)
+            }
         try visitor.accept(self)
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        let copy = super.deepCopy()
-        copy.arguments = self.arguments.map{$0.deepCopy()}
-        return(copy)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

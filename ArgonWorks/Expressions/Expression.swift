@@ -7,8 +7,13 @@
 
 import Foundation
 
-public class Expression: NSObject,NSCoding
+public class Expression: NSObject,NSCoding,VisitorReceiver
     {
+    public var diagnosticString: String
+        {
+        ""
+        }
+        
     public var enclosingScope: Scope
         {
         return(self.parent.enclosingScope)
@@ -52,6 +57,10 @@ public class Expression: NSObject,NSCoding
     public var lhsValue: Expression?
         {
         return(nil)
+        }
+        
+    public func display(indent: String)
+        {
         }
         
     public var declaration: Location?
@@ -102,8 +111,9 @@ public class Expression: NSObject,NSCoding
     public private(set) var locations = SourceLocations()
     public internal(set) var _place: T3AInstruction.Operand = .none
     public private(set) var parent: Parent = .none
-    internal var type: Type = .unknown
-    public private(set) var issues = CompilerIssues()
+    internal var type: Type = Type()
+    public var issues = CompilerIssues()
+    
     public override init()
         {
         }
@@ -165,6 +175,16 @@ public class Expression: NSObject,NSCoding
         {
         }
 
+    public func substitute(from: TypeContext.Substitution) -> Self
+        {
+        self
+        }
+        
+    public func appendIssue(_ issue: CompilerIssue)
+        {
+        self.issues.append(issue)
+        }
+        
     public func appendIssue(at: Location,message: String,isWarning:Bool = false)
         {
         self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
@@ -215,18 +235,19 @@ public class Expression: NSObject,NSCoding
         self.parent = .expression(expression)
         }
         
+    public func setParent(_ parent: Parent)
+        {
+        self.parent = parent
+        }
+        
     public var displayString: String
         {
         return("")
         }
         
-    public func deepCopy() -> Self
+    public func substitute(from: TypeContext) -> Self
         {
-        return(Expression() as! Self)
-        }
-        
-    public func substitute(from: TypeContext)
-        {
+        Expression() as! Self
         }
         
     public func dump(depth: Int)

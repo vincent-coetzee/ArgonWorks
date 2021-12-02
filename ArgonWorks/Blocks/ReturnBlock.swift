@@ -57,6 +57,11 @@ public class ReturnBlock: Block
         try super.visit(visitor: visitor)
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        ReturnBlock(expression: substitution.substitute(self.value)) as! Self
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.value.initializeType(inContext: context)

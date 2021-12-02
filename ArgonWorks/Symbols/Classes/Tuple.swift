@@ -78,6 +78,21 @@ public enum TupleElement
             }
         }
         
+    public func substitute(from substitution: TypeContext.Substitution) -> TupleElement
+        {
+        switch(self)
+            {
+            case .localSlot(let slot):
+                return(.localSlot(substitution.substitute(slot) as! LocalSlot))
+            case .literal(let literal):
+                return(.literal(substitution.substitute(literal)))
+            case .expression(let expression):
+                return(.expression(substitution.substitute(expression)))
+            case .tuple(let tuple):
+                return(.tuple(substitution.substitute(tuple)))
+            }
+        }
+        
     public func visit(visitor: Visitor) throws
         {
         switch(self)
@@ -146,6 +161,21 @@ public enum TupleElement
             }
         }
         
+    public func display(indent: String)
+        {
+        switch(self)
+            {
+            case .localSlot(let slot):
+                slot.display(indent: indent + "\t")
+            case .literal(let literal):
+                literal.display(indent: indent + "\t")
+            case .expression(let expression):
+                expression.display(indent: indent + "\t")
+            case .tuple(let tuple):
+                tuple.display(indent: indent + "\t")
+            }
+        }
+        
     func setParent(_ block: Block)
         {
         switch(self)
@@ -154,21 +184,6 @@ public enum TupleElement
                 expression.setParent(block)
             default:
                 break
-            }
-        }
-        
-    public func deepCopy() -> Self
-        {
-        switch(self)
-            {
-            case .literal:
-                return(self)
-            case .localSlot(let slot):
-                return(.localSlot(slot.deepCopy()))
-            case .tuple(let tuple):
-                return(.tuple(tuple.deepCopy()))
-            case .expression(let expression):
-                return(.expression(expression.deepCopy()))
             }
         }
     }
@@ -183,15 +198,18 @@ public struct TupleElementPair
     internal let lhs: TupleElement
     internal let rhs: TupleElement
     
+    public func display(indent: String)
+        {
+        print("\(indent)TUPLE ELEMENT LHS:")
+        self.lhs.display(indent: indent + "\t")
+        print("\(indent)TUPLE ELEMENT RHS:")
+        self.rhs.display(indent: indent + "\t")
+        }
+        
     public func setParent(_ block: Block)
         {
         lhs.setParent(block)
         rhs.setParent(block)
-        }
-        
-    public func deepCopy() -> Self
-        {
-        TupleElementPair(lhs: self.lhs.deepCopy(),rhs: self.rhs.deepCopy())
         }
         
     public func initializeType(inContext context: TypeContext) throws -> TupleElementPair
@@ -205,6 +223,11 @@ public struct TupleElementPair
         {
         try self.lhs.visit(visitor: visitor)
         try self.rhs.visit(visitor: visitor)
+        }
+        
+    public func substitute(from substitution: TypeContext.Substitution) -> TupleElementPair
+        {
+        TupleElementPair(lhs: self.lhs.substitute(from: substitution),rhs: self.rhs.substitute(from: substitution))
         }
     }
     
@@ -259,6 +282,12 @@ public class Tuple: Class,Collection
         super.init(label: Argon.nextName("1_TUPLE_"))
         }
         
+    convenience init(elements: Array<TupleElement>)
+        {
+        self.init()
+        self.elements = elements
+        }
+        
     required init(label: Label)
         {
         super.init(label: label)
@@ -309,13 +338,6 @@ public class Tuple: Class,Collection
         self.elements = try self.elements.map{try $0.initializeType(inContext: context)}
         }
         
-    public override func deepCopy() -> Self
-        {
-        let copy = super.deepCopy()
-        copy.elements = self.elements.map{$0.deepCopy()}
-        return(copy)
-        }
-        
     public override func visit(visitor: Visitor) throws
         {
         for element in self.elements
@@ -323,5 +345,14 @@ public class Tuple: Class,Collection
             try element.visit(visitor: visitor)
             }
         try visitor.accept(self)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)TUPLE:")
+        for element in self.elements
+            {
+            element.display(indent: indent + "\t")
+            }
         }
     }

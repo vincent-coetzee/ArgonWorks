@@ -63,6 +63,7 @@ public class SystemClass:Class
         {
         self._typeCode = typeCode
         super.init(label:label)
+        self.index = UUID()
         for aClass in superclasses
             {
             self.addSuperclass(aClass)
@@ -81,5 +82,6 @@ public class SystemClass:Class
         {
         self._typeCode = .class
         super.init(label: label)
+        self.index = UUID()
         }
 }

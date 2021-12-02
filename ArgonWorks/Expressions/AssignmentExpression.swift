@@ -40,13 +40,24 @@ public class AssignmentExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func deepCopy() -> Self
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        return(AssignmentExpression(self.lhs.deepCopy(),self.rhs.deepCopy()) as! Self)
+        AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs)) as! Self
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)ASSIGNMENT EXPRESSION:")
+        print("\(indent)LHS: \(self.lhs.type.displayString)")
+        self.lhs.display(indent: indent + "\t")
+        print("\(indent)RHS: \(self.rhs.type.displayString)")
+        self.rhs.display(indent: indent + "\t")
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
+        self.lhs.type = self.lhs.type.freshTypeVariable(inContext: context)
+        self.rhs.type = self.lhs.type.freshTypeVariable(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         

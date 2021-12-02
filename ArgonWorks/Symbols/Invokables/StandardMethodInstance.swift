@@ -24,6 +24,13 @@ import Foundation
 ///
 public class StandardMethodInstance: MethodInstance, StackFrame
     {
+    public override var allIssues: CompilerIssues
+        {
+        var myIssues = self.issues
+        myIssues.append(contentsOf: self.block.allIssues)
+        return(myIssues)
+        }
+        
     public override var instructions: Array<T3AInstruction>
         {
         self.buffer.instructions
@@ -34,9 +41,7 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
         }
         
-    internal private(set) var block: MethodInstanceBlock! = nil
-    
-
+    internal var block: MethodInstanceBlock! = nil
     private var _method:Method?
     public let buffer:T3ABuffer
     public var genericParameters = Types()
@@ -72,16 +77,23 @@ public class StandardMethodInstance: MethodInstance, StackFrame
 //        return(method)
 //        }
         
-    public var method: ArgonWorks.Method
+    public override var method: ArgonWorks.Method!
         {
-        if self._method.isNotNil
+        get
             {
-            return(self._method!)
+            if self._method.isNotNil
+                {
+                return(self._method!)
+                }
+            let method = Method(label: self.label)
+            method.addInstance(self)
+            self._method = method
+            return(method)
             }
-        let method = Method(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
+        set
+            {
+            self._method = newValue
+            }
         }
         
     required init(label:Label)
@@ -100,149 +112,6 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         self.block.setParent(self)
         }
         
-//    convenience init(left:String,_ operation:Token.Symbol,right:String,out:String)
-//        {
-//        let leftParm = Parameter(label: "left", type: Class(label: left).type,isVisible: false)
-//        let rightParm = Parameter(label: "right", type: Class(label: right).type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = Class(label:out)
-//        self.init(label: name)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(left:String,_ operation:String,right:String,out:String)
-//        {
-//        let leftParm = Parameter(label: "left", type: Class(label: left).type,isVisible: false)
-//        let rightParm = Parameter(label: "right", type: Class(label: right).type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = Class(label:out)
-//        self.init(label: name)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(left:String,_ operation:String,right:String,out:Class)
-//        {
-//        let leftParm = Parameter(label: "left", type: Class(label: left).type,isVisible: false)
-//        let rightParm = Parameter(label: "right", type: Class(label: right).type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = out
-//        self.init(label: name)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(left:Class,_ operation:Token.Symbol,right:Class,out:Class)
-//        {
-//        let leftParm = Parameter(label: "left", type: left.type,isVisible: false)
-//        let rightParm = Parameter(label: "right", type: right.type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = out
-//        self.init(label: name)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//   convenience init(left:Class,_ operation: String,right:Class,out:Class)
-//        {
-//        let leftParm = Parameter(label: "left", type: left.type,isVisible: false)
-//        let rightParm = Parameter(label: "right", type: right.type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = out
-//        self.init(label: name)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//   convenience init(_ operation: String,arg:Class,out:Class)
-//        {
-//        let rightParm = Parameter(label: "arg", type: arg.type,isVisible: false)
-//        let name = "\(operation)"
-//        let result = out
-//        self.init(label: name)
-//        self.parameters = [rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ op2:String,_ out:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let rightParm = Parameter(label: "op2", type: Class(label:op2).type,isVisible: false)
-//        let result = out
-//        self.init(label: label)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ out:String)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let result = Class(label:out)
-//        self.init(label: label)
-//        self.parameters = [leftParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        self.init(label: label)
-//        self.parameters = [leftParm]
-//        self.returnType = VoidClass.voidClass.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:String,_ out:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-//        let lastParm = Parameter(label: "op3", type: Class(label:op3).type,isVisible: false)
-//        let result = out
-//        self.init(label: label)
-//        self.parameters = [leftParm,rightParm,lastParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:Class,_ out:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-//        let lastParm = Parameter(label: "op3", type: op3.type,isVisible: false)
-//        let result = out
-//        self.init(label: label)
-//        self.parameters = [leftParm,rightParm,lastParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:String)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-//        let result = Class(label:out)
-//        self.init(label: label)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-//        let result = out
-//        self.init(label: label)
-//        self.parameters = [leftParm,rightParm]
-//        self.returnType = result.type
-//        }
-//        
-//    convenience init(_ label:String,_ op1:Class,_ out:Class)
-//        {
-//        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-//        let result = out
-//        self.init(label: label)
-//        self.parameters = [leftParm]
-//        self.returnType = result.type
-//        }
-        
     convenience init(label: Label,parameters: Parameters,returnType:Type)
         {
         self.init(label: label)
@@ -259,13 +128,7 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         self.localSymbols.append(symbol)
         symbol.frame = self
         }
-        
-//    public func generic(_ name:String) -> Self
-//        {
-//        self.parameters.append(Parameter(label: name,type: GenericType(label: name).type))
-//        return(self)
-//        }
-        
+
     public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
         {
         return(self)
@@ -345,19 +208,31 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         buffer.append("RET",.none,.none,.none)
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let instance = StandardMethodInstance(label: self.label)
+        instance.block = substitution.substitute(self.block) as! MethodInstanceBlock
+        instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
+        instance.returnType = substitution.substitute(self.returnType)
+        return(instance as! Self)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
+        try self.parameters.forEach{try $0.initializeType(inContext: context)}
+        try self.returnType.initializeType(inContext: context)
         try self.block.initializeType(inContext: context)
-        self.type = TypeFunction(types: self.parameters.map{$0.type},returnType: self.returnType)
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        print("INIT CONSTRAINTS FOR \(self.label)")
+        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        try self.returnType.initializeTypeConstraints(inContext: context)
         try self.block.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.returnType,right: self.block.type,origin: .symbol(self)))
         let parameterTypes = self.parameters.map{$0.type}
-        context.append(TypeConstraint(left: self.type,right: TypeFunction(types: parameterTypes, returnType: self.block.type),origin: .symbol(self)))
-        print("AFTER ADDING CONSTRAINTS \(context.constraints.count) CONSTRAINTS")
+        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type),origin: .symbol(self)))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -369,5 +244,18 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         try self.parameters.visit(visitor: visitor)
         try self.block.visit(visitor: visitor)
         try visitor.accept(self)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)STANDARD METHOD INSTANCE \(self.label)")
+        var index = 0
+        for parameter in self.parameters
+            {
+            print("\(indent)\tPARAMETER[\(index)] \(parameter.label) \(parameter.type.displayString)")
+            index += 1
+            }
+        print("\(indent)\tRETURN TYPE \(self.returnType.displayString)")
+        self.block.display(indent: indent + "\t")
         }
     }

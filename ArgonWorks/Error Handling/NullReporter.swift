@@ -33,7 +33,7 @@ public struct NullReporter:Reporter
         {
         }
         
-    public func pushIssues()
+    public func pushIssues(_ issues: CompilerIssues)
         {
         }
     }

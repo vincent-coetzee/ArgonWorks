@@ -41,6 +41,13 @@ public class Initializer:Function,Scope
         
     internal private(set) var block = Block()
     internal var declaringClass: Class?
+        {
+        didSet
+            {
+            let aType = self.enclosingScope.lookup(label: self.declaringClass!.label) as! Type
+            self._type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: aType)
+            }
+        }
     private let buffer = T3ABuffer()
     private var symbols = Symbols()
     
@@ -89,6 +96,57 @@ public class Initializer:Function,Scope
         return(self.parent.lookup(label: label))
         }
         
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.parameters.forEach{try $0.initializeType(inContext: context)}
+        self._type = TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.declaringClass!.type)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        context.append(TypeConstraint(left: self.type,right: self.declaringClass!.type,origin: .symbol(self)))
+        }
+        
+    public func moreSpecific(than instance:Initializer,forTypes types: Types) -> Bool
+        {
+        var orderings = Array<SpecificOrdering>()
+        for index in 0..<types.count
+            {
+            let argumentType = types[index]
+            let typeA = self.parameters[index].type
+            let typeB = instance.parameters[index].type
+            if typeA.isSubtype(of: typeB)
+                {
+                orderings.append(.more)
+                }
+            else if typeA.isClass && typeB.isClass && argumentType.isClass
+                {
+                let argumentClassList = argumentType.classValue.precedenceList
+                if let typeAIndex = argumentClassList.firstIndex(of: typeA.classValue),let typeBIndex = argumentClassList.firstIndex(of: typeB.classValue)
+                    {
+                    orderings.append(typeAIndex > typeBIndex ? .more : .less)
+                    }
+                else
+                    {
+                    orderings.append(.unordered)
+                    }
+                }
+            else
+                {
+                orderings.append(.unordered)
+                }
+            }
+        for ordering in orderings
+            {
+            if ordering == .more
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
     public override func emitCode(using: CodeGenerator) throws
         {
         try self.emitCode(into: self.buffer,using: using)
@@ -102,4 +160,15 @@ public class Initializer:Function,Scope
         buffer.append("RET",.none,.none,.none)
         }
         
-}
+    public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
+        {
+        for (inType,myType) in zip(types,self.parameters.map{$0.type})
+            {
+            if !inType.isSubtype(of: myType)
+                {
+                return(false)
+                }
+            }
+        return(true)
+        }
+    }

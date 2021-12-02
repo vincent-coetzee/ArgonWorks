@@ -53,9 +53,9 @@ public class ArrayAccessExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func deepCopy() -> Self
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        return(ArrayAccessExpression(array: self.array.deepCopy(),index: self.index.deepCopy()) as! Self)
+        ArrayAccessExpression(array: substitution.substitute(self.array),index: substitution.substitute(self.index)) as! Self
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -107,7 +107,7 @@ public class ArrayAccessExpression: Expression
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.lineNumber.line)
+            instance.append(lineNumber: location.line)
             }
         let temp = instance.nextTemporary()
         try self.array.emitCode(into: instance,using: generator)

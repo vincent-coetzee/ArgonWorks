@@ -9,6 +9,11 @@ import Foundation
     
 public class BinaryExpression: Expression
     {
+    public override var diagnosticString: String
+        {
+        "BinaryExpression(\(self.operation.rawValue))"
+        }
+        
     public override var lhsValue: Expression?
         {
         return(self.lhs)
@@ -22,6 +27,8 @@ public class BinaryExpression: Expression
     internal let operation: Token.Symbol
     internal let rhs: Expression
     internal let lhs: Expression
+    internal var method: Method?
+    internal var methodInstance: MethodInstance?
     
     init(_ lhs:Expression,_ operation:Token.Symbol,_ rhs:Expression)
         {
@@ -115,19 +122,15 @@ public class BinaryExpression: Expression
         coder.encode(self.rhs,forKey: "rhs")
         }
         
-    public override func deepCopy() -> Self
+    public override func substitute(from context: TypeContext) -> Self
         {
-        return(BinaryExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
-        }
-        
-    public override func substitute(from context: TypeContext)
-        {
-        self.lhs.substitute(from: context)
-        self.rhs.substitute(from: context)
+        BinaryExpression(self.lhs.substitute(from: context),self.operation,self.rhs.substitute(from: context)) as! Self
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
+        self.method = self.enclosingScope.lookup(label: self.operation.rawValue) as? Method
+        try self.method?.initializeType(inContext: context)
         try self.lhs.initializeType(inContext: context)
         try self.rhs.initializeType(inContext: context)
         if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Method
@@ -139,20 +142,113 @@ public class BinaryExpression: Expression
             {
             self.appendIssue(at: self.declaration!, message: "The method \(self.operation) can not be resolved.")
             }
+        self.type = self.method.isNil ? context.freshTypeVariable() : self.method!.returnType.freshTypeVariable(inContext: context)
         }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
+        expression.type = substitution.substitute(expression.type)
+        return(expression as! Self)
+        }
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Method
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.type = context.freshTypeVariable()
+        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Operator
             {
-            try self.lhs.initializeTypeConstraints(inContext: context)
-            try self.rhs.initializeTypeConstraints(inContext: context)
-            let argTypes = [self.lhs.type,self.rhs.type]
-            let functionType = TypeFunction(types: argTypes, returnType: method.returnType)
-            context.append(TypeConstraint(left: self.type, right: functionType, origin: .expression(self)))
+            if self.method!.label == "+"
+                {
+                print("halt")
+                }
+            let instances = method.instancesWithArity(2)
+            var inferredInstances = MethodInstances()
+            for instance in instances
+                {
+                try context.extended(withContentsOf: TaggedTypes())
+                    {
+                    newContext in
+                    let freshInstance = instance.freshTypeVariable(inContext: context)
+                    try freshInstance.initializeType(inContext: context)
+                    try freshInstance.initializeTypeConstraints(inContext: newContext)
+                    for (argument,parameter) in zip([self.lhs,self.rhs],freshInstance.parameters)
+                        {
+                        newContext.append(TypeConstraint(left: parameter.type,right: argument.type,origin: .expression(self)))
+                        }
+                    if freshInstance.parameters[0] == freshInstance.parameters[1]
+                        {
+                        newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+                        }
+                    if freshInstance.parameters[0] == freshInstance.returnType
+                        {
+                        newContext.append(TypeConstraint(left: self.lhs.type,right: freshInstance.returnType,origin: .expression(self)))
+                        }
+                    if freshInstance.parameters[1] == freshInstance.returnType
+                        {
+                        newContext.append(TypeConstraint(left: self.rhs.type,right: freshInstance.returnType,origin: .expression(self)))
+                        }
+                    let substitution = newContext.unify()
+                    let newInstance = substitution.substitute(freshInstance)
+                    let leftType = substitution.substitute(self.lhs.type)
+                    let rightType = substitution.substitute(self.rhs.type)
+                    let types = [leftType,rightType]
+                    if newInstance.parameterTypesAreSupertypes(ofTypes: types)
+                        {
+                        inferredInstances.append(newInstance)
+                        }
+                    if let mostSpecificInstance = inferredInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
+                        {
+                        self.methodInstance = mostSpecificInstance
+                        }
+                    }
+                }
+            guard self.methodInstance.isNotNil else
+                {
+                print("COULD NOT MATCH AN INSTANCE")
+                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation can not be resolved. Trying making it more specific.")
+                return
+                }
+            print("MATCHED \(self.lhs.type.displayString) \(self.rhs.type.displayString)")
+            self.type = self.methodInstance!.returnType
+            for (argument,parameter) in zip([self.lhs,self.rhs],self.methodInstance!.parameters)
+                {
+                context.append(TypeConstraint(left: parameter.type,right: argument.type,origin: .expression(self)))
+                }
+            if self.methodInstance!.parameters[0] == self.methodInstance!.parameters[1]
+                {
+                context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+                }
+            if self.methodInstance!.parameters[0] == self.methodInstance!.returnType
+                {
+                context.append(TypeConstraint(left: self.lhs.type,right: self.methodInstance!.returnType,origin: .expression(self)))
+                }
+            if self.methodInstance!.parameters[1] == self.methodInstance!.returnType
+                {
+                context.append(TypeConstraint(left: self.rhs.type,right: self.methodInstance!.returnType,origin: .expression(self)))
+                }
             }
         else
             {
-            self.appendIssue(at: self.declaration!, message: "Unable to resolve binary operation '\(self.operation)' so method can not be dispatched.")
+            self.appendIssue(at: self.declaration!,message: "Unable to resolve operator '\(self.operation)', this operation can not be dispatched.")
+            }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)BINARY EXPRESSION: \(self.operation)")
+        print("\(indent)LHS: \(self.lhs.type.displayString)")
+        self.lhs.display(indent: indent + "\t")
+        print("\(indent)RHS: \(self.rhs.type.displayString)")
+        self.rhs.display(indent: indent + "\t")
+        if self.methodInstance.isNil
+            {
+            print("\(indent)SELECTED INSTANCE - NONE")
+            }
+        else
+            {
+            print("\(indent)SELECTED INSTANCE \(self.methodInstance!.displayString)")
             }
         }
         
@@ -265,6 +361,11 @@ public class BinaryExpression: Expression
 
 public class ComparisonExpression: BinaryExpression
     {
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs)) as! Self
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.lhs.initializeType(inContext: context)
@@ -277,15 +378,15 @@ public class ComparisonExpression: BinaryExpression
         try self.lhs.initializeTypeConstraints(inContext: context)
         try self.rhs.initializeTypeConstraints(inContext: context)
         }
-        
-    public override func deepCopy() -> Self
-        {
-        return(ComparisonExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
-        }
     }
 
 public class BooleanExpression: BinaryExpression
     {
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        BooleanExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs)) as! Self
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.lhs.initializeType(inContext: context)
@@ -299,10 +400,5 @@ public class BooleanExpression: BinaryExpression
         try self.rhs.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: context.booleanType,origin: .expression(self)))
         context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        return(BooleanExpression(self.lhs.deepCopy(),self.operation,self.rhs.deepCopy()) as! Self)
         }
     }

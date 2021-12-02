@@ -53,6 +53,11 @@ public class SelectBlock: Block
         try super.visit(visitor: visitor)
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        SelectBlock(value: substitution.substitute(self.value)) as! Self
+        }
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.value.initializeTypeConstraints(inContext: context)

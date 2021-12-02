@@ -1114,8 +1114,7 @@ public class TokenStream:Equatable, TokenSource
         {
         self.tokenStop = self.characterOffset
         self.tokenStart = self.startIndex
-        let line = LineNumber(line: self.line)
-        return(Location(lineNumber: line,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
+        return(Location(line: self.line,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
         }
     
     private func scanOperator(withPrefix startString:String) -> Token

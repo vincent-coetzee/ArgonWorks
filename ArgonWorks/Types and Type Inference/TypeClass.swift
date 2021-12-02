@@ -29,6 +29,11 @@ public class TypeClass: TypeConstructor
         self.theClass.isGenericClass
         }
         
+    public override var classValue: Class
+        {
+        self.theClass
+        }
+        
     public override var localAndInheritedSlots: Slots
         {
         self.theClass.localAndInheritedSlots
@@ -95,7 +100,7 @@ public class TypeClass: TypeConstructor
         
     required init(label: Label)
         {
-        if label == "String"
+        if label == "String" || label == "Float"
             {
             print("halt")
             }
@@ -116,11 +121,6 @@ public class TypeClass: TypeConstructor
     public override func encode(with coder: NSCoder)
         {
         fatalError()
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        TypeClass(class: self.theClass,generics: self.generics.map{$0.deepCopy()}) as! Self
         }
         
     public override func isSubtype(of type: Type) -> Bool

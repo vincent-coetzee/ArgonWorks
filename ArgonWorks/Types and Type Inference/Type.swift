@@ -9,8 +9,6 @@ import Foundation
 
 public class Type: Symbol
     {
-    public static let unknown = TypeUnknown()
-    
     private static var typeMappings = Dictionary<Name,Type>()
     
     internal static func of(_ aClass: Class) -> Type
@@ -48,12 +46,7 @@ public class Type: Symbol
         self.typeMappings[enumeration.fullName] = type
         return(type)
         }
-        
-    public static func tvar(_ name: String) -> Type
-        {
-        TypeContext.freshTypeVariable(named: name)
-        }
-        
+
     public static func ==(lhs: Type,rhs: Type) -> Bool
         {
         lhs === rhs
@@ -180,11 +173,6 @@ public class Type: Symbol
         return(self)
         }
         
-    public override func deepCopy() -> Self
-        {
-        Type(label: self.label) as! Self
-        }
-        
     public func isSubtype(of: Type) -> Bool
         {
         false
@@ -195,33 +183,19 @@ public class Type: Symbol
         return(nil)
         }
         
-    public func contains(_ typeVariable: TypeVariable) -> Bool
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        substitution.substitute(self) as! Self
+        }
+        
+    public func freshTypeVariable(inContext: TypeContext) -> Type
+        {
+        self
+        }
+        
+    public func contains(_ type:Type) -> Bool
         {
         false
-        }
-        
-    public func instanciate(withType: Type) -> Type
-        {
-        fatalError()
-        }
-        
-    public func instanciate(withTypes: Types) -> Type
-        {
-        fatalError()
-        }
-        
-    public func substitute(from context: TypeContext) -> Type
-        {
-        self
-        }
-        
-    public func freshTypeVariable(inContext context:TypeContext) -> Type
-        {
-        self
-        }
-        
-    public func replace(_ id:Int,with: Type)
-        {
         }
     }
 

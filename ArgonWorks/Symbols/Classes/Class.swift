@@ -12,6 +12,18 @@ import FFI
 
 public class Class:ContainerSymbol
     {
+    public override var type: Type
+        {
+        get
+            {
+            fatalError()
+            }
+        set
+            {
+            fatalError()
+            }
+        }
+        
     public var genericSourceClass: Class
         {
         return(self)
@@ -150,9 +162,6 @@ public class Class:ContainerSymbol
         
     public static var classesByAddress = Dictionary<Word,Class>()
     
-//    public static let `class` = self.topModule.argonModule.class
-//    public static let slot = self.topModule.argonModule.slot
-    
     public static func == (lhs: Class, rhs: Class) -> Bool
         {
         return(lhs.index == rhs.index)
@@ -175,20 +184,7 @@ public class Class:ContainerSymbol
             try initializer.emitCode(using: using)
             }
         }
-        
-//    public static var integer: Class = ArgonModule.argonModule.integer
-//    public static var boolean: Class = ArgonModule.argonModule.boolean
-//    public static var string: Class = ArgonModule.argonModule.string
-//    public static var character: Class = ArgonModule.argonModule.character
-//    public static var byte: Class = ArgonModule.argonModule.byte
-//    public static var array: Class = ArgonModule.argonModule.array
-//    public static var dictionary: Class = ArgonModule.argonModule.dictionary
-//    public static var instruction: Class = ArgonModule.argonModule.instruction
-//    public static var typeClass: Class = ArgonModule.argonModule.typeClass
-//    public static var classClass: Class = ArgonModule.argonModule.class
-//    public static var collection: Class = ArgonModule.argonModule.collection
-//    public static var enumeration: Class = ArgonModule.argonModule.enumeration
-    
+
     public override var isClass: Bool
         {
         return(true)
@@ -525,7 +521,7 @@ public class Class:ContainerSymbol
         super.init(label: label)
         self.addDeclaration(.zero)
         self.layoutSlots.parent = self
-        self.type = TypeClass(class: self,generics: [])
+        self._type = Type()
         }
         
     public required init?(coder: NSCoder)
@@ -541,7 +537,7 @@ public class Class:ContainerSymbol
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
         super.init(coder: coder)
-        self.type = TypeClass(class: self,generics: [])
+        self._type = Type()
 //        print("END DECODE SYMBOL \(self.label)")
         }
 
@@ -641,15 +637,25 @@ public class Class:ContainerSymbol
             }
         }
         
+    private var subclassList: Classes
+        {
+        self.subclasses.map{($0 as! TypeClass).theClass}
+        }
+        
+    internal var classType: Type
+        {
+        TypeClass(class: self,generics: [])
+        }
+        
     public func addSuperclass(_ type: Type)
         {
         if !self.superclasses.contains(type)
             {
             self.superclasses.append(type)
             }
-        if !(type as! TypeClass).theClass.subclasses.contains(self.type)
+        if !(type as! TypeClass).theClass.subclassList.contains(self)
             {
-            (type as! TypeClass).theClass.subclasses.append(self.type)
+            (type as! TypeClass).theClass.subclasses.append(self.classType)
             }
         }
         
@@ -661,6 +667,19 @@ public class Class:ContainerSymbol
             {
             aClass.subclasses.removeAll(where: { self == $0})
             }
+        }
+        
+    public func mostSpecificInitializer(forArguments arguments: Arguments) -> Initializer?
+        {
+        let arity = arguments.count
+        let types = arguments.map{$0.value.type}
+        var possibles = self.initializers.filter{$0.arity == arity && $0.parameterTypesAreSupertypes(ofTypes: types)}
+        if possibles.isEmpty
+            {
+            return(nil)
+            }
+        possibles.sort{$0.moreSpecific(than: $1, forTypes: types)}
+        return(possibles.last)
         }
         
     public func removeSubclass(_ type: Type)
@@ -968,15 +987,15 @@ public class Class:ContainerSymbol
         var offset:Int = 0
         var visitedClasses = Set<Class>()
         visitedClasses.insert(self)
-        var slot:Slot = HeaderSlot(label: "_header",type: TopModule.shared.argonModule.integer.type)
+        var slot:Slot = HeaderSlot(label: "_header",type: self.enclosingScope.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_magicNumber",type: TopModule.shared.argonModule.integer.type)
+        slot = Slot(label: "_magicNumber",type: self.enclosingScope.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_classPointer",type: TopModule.shared.argonModule.address.type)
+        slot = ObjectSlot(label: "_classPointer",type: self.enclosingScope.topModule.argonModule.address.type)
         slot.setOffset(offset)
         self.layoutSlots.append(slot)
         offset += slot.size
@@ -1009,15 +1028,15 @@ public class Class:ContainerSymbol
         visitedClasses.insert(self)
 //        print("LAYING OUT CLASS \(self.label) INDIRECTLY")
 //        inClass.offsetOfClass[self] = offset
-        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: TopModule.shared.argonModule.integer.type)
+        var slot:Slot = HeaderSlot(label: "_\(self.label)Header",type: self.enclosingScope.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = Slot(label: "_\(self.label)MagicNumber",type: TopModule.shared.argonModule.integer.type)
+        slot = Slot(label: "_\(self.label)MagicNumber",type: self.enclosingScope.topModule.argonModule.integer.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size
-        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: TopModule.shared.argonModule.address.type)
+        slot = ObjectSlot(label: "_\(self.label)ClassPointer",type: self.enclosingScope.topModule.argonModule.address.type)
         slot.setOffset(offset)
         inClass.layoutSlots.append(slot)
         offset += slot.size

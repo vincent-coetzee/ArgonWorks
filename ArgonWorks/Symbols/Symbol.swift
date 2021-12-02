@@ -8,7 +8,7 @@
 import Foundation
 import AppKit
 
-public class Symbol:Node,ParseNode
+public class Symbol:Node,ParseNode,VisitorReceiver
     {
     public var allNamedInvokables: Array<NamedInvokable>
         {
@@ -234,6 +234,11 @@ public class Symbol:Node,ParseNode
             }
         }
         
+    public var allIssues: CompilerIssues
+        {
+        return(self.issues)
+        }
+        
     public var type: Type
         {
         get
@@ -257,8 +262,8 @@ public class Symbol:Node,ParseNode
     public private(set) var isLoaded = false
     public private(set) var isImported = false
     public private(set) var loader: Loader?
-    public private(set) var compiler: Compiler!
-    public private(set) var issues = CompilerIssues()
+    public var compiler: Compiler!
+    public var issues = CompilerIssues()
     public var _type: Type!
     
     public required init(label: Label)
@@ -378,6 +383,14 @@ public class Symbol:Node,ParseNode
         copy.source = self.source
         copy.loader = self.loader
         copy.compiler = self.compiler
+        copy.issues = self.issues
+        return(copy)
+        }
+        
+    public func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = Self.init(label: self.label)
+        copy._type = substitution.substitute(self._type)
         return(copy)
         }
         
@@ -385,6 +398,11 @@ public class Symbol:Node,ParseNode
         {
         let string = String(repeating: "\t", count: depth)
         print("\(string)\(Swift.type(of: self)) \(self.label)")
+        }
+        
+    public func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self)): \(self.label) \(self.type.displayString)")
         }
         
     public func replaceSymbol(_ source: Symbol,with replacement: Symbol)

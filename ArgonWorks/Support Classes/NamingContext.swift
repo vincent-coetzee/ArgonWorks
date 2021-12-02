@@ -21,7 +21,7 @@ public struct NullContext: NamingContext
     {
     public var topModule: TopModule
         {
-        TopModule()
+        fatalError()
         }
         
     public var index: UUID

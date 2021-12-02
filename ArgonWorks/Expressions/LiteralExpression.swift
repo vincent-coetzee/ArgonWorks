@@ -25,7 +25,7 @@ public indirect enum Literal:Hashable,Displayable
     case module(Module)
     case enumeration(Enumeration)
     case enumerationCase(EnumerationCase)
-    case method(Method)
+    case methodInstance(MethodInstance)
     case constant(Constant)
     case function(Function)
     
@@ -62,7 +62,7 @@ public indirect enum Literal:Hashable,Displayable
             case 11:
                 self = .enumerationCase(coder.decodeObject(forKey: "enumerationCase") as! EnumerationCase)
             case 12:
-                self = .method(coder.decodeObject(forKey: "method") as! Method)
+                self = .methodInstance(coder.decodeObject(forKey: "methodInstance") as! MethodInstance)
             case 13:
                 self = .constant(coder.decodeObject(forKey: "constant") as! Constant)
             case 14:
@@ -98,7 +98,7 @@ public indirect enum Literal:Hashable,Displayable
                 return("\(enumeration.label)")
             case .enumerationCase(let aCase):
                 return("\(aCase.label)")
-            case .method(let method):
+            case .methodInstance(let method):
                 return("\(method.label)")
             case .function(let function):
                 return("\(function.label)")
@@ -140,9 +140,9 @@ public indirect enum Literal:Hashable,Displayable
             case .enumeration(let enumeration):
                 coder.encode(10,forKey:"kind")
                 coder.encode(enumeration,forKey:"enumeration")
-            case .method(let method):
+            case .methodInstance(let method):
                 coder.encode(12,forKey:"kind")
-                coder.encode(method,forKey:"method")
+                coder.encode(method,forKey:"methodInstance")
             case .constant(let constant):
                 coder.encode(13,forKey:"kind")
                 coder.encode(constant,forKey:"constant")
@@ -152,6 +152,86 @@ public indirect enum Literal:Hashable,Displayable
             case .function(let aCase):
                 coder.encode(14,forKey:"kind")
                 coder.encode(aCase,forKey:"function")
+            }
+        }
+        
+    public func type(inContext context: TypeContext) -> Type
+        {
+       switch(self)
+            {
+            case .nil:
+                return(context.nilType)
+            case .integer:
+                return(context.integerType)
+            case .float:
+                return(context.floatType)
+            case .string:
+                return(context.stringType)
+            case .boolean:
+                return(context.booleanType)
+            case .symbol:
+                return(context.symbolType)
+            case .array(let array):
+                let first = array.first!
+                let elementType = first.type
+                let arrayType = context.arrayType
+                let arrayClass = (arrayType as! TypeClass).theClass
+                return(TypeClass(class: arrayClass,generics: [elementType]))
+            case .class:
+                return(context.classType)
+            case .module:
+                return(context.moduleType)
+            case .enumeration(let enumeration):
+                return(TypeEnumeration(enumeration: enumeration,generics: enumeration.genericTypes))
+            case .enumerationCase:
+                return(context.enumerationCaseType)
+            case .methodInstance(let instance):
+                return(TypeFunction(label: instance.label,types: instance.parameters.map{$0.type},returnType: instance.returnType))
+            case .function(let function):
+                return(TypeFunction(label: function.label,types: function.parameters.map{$0.type},returnType: function.returnType))
+            case .constant(let constant):
+                return(constant.type)
+            }
+        }
+        
+    public func display(indent: String)
+        {
+        print("\(indent)LITERAL \(self) \(self.type.displayString)")
+        }
+        
+    public func substitute(from substitution: TypeContext.Substitution) -> Literal
+        {
+       switch(self)
+            {
+            case .nil:
+                return(self)
+            case .integer:
+                return(self)
+            case .float:
+                return(self)
+            case .string:
+                return(self)
+            case .boolean:
+                return(self)
+            case .symbol:
+                return(self)
+            case .array(let array):
+                let newElements = array.map{$0.substitute(from: substitution)}
+                return(.array(newElements))
+            case .class(let aClass):
+                return(.class(substitution.substitute(aClass) as! Class))
+            case .module(let module):
+                return(.module(substitution.substitute(module) as! Module))
+            case .enumeration(let enumeration):
+                return(.enumeration(substitution.substitute(enumeration) as! Enumeration))
+            case .enumerationCase(let aCase):
+                return(.enumerationCase(substitution.substitute(aCase) as! EnumerationCase))
+            case .methodInstance(let instance):
+                return(.methodInstance(substitution.substitute(instance)))
+            case .function(let function):
+                return(.function(substitution.substitute(function) as! Function))
+            case .constant(let constant):
+                return(.constant(substitution.substitute(constant) as! Constant))
             }
         }
     }
@@ -200,7 +280,7 @@ public class LiteralExpression: Expression
         {
         switch(self.literal)
             {
-            case .method:
+            case .methodInstance:
                 return(true)
             default:
                 return(false)
@@ -240,11 +320,11 @@ public class LiteralExpression: Expression
             }
         }
         
-    public var methodLiteral: Method
+    public var methodInstanceLiteral: MethodInstance
         {
         switch(self.literal)
             {
-            case .method(let symbol):
+            case .methodInstance(let symbol):
                 return(symbol)
             default:
                 fatalError("Should not have been called")
@@ -330,11 +410,6 @@ public class LiteralExpression: Expression
         super.init()
         }
         
-    public override func deepCopy() -> Self
-        {
-        LiteralExpression(self.literal) as! Self
-        }
-        
     required init?(coder: NSCoder)
         {
         self.literal = Literal(coder: coder)
@@ -379,7 +454,7 @@ public class LiteralExpression: Expression
                 context.append(TypeConstraint(left: self.type,right: enumeration.type,origin: .expression(self)))
             case .enumerationCase(let aCase):
                 context.append(TypeConstraint(left: self.type,right: aCase.type,origin: .expression(self)))
-            case .method(let method):
+            case .methodInstance(let method):
                 context.append(TypeConstraint(left: self.type,right: method.type,origin: .expression(self)))
             case .function(let function):
                 context.append(TypeConstraint(left: self.type,right: function.type,origin: .expression(self)))
@@ -404,8 +479,12 @@ public class LiteralExpression: Expression
                 self.type = context.booleanType
             case .symbol:
                 self.type = context.symbolType
-            case .array:
-                self.type = context.arrayType
+            case .array(let array):
+                let first = array.first!
+                let elementType = first.type
+                let arrayType = context.arrayType
+                let arrayClass = (arrayType as! TypeClass).theClass
+                self.type = TypeClass(class: arrayClass,generics: [elementType])
             case .class(let aClass):
                 self.type = aClass.type
             case .module:
@@ -414,13 +493,18 @@ public class LiteralExpression: Expression
                 self.type = enumeration.type
             case .enumerationCase(let aCase):
                 self.type = aCase.type
-            case .method(let method):
+            case .methodInstance(let method):
                 self.type = method.type
             case .function(let function):
                 self.type = function.type
             case .constant(let constant):
                 self.type = constant.type
             }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)LITERAL \(self.literal) \(self.type.displayString)")
         }
         
     public override func dump(depth: Int)
@@ -519,8 +603,8 @@ public class LiteralExpression: Expression
                  instance.append(nil,"LOAD",.relocatable(.enumeration(enumeration)),.none,temp)
             case .enumerationCase(let enumerationCase):
                  instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
-            case .method(let method):
-                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
+            case .methodInstance(let method):
+                 instance.append(nil,"LOAD",.relocatable(.methodInstance(method)),.none,temp)
             case .constant(let constant):
                  instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
             case .function(let constant):

@@ -99,6 +99,9 @@ public struct Palette
     public let hierarchyPrimaryTintColor = NSColor.controlAccentColor
     public let hierarchySecondaryTintColor = NSColor.argonCaledonGreen
     public let hierarchyTertiaryTintColor = NSColor.argonSkyBlueCrayola
+    
+    public let warningColor = NSColor.argonCheese
+    public let errorColor = NSColor.argonPink
 
     public let compilationEventWarningSelectionColor = NSColor.controlAccentColor
     public let compilationEventErrorSelectionColor = NSColor.controlAccentColor

@@ -33,11 +33,6 @@ public class FunctionInvocationExpression: Expression
         super.init(coder: coder)
         }
         
-    public override func deepCopy() -> Self
-        {
-        fatalError()
-        }
-        
     public override func visit(visitor: Visitor) throws
         {
         try self.function.visit(visitor: visitor)

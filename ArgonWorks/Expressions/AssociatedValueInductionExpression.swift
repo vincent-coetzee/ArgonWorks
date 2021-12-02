@@ -53,11 +53,6 @@ public class AssociatedValueInductionExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func deepCopy() -> Self
-        {
-        return(AssociatedValueInductionExpression(self.expression.deepCopy(),self.slots.map{$0.label}) as! Self)
-        }
-        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         }

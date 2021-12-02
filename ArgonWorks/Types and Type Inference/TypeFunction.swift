@@ -7,16 +7,16 @@
 
 import Foundation
 
-public class TypeFunction: Type
+public class TypeFunction: TypeConstructor
     {
     internal let types: Types
     internal var returnType: Type
     
-    init(types: Types,returnType: Type)
+    init(label: Label,types: Types,returnType: Type)
         {
         self.types = types
         self.returnType = returnType
-        super.init()
+        super.init(label: label)
         }
         
     required init?(coder: NSCoder)
@@ -38,14 +38,5 @@ public class TypeFunction: Type
         coder.encode(self.types,forKey: "types")
         coder.encode(self.returnType,forKey: "returnType")
         super.encode(with: coder)
-        }
-        
-    public override func replace(_ id:Int,with: Type)
-        {
-        self.types.forEach{$0.replace(id,with: with)}
-        if self.returnType.isTypeVariable && (self.returnType as! TypeVariable).id == id
-            {
-            self.returnType = with
-            }
         }
     }

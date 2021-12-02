@@ -14,5 +14,5 @@ public protocol Reporter
     func status(_ string:String)
     func dispatchWarning(at:Location,message:String)
     func dispatchError(at:Location,message:String)
-    func pushIssues()
+    func pushIssues(_ issues: CompilerIssues)
     }

@@ -58,6 +58,6 @@ public class CodeGenerator: CompilerPass
         
     public func finish()
         {
-        self.compiler.reportingContext.pushIssues()
+        self.compiler.reportingContext.pushIssues(compiler.allIssues)
         }
     }

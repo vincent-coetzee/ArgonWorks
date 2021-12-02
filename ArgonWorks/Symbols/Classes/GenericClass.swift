@@ -16,6 +16,11 @@ public class GenericClass:Class
         return("\(self.label)\(string)")
         }
         
+    public override var classType: Type
+        {
+        TypeClass(class: self,generics: self.types)
+        }
+        
     public override var isGenericClass: Bool
         {
         return(true)
@@ -56,14 +61,14 @@ public class GenericClass:Class
         {
         self._typeCode = typeCode
         super.init(label: label)
-        self.type = TypeClass(class: self,generics: self.types)
+        self._type = Type()
         }
         
     required init(label: Label)
         {
         self._typeCode = .other
         super.init(label: label)
-        self.type = TypeClass(class: self,generics: self.types)
+        self._type = Type()
         }
         
     init(label: Label,types: Types)
@@ -71,7 +76,7 @@ public class GenericClass:Class
         self.types = types
         self._typeCode = .other
         super.init(label: label)
-        self.type = TypeClass(class: self,generics: self.types)
+        self._type = Type()
         }
         
     required init?(coder: NSCoder)
@@ -80,7 +85,7 @@ public class GenericClass:Class
         self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClass>
         self._typeCode = .array
         super.init(coder: coder)
-        self.type = TypeClass(class: self,generics: self.types)
+        self._type = Type()
         }
         
     public override func encode(with coder:NSCoder)
@@ -109,7 +114,7 @@ public class GenericClass:Class
         self._typeCode = typeCode
         super.init(label:label)
         self.types = types
-        self.type = TypeClass(class: self,generics: self.types)
+        self._type = Type()
         for aClass in superclasses
             {
             self.addSuperclass(aClass)
@@ -155,6 +160,20 @@ public class GenericClass:Class
 //        self.types = types.map{TypeParameterType(TypeParameter(label: $0))}
 //        self.superclassReferences = superclasses.map{ForwardReferenceClass(name:Name($0))}
 //        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self)): \(self.label)")
+        let list = self.types.map{$0.displayString}.joined(separator: ",")
+        print("\(indent)\tGENERICS: \(list)")
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        copy.types = self.types.map{substitution.substitute($0)}
+        return(copy)
+        }
         
    public func of(_ type:Type) -> Type
         {

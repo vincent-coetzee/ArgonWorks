@@ -29,7 +29,7 @@ import Cocoa
 
 internal protocol SourceEditorDelegate
     {
-    func sourceEditorGutter(_ view: LineNumberGutter,selectedAnnotationAtLine: Int)
+    func sourceEditorGutter(_ view: LineNumberGutter,selectedAnnotation: LineAnnotation, atLine: Int)
     func sourceEditorKeyPressed(_ editor: LineNumberTextView)
     func sourceEditor(_ editor: LineNumberTextView,changedLine: Int,offset: Int)
     }
@@ -72,7 +72,7 @@ public class LineNumberTextView: NSTextView
     /// Holds the selected line number
     private var selectedLineNumber = 0
     /// Holds the attached line number gutter.
-    private var lineNumberGutter: LineNumberGutter?
+    internal var lineNumberGutter: LineNumberGutter?
 
     /// Holds the text color for the gutter. Available in the Inteface Builder.
     @IBInspectable public var gutterForegroundColor: NSColor? {
@@ -94,7 +94,11 @@ public class LineNumberTextView: NSTextView
         }
     }
 
-
+    public var annotations: Array<LineAnnotation>
+        {
+        Array(self.lineNumberGutter?.annotations.values ?? Dictionary<Int,LineAnnotation>().values)
+        }
+        
     public func addAnnotation(_ annotation:LineAnnotation)
         {
         self.lineNumberGutter?.addAnnotation(annotation)
@@ -227,6 +231,26 @@ public class LineNumberTextView: NSTextView
         var frame = NSRect(x:0,y:offset,width: self.bounds.width,height: lineHeight)
         frame.origin.y = frame.minY - lineHeight
         self.selectedLineLayer.frame = frame
+        }
+        
+    public func endOfLineFrame(forLine: Int) -> CGRect
+        {
+        var line = 0
+        let text = self.string
+        var index = text.startIndex
+        while index < text.endIndex && line < forLine
+            {
+            if text[index] == "\n"
+                {
+                line += 1
+                }
+            index = text.index(index, offsetBy: 1)
+            }
+        let characterIndex = text.distance(from: text.startIndex,to: index) - 1
+        let glyphIndex = self.layoutManager!.glyphIndexForCharacter(at: characterIndex)
+        var range = NSRange(location: glyphIndex,length: 1)
+        let rect = self.layoutManager!.boundingRect(forGlyphRange: range, in: self.textContainer!)
+        return(rect)
         }
         
     public override func mouseDown(with event: NSEvent)

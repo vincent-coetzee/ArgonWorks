@@ -193,54 +193,47 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.topLeftText.stringValue = string
         }
         
-    public func pushIssues()
+    public func pushIssues(_ issues: CompilerIssues)
         {
         self.outliner.reloadData()
         self.refreshSourceAnnotations()
+        for issue in issues
+            {
+            self.appendIssue(issue)
+            }
         }
         
     public func cancelCompletion()
         {
         }
         
-    public func dispatchWarning(at: Location, message: String)
+    private func appendIssue(_ incoming: CompilerIssue)
         {
         var found = false
         for issue in self.issues
             {
-            if issue.line == at.line
+            if issue.line == incoming.location.line
                 {
                 found = true
-                issue.appendSubissue(message: message)
+                issue.appendSubissue(message: incoming.message)
                 }
             }
         if !found
             {
-            let issue = IssueItem(line: at.line, message: message)
+            let issue = IssueItem(line: incoming.location.line, message: incoming.message,isWarning: incoming.isWarning)
+            issue.issue = incoming
             self.issues.append(issue)
             self.warningItem.appendIssue(issue)
             }
         self.warningItem.sort()
         }
+        
+    public func dispatchWarning(at: Location, message: String)
+        {
+        }
     
     public func dispatchError(at: Location, message: String)
         {
-        var found = false
-        for issue in self.issues
-            {
-            if issue.line == at.line
-                {
-                found = true
-                issue.appendSubissue(message: message)
-                }
-            }
-        if !found
-            {
-            let issue = IssueItem(line: at.line, message: message)
-            self.issues.append(issue)
-            self.warningItem.appendIssue(issue)
-            }
-        self.warningItem.sort()
         }
     
     public func resetReporting()
@@ -249,6 +242,14 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.issues = []
         self.warningItem = WarningGroupItem()
         self.currentItem.appendItem(self.warningItem)
+        for annotation in self.editorView.annotations
+            {
+            if annotation.issueLayer.isNotNil
+                {
+                annotation.issueLayer?.removeFromSuperlayer()
+                annotation.issueLayer = nil
+                }
+            }
         self.editorView.removeAllAnnotations()
         }
         
@@ -257,18 +258,20 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.editorView.removeAllAnnotations()
         for value in self.issues
             {
-            let annotation = LineAnnotation(line: value.line, icon: NSImage(named: "IconLineMarkerYellow2")!)
+            let annotation = LineAnnotation(line: value.line, symbolName: value.isWarning ? "exclamationmark.triangle" : "exclamationmark.circle",tintColor: value.isWarning ? .argonCheese : .argonPink)
             self.editorView.addAnnotation(annotation)
             }
         }
         
-    func sourceEditorGutter(_ view: LineNumberGutter, selectedAnnotationAtLine line: Int)
+    func sourceEditorGutter(_ view: LineNumberGutter, selectedAnnotation annotation: LineAnnotation,atLine line: Int)
         {
         var rowSet = IndexSet()
+        var clickedIssue:IssueItem?
         for issue in self.issues
             {
             if issue.line == line && issue.line != -1
                 {
+                clickedIssue = issue
                 let row = self.outliner.row(forItem: issue)
                 if row != -1
                     {
@@ -277,6 +280,26 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 }
             }
         self.outliner.selectRowIndexes(rowSet, byExtendingSelection: false)
+        if let issue = clickedIssue
+            {
+            if annotation.issueLayer.isNotNil
+                {
+                annotation.issueLayer?.removeFromSuperlayer()
+                annotation.issueLayer = nil
+                annotation.image = NSImage(systemSymbolName: issue.isWarning ? "exclamationmark.triangle" : "exclamationmark.circle", accessibilityDescription: "")!
+                }
+            else if let compilerIssue = issue.issue
+                {
+                var location = self.editorView.endOfLineFrame(forLine: line)
+                location.origin.x += 10
+                let newLayer = CompilerIssueMessageLayer(issue: compilerIssue)
+                self.editorView.layer?.addSublayer(newLayer)
+                newLayer.frame = location
+                annotation.issueLayer = newLayer
+                annotation.image = NSImage(systemSymbolName: issue.isWarning ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill", accessibilityDescription: "")!
+                }
+            self.editorView.lineNumberGutter?.needsDisplay = true
+            }
         }
     
     func sourceEditorKeyPressed(_ editor: LineNumberTextView)
@@ -413,7 +436,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = TopModule.shared.deepCopy()
+                        ImportUnarchiver.topModule = aCompiler.topModule
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")

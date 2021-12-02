@@ -36,7 +36,7 @@ public class VirtualMachine
 //    public var registers: Array<Word> = Array(repeating: 0, count: Instruction.Register.allCases.count + 1)
     public var topModule: TopModule
         {
-        return(TopModule.shared)
+        fatalError()
         }
         
     public let pageServer: PageServer!
@@ -45,7 +45,7 @@ public class VirtualMachine
     
     public var argonModule: ArgonModule
         {
-        TopModule.shared.argonModule
+        fatalError()
         }
         
     public var ip: Int = 0

@@ -10,6 +10,16 @@ import AppKit
 
 public class Method:Symbol
     {
+    public override var allIssues: CompilerIssues
+        {
+        var myIssues = self.issues
+        for instance in self.instances
+            {
+            myIssues.append(contentsOf: instance.allIssues)
+            }
+        return(myIssues)
+        }
+        
     public override var allNamedInvokables: Array<NamedInvokable>
         {
         return(self.instances.map{NamedInvokable(fullName: $0.fullName, invokable: $0)})
@@ -27,7 +37,7 @@ public class Method:Symbol
         
     public override var asLiteralExpression: LiteralExpression?
         {
-        return(LiteralExpression(.method(self)))
+        fatalError()
         }
         
     public var maximumInstanceArity: Int
@@ -38,6 +48,11 @@ public class Method:Symbol
     public override var canBecomeAType: Bool
         {
         return(true)
+        }
+        
+    public var isEmpty: Bool
+        {
+        self.instances.isEmpty
         }
         
     public var isSystemMethod: Bool
@@ -52,7 +67,7 @@ public class Method:Symbol
         }
         
     public var isMainMethod: Bool = false
-    public var returnType: Type = Type.unknown
+    public var returnType: Type!
     public var proxyParameters = Parameters()
     public var isGenericMethod = false
     public var isIntrinsic = false
@@ -75,6 +90,7 @@ public class Method:Symbol
     public required init(label: Label)
         {
         super.init(label: label)
+        self._type = Type()
         }
         
     public override func encode(with coder: NSCoder)
@@ -94,6 +110,16 @@ public class Method:Symbol
     public class func method(label:String) -> Method
         {
         return(Method(label:label))
+        }
+        
+    public class func single(_ name:String,_ label:String,_ type:Type,_ result:Type) -> Method
+        {
+        let instance = MethodInstance(label: name)
+        instance.parameters = [Parameter(label: label, relabel: nil, type: type, isVisible: false, isVariadic: false)]
+        instance.returnType = result
+        let method = Method(label: name)
+        method.addInstance(instance)
+        return(method)
         }
         
     public func instancesWithArity(_ arity:Int) -> MethodInstances
@@ -161,6 +187,17 @@ public class Method:Symbol
             }
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        for instance in self.instances
+            {
+            let newInstance = substitution.substitute(instance)
+            copy.addInstance(newInstance)
+            }
+        return(copy)
+        }
+        
     public func instance(_ types:Type...,returnType:Type = VoidClass.voidClass.type) -> Method
         {
         let instance = MethodInstance(label: self.label)
@@ -199,8 +236,13 @@ public class Method:Symbol
         
     private func eliminateImpossibleMethodInstances(forTypes types: Types) -> MethodInstances
         {
+        let newInstances = self.instances.filter{!$0.hasVariableTypes}
+        if newInstances.isEmpty
+            {
+            return([])
+            }
         let count = types.count
-        return(self.instances.filter{$0.parameters.count == count && $0.parameterTypesAreSupertypes(ofTypes: types)})
+        return(newInstances.filter{$0.parameters.count == count && $0.parameterTypesAreSupertypes(ofTypes: types)})
         }
         
     public func addInstance(_ instance:MethodInstance)
@@ -214,8 +256,7 @@ public class Method:Symbol
             self.instances.append(instance)
             }
         instance.setParent(self)
-        self.proxyParameters = instance.parameters
-        self.returnType = instance.returnType
+        instance.method = self
         }
         
     public func filledInTagSignature(forArguments: Arguments) -> TagSignature?
@@ -231,9 +272,13 @@ public class Method:Symbol
         
     public override func initializeType(inContext: TypeContext) throws
         {
-        for instance in self.instances
+        if self.returnType.isNil
             {
-            try instance.initializeType(inContext: inContext)
+            self.returnType = inContext.freshTypeVariable()
+            for instance in self.instances
+                {
+                try instance.initializeType(inContext: inContext)
+                }
             }
         }
         
@@ -243,6 +288,41 @@ public class Method:Symbol
             {
             try instance.initializeTypeConstraints(inContext: inContext)
             }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)METHOD: \(self.label)")
+        for instance in self.instances
+            {
+            instance.display(indent: indent + "\t")
+            }
+        }
+        
+    public func triple(_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
+        {
+        let random = Int.random(in: 0..<1000000)
+        
+        let parameters = [type1.parameter(random),type2.parameter(random)]
+        let returnType = type3.value(random)
+        let instance = PrimitiveMethodInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        self.addInstance(instance)
+        return(self)
+        }
+        
+    public func double(_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
+        {
+        let random = Int.random(in: 0..<1000000)
+        
+        let parameters = [type1.parameter(random)]
+        let returnType = type3.value(random)
+        let instance = PrimitiveMethodInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        self.addInstance(instance)
+        return(self)
         }
     }
 
@@ -255,3 +335,33 @@ extension Array
     }
     
 public typealias Methods = Array<Method>
+
+public enum ArgumentType
+    {
+    case type(Type)
+    case generic(String)
+    
+    public func parameter(_ random:Int) -> Parameter
+        {
+        switch(self)
+            {
+            case .type(let type):
+                return(Parameter(label: "\(random)", relabel: nil, type: type, isVisible: false, isVariadic: false))
+            case .generic(let label):
+                return(Parameter(label: "\(random)", relabel: nil, type: TypeContext.freshTypeVariable(named: "\(random)\(label)"), isVisible: false, isVariadic: false))
+            }
+        }
+        
+    public func value(_ random:Int) -> Type
+        {
+        switch(self)
+            {
+            case .type(let type):
+                return(type)
+            case .generic(let number):
+                return(TypeContext.freshTypeVariable(named:"\(random)\(number)"))
+            }
+        }
+    }
+    
+

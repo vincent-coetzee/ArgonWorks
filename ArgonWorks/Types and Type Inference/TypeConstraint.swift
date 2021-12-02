@@ -9,6 +9,32 @@ import Foundation
 
 public class TypeConstraint: Displayable,CustomStringConvertible
     {
+    public var line: Int
+        {
+        switch(self.origin)
+            {
+            case .symbol(let symbol):
+                return(symbol.declaration!.line)
+            case .expression(let expression):
+                return(expression.declaration!.line)
+            case .block(let block):
+                return(block.declaration!.line)
+            }
+        }
+        
+    public var originTypeString: String
+        {
+        switch(self.origin)
+            {
+            case .symbol(let symbol):
+                return("\(Swift.type(of: symbol))")
+            case .expression(let expression):
+                return("\(Swift.type(of: expression)) \(expression.diagnosticString)")
+            case .block(let block):
+                return("\(Swift.type(of: block))")
+            }
+        }
+        
     public var description: String
         {
         self.displayString
@@ -24,6 +50,19 @@ public class TypeConstraint: Displayable,CustomStringConvertible
         case symbol(Symbol)
         case expression(Expression)
         case block(Block)
+        
+        public func appendIssue(_ issue: CompilerIssue)
+            {
+            switch(self)
+                {
+                case .symbol(let symbol):
+                    symbol.appendIssue(issue)
+                case .expression(let expression):
+                    expression.appendIssue(issue)
+                case .block(let block):
+                    block.appendIssue(issue)
+                }
+            }
         }
         
     internal let lhs: Type
@@ -35,12 +74,6 @@ public class TypeConstraint: Displayable,CustomStringConvertible
         self.lhs = left
         self.rhs = right
         self.origin = origin
-        }
-        
-    public func replace(_ id:Int,with type: Type)
-        {
-        self.lhs.replace(id,with: type)
-        self.rhs.replace(id,with: type)
         }
     }
     

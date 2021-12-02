@@ -44,11 +44,6 @@ public class InvocationExpression: Expression
             argument.value.setParent(self)
             }
         }
-
-    public override func deepCopy() -> Self
-        {
-        InvocationExpression(name: self.name,arguments: self.arguments,location: self.location) as! Self
-        }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {

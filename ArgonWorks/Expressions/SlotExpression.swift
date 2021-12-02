@@ -48,6 +48,16 @@ public class SlotExpression: Expression
         try visitor.accept(self)
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        SlotExpression(slot: substitution.substitute(self.slot) as! Slot) as! Self
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)SLOT EXPRESSION: \(self.slot.label) \(self.slot.type.displayString)")
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         self.type = self.slot.type
@@ -55,11 +65,6 @@ public class SlotExpression: Expression
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        SlotExpression(slot: self.slot) as! Self
         }
         
     public override func becomeLValue()

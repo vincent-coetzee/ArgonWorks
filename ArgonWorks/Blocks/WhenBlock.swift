@@ -58,5 +58,10 @@ public class WhenBlock: Block
             try block.initializeTypeConstraints(inContext: context)
             }
         }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        WhenBlock(condition: substitution.substitute(self.condition)) as! Self
+        }
     }
     

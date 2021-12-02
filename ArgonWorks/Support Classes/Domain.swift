@@ -29,7 +29,7 @@ public class Domain: Loader
     init(label: Label)
         {
         self.label = label
-        self.topModule = TopModule.shared.deepCopy()
+        fatalError()
         }
         
     public func compileIn(source:String,reportingContext: Reporter)

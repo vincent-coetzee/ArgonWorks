@@ -10,9 +10,11 @@ import Combine
 
 public class Compiler
     {
+    private static var instanceCounter = 1
+    
     public static var systemClassNames: Array<String>
         {
-        TopModule().argonModule.classes.map{$0.label}
+        TopModule(compiler: Compiler()).argonModule.classes.map{$0.label}
         }
 
     public var argonModule: ArgonModule
@@ -20,23 +22,43 @@ public class Compiler
         return(self.topModule.argonModule)
         }
         
+    public private(set) var allIssues: CompilerIssues = []
     internal var reportingContext:Reporter
     private var parser: Parser!
     internal var lastNode: ParseNode?
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
-    internal var topModule: TopModule
+    internal var topModule: TopModule!
     internal var tokenRenderer:SemanticTokenRenderer
+    internal let instanceNumber: Int
     
-    init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
+    init()
         {
+        self.instanceNumber = Self.instanceCounter
+        Self.instanceCounter += 1
         self.parser = nil
         self.currentPass = nil
         self.lastNode = nil
-        self.topModule = TopModule()
+        self.reportingContext = NullReporter()
+        self.tokenRenderer = NullTokenRenderer()
+        self.topModule = TopModule(compiler: self)
+        self.parser = Parser(compiler: self,source: "")
+        self.currentPass = self.parser
+        self.tokenRenderer.update("")
+
+        }
+        
+    init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
+        {
+        self.instanceNumber = Self.instanceCounter
+        Self.instanceCounter += 1
+        self.parser = nil
+        self.currentPass = nil
+        self.lastNode = nil
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
+        self.topModule = TopModule(compiler: self)
         self.parser = Parser(compiler: self,source: source)
         self.currentPass = self.parser
         self.tokenRenderer.update(source)
@@ -44,15 +66,17 @@ public class Compiler
 
     init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
+        self.instanceNumber = Self.instanceCounter
+        Self.instanceCounter += 1
         self.parser = nil
         self.currentPass = nil
         self.lastNode = nil
-        self.topModule = TopModule()
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
-        self.topModule.printContents("\t")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
         let cleanTokens = tokens.filter{!$0.isWhitespace}
+        self.topModule = TopModule(compiler: self)
+        self.topModule.printContents("\t")
         self.parser = Parser(compiler: self,tokens: cleanTokens)
         self.currentPass = self.parser
         }
@@ -68,18 +92,21 @@ public class Compiler
         self.reportingContext.resetReporting()
         if let module = self.parser.parse(),!parseOnly
             {
-            let visitor = TestVisitor()
-            visitor.startVisit()
-            try! module.visit(visitor: visitor)
-            visitor.endVisit()
-            self.reportingContext.pushIssues()
             SemanticAnalyzer.analyzeModule(module,in:self)
             AddressAllocator.allocateAddresses(module,in: self)
             CodeGenerator.emit(into: module,in:self)
             Optimizer.optimize(module,in:self)
+            let visitor = TestVisitor.visit(module)
+            self.allIssues = visitor.allIssues
+            let someIssues = module.issues
+            print(someIssues)
+            self.reportingContext.pushIssues(self.allIssues)
+            let newModule = module.checkTypes()
+            module.display(indent: "")
+            newModule.display(indent:"")
+            let walker = TestWalker.visit(newModule)
             return(module)
             }
-        self.reportingContext.pushIssues()
         return(nil)
         }
     }

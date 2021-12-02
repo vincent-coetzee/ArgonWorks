@@ -80,6 +80,14 @@ public class LoopBlock: Block
         context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let newStarts = self.startExpressions.map{substitution.substitute($0)}
+        let newUpdates = self.updateExpressions.map{substitution.substitute($0)}
+        let newEnd = substitution.substitute(endExpression)
+        return(LoopBlock(start: newStarts, end: newEnd, update: newUpdates) as! Self)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         for block in self.blocks

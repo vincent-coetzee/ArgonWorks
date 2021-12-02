@@ -254,11 +254,14 @@ public class IssueItem: FileItem
     public let line: Int
     public let message: String
     private var kids: FileItems = []
+    public let isWarning: Bool
+    public var issue: CompilerIssue?
     
-    init(line: Int,message:String)
+    init(line: Int,message:String,isWarning:Bool = false)
         {
         self.message = message
         self.line = line
+        self.isWarning = isWarning
         }
         
     public func appendSubissue(message: String)

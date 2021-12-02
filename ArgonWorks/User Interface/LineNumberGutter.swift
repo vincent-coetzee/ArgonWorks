@@ -296,7 +296,7 @@ class LineNumberGutter: NSRulerView {
         let rect:NSRect = NSRect(x:4,y:y,width:15,height:15)
         let relativePoint    = self.convert(NSZeroPoint, from: textView)
         let newRect = NSRect(x:rect.minX + 31,y:relativePoint.y + y - 1,width:rect.width,height:rect.height)
-        cartouche.icon.draw(in: newRect)
+        cartouche.image.draw(in: newRect)
         cartouche.area = newRect
         let lineView = textView as! LineNumberTextView
         lineView.cartouche(cartouche, drawnIn: newRect)
@@ -327,7 +327,7 @@ class LineNumberGutter: NSRulerView {
             {
             if annotation.area.contains(point)
                 {
-                self.sourceEditorDelegate?.sourceEditorGutter(self, selectedAnnotationAtLine: annotation.line)
+                self.sourceEditorDelegate?.sourceEditorGutter(self, selectedAnnotation: annotation,atLine: annotation.line)
                 }
             }
         super.mouseDown(with: event)

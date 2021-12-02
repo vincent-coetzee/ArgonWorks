@@ -10,14 +10,30 @@ import Cocoa
 public class LineAnnotation
     {
     public var area:NSRect = .zero
-    public let icon:NSImage
-    public let line:Int
-    
-    init(line:Int,icon:NSImage)
+    private var icon: NSImage
+    public var image:NSImage
         {
+        get
+            {
+            return(icon)
+            }
+        set
+            {
+            self.icon.isTemplate = true
+            self.icon = newValue.image(withTintColor: self.tintColor)
+            }
+        }
+        
+    public let line:Int
+    public let tintColor: NSColor
+    public var issueLayer: CompilerIssueMessageLayer?
+    
+    init(line:Int,symbolName:String,tintColor:NSColor = NSColor.controlAccentColor)
+        {
+        self.tintColor = tintColor
         self.line = line
-        icon.isTemplate = true
-        self.icon = icon.image(withTintColor: NSColor.controlAccentColor)
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "")!
+        self.icon = image.image(withTintColor: self.tintColor)
         self.icon.isTemplate = true
         }
     }

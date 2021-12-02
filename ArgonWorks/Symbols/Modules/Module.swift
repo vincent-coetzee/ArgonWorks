@@ -77,6 +77,7 @@ public class Module:ContainerSymbol,Scope
     public required init(label: Label)
         {
         super.init(label: label)
+        self._type = Type()
         }
         
     public required init?(coder: NSCoder)
@@ -261,6 +262,31 @@ public class Module:ContainerSymbol,Scope
         self.layoutInMemory()
         }
 
+    public func checkTypes() -> Module
+        {
+        do
+            {
+            let typeContext = TypeContext(scope: self.enclosingScope)
+            for node in self.symbols
+                {
+                try node.initializeType(inContext: typeContext)
+                try node.initializeTypeConstraints(inContext: typeContext)
+                }
+            let substitution = typeContext.unify()
+            return(substitution.substitute(self) as! Module)
+            }
+        catch let error as CompilerIssue
+            {
+            self.appendIssue(error)
+            print(error)
+            }
+        catch let error
+            {
+            self.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
+            }
+        return(self)
+        }
+        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         do

@@ -10,6 +10,22 @@ import Collections
 
 public class ContainerSymbol:Symbol
     {
+    public override var allIssues: CompilerIssues
+        {
+        get
+            {
+            var myIssues = self.issues
+            for symbol in self.symbolsByLabel.values
+                {
+                myIssues.append(contentsOf: symbol.allIssues)
+                }
+            return(myIssues)
+            }
+        set
+            {
+            }
+        }
+        
     public override var allNamedInvokables: Array<NamedInvokable>
         {
         var buffer = Array<NamedInvokable>()
@@ -131,6 +147,15 @@ public class ContainerSymbol:Symbol
             {
             symbol.resetParent()
             self.symbolsByLabel[symbol.label] = nil
+            }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self)): \(self.label)")
+        for symbol in self.symbols
+            {
+            symbol.display(indent: indent + "\t")
             }
         }
         

@@ -126,21 +126,21 @@ public class EmptyLineNumber: LineNumber
     }
     
     
-public struct Location:Equatable
+public struct Location:Equatable,CustomStringConvertible
     {
-    public static let zero = Location(line:0,lineStart:0,lineStop:0,tokenStart:0,tokenStop:0)
-    
-    public var line: Int
+    public var description: String
         {
-        return(self.lineNumber.line)
+        "Location(\(self.line),\(self.tokenStart),\(self.tokenStop),\(self.lineStart),\(self.lineStop))"
         }
         
+    public static let zero = Location(line:0,lineStart:0,lineStop:0,tokenStart:0,tokenStop:0)
+    
     public var range: NSRange
         {
         NSRange(location: self.tokenStart, length: self.tokenStop - self.tokenStart)
         }
         
-    public var lineNumber: LineNumber
+    public var line: Int
     public let tokenStart: Int
     public let tokenStop: Int
     public let lineStart: Int
@@ -148,25 +148,11 @@ public struct Location:Equatable
 
     public init(line:Int,lineStart:Int,lineStop:Int,tokenStart:Int,tokenStop:Int)
         {
-        self.lineNumber = LineNumber(line: line)
+        self.line = line
         self.lineStart = lineStart
         self.lineStop = lineStop
         self.tokenStart = tokenStart
         self.tokenStop = tokenStop
-        }
-        
-    public init(lineNumber: LineNumber,lineStart:Int,lineStop:Int,tokenStart:Int,tokenStop:Int)
-        {
-        self.lineNumber = lineNumber
-        self.lineStart = lineStart
-        self.lineStop = lineStop
-        self.tokenStart = tokenStart
-        self.tokenStop = tokenStop
-        }
-        
-    public func with(_ lineNumber: LineNumber) -> Location
-        {
-        return(Location(lineNumber: lineNumber, lineStart: self.lineStart, lineStop: self.lineStop, tokenStart: self.tokenStart, tokenStop: self.tokenStop))
         }
     }
 

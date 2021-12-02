@@ -45,8 +45,8 @@ public class EnumerationCase:Symbol
         .enumerationCase
         }
         
-    public let associatedTypes: Types
-    public let symbol: Argon.Symbol
+    public var associatedTypes: Types
+    public var symbol: Argon.Symbol
     public var rawValue: LiteralExpression?
     public var caseSizeInBytes:Int = 0
     public weak var enumeration: Enumeration!
@@ -85,6 +85,15 @@ public class EnumerationCase:Symbol
         coder.encode(self.associatedTypes,forKey: "associatedTypes")
         }
     
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)}
+        copy.symbol = self.symbol
+        copy.rawValue = self.rawValue.isNil ? nil : substitution.substitute(self.rawValue!) as! LiteralExpression
+        return(copy)
+        }
+        
     public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
         super.configure(cell: cell)
@@ -97,9 +106,9 @@ public class EnumerationCase:Symbol
         
     private func calculateSizeInBytes()
         {
-        let size = TopModule.shared.argonModule.enumerationCase.localAndInheritedSlots.count * MemoryLayout<Word>.size
-        let typesSize = self.associatedTypes.count * MemoryLayout<Word>.size
-        self.caseSizeInBytes = size + typesSize + MemoryLayout<Word>.size * 4
+//        let size = TopModule.shared.argonModule.enumerationCase.localAndInheritedSlots.count * MemoryLayout<Word>.size
+//        let typesSize = self.associatedTypes.count * MemoryLayout<Word>.size
+//        self.caseSizeInBytes = size + typesSize + MemoryLayout<Word>.size * 4
         }
     }
     

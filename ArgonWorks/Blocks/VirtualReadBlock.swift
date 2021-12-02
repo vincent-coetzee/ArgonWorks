@@ -51,6 +51,14 @@ public class VirtualReadBlock: Block,Scope
         
     internal var slot: Slot!
     
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let block = VirtualWriteBlock()
+        block.slot = self.slot.deepCopy()
+        block.slot.type = substitution.substitute(self.slot.type)
+        return(block as! Self)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.slot.initializeType(inContext: context)
@@ -96,6 +104,16 @@ public class VirtualWriteBlock: VirtualReadBlock
         self.type = self.slot.type
         }
 
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let block = VirtualWriteBlock()
+        block.slot = self.slot.deepCopy()
+        block.slot.type = substitution.substitute(self.slot.type)
+        block.newValueSlot = self.newValueSlot.deepCopy()
+        block.newValueSlot.type = substitution.substitute(self.newValueSlot.type)
+        return(block as! Self)
+        }
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         for block in self.blocks

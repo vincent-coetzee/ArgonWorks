@@ -64,6 +64,11 @@ public class WhileBlock: Block
         buffer.pendingLabel = endLabel
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        WhileBlock(condition: substitution.substitute(self.condition)) as! Self
+        }
+        
     public override func visit(visitor: Visitor) throws
         {
         try self.condition.visit(visitor: visitor)

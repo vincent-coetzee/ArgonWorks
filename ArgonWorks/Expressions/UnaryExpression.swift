@@ -32,11 +32,6 @@ public class UnaryExpression: Expression
         super.init(coder: coder)
         }
         
-    public override func deepCopy() -> Self
-        {
-        UnaryExpression(Token.Symbol(rawValue: self.operationName)!,self.rhs.deepCopy()) as! Self
-        }
-        
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
@@ -61,11 +56,16 @@ public class UnaryExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
+        }
+        
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.lineNumber.line)
+            instance.append(lineNumber: location.line)
             }
         try self.rhs.emitCode(into: instance, using: using)
         var opcode = "NOP"

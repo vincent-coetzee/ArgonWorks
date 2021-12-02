@@ -26,11 +26,6 @@ public class EnumerationInstanceExpression: Expression
         super.init(coder: coder)
         }
         
-     public override func deepCopy() -> Self
-        {
-        EnumerationInstanceExpression(lhs: self.lhs.deepCopy(),enumerationCase: self.enumerationCase,associatedValues: self.associatedValues.isNil ? nil : self.associatedValues!.map{$0.deepCopy()}) as! Self
-        }
-        
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)

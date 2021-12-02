@@ -39,11 +39,6 @@ public struct Argument:Displayable
         try self.value.inferType(context: context)
         }
         
-    public func deepCopy() -> Self
-        {
-        Argument(tag: self.tag,value: value.deepCopy())
-        }
-        
     public func visit(visitor: Visitor) throws
         {
         try self.value.visit(visitor: visitor)
@@ -52,7 +47,8 @@ public struct Argument:Displayable
         
     public func substitute(from: TypeContext) -> Argument
         {
-        let expression = self.value.deepCopy()
+        
+        let expression = self.value.substitute(from: from)
         expression.substitute(from: from)
         return(Argument(tag: self.tag,value: expression))
         }
@@ -65,9 +61,8 @@ public struct Argument:Displayable
         
     public func initializeType(inContext context: TypeContext) throws -> Argument
         {
-        let newValue = self.value.deepCopy()
-        try newValue.initializeType(inContext: context)
-        return(Argument(tag: self.tag,value: newValue))
+        try self.value.initializeType(inContext: context)
+        return(self)
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext) throws

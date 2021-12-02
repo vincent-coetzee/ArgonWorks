@@ -42,7 +42,7 @@ public class TypeVariable: Type
         {
         get
             {
-            self.boundType.isNil ? Type.unknown : self.boundType!.type
+            self.boundType.isNil ? Type() : self.boundType!.type
             }
         set
             {
@@ -56,7 +56,7 @@ public class TypeVariable: Type
         
     public override var inferredType: Type
         {
-        self.boundType.isNil ? Type.unknown : self.boundType!.inferredType
+        self.boundType.isNil ? Type() : self.boundType!.inferredType
         }
         
     internal var id: Int
@@ -100,37 +100,11 @@ public class TypeVariable: Type
         return(type.contains(self))
         }
         
-    public override func contains(_ typeVariable: TypeVariable) -> Bool
-        {
-        if self.boundType.isNil
-            {
-            return(false)
-            }
-        return(self.boundType!.contains(typeVariable))
-        }
-        
-    public override func substitute(from context: TypeContext) -> Type
-        {
-        self.boundType ?? Type.unknown
-        }
-        
     public override func freshTypeVariable(inContext context:TypeContext) -> Type
         {
-        let variable = context.freshTypeVariable()
+        let variable = context.freshTypeVariable(forTypeVariable: self)
         self.boundType = variable
         return(variable)
-        }
-        
-    public override func replace(_ id:Int,with: Type)
-        {
-        if self.id == id
-            {
-            self.boundType = type
-            }
-        else
-            {
-            self.boundType?.replace(id,with: with)
-            }
         }
     }
     

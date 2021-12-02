@@ -70,10 +70,10 @@ public class VisualTokenizer: SemanticTokenRenderer
             {
             let compiler = Compiler(tokens: someTokens,reportingContext: self.reportingContext,tokenRenderer: self)
             compiler.compile(parseOnly: true)
-            }
-        DispatchQueue.main.async
-            {
-            self.reportingContext.pushIssues()
+            DispatchQueue.main.async
+                {
+                self.reportingContext.pushIssues(compiler.allIssues)
+                }
             }
         print("Time to create Compiler and parse = \(time2)")
         }

@@ -35,9 +35,4 @@ public class ImportExpression: Expression
         {
         return(self.importSymbol.lookup(label: label))
         }
-        
-    public override func deepCopy() -> Self
-        {
-        fatalError()
-        }
     }

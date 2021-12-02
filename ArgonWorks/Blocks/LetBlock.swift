@@ -51,6 +51,15 @@ public class LetBlock: Block
         super.encode(with: coder)
         }
         
+    public override func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self))")
+        for pair in self.pairs
+            {
+            pair.display(indent: indent + "\t")
+            }
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         for element in self.pairs
@@ -61,6 +70,11 @@ public class LetBlock: Block
         self.type = context.voidType
         }
         
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        LetBlock(location: self.location,pairs: self.pairs.map{$0.substitute(from: substitution)}) as! Self
+        }
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         for element in self.pairs
@@ -69,14 +83,6 @@ public class LetBlock: Block
             try element.rhs.initializeTypeConstraints(inContext: context)
             context.append(TypeConstraint(left: element.lhs.type,right: element.rhs.type,origin: .block(self)))
             }
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        let copy = super.deepCopy()
-        copy.pairs = self.pairs.map{$0.deepCopy()}
-        copy.location = self.location
-        return(copy)
         }
         
     public override func visit(visitor: Visitor) throws

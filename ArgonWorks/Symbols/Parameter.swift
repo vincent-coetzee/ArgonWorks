@@ -87,14 +87,15 @@ public class Parameter:Slot,Displayable
         
     public func freshTypeVariable(inContext context: TypeContext) -> Parameter
         {
-        let newType = self.type is TypeVariable ? context.freshTypeVariable() : self.type
+        let newType = self.type is TypeVariable ? context.freshTypeVariable(forTypeVariable: self.type) : self.type
         let newParameter = Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic)
         return(newParameter)
         }
         
-    public func substitute(from context: TypeContext)
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        self.type = self.type.substitute(from: context)
+        self.type = substitution.substitute(self.type)
+        return(Parameter(label: self.label, relabel: self.relabel, type: self.type, isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
         }
         
     public override func deepCopy() -> Self

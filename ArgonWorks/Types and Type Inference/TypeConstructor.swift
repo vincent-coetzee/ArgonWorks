@@ -58,26 +58,19 @@ public class TypeConstructor: Type
         fatalError()
         }
         
-    public override func deepCopy() -> Self
+    public override func contains(_ type:Type) -> Bool
         {
-        TypeConstructor(label: self.label,generics: self.generics.map{$0.deepCopy()}) as! Self
-        }
-        
-    public override func contains(_ typeVariable: TypeVariable) -> Bool
-        {
-        for type in self.generics
+        for inner in self.generics
             {
-            if type.contains(typeVariable)
+            if inner == type
+                {
+                return(true)
+                }
+            if inner.contains(type)
                 {
                 return(true)
                 }
             }
         return(false)
-        }
-        
-    public override func substitute(from context: TypeContext) -> Type
-        {
-        self.generics = self.generics.map{$0.substitute(from: context)}
-        return(self)
         }
     }

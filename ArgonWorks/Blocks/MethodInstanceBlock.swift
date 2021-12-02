@@ -16,6 +16,11 @@ public class MethodInstanceBlock: Block
         return(self._methodInstance)
         }
         
+    public override var declaration: Location?
+        {
+        self.methodInstance.declaration
+        }
+        
     required init()
         {
         self._methodInstance = MethodInstance(label: "")

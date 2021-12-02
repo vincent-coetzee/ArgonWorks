@@ -34,7 +34,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.classBrowser.delegate = self.symbolList1
         self.classBrowser.dataSource = self.symbolList1
         self.symbolList1!.outliner = self.classBrowser
-        self.symbolList1!.symbols = [TopModule.shared.argonModule.object]
+//        self.symbolList1!.symbols = [TopModule.shared.argonModule.object]
         self.header2.text = "Methods"
         self.header2.textColor = Palette.shared.headerTextColor
         self.header2.headerColor = Palette.shared.headerColor
@@ -44,7 +44,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.methodBrowser.delegate = self.symbolList2
         self.methodBrowser.dataSource = self.symbolList2
         self.symbolList2!.outliner = self.methodBrowser
-        self.symbolList2!.symbols = [TopModule.shared]
+//        self.symbolList2!.symbols = [TopModule.shared]
         self.header3.text = "Objects"
         self.header3.textColor = Palette.shared.headerTextColor
         self.header3.headerColor = Palette.shared.headerColor
@@ -54,7 +54,7 @@ class ArgonBrowserHierarchyViewController: NSViewController,NSOutlineViewDelegat
         self.objectBrowser.delegate = self.symbolList3
         self.objectBrowser.dataSource = self.symbolList3
         self.symbolList3!.outliner = self.objectBrowser
-        self.symbolList3!.symbols = [TopModule.shared.moduleRoot]
+//        self.symbolList3!.symbols = [TopModule.shared.moduleRoot]
         }
         
     public override func viewDidAppear()

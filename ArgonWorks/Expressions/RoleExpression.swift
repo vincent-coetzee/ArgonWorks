@@ -34,20 +34,15 @@ public class RoleExpression: Expression
         super.init()
         self.type = type
         }
-
-    public override func deepCopy() -> Self
-        {
-        fatalError()
-        }
         
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type.lookup(label: label))
         }
         
-    public override func substitute(from context: TypeContext)
+    public override func substitute(from context: TypeContext) -> Self
         {
-        self.expression.substitute(from: context)
+        fatalError()
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

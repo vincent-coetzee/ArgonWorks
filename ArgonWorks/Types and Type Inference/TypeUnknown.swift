@@ -21,6 +21,6 @@ public class TypeUnknown: Type
         
     public override func deepCopy() -> Self
         {
-        Type.unknown as! Self
+        Type() as! Self
         }
     }

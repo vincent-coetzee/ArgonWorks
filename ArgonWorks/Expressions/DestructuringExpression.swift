@@ -37,14 +37,6 @@ public class DestructuringExpression: Expression
         coder.encode(self.isArrayDestructure,forKey: "isArrayDestructure")
         }
         
-    public override func deepCopy() -> Self
-        {
-        let expression = DestructuringExpression()
-        expression.expressions = self.expressions.map{$0.deepCopy()}
-        expression.isArrayDestructure = self.isArrayDestructure
-        return(expression as! Self)
-        }
-        
     public override func visit(visitor: Visitor) throws
         {
         for expression in self.expressions

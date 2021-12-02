@@ -55,11 +55,6 @@ public class AssignmentOperatorExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func deepCopy() -> Self
-        {
-        return(AssignmentOperatorExpression(self.lhs.deepCopy(),Token.Operator(self.operationName),self.rhs.deepCopy()) as! Self)
-        }
-        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
@@ -72,6 +67,11 @@ public class AssignmentOperatorExpression: Expression
         self.type = self.lhs.type
         }
 
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs)) as! Self
+        }
+        
     public override var displayString: String
         {
         return("\(self.lhs.displayString) \(self.operationName) \(self.rhs.displayString)")

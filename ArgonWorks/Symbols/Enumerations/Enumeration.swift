@@ -31,6 +31,7 @@ public class Enumeration:Symbol
 
     private var cases: EnumerationCases = []
     public var rawType: Type?
+    public var genericTypes: Types = []
     
     public required init(label: Label)
         {
@@ -84,6 +85,20 @@ public class Enumeration:Symbol
     public override func isElement(ofType: Group.ElementType) -> Bool
         {
         return(ofType == .enumeration)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        copy.cases = self.cases.map{substitution.substitute($0) as! EnumerationCase}
+        copy.cases.forEach{$0.enumeration = self}
+        copy.cases.forEach{$0.setParent(self)}
+        if self.rawType.isNotNil
+            {
+            copy.rawType = substitution.substitute(self.rawType!)
+            }
+        copy.genericTypes = self.genericTypes.map{substitution.substitute($0)}
+        return(copy)
         }
         
     public override func lookup(label: String) -> Symbol?

@@ -50,6 +50,11 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function,Scope
     {
+    public override var declaration: Location?
+        {
+        self.method.declaration
+        }
+        
     public var isSlotScope: Bool
         {
         false
@@ -111,11 +116,6 @@ public class MethodInstance: Function,Scope
         return(self)
         }
         
-    public var arity: Int
-        {
-        return(self.parameters.count)
-        }
-        
     public override var iconName: String
         {
         "IconMethodInstance"
@@ -137,8 +137,21 @@ public class MethodInstance: Function,Scope
         return("\(self.label)\(parmString) -> \(self.returnType.displayString)")
         }
         
+    public var hasVariableTypes: Bool
+        {
+        for parameter in self.parameters
+            {
+            if parameter.type.isTypeVariable
+                {
+                return(true)
+                }
+            }
+        return(self.returnType.isTypeVariable)
+        }
+        
     public var isGenericMethod = false
     public var conditionalTypes: Types = []
+    public weak var method: Method!
     
     public required init?(coder: NSCoder)
         {
@@ -159,13 +172,12 @@ public class MethodInstance: Function,Scope
         super.encode(with: coder)
         }
         
-    public override func deepCopy() -> Self
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let instance = super.deepCopy()
-        instance.parameters = self.parameters.map{$0.deepCopy()}
-        instance.returnType = self.returnType.deepCopy()
-        instance.conditionalTypes = self.conditionalTypes
-        return(instance)
+        let instance = MethodInstance(label: self.label)
+        instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
+        instance.returnType = substitution.substitute(self.returnType)
+        return(instance as! Self)
         }
         
     public func freshTypeVariable(inContext context: TypeContext) -> MethodInstance

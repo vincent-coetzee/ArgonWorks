@@ -32,6 +32,19 @@ public class TypeContext
             self.typeVariables = substitution.typeVariables
             }
             
+        public func freshTypeVariable(forTypeVariable old: Type) -> TypeVariable
+            {
+            let oldTypeVariable = old as! TypeVariable
+            if let newVariable = self.typeVariables[oldTypeVariable.id]
+                {
+                return(newVariable as! TypeVariable)
+                }
+            let variable = TypeVariable(index: Self.typeVariableIndex)
+            Self.typeVariableIndex += 1
+            self.typeVariables[variable.id] = variable
+            return(variable)
+            }
+            
         public func freshTypeVariable() -> TypeVariable
             {
             let variable = TypeVariable(index: Self.typeVariableIndex)
@@ -42,6 +55,13 @@ public class TypeContext
             
         public func freshTypeVariable(named: String) -> TypeVariable
             {
+            for variable in self.typeVariables.values
+                {
+                if variable.label == named
+                    {
+                    return(variable as! TypeVariable)
+                    }
+                }
             let variable = TypeVariable(label: named)
             variable.id = Self.typeVariableIndex
             Self.typeVariableIndex += 1
@@ -101,7 +121,17 @@ public class TypeContext
             return(false)
             }
             
-        private func substitute(_ type: Type) -> Type
+        public func substitute(_ argument: Argument) -> Argument
+            {
+            Argument(tag: argument.tag, value: self.substitute(argument.value))
+            }
+            
+        public func substitute(_ parameter: Parameter) -> Parameter
+            {
+            Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type), isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
+            }
+            
+        public func substitute(_ type: Type) -> Type
             {
             if let typeVariable = type as? TypeVariable
                 {
@@ -123,16 +153,64 @@ public class TypeContext
                 {
                 return(TypeConstructor(label: constructor.label,generics: constructor.generics.map{self.substitute($0)}))
                 }
+            if let function = type as? TypeFunction
+                {
+                return(TypeFunction(label: function.label,types: function.generics.map{self.substitute($0)},returnType: self.substitute(function.returnType)))
+                }
             return(type)
+            }
+            
+        public func substitute(_ literal: Literal) -> Literal
+            {
+            literal.substitute(from: self)
+            }
+            
+        public func substitute(_ tuple: Tuple) -> Tuple
+            {
+            Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
+            }
+            
+        public func substitute(_ symbol: Symbol) -> Symbol
+            {
+            let newSymbol = symbol.substitute(from: self)
+            newSymbol.type = self.substitute(symbol.type)
+            return(newSymbol)
+            }
+            
+        public func substitute(_ expression: Expression) -> Expression
+            {
+            let newExpression = expression.substitute(from: self)
+            newExpression.type = self.substitute(expression.type)
+            newExpression.setParent(expression.parent)
+            newExpression.issues = expression.issues
+            return(newExpression)
+            }
+            
+        public func substitute(_ container: ContainerSymbol) -> ContainerSymbol
+            {
+            let newModule = container.substitute(from: self)
+            for symbol in container.symbols
+                {
+                let newSymbol = self.substitute(symbol)
+                newModule.addSymbol(newSymbol)
+                }
+            newModule.type = self.substitute(container.type)
+            return(newModule)
+            }
+            
+        public func substitute(_ block: Block) -> Block
+            {
+            block.substitute(from: self)
             }
             
         public func substitute(_ methodInstance: MethodInstance) -> MethodInstance
             {
             let newReturnType = self.substitute(methodInstance.returnType)
             let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
-            let newInstance = methodInstance.deepCopy()
-            newInstance.returnType = newReturnType
-            newInstance.parameters = newParameters
+            let newInstance = methodInstance.substitute(from: self)
+            newInstance.type = self.substitute(methodInstance.type)
+            newInstance.setParent(methodInstance.parent)
+            newInstance.issues = methodInstance.issues
             return(newInstance)
             }
             
@@ -290,7 +368,7 @@ public class TypeContext
         {
         self.initialSubstitution.freshTypeVariable()
         }
-        
+
     public static func freshTypeVariable(named: String) -> TypeVariable
         {
         self.initialSubstitution.freshTypeVariable(named: named)
@@ -361,6 +439,26 @@ public class TypeContext
         self.scope.topModule.argonModule.iterable
         }
         
+    public var classType: Type
+        {
+        self.scope.topModule.argonModule.class
+        }
+        
+    public var methodType: Type
+        {
+        self.scope.topModule.argonModule.method
+        }
+        
+    public var functionType: Type
+        {
+        self.scope.topModule.argonModule.function
+        }
+        
+    public var enumerationCaseType: Type
+        {
+        self.scope.topModule.argonModule.enumerationCase
+        }
+        
     private let scope: Scope
     private var environment = Environment()
     private var stack = Stack<Context>()
@@ -372,25 +470,15 @@ public class TypeContext
         self.scope = scope
         self.environment = [:]
         self.substitution = Self.initialSubstitution
-        self.initBasicTypes()
+        print("FLOAT CLASS \(self.floatType)")
+        print("INDEX OF FLOAT CLASS IS \((self.floatType as! TypeClass).theClass.index)")
         }
         
-    private func initBasicTypes()
+    public func freshTypeVariable(forTypeVariable old: Type) -> TypeVariable
         {
-        self.environment[self.integerType.label] = self.integerType
-        self.environment[self.uIntegerType.label] = self.uIntegerType
-        self.environment[self.booleanType.label] = self.booleanType
-        self.environment[self.stringType.label] = self.stringType
-        self.environment[self.characterType.label] = self.characterType
-        self.environment[self.booleanType.label] = self.booleanType
-        self.environment[self.floatType.label] = self.floatType
-        self.environment[self.moduleType.label] = self.moduleType
-        self.environment[self.symbolType.label] = self.symbolType
-        self.environment[self.arrayType.label] = self.arrayType
-        self.environment[self.voidType.label] = self.voidType
-        self.environment[self.iterableType.label] = self.iterableType
+        self.substitution.freshTypeVariable(forTypeVariable: old)
         }
-        
+            
     public func freshTypeVariable() -> TypeVariable
         {
         self.substitution.freshTypeVariable()
@@ -454,18 +542,32 @@ public class TypeContext
         return(context)
         }
         
-    public func unify() throws -> Substitution
+    public func unify() -> Substitution
         {
         let newSubstitution = Substitution(self.substitution)
         for constraint in self.constraints
             {
-            if constraint is SubTypeConstraint
+            do
                 {
-                try newSubstitution.unifySubtypes(constraint.lhs,constraint.rhs)
+                if constraint is SubTypeConstraint
+                    {
+                    try newSubstitution.unifySubtypes(constraint.lhs,constraint.rhs)
+                    }
+                else
+                    {
+                    try newSubstitution.unify(constraint.lhs,constraint.rhs)
+                    }
                 }
-            else
+            catch let compilerIssue as CompilerIssue
                 {
-                try newSubstitution.unify(constraint.lhs,constraint.rhs)
+                let lineNumber = constraint.line
+                let originType = constraint.originTypeString
+                let newMessage = compilerIssue.message + " in " + originType
+                constraint.origin.appendIssue(CompilerIssue(location: Location(line: lineNumber, lineStart: 0, lineStop: 0, tokenStart: 0, tokenStop: 0),message: newMessage))
+                }
+            catch let error
+                {
+                constraint.origin.appendIssue(CompilerIssue(location: .zero,message: "Unexpected error: \(error)"))
                 }
             }
         return(newSubstitution)

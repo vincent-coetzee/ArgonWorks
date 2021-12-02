@@ -74,28 +74,20 @@ public class PseudoVariableExpression: Expression
         fatalError()
         }
         
-    public override func deepCopy() -> Self
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        fatalError()
+        PseudoVariableExpression(self.variable, nil) as! Self
         }
         
-    public override func inferType(context: TypeContext) throws -> Type
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        var scope:Scope? = self.enclosingScope
-        while scope.isNotNil && !scope!.isInitializerScope
+        if self.variable == .vSelf || self.variable == .vSELF || self.variable == .vSuper
             {
-            scope = scope!.enclosingScope
+            if let aClass = (self.enclosingScope.initializerScope as! Initializer).declaringClass
+                {
+                self.type = aClass.type
+                }
             }
-        if scope.isNil
-            {
-            throw(TypeError.notImplemented)
-            }
-        let aClass = scope as! Class
-        return(TypeClass(class: aClass))
-        }
-        
-    public override func substitute(from context: TypeContext)
-        {
         }
         
     public override func encode(with coder:NSCoder)
