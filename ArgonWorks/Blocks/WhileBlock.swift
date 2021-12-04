@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class WhileBlock: Block
+public class WhileBlock: Block,StackFrame,Scope
     {
     private let condition:Expression
     
@@ -15,6 +15,7 @@ public class WhileBlock: Block
         {
         self.condition = condition
         super.init()
+        self.condition.setParent(self)
         }
         
     public required init?(coder: NSCoder)

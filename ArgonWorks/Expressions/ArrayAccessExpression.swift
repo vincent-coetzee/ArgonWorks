@@ -44,6 +44,8 @@ public class ArrayAccessExpression: Expression
         self.array = array
         self.index = index
         super.init()
+        self.array.setParent(self)
+        self.index.setParent(self)
         }
         
     public override func visit(visitor: Visitor) throws
@@ -62,23 +64,25 @@ public class ArrayAccessExpression: Expression
         {
         try self.array.initializeTypeConstraints(inContext: context)
         try self.index.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: index.type,right: context.integerType,origin: .expression(self)))
-//        guard let typeClass = self.array.type as? TypeClass else
-//            {
-//            throw(CompilerIssue(location: self.declaration!, message: "Array access type should be an array but is not."))
-//            }
-//        guard typeClass.theClass.fullName.displayString == "\\\\Argon\\Array" else
-//            {
-//            throw(CompilerIssue(location: self.declaration!, message: "The target of an array access must be an instance of \\\\Argon\\Array and this is not."))
-//            }
-        context.append(TypeConstraint(left: self.type,right: self.array.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
+        let elementType = context.freshTypeVariable()
+        context.append(TypeConstraint(left: self.type,right: elementType,origin: .expression(self)))
+        let arrayClass = (context.arrayType as! TypeClass).theClass
+        let arrayType = TypeClass(class: arrayClass,generics: [elementType])
+        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
+        }
+        
+    public override func defineLocalSymbols(inContext: TypeContext)
+        {
+        self.array.defineLocalSymbols(inContext:inContext)
+        self.index.defineLocalSymbols(inContext:inContext)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.array.initializeType(inContext: context)
         try self.index.initializeType(inContext: context)
-        self.type = self.array.type
+        self.type = context.freshTypeVariable()
         }
         
     public override func becomeLValue()
@@ -90,7 +94,7 @@ public class ArrayAccessExpression: Expression
         {
         self.array.analyzeSemantics(using: analyzer)
         self.index.analyzeSemantics(using: analyzer)
-        let arrayType = self.array.type
+        let arrayType = self.array.type!
         if !arrayType.isArrayClassInstance
             {
             analyzer.cancelCompletion()
@@ -100,7 +104,7 @@ public class ArrayAccessExpression: Expression
         
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.lookup(label: label))
+        return(self.type!.lookup(label: label))
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

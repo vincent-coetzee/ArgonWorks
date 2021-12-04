@@ -122,116 +122,59 @@ public class BinaryExpression: Expression
         coder.encode(self.rhs,forKey: "rhs")
         }
         
-    public override func substitute(from context: TypeContext) -> Self
-        {
-        BinaryExpression(self.lhs.substitute(from: context),self.operation,self.rhs.substitute(from: context)) as! Self
-        }
-        
     public override func initializeType(inContext context: TypeContext) throws
         {
-        self.method = self.enclosingScope.lookup(label: self.operation.rawValue) as? Method
-        try self.method?.initializeType(inContext: context)
         try self.lhs.initializeType(inContext: context)
         try self.rhs.initializeType(inContext: context)
-        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Method
+        if let methods = self.enclosingScope.lookupN(label: operation.rawValue)
             {
-            let instance = method.mostSpecificInstance(forTypes: [self.lhs.type,self.rhs.type])
-            print(instance)
+            if let selectedMethod = methods.filter({$0 is InfixOperator}).first as? InfixOperator
+                {
+                self.method = selectedMethod
+                self.type = selectedMethod.returnType
+                }
+            else
+                {
+                self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) of the correct type can not be resolved.")
+                self.type = context.voidType
+                }
             }
         else
             {
-            self.appendIssue(at: self.declaration!, message: "The method \(self.operation) can not be resolved.")
+            self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) can not be resolved.")
+            self.type = context.voidType
             }
-        self.type = self.method.isNil ? context.freshTypeVariable() : self.method!.returnType.freshTypeVariable(inContext: context)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(expression.type)
+        expression.type = substitution.substitute(self.type!)
         return(expression as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
+        print("BINARY EXPRESSION")
         try self.lhs.initializeTypeConstraints(inContext: context)
         try self.rhs.initializeTypeConstraints(inContext: context)
-        self.type = context.freshTypeVariable()
-        if let method = self.enclosingScope.lookup(label: operation.rawValue) as? Operator
+        if let method = self.method
             {
-            if self.method!.label == "+"
+            let methodMatcher = MethodInstanceMatcher(method: method, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
+            methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+            methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+            methodMatcher.appendReturnType(self.type!)
+            if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
                 {
-                print("halt")
+                self.methodInstance = specificInstance
+                print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operation.rawValue) = \(specificInstance.displayString)")
+                methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: [self.lhs.type!], returnType: self.type!, to: context)
                 }
-            let instances = method.instancesWithArity(2)
-            var inferredInstances = MethodInstances()
-            for instance in instances
+            else
                 {
-                try context.extended(withContentsOf: TaggedTypes())
-                    {
-                    newContext in
-                    let freshInstance = instance.freshTypeVariable(inContext: context)
-                    try freshInstance.initializeType(inContext: context)
-                    try freshInstance.initializeTypeConstraints(inContext: newContext)
-                    for (argument,parameter) in zip([self.lhs,self.rhs],freshInstance.parameters)
-                        {
-                        newContext.append(TypeConstraint(left: parameter.type,right: argument.type,origin: .expression(self)))
-                        }
-                    if freshInstance.parameters[0] == freshInstance.parameters[1]
-                        {
-                        newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
-                        }
-                    if freshInstance.parameters[0] == freshInstance.returnType
-                        {
-                        newContext.append(TypeConstraint(left: self.lhs.type,right: freshInstance.returnType,origin: .expression(self)))
-                        }
-                    if freshInstance.parameters[1] == freshInstance.returnType
-                        {
-                        newContext.append(TypeConstraint(left: self.rhs.type,right: freshInstance.returnType,origin: .expression(self)))
-                        }
-                    let substitution = newContext.unify()
-                    let newInstance = substitution.substitute(freshInstance)
-                    let leftType = substitution.substitute(self.lhs.type)
-                    let rightType = substitution.substitute(self.rhs.type)
-                    let types = [leftType,rightType]
-                    if newInstance.parameterTypesAreSupertypes(ofTypes: types)
-                        {
-                        inferredInstances.append(newInstance)
-                        }
-                    if let mostSpecificInstance = inferredInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
-                        {
-                        self.methodInstance = mostSpecificInstance
-                        }
-                    }
+                print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(method.label)")
+                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(method.label)' ) can not be resolved. Try making it more specific.")
                 }
-            guard self.methodInstance.isNotNil else
-                {
-                print("COULD NOT MATCH AN INSTANCE")
-                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation can not be resolved. Trying making it more specific.")
-                return
-                }
-            print("MATCHED \(self.lhs.type.displayString) \(self.rhs.type.displayString)")
-            self.type = self.methodInstance!.returnType
-            for (argument,parameter) in zip([self.lhs,self.rhs],self.methodInstance!.parameters)
-                {
-                context.append(TypeConstraint(left: parameter.type,right: argument.type,origin: .expression(self)))
-                }
-            if self.methodInstance!.parameters[0] == self.methodInstance!.parameters[1]
-                {
-                context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
-                }
-            if self.methodInstance!.parameters[0] == self.methodInstance!.returnType
-                {
-                context.append(TypeConstraint(left: self.lhs.type,right: self.methodInstance!.returnType,origin: .expression(self)))
-                }
-            if self.methodInstance!.parameters[1] == self.methodInstance!.returnType
-                {
-                context.append(TypeConstraint(left: self.rhs.type,right: self.methodInstance!.returnType,origin: .expression(self)))
-                }
-            }
-        else
-            {
-            self.appendIssue(at: self.declaration!,message: "Unable to resolve operator '\(self.operation)', this operation can not be dispatched.")
             }
         }
         
@@ -359,46 +302,5 @@ public class BinaryExpression: Expression
         }
     }
 
-public class ComparisonExpression: BinaryExpression
-    {
-    public override func substitute(from substitution: TypeContext.Substitution) -> Self
-        {
-        ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs)) as! Self
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
-        self.type = context.booleanType
-        }
-        
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
-        {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
-        }
-    }
 
-public class BooleanExpression: BinaryExpression
-    {
-    public override func substitute(from substitution: TypeContext.Substitution) -> Self
-        {
-        BooleanExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs)) as! Self
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
-        self.type = context.booleanType
-        }
-        
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
-        {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.lhs.type,right: context.booleanType,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
-        }
-    }
+

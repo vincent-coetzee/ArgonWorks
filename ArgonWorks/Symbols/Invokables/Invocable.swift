@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class Invocable: Symbol
+public class Invocable: Symbol,StackFrame
     {
     public var arity: Int
         {
@@ -33,14 +33,16 @@ public class Invocable: Symbol
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
-    public var returnType: Type = TypeVoid()
-        
+    public var returnType: Type!
+    private var nextLocalSlotOffset = 0
+    private var nextParameterOffset = 16
+    
     public required init?(coder: NSCoder)
         {
         self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
-        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
+        self.returnType = coder.decodeObject(forKey: "returnType") as? Type
         super.init(coder: coder)
         }
         
@@ -66,16 +68,32 @@ public class Invocable: Symbol
         return(ofType == .method)
         }
         
-    public func addLocalSlot(_ localSlot:Slot)
+    public func addSlot(_ localSlot:Slot)
         {
         self.localSymbols.append(localSlot)
+        localSlot.frame = self
+        localSlot.offset = self.nextLocalSlotOffset
+        self.nextLocalSlotOffset -= 8
+        }
+        
+    public func addParameterSlot(_ parameter:Parameter)
+        {
+        self.localSymbols.append(parameter)
+        parameter.frame = self
+        parameter.offset = self.nextParameterOffset
+        self.nextParameterOffset += 8
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        self.returnType = context.voidType
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = self.deepCopy()
         copy.parameters = self.parameters.map{substitution.substitute($0)}
-        copy.returnType = substitution.substitute(self.returnType)
+        copy.returnType = substitution.substitute(self.returnType!)
         copy.cName = self.cName
         return(copy)
         }

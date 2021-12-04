@@ -9,6 +9,16 @@ import Foundation
 
 public class Initializer:Function,Scope
     {
+    public var enclosingStackFrame: StackFrame
+        {
+        self
+        }
+        
+    public var isStackFrameScope: Bool
+        {
+        false
+        }
+        
     public var isSlotScope: Bool
         {
         false
@@ -45,7 +55,7 @@ public class Initializer:Function,Scope
         didSet
             {
             let aType = self.enclosingScope.lookup(label: self.declaringClass!.label) as! Type
-            self._type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: aType)
+            self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: aType)
             }
         }
     private let buffer = T3ABuffer()
@@ -99,7 +109,7 @@ public class Initializer:Function,Scope
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.parameters.forEach{try $0.initializeType(inContext: context)}
-        self._type = TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.declaringClass!.type)
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.declaringClass!.type)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -114,8 +124,8 @@ public class Initializer:Function,Scope
         for index in 0..<types.count
             {
             let argumentType = types[index]
-            let typeA = self.parameters[index].type
-            let typeB = instance.parameters[index].type
+            let typeA = self.parameters[index].type!
+            let typeB = instance.parameters[index].type!
             if typeA.isSubtype(of: typeB)
                 {
                 orderings.append(.more)
@@ -162,7 +172,7 @@ public class Initializer:Function,Scope
         
     public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
         {
-        for (inType,myType) in zip(types,self.parameters.map{$0.type})
+        for (inType,myType) in zip(types,self.parameters.map{$0.type!})
             {
             if !inType.isSubtype(of: myType)
                 {

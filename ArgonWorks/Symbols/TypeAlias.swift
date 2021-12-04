@@ -26,7 +26,7 @@ public class TypeAlias:Symbol
         
     public override var classValue: Class
         {
-        self.type.classValue
+        self.type!.classValue
         }
 //        
 //    public override var canBecomeAClass: Bool
@@ -46,17 +46,12 @@ public class TypeAlias:Symbol
         
     public var mangledName: String
         {
-        return(self.type.mangledName)
+        return(self.type!.mangledName)
         }
         
     public override var iconName: String
         {
         "IconType"
-        }
-        
-    public override var asType: Type
-        {
-        return(self.type)
         }
         
     public override func emitCode(using: CodeGenerator)
@@ -73,7 +68,7 @@ public class TypeAlias:Symbol
         {
 //        print("START DECODE TYPE ALIAS")
         super.init(coder: coder)
-        self.type = coder.decodeObject(forKey: "_type") as! Type
+        self.type = (coder.decodeObject(forKey: "_type") as! Type)
 //        print("END DECODE TYPE ALIAS \(self.label)")
         }
         
@@ -101,16 +96,16 @@ public class TypeAlias:Symbol
         
     public func isSubtype(of alias: TypeAlias) -> Bool
         {
-        return(self.type.isSubtype(of: alias.type))
+        return(self.type!.isSubtype(of: alias.type!))
         }
         
     public func isSubtype(of enumeration: Enumeration) -> Bool
         {
-        return(self.type == enumeration.type)
+        return(self.type! == enumeration.type!)
         }
         
     public func isInclusiveSubclass(of aClass: Class) -> Bool
         {
-        return(self.type.isSubtype(of: aClass.type))
+        return(self.type!.isSubtype(of: aClass.type!))
         }
     }

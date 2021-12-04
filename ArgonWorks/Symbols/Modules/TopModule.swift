@@ -75,7 +75,7 @@ public class TopModule: SystemModule
         super.init(label: "Root")
         for element in array
             {
-            self.symbolsByLabel[element.label] = element
+            self.symbols.append(element)
             }
         self.index = UUID(index: 0)
         }
@@ -90,16 +90,21 @@ public class TopModule: SystemModule
         super.init(label: label)
         }
         
-    public override func replaceSymbol(_ source: Symbol,with replacement: Symbol)
+    public override func lookupN(label: Label) -> Symbols?
         {
+        var found = Symbols()
         for symbol in self.symbols
             {
-            symbol.replaceSymbol(source,with: replacement)
-            if symbol == source
+            if symbol.label == label
                 {
-                self.symbolsByLabel[source.label] = replacement
+                found.append(symbol)
                 }
             }
+        if let more = self.argonModule.lookupN(label: label)
+            {
+            found.append(contentsOf: more)
+            }
+        return(found.isEmpty ? nil : found)
         }
         
     public override func lookup(name: Name) -> Symbol?

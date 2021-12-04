@@ -43,7 +43,7 @@ public class LocalSlot:Slot
         
     public override func lookup(label: String) -> Symbol?
         {
-        return(self.type.lookup(label: label))
+        return(self.type?.lookup(label: label))
         }
     }
 

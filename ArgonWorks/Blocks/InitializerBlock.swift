@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class InitializerBlock: Block
+public class InitializerBlock: Block,Scope
     {
     private let initializer: Initializer
     

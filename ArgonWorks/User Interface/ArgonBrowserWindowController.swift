@@ -287,12 +287,6 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
     public func refreshSourceAnnotations()
         {
         self.sourceEditor.removeAllAnnotations()
-        for value in self.compilationEvents.values
-            {
-            let group = value as! CompilationEventGroup
-//            let annotation = LineAnnotation(line: group.line.line, symbolName: group.isWarning ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill",tintColor: value.tintColor)
-//            self.sourceEditor.addAnnotation(annotation)
-            }
         }
         
     private func initSourceEditor()

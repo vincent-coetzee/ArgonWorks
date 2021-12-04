@@ -7,8 +7,6 @@
 
 import Foundation
 
-
-
 public class LetBlock: Block
     {
     public override var displayString: String
@@ -62,17 +60,22 @@ public class LetBlock: Block
         
     public override func initializeType(inContext context: TypeContext) throws
         {
+        var newElements = Array<TupleElementPair>()
         for element in self.pairs
             {
-            try element.lhs.initializeType(inContext: context)
-            try element.rhs.initializeType(inContext: context)
+            let left = try element.lhs.initializeType(inContext: context)
+            let right = try element.rhs.initializeType(inContext: context)
+            newElements.append(TupleElementPair(lhs: left,rhs: right))
             }
+        self.pairs = newElements
         self.type = context.voidType
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        LetBlock(location: self.location,pairs: self.pairs.map{$0.substitute(from: substitution)}) as! Self
+        let block = LetBlock(location: self.location,pairs: self.pairs.map{$0.substitute(from: substitution)})
+        block.type = substitution.substitute(self.type!)
+        return(block as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -81,6 +84,9 @@ public class LetBlock: Block
             {
             try element.lhs.initializeTypeConstraints(inContext: context)
             try element.rhs.initializeTypeConstraints(inContext: context)
+            }
+        for element in self.pairs
+            {
             context.append(TypeConstraint(left: element.lhs.type,right: element.rhs.type,origin: .block(self)))
             }
         }

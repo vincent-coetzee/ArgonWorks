@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class LoopBlock: Block
+public class LoopBlock: Block,StackFrame,Scope
     {
     public var startExpressions: Array<Expression>!
         {
@@ -44,6 +44,15 @@ public class LoopBlock: Block
         self.endExpression = end
         self.updateExpressions = update
         super.init()
+        for expression in start
+            {
+            expression.setParent(self)
+            }
+        for expression in update
+            {
+            expression.setParent(self)
+            }
+        end.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -64,10 +73,6 @@ public class LoopBlock: Block
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        for block in self.blocks
-            {
-            try block.initializeTypeConstraints(inContext: context)
-            }
         for expression in self.startExpressions
             {
             try expression.initializeTypeConstraints(inContext: context)
@@ -78,6 +83,31 @@ public class LoopBlock: Block
             }
         try self.endExpression.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
+        for block in self.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self))")
+        print("\(indent)START:")
+        for expression in self.startExpressions
+            {
+            expression.display(indent: indent + "\t")
+            }
+        print("\(indent)END:")
+        self.endExpression.display(indent: indent + "\t")
+        print("\(indent)UPDATE:")
+        for expression in self.updateExpressions
+            {
+            expression.display(indent: indent + "\t")
+            }
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -85,15 +115,19 @@ public class LoopBlock: Block
         let newStarts = self.startExpressions.map{substitution.substitute($0)}
         let newUpdates = self.updateExpressions.map{substitution.substitute($0)}
         let newEnd = substitution.substitute(endExpression)
-        return(LoopBlock(start: newStarts, end: newEnd, update: newUpdates) as! Self)
+        let loop = LoopBlock(start: newStarts, end: newEnd, update: newUpdates)
+        for block in self.blocks
+            {
+            let newBlock = substitution.substitute(block)
+            newBlock.type = substitution.substitute(block.type!)
+            loop.addBlock(newBlock)
+            }
+        loop.type = substitution.substitute(self.type!)
+        return(loop as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        for block in self.blocks
-            {
-            try block.initializeType(inContext: context)
-            }
         for expression in self.startExpressions
             {
             try expression.initializeType(inContext: context)
@@ -104,6 +138,10 @@ public class LoopBlock: Block
             }
         try endExpression.initializeType(inContext: context)
         self.type = context.voidType
+        for block in self.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

@@ -349,6 +349,7 @@ public class ArgonModule: SystemModule
         self.addSystemClass(GenericSystemClass(label: "Set",superclasses:[self.collection],types:[]).mcode("S"))
         self.addSystemClass(ArrayClass(label: "Vector",superclasses:[self.collection],types:[TypeContext.freshTypeVariable(named:"INDEX")]).slotClass(ArraySlot.self).mcode("V"))
         self.addSystemClass(ClosureClass(label: "Closure",superclasses:[self.invokable]).slotClass(ObjectSlot.self).mcode("C"))
+        classesAreLocked = true
         }
         
     private func initConstants()
@@ -399,37 +400,50 @@ public class ArgonModule: SystemModule
 
     private func initBaseMethods()
         {
-        self.addSymbol(InfixOperator(label: "+").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "-").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "*").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "/").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "**").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "%").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "+").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "-").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "*").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "/").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "**").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "%").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
         
-        self.addSymbol(InfixOperator(label: "+=").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "-=").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "*=").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "/=").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "%=").double(.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "+=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "-=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "*=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "/=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "%=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
         
-        self.addSymbol(InfixOperator(label: "==").triple(.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "<=").triple(.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: ">=").triple(.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: ">").triple(.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "<").triple(.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "==").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "<=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: ">=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: ">").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "<").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
         
-        self.addSymbol(InfixOperator(label: "&&").triple(.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(InfixOperator(label: "||").triple(.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "&&").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "||").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
     
-        self.addSymbol(InfixOperator(label: "&").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
-        self.addSymbol(InfixOperator(label: "|").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
-        self.addSymbol(InfixOperator(label: "^").triple(.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
+        self.addSymbol(InfixOperator(label: "&").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
+        self.addSymbol(InfixOperator(label: "|").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
+        self.addSymbol(InfixOperator(label: "^").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
         
-        self.addSymbol(PrefixOperator(label: "!").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(PrefixOperator(label: "-").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(PrefixOperator(label: "~").double(.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(PrefixOperator(label: "!").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(PrefixOperator(label: "-").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(PrefixOperator(label: "~").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
         
-        self.addSymbol(PostfixOperator(label: "++").double(.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(PostfixOperator(label: "--").double(.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(PostfixOperator(label: "++").double(self,.generic("number"),.void,where: ("number",self.number)))
+        self.addSymbol(PostfixOperator(label: "--").double(self,.generic("number"),.void,where: ("number",self.number)))
+        }
+        
+    public override func lookupN(label: Label) -> Symbols?
+        {
+        var found = Symbols()
+        for symbol in self.symbols
+            {
+            if symbol.label == label
+                {
+                found.append(symbol)
+                }
+            }
+        return(found.isEmpty ? nil : found)
         }
     }

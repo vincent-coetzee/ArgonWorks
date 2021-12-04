@@ -22,7 +22,7 @@ import Foundation
 /// will actually be used when this instance of a method is called.
 ///
 ///
-public class StandardMethodInstance: MethodInstance, StackFrame
+public class StandardMethodInstance: MethodInstance
     {
     public override var allIssues: CompilerIssues
         {
@@ -35,17 +35,11 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         {
         self.buffer.instructions
         }
-        
-    public var localSlots: Slots
-        {
-        self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
-        }
-        
+
     internal var block: MethodInstanceBlock! = nil
     private var _method:Method?
     public let buffer:T3ABuffer
     public var genericParameters = Types()
-        
     public required init?(coder: NSCoder)
         {
 //        print("START DECODE METHOD INSTANCE")
@@ -119,14 +113,8 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         self.returnType = returnType
         for parameter in parameters
             {
-            self.addLocalSlot(parameter)
+            self.addParameterSlot(parameter)
             }
-        }
-        
-    public override func addSymbol(_ symbol: Symbol)
-        {
-        self.localSymbols.append(symbol)
-        symbol.frame = self
         }
 
     public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
@@ -134,7 +122,7 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         return(self)
         }
         
-    public func type(atIndex: Int) -> Type
+    public func type(atIndex: Int) -> Type?
         {
         parameters[atIndex].type
         }
@@ -143,7 +131,7 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         {
         for symbol in scope.symbols
             {
-            self.localSymbols.append(symbol)
+            self.block.addSymbol(symbol)
             }
         }
     
@@ -159,18 +147,6 @@ public class StandardMethodInstance: MethodInstance, StackFrame
     public func hasSameReturnType(_ clazz: Class) -> Bool
         {
         return(self.returnType == clazz.type)
-        }
-        
-    public override func lookup(label: String) -> Symbol?
-        {
-        for slot in self.localSymbols
-            {
-            if slot.label == label
-                {
-                return(slot)
-                }
-            }
-        return(self.parent.lookup(label: label))
         }
         
     public func layoutSymbol(in vm: VirtualMachine)
@@ -211,18 +187,19 @@ public class StandardMethodInstance: MethodInstance, StackFrame
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = StandardMethodInstance(label: self.label)
-        instance.block = substitution.substitute(self.block) as! MethodInstanceBlock
+        instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
+        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
         }
-        
+
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.parameters.forEach{try $0.initializeType(inContext: context)}
         try self.returnType.initializeType(inContext: context)
         try self.block.initializeType(inContext: context)
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context))
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -231,8 +208,8 @@ public class StandardMethodInstance: MethodInstance, StackFrame
         try self.returnType.initializeTypeConstraints(inContext: context)
         try self.block.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.returnType,right: self.block.type,origin: .symbol(self)))
-        let parameterTypes = self.parameters.map{$0.type}
-        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type),origin: .symbol(self)))
+        let parameterTypes = self.parameters.map{$0.type!}
+        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type!),origin: .symbol(self)))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

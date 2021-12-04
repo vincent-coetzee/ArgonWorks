@@ -68,11 +68,14 @@ public class SystemModule: Module
         
     public override func lookup(label: Label) -> Symbol?
         {
-        if let symbol = self.symbolsByLabel[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
-        for symbol in self.symbolsByLabel.values where symbol is SystemModule || symbol is SymbolGroup
+        for symbol in self.symbols where symbol is SystemModule || symbol is SymbolGroup
             {
             if let innerSymbol = symbol.lookup(label: label)
                 {

@@ -7,23 +7,33 @@
 
 import Foundation
 
-public class ForBlock: Block
+public class ForBlock: Block,StackFrame,Scope
     {
     private var inductionSlot:LocalSlot
     private var elements: Expression
-    
+
     init(inductionSlot:LocalSlot,elements:Expression)
         {
         self.inductionSlot = inductionSlot
         self.elements = elements
         super.init()
+        self.elements.setParent(self)
+        self.inductionSlot.setParent(self)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        ForBlock(inductionSlot: substitution.substitute(self.inductionSlot) as! LocalSlot, elements: substitution.substitute(self.elements)) as! Self
+        let forBlock = ForBlock(inductionSlot: substitution.substitute(self.inductionSlot) as! LocalSlot, elements: substitution.substitute(self.elements))
+        for block in self.blocks
+            {
+            let newBlock = substitution.substitute(block)
+            newBlock.type = substitution.substitute(block.type!)
+            forBlock.addBlock(newBlock)
+            }
+        forBlock.type = substitution.substitute(self.type!)
+        return(forBlock as! Self)
         }
-        
+
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.inductionSlot.initializeType(inContext: context)
@@ -34,7 +44,7 @@ public class ForBlock: Block
             }
         self.type = context.voidType
         }
-
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.elements.initializeTypeConstraints(inContext: context)
@@ -43,8 +53,19 @@ public class ForBlock: Block
             try block.initializeTypeConstraints(inContext: context)
             }
         let collectionClass = (self.enclosingScope.lookup(name: Name("\\\\Argon\\Collection")) as! TypeClass).theClass
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: TypeClass(class: collectionClass, generics: [self.inductionSlot.type]),origin: .block(self)))
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: TypeClass(class: collectionClass, generics: [self.inductionSlot.type!]),origin: .block(self)))
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)FOR")
+        print("\(indent)\tINDUCTION SLOT \(self.inductionSlot) \(self.inductionSlot.type.displayString)")
+        print("\(indent)\tELEMENTS \(self.elements) \(self.elements.type.displayString)")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
         }
         
     public override func visit(visitor: Visitor) throws

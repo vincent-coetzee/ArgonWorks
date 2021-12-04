@@ -24,7 +24,7 @@ public enum TupleElement
             }
         }
         
-    public var type: Type
+    public var type: Type?
         {
         switch(self)
             {
@@ -215,8 +215,15 @@ public struct TupleElementPair
     public func initializeType(inContext context: TypeContext) throws -> TupleElementPair
         {
         let newLeft = try self.lhs.initializeType(inContext: context)
-        let newRight = try self.lhs.initializeType(inContext: context)
+        let newRight = try self.rhs.initializeType(inContext: context)
         return(TupleElementPair(lhs: newLeft,rhs: newRight))
+        }
+        
+    public func initializeEqualityTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .symbol(Symbol(label:""))))
         }
         
     public func visit(visitor: Visitor) throws

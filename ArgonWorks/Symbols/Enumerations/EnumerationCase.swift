@@ -24,7 +24,7 @@ public class EnumerationCase:Symbol
         return(!self.associatedTypes.isEmpty)
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {
@@ -90,7 +90,7 @@ public class EnumerationCase:Symbol
         let copy = super.substitute(from: substitution)
         copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)}
         copy.symbol = self.symbol
-        copy.rawValue = self.rawValue.isNil ? nil : substitution.substitute(self.rawValue!) as! LiteralExpression
+        copy.rawValue = self.rawValue.isNil ? nil : (substitution.substitute(self.rawValue!) as! LiteralExpression)
         return(copy)
         }
         

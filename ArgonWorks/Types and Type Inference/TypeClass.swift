@@ -69,11 +69,11 @@ public class TypeClass: TypeConstructor
         self.theClass
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {
-            TypeClass(class: self.theClass,generics: self.generics.map{$0.type})
+            TypeClass(class: self.theClass,generics: self.generics.map{$0.type!})
             }
         set
             {

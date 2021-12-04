@@ -19,12 +19,14 @@ public class TypeContext
         
     public class Substitution
         {
+        public weak var typeContext: TypeContext?
         private static var typeVariableIndex = 0
         
         private var typeVariables = Dictionary<Int,Type>()
         
-        init()
+        init(typeContext: TypeContext?)
             {
+            self.typeContext = typeContext
             }
             
         init(_ substitution: Substitution)
@@ -128,7 +130,7 @@ public class TypeContext
             
         public func substitute(_ parameter: Parameter) -> Parameter
             {
-            Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type), isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
+            Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type!), isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
             }
             
         public func substitute(_ type: Type) -> Type
@@ -173,14 +175,21 @@ public class TypeContext
         public func substitute(_ symbol: Symbol) -> Symbol
             {
             let newSymbol = symbol.substitute(from: self)
-            newSymbol.type = self.substitute(symbol.type)
+            newSymbol.type = self.substitute(symbol.type!)
             return(newSymbol)
+            }
+            
+        public func substitute(_ slot: Slot) -> Slot
+            {
+            let newSlot = slot.substitute(from: self)
+            newSlot.type = self.substitute(slot.type!)
+            return(newSlot)
             }
             
         public func substitute(_ expression: Expression) -> Expression
             {
             let newExpression = expression.substitute(from: self)
-            newExpression.type = self.substitute(expression.type)
+            newExpression.type = self.substitute(expression.type!)
             newExpression.setParent(expression.parent)
             newExpression.issues = expression.issues
             return(newExpression)
@@ -194,7 +203,7 @@ public class TypeContext
                 let newSymbol = self.substitute(symbol)
                 newModule.addSymbol(newSymbol)
                 }
-            newModule.type = self.substitute(container.type)
+            newModule.type = self.substitute(container.type!)
             return(newModule)
             }
             
@@ -206,11 +215,13 @@ public class TypeContext
         public func substitute(_ methodInstance: MethodInstance) -> MethodInstance
             {
             let newReturnType = self.substitute(methodInstance.returnType)
-            let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
+            let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type!), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
             let newInstance = methodInstance.substitute(from: self)
-            newInstance.type = self.substitute(methodInstance.type)
+            newInstance.type = self.substitute(methodInstance.type!)
             newInstance.setParent(methodInstance.parent)
             newInstance.issues = methodInstance.issues
+            newInstance.parameters = newParameters
+            newInstance.returnType = newReturnType
             return(newInstance)
             }
             
@@ -293,7 +304,7 @@ public class TypeContext
                 {
                 if left.theClass != right.theClass
                     {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.theClass.fullName.displayString) \(right.theClass.fullName.displayString)"))
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.theClass.fullName.displayString)-\(left.theClass.index) \(right.theClass.fullName.displayString)-\(right.theClass.index)"))
                     }
                 for (leftType,rightType) in zip(left.generics,right.generics)
                     {
@@ -321,6 +332,14 @@ public class TypeContext
                     try self.unify(leftType,rightType)
                     }
                 return
+                }
+            if let left = lhs as? TypeSlot,let right = rhs as? TypeSlot
+                {
+                if left.slotLabel != right.slotLabel
+                    {
+                    throw(CompilerIssue(location: .zero,message: "slot(\(left.slotLabel)) does not match slot(\(right.slotLabel))."))
+                    }
+                try self.unify(left.baseType,right.baseType)
                 }
             if let left = lhs as? TypeVariable,let right = rhs as? TypeVariable
                 {
@@ -362,7 +381,8 @@ public class TypeContext
         }
         
     internal typealias Environment = Dictionary<Label,Type>
-    private static let initialSubstitution = Substitution()
+    
+    private static let initialSubstitution = Substitution(typeContext: nil)
     
     public static func freshTypeVariable() -> TypeVariable
         {
@@ -470,6 +490,7 @@ public class TypeContext
         self.scope = scope
         self.environment = [:]
         self.substitution = Self.initialSubstitution
+        self.substitution.typeContext = self
         print("FLOAT CLASS \(self.floatType)")
         print("INDEX OF FLOAT CLASS IS \((self.floatType as! TypeClass).theClass.index)")
         }
@@ -498,6 +519,21 @@ public class TypeContext
         self.constraints.append(constraint)
         }
 
+    internal func append(contentsOf: [TypeConstraint])
+        {
+        self.constraints.append(contentsOf: contentsOf)
+        }
+        
+    public func bind(_ type:Type,to label:Label)
+        {
+        self.environment[label] = type
+        }
+        
+    public func lookupBinding(atLabel label: Label) -> Type?
+        {
+        self.environment[label]
+        }
+        
     private func deepCopy() -> TypeContext
         {
         let newContext = TypeContext(scope: self.scope)

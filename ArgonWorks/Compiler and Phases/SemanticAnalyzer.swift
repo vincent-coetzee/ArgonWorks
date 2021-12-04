@@ -36,6 +36,7 @@ public class SemanticAnalyzer: CompilerPass
         self.wasCancelled = true
         }
         
+    @discardableResult
     public static func analyzeModule(_ module: Module,in compiler: Compiler) -> Bool
         {
         let analyzer = SemanticAnalyzer(compiler: compiler)

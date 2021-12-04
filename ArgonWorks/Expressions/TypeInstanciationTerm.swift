@@ -15,9 +15,7 @@ public class TypeInstanciationTerm: Expression
     required init?(coder: NSCoder)
         {
         self.arguments = coder.decodeArguments(forKey: "arguments")
-        self._type = Type()
         super.init(coder: coder)
-        self._type = type
         }
         
     public override func encode(with coder: NSCoder)
@@ -25,28 +23,25 @@ public class TypeInstanciationTerm: Expression
         super.encode(with: coder)
         coder.encode(self.arguments,forKey: "arguments")
         }
-        
-    private var _type: Type
-    
+
     public init(type: Type,arguments: Arguments)
         {
         self.arguments = arguments
-        self._type = type
         super.init()
+        self.type = type
         for argument in arguments
             {
             argument.value.setParent(self)
             }
-        self.type = type
-        if self._type.isClass && !self._type.classValue.initializers.isEmpty
+        if self.type!.isClass && !self.type!.classValue.initializers.isEmpty
             {
-            self.initializer = self._type.classValue.mostSpecificInitializer(forArguments: self.arguments)
+            self.initializer = self.type!.classValue.mostSpecificInitializer(forArguments: self.arguments)
             }
         }
         
     public override func display(indent: String)
         {
-        print("\(indent)TYPE INSTANCIATION \(self._type.displayString)")
+        print("\(indent)TYPE INSTANCIATION \(self.type.displayString)")
         print("\(indent)ARGUMENTS:")
         for argument in self.arguments
             {
@@ -63,7 +58,7 @@ public class TypeInstanciationTerm: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        TypeInstanciationTerm(type: substitution.substitute(self._type),arguments: self.arguments.map{substitution.substitute($0)}) as! Self
+        TypeInstanciationTerm(type: substitution.substitute(self.type!),arguments: self.arguments.map{substitution.substitute($0)}) as! Self
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -74,7 +69,6 @@ public class TypeInstanciationTerm: Expression
             try self.initializer!.parameters.forEach{try $0.initializeType(inContext: context)}
             }
         self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
-        self.type = self._type.freshTypeVariable(inContext: context)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -87,7 +81,6 @@ public class TypeInstanciationTerm: Expression
                 context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
                 }
             }
-        context.append(TypeConstraint(left: self.type,right: self._type,origin: .expression(self)))
         }
         
     public override func visit(visitor: Visitor) throws
@@ -105,7 +98,7 @@ public class TypeInstanciationTerm: Expression
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        if self.type.isGenericClass
+        if self.type!.isGenericClass
             {
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The class of this MAKE term is an uninstanciated class and can not be used until it is instanciated.")
@@ -114,7 +107,7 @@ public class TypeInstanciationTerm: Expression
         
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.lookup(label: label))
+        return(self.type?.lookup(label: label))
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws

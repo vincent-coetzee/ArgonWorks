@@ -50,7 +50,10 @@ public class SlotExpression: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        SlotExpression(slot: substitution.substitute(self.slot) as! Slot) as! Self
+        let newSlot = substitution.substitute(self.slot)
+        let expression = SlotExpression(slot: newSlot) as! Self
+        substitution.typeContext?.bind(newSlot.type!,to: newSlot.label)
+        return(expression)
         }
         
     public override func display(indent: String)
@@ -60,7 +63,48 @@ public class SlotExpression: Expression
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        self.type = self.slot.type
+        if self.slot.type.isNil
+            {
+            if let slotType = context.lookupBinding(atLabel: self.slot.label)
+                {
+                self.type = slotType
+                self.slot.type = slotType
+                }
+            else
+                {
+                self.slot.type = context.freshTypeVariable()
+                self.type = self.slot.type
+                context.bind(self.slot.type!,to: self.slot.label)
+                }
+            }
+        else if self.slot.type!.isTypeVariable
+            {
+            if let slotType = context.lookupBinding(atLabel: self.slot.label)
+                {
+                self.slot.type = slotType
+                self.type = slotType
+                }
+            else
+                {
+                self.type = self.slot.type!
+                context.bind(self.slot.type!,to: self.slot.label)
+                }
+            }
+        else if self.slot.type!.isClass || self.slot.type!.isEnumeration
+            {
+            self.type = self.slot.type
+            context.bind(self.slot.type!,to: self.slot.label)
+            }
+        else if self.slot.initialValue.isNotNil
+            {
+            self.slot.type = self.slot.initialValue!.type
+            self.type = self.slot.type
+            context.bind(self.slot.type!,to: self.slot.label)
+            }
+        else
+            {
+            fatalError("This should not happen.")
+            }
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -79,7 +123,7 @@ public class SlotExpression: Expression
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        if slot.type.isGenericClass
+        if slot.type!.isGenericClass
             {
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")

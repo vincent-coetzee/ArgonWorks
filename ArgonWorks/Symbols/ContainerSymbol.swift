@@ -15,7 +15,7 @@ public class ContainerSymbol:Symbol
         get
             {
             var myIssues = self.issues
-            for symbol in self.symbolsByLabel.values
+            for symbol in self.symbols
                 {
                 myIssues.append(contentsOf: symbol.allIssues)
                 }
@@ -46,7 +46,7 @@ public class ContainerSymbol:Symbol
     public override var allImportedSymbols: Symbols
         {
         var importedSymbols = Symbols()
-        for symbol in self.symbolsByLabel.values
+        for symbol in self.symbols
             {
             if symbol.isImported
                 {
@@ -56,18 +56,13 @@ public class ContainerSymbol:Symbol
             }
         return(importedSymbols)
         }
-        
-    internal var symbols: Symbols
-        {
-        Array(self.symbolsByLabel.values)
-        }
-        
+
     public override var isGroup: Bool
         {
         return(true)
         }
         
-    internal var symbolsByLabel = OrderedDictionary<Label,Symbol>()
+    internal var symbols = Symbols()
     
     public override var isExpandable: Bool
         {
@@ -113,7 +108,7 @@ public class ContainerSymbol:Symbol
         
     public required init?(coder: NSCoder)
         {
-        self.symbolsByLabel = coder.decodeObject(forKey: "symbolsByLabel") as! OrderedDictionary<Label,Symbol>
+        self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
         super.init(coder: coder)
         }
         
@@ -125,7 +120,7 @@ public class ContainerSymbol:Symbol
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.symbolsByLabel,forKey: "symbolsByLabel")
+        coder.encode(self.symbols,forKey: "symbolsByLabel")
         }
     ///
     ///
@@ -134,20 +129,31 @@ public class ContainerSymbol:Symbol
     ///
     public override func lookup(label:String) -> Symbol?
         {
-        if let symbol = self.symbolsByLabel[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
         return(self.parent.lookup(label: label))
         }
         
-    public override func removeSymbol(_ symbol: Symbol)
+    public override func lookupN(label: Label) -> Symbols?
         {
-        if self.symbolsByLabel[symbol.label].isNotNil
+        var found = Symbols()
+        for symbol in self.symbols
             {
-            symbol.resetParent()
-            self.symbolsByLabel[symbol.label] = nil
+            if symbol.label == label
+                {
+                found.append(symbol)
+                }
             }
+        if let more = self.parent.lookupN(label: label)
+            {
+            found.append(contentsOf: more)
+            }
+        return(found.isEmpty ? nil : found)
         }
         
     public override func display(indent: String)
@@ -166,7 +172,7 @@ public class ContainerSymbol:Symbol
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        for symbol in self.symbolsByLabel.values
+        for symbol in self.symbols
             {
             try symbol.initializeType(inContext: context)
             }
@@ -175,7 +181,7 @@ public class ContainerSymbol:Symbol
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        for symbol in self.symbolsByLabel.values
+        for symbol in self.symbols
             {
             try symbol.initializeTypeConstraints(inContext: context)
             }
@@ -184,7 +190,7 @@ public class ContainerSymbol:Symbol
 
     public override func visit(visitor: Visitor) throws
         {
-        for symbol in self.symbolsByLabel.values
+        for symbol in self.symbols
             {
             try symbol.visit(visitor: visitor)
             }
@@ -194,12 +200,12 @@ public class ContainerSymbol:Symbol
     public override func deepCopy() -> Self
         {
         let container = super.deepCopy()
-        var newSymbols = OrderedDictionary<Label,Symbol>()
+        var newSymbols = Symbols()
         for symbol in self.symbols
             {
-            newSymbols[symbol.label] = symbol.deepCopy()
+            newSymbols.append(symbol.deepCopy())
             }
-        container.symbolsByLabel = newSymbols
+        container.symbols = newSymbols
         return(container)
         }
         
@@ -213,7 +219,7 @@ public class ContainerSymbol:Symbol
         
     public override func addSymbol(_ symbol:Symbol)
         {
-        self.symbolsByLabel[symbol.label] = symbol
+        self.symbols.append(symbol)
         symbol.setParent(self)
         print("ADDED \(symbol.fullName.displayString) TO \(self.fullName.displayString)")
         }

@@ -9,42 +9,15 @@ import Foundation
 
 public class SlotAccessExpression: Expression
     {
-    public override var assignedSlots: Slots
-        {
-        return(self.slot.isNil ? [] : [self.slot as! Slot])
-        }
-        
-    public override var enumerationCaseHasAssociatedTypes: Bool
-        {
-        if self.slot.isNotNil,let aCase = self.slot as? EnumerationCase,aCase.hasAssociatedTypes
-            {
-            return(true)
-            }
-        return(false)
-        }
-        
-    public override var enumerationCase: EnumerationCase
-        {
-        return(self.slot as! EnumerationCase)
-        }
-        
-    public override var isEnumerationCaseExpression: Bool
-        {
-        if self.slot.isNotNil
-            {
-            return(self.slot!.isEnumerationCase)
-            }
-        return(false)
-        }
-        
     public override var displayString: String
         {
-        return("\(self.receiver.displayString)->\(String(describing: self.slotExpression?.displayString))")
+        return("\(self.receiver.displayString)->\(self.slotLabel)")
         }
 
     private let receiver: Expression
     private var slotExpression: Expression?
-    private var slot: Symbol?
+    private var slotLabel: Label
+    private var slot: Slot?
     private var isLValue = false
     private var selector: String?
      
@@ -53,17 +26,17 @@ public class SlotAccessExpression: Expression
 //        print("START DECODE SLOT ACCESS EXPRESSION")
         self.receiver = coder.decodeObject(forKey: "receiver") as!Expression
         self.slotExpression = coder.decodeObject(forKey: "slotExpression") as? Expression
-        self.slot = coder.decodeObject(forKey: "slot") as? Slot
+        self.slotLabel = coder.decodeObject(forKey: "slotLabel") as! String
         self.selector = coder.decodeString(forKey: "selector")
         self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
 //        print("END DECODE SLOT ACCESS EXPRESSION")
         }
         
-    init(_ receiver:Expression,slot: Symbol)
+    init(_ receiver:Expression,slotLabel: Label)
         {
         self.receiver = receiver
-        self.slot = slot
+        self.slotLabel = slotLabel
         super.init()
         }
         
@@ -71,7 +44,7 @@ public class SlotAccessExpression: Expression
         {
         super.encode(with: coder)
         coder.encode(self.isLValue,forKey: "isLValue")
-        coder.encode(self.slot,forKey: "slot")
+        coder.encode(self.slotLabel,forKey: "slotLabel")
         coder.encode(self.slotExpression,forKey: "slotExpression")
         coder.encode(self.receiver,forKey: "receiver")
         coder.encode(self.selector,forKey: "selector")
@@ -81,30 +54,110 @@ public class SlotAccessExpression: Expression
         {
         try self.receiver.visit(visitor: visitor)
         try self.slotExpression?.visit(visitor: visitor)
-        try self.slot?.visit(visitor: visitor)
         try visitor.accept(self)
-        }
-        
-    public override func inferType(context: TypeContext) throws -> Type
-        {
-        self.slot!.type
         }
         
     public override func display(indent: String)
         {
         print("\(indent)SLOT EXPRESSION:")
         self.receiver.display(indent: indent + "\t")
-        print("\(indent)\tSLOT \(self.slot!.label) \(self.slot!.type.displayString)")
+        print("\(indent)\tSLOT \(self.slotLabel)")
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        SlotAccessExpression(substitution.substitute(self.receiver),slot: substitution.substitute(self.slot!)) as! Self
+        let expression = SlotAccessExpression(substitution.substitute(self.receiver),slotLabel: self.slotLabel)
+        expression.type = substitution.substitute(self.type!)
+        return(expression as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        self.type = self.slot!.type
+        try self.receiver.initializeType(inContext: context)
+        self.type = TypeSlot(baseType: self.receiver.type!,slotLabel: self.slotLabel)
+//        if let slot = self.slot as? Slot
+//            {
+//            if slot.type.isNil
+//                {
+//                if let slotType = context.lookupBinding(atLabel: slot.label)
+//                    {
+//                    self.type = slotType
+//                    slot.type = slotType
+//                    }
+//                else
+//                    {
+//                    slot.type = context.freshTypeVariable()
+//                    self.type = slot.type
+//                    context.bind(slot.type!,to: slot.label)
+//                    }
+//                }
+//            else if slot.type!.isTypeVariable
+//                {
+//                if let slotType = context.lookupBinding(atLabel: slot.label)
+//                    {
+//                    slot.type = slotType
+//                    self.type = slotType
+//                    }
+//                else
+//                    {
+//                    self.type = slot.type!
+//                    context.bind(slot.type!,to: slot.label)
+//                    }
+//                }
+//            else if slot.type!.isClass || slot.type!.isEnumeration
+//                {
+//                self.type = slot.type
+//                context.bind(slot.type!,to: slot.label)
+//                }
+//            else if slot.initialValue.isNotNil
+//                {
+//                slot.type = slot.initialValue!.type
+//                self.type = slot.type
+//                context.bind(slot.type!,to: slot.label)
+//                }
+//            else
+//                {
+//                fatalError("This should not happen.")
+//                }
+//            }
+        }
+
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.receiver.initializeTypeConstraints(inContext: context)
+        if self.receiver.type!.isClass
+            {
+            let aClass = self.receiver.type!.classValue
+            if let aSlot = aClass.lookup(label: self.slotLabel) as? Slot
+                {
+                self.slot = aSlot
+                self.type = aSlot.type!
+                context.append(TypeConstraint(left: self.type,right: aSlot.type!,origin: .expression(self)))
+                }
+            else
+                {
+                self.appendIssue(at: self.declaration!, message: "The base type of this expression '\(self.receiver.type!.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
+                return
+                }
+            }
+        else
+            {
+            let substitution = context.unify()
+            let receiverType = substitution.substitute(self.receiver.type!)
+            guard receiverType.isClass else
+                {
+                self.appendIssue(at: self.declaration!, message: "Unable to infer base type of slot parent in this expression.")
+                return
+                }
+            guard let aSlot = receiverType.classValue.lookup(label: self.slotLabel) as? Slot else
+                {
+                self.appendIssue(at: self.declaration!, message: "The inferred base type of this expression '\(self.receiver.type!.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
+                return
+                }
+            self.slot = aSlot
+            self.type = aSlot.type!
+            context.append(TypeConstraint(left: self.type,right: aSlot.type!,origin: .expression(self)))
+            }
         }
         
     public override func becomeLValue()
@@ -112,28 +165,9 @@ public class SlotAccessExpression: Expression
         self.isLValue = true
         }
         
-//    init(_ receiver: Expression,slotExpression: SlotSelectorExpression)
-//        {
-//        self.receiver = receiver
-//        self.slotExpression = slotExpression
-//        super.init()
-//        self.receiver.setParent(self)
-//        self.slotExpression?.setParent(self)
-//        }
-//        
-//    init(_ receiver: Expression,selector: String)
-//        {
-//        self.receiver = receiver
-//        self.slotExpression = nil
-//        super.init()
-//        self.receiver.setParent(self)
-//        self.selector = selector
-//        }
-        
-        
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.lookup(label: label))
+        return(self.type?.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

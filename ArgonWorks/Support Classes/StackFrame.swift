@@ -9,4 +9,6 @@ import Foundation
 
 public protocol StackFrame
     {
+    func addSlot(_ local: Slot)
+    func addParameterSlot(_ paramater: Parameter)
     }

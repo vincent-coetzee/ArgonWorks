@@ -16,9 +16,8 @@ public struct TypeSignature: Equatable
         
     internal static func typeSignature(for instance: MethodInstance,inContext context: TypeContext) -> TypeSignature
         {
-        let types = instance.parameters.map{$0.type.type}
-        let returnType = instance.returnType
-        return(TypeSignature(label: instance.label, types: types, returnType: returnType))
+        let types = instance.parameters.map{$0.type!.type!}
+        return(TypeSignature(label: instance.label, types: types, returnType: instance.returnType!))
         }
         
     internal let label: Label

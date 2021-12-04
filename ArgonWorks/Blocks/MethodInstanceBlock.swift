@@ -7,8 +7,13 @@
 
 import Foundation
 
-public class MethodInstanceBlock: Block
+public class MethodInstanceBlock: Block,StackFrame,Scope
     {
+    public override var isMethodInstanceScope: Bool
+        {
+        true
+        }
+        
     private var _methodInstance: MethodInstance
     
     public override var methodInstance: MethodInstance
@@ -42,22 +47,45 @@ public class MethodInstanceBlock: Block
     
     public override func lookup(label: String) -> Symbol?
         {
-        for slot in self.localSlots
+        for symbol in self.localSymbols
             {
-            if slot.label == label
+            if symbol.label == label
                 {
-                return(slot)
+                return(symbol)
                 }
             }
-        return(self.methodInstance.lookup(label: label))
+        return(self.parent.lookup(label: label))
         }
         
     public func addParameters(_ parameters: Parameters)
         {
         for parameter in parameters
             {
-            self.addLocalSlot(parameter)
+            self.methodInstance.addParameterSlot(parameter)
             }
+        }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let newBlock = super.substitute(from: substitution)
+        for block in self.blocks
+            {
+            newBlock.addBlock(substitution.substitute(block))
+            }
+        newBlock.type = substitution.substitute(self.type!)
+        newBlock.issues = self.issues
+        return(newBlock)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("START OF METHOD INSTANCE BLOCK--------------------------------------------------------------------------------")
+        print("\(indent)\(Swift.type(of: self))")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        print("END OF METHOD INSTANCE BLOCK----------------------------------------------------------------------------------")
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -97,11 +125,6 @@ public class MethodInstanceBlock: Block
         return(newBlock)
         }
         
-    public override func addLocalSlot(_ slot:Slot)
-        {
-        self.methodInstance.addLocalSlot(slot)
-        }
-        
     public override func encode(with coder: NSCoder)
         {
         print("START ENCODE \(Swift.type(of: self))")
@@ -111,9 +134,9 @@ public class MethodInstanceBlock: Block
         
     public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
-        for slot in self.localSlots
+        for symbol in self.localSymbols
             {
-            try slot.emitCode(into: into,using: using)
+            try symbol.emitCode(into: into,using: using)
             }
         for block in self.blocks
             {

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Type: Symbol
+public class Type: Symbol,Displayable
     {
     private static var typeMappings = Dictionary<Name,Type>()
     
@@ -132,7 +132,7 @@ public class Type: Symbol
         Types()
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {

@@ -30,6 +30,11 @@ public class Method:Symbol
         return(true)
         }
         
+    public var returnType: Type
+        {
+        self.instances.first!.returnType
+        }
+        
     public override var isLiteral: Bool
         {
         return(true)
@@ -67,7 +72,6 @@ public class Method:Symbol
         }
         
     public var isMainMethod: Bool = false
-    public var returnType: Type!
     public var proxyParameters = Parameters()
     public var isGenericMethod = false
     public var isIntrinsic = false
@@ -78,7 +82,6 @@ public class Method:Symbol
         {
 //        print("START DECODE METHOD")
         self.isMainMethod = coder.decodeBool(forKey: "isMainMethod")
-        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         self.proxyParameters = coder.decodeObject(forKey: "proxyParameters") as! Parameters
         self.isGenericMethod = coder.decodeBool(forKey: "isGenericMethod")
         self.isIntrinsic = coder.decodeBool(forKey: "isIntrinsic")
@@ -90,7 +93,6 @@ public class Method:Symbol
     public required init(label: Label)
         {
         super.init(label: label)
-        self._type = Type()
         }
         
     public override func encode(with coder: NSCoder)
@@ -99,7 +101,6 @@ public class Method:Symbol
 //        print("ENCODE METHOD \(self.label)")
         #endif
         coder.encode(self.isMainMethod,forKey: "isMainMethod")
-        coder.encode(self.returnType,forKey: "returnType")
         coder.encode(self.proxyParameters,forKey: "proxyParameters")
         coder.encode(self.isGenericMethod,forKey: "isGenericMethod")
         coder.encode(self.isIntrinsic,forKey: "isIntrinsic")
@@ -270,15 +271,12 @@ public class Method:Symbol
         return(some.first!.tagSignature.withArguments(forArguments))
         }
         
-    public override func initializeType(inContext: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext) throws
         {
-        if self.returnType.isNil
+        self.type = TypeFunction(label: self.label, types: [], returnType: context.voidType)
+        for instance in self.instances
             {
-            self.returnType = inContext.freshTypeVariable()
-            for instance in self.instances
-                {
-                try instance.initializeType(inContext: inContext)
-                }
+            try instance.initializeType(inContext: context)
             }
         }
         
@@ -287,6 +285,14 @@ public class Method:Symbol
         for instance in self.instances
             {
             try instance.initializeTypeConstraints(inContext: inContext)
+            }
+        }
+        
+    public override func defineLocalSymbols(inContext: TypeContext)
+        {
+        for instance in self.instances
+            {
+            instance.defineLocalSymbols(inContext: inContext)
             }
         }
         
@@ -299,12 +305,12 @@ public class Method:Symbol
             }
         }
         
-    public func triple(_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
+    public func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
         {
         let random = Int.random(in: 0..<1000000)
         
         let parameters = [type1.parameter(random),type2.parameter(random)]
-        let returnType = type3.value(random)
+        let returnType = type3.value(random,argonModule)
         let instance = PrimitiveMethodInstance(label: self.label)
         instance.parameters = parameters
         instance.returnType = returnType
@@ -312,12 +318,12 @@ public class Method:Symbol
         return(self)
         }
         
-    public func double(_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
+    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
         {
         let random = Int.random(in: 0..<1000000)
         
         let parameters = [type1.parameter(random)]
-        let returnType = type3.value(random)
+        let returnType = type3.value(random,argonModule)
         let instance = PrimitiveMethodInstance(label: self.label)
         instance.parameters = parameters
         instance.returnType = returnType
@@ -340,6 +346,7 @@ public enum ArgumentType
     {
     case type(Type)
     case generic(String)
+    case void
     
     public func parameter(_ random:Int) -> Parameter
         {
@@ -349,10 +356,12 @@ public enum ArgumentType
                 return(Parameter(label: "\(random)", relabel: nil, type: type, isVisible: false, isVariadic: false))
             case .generic(let label):
                 return(Parameter(label: "\(random)", relabel: nil, type: TypeContext.freshTypeVariable(named: "\(random)\(label)"), isVisible: false, isVariadic: false))
+            case .void:
+                fatalError()
             }
         }
         
-    public func value(_ random:Int) -> Type
+    public func value(_ random:Int,_ argonModule: ArgonModule) -> Type
         {
         switch(self)
             {
@@ -360,6 +369,8 @@ public enum ArgumentType
                 return(type)
             case .generic(let number):
                 return(TypeContext.freshTypeVariable(named:"\(random)\(number)"))
+            case .void:
+                return(argonModule.void)
             }
         }
     }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ClosureBlock: Block
+public class ClosureBlock: Block,StackFrame
     {
     public var parameters = Parameters()
 //    public var returnType:Type = VoidClass.voidClass.type
@@ -16,7 +16,7 @@ public class ClosureBlock: Block
     public func addParameter(label:String,type: Type)
         {
         let parameter = Parameter(label: label,type: type)
-        self.addLocalSlot(parameter)
+        self.addParameterSlot(parameter)
         }
         
     public override func dump(depth: Int)

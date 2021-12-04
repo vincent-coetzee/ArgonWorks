@@ -33,30 +33,10 @@ public struct Argument:Displayable
         self.value.analyzeSemantics(using: using)
         }
         
-    @discardableResult
-    public func inferType(context: TypeContext) throws -> Type
-        {
-        try self.value.inferType(context: context)
-        }
-        
     public func visit(visitor: Visitor) throws
         {
         try self.value.visit(visitor: visitor)
         try visitor.accept(self)
-        }
-        
-    public func substitute(from: TypeContext) -> Argument
-        {
-        
-        let expression = self.value.substitute(from: from)
-        expression.substitute(from: from)
-        return(Argument(tag: self.tag,value: expression))
-        }
-        
-    public func taggedType(context:TypeContext) throws -> TaggedType
-        {
-        let valueType = try self.value.inferType(context: context)
-        return(TaggedType(tag: self.tag,type: valueType))
         }
         
     public func initializeType(inContext context: TypeContext) throws -> Argument
@@ -74,9 +54,9 @@ public struct Argument:Displayable
 public struct TaggedType
     {
     internal let tag: String?
-    internal let type: Type
+    internal let type: Type?
     
-    init(tag: String?,type: Type)
+    init(tag: String?,type: Type?)
         {
         self.tag = tag
         self.type = type
@@ -91,7 +71,7 @@ extension Arguments
     {
     public var resultTypes: Array<Type>
         {
-        return(self.map{$0.value.type})
+        return(self.map{$0.value.type!})
         }
         
     public func allocateAddresses(using: AddressAllocator)

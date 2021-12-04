@@ -104,7 +104,6 @@ public class Compiler
             let newModule = module.checkTypes()
             module.display(indent: "")
             newModule.display(indent:"")
-            let walker = TestWalker.visit(newModule)
             return(module)
             }
         return(nil)

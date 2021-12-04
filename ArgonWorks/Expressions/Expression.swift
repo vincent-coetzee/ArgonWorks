@@ -111,7 +111,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     public private(set) var locations = SourceLocations()
     public internal(set) var _place: T3AInstruction.Operand = .none
     public private(set) var parent: Parent = .none
-    internal var type: Type = Type()
+    internal var type: Type? = nil
     public var issues = CompilerIssues()
     
     public override init()
@@ -129,13 +129,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeSourceLocations(self.locations,forKey:"locations")
-        }
-        
-    @discardableResult
-    public func inferType(context: TypeContext) throws -> Type
-        {
-        self.type = context.voidType
-        return(self.type)
         }
         
     public func initializeType(inContext context: TypeContext) throws
@@ -245,11 +238,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return("")
         }
         
-    public func substitute(from: TypeContext) -> Self
-        {
-        Expression() as! Self
-        }
-        
     public func dump(depth: Int)
         {
         let padding = String(repeating: "\t", count: depth)
@@ -282,6 +270,10 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         self.setParent(expression)
         index.setParent(expression)
         return(expression)
+        }
+        
+    public func defineLocalSymbols(inContext: TypeContext)
+        {
         }
     }
     

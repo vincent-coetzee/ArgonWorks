@@ -37,12 +37,7 @@ public class RoleExpression: Expression
         
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.lookup(label: label))
-        }
-        
-    public override func substitute(from context: TypeContext) -> Self
-        {
-        fatalError()
+        return(self.type!.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -57,7 +52,7 @@ public class RoleExpression: Expression
         {
         try self.expression.emitCode(into: instance,using: generator)
         let temp = instance.nextTemporary()
-        instance.append("ROLE",self.expression._place,.relocatable(.type(self.type)),temp)
+        instance.append("ROLE",self.expression._place,.relocatable(.type(self.type!)),temp)
         self._place = temp
         }
     }

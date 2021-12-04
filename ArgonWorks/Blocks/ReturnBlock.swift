@@ -65,6 +65,7 @@ public class ReturnBlock: Block
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.value.initializeType(inContext: context)
+        assert(self.value.type.isNotNil)
         self.type = self.value.type
         }
         

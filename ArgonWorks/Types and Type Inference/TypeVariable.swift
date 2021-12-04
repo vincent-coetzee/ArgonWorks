@@ -38,11 +38,11 @@ public class TypeVariable: Type
         [self]
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {
-            self.boundType.isNil ? Type() : self.boundType!.type
+            self.boundType.isNil ? nil : self.boundType!.type
             }
         set
             {

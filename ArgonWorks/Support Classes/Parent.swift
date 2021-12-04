@@ -36,12 +36,38 @@ public enum Parent:Storable
             case .none:
                 fatalError()
             case .node(let node):
-                return(node.enclosingScope)
+                if node is Scope
+                    {
+                    return(node as! Scope)
+                    }
+                else
+                    {
+                    return(node.parent.enclosingScope)
+                    }
             case .expression(let expression):
-                return(expression.enclosingScope)
+                if expression is Scope
+                    {
+                    return(expression as! Scope)
+                    }
+                else
+                    {
+                    return(expression.parent.enclosingScope)
+                    }
             case .block(let block):
-                return(block.enclosingScope)
+                if block is Scope
+                    {
+                    return(block as! Scope)
+                    }
+                else
+                    {
+                    return(block.parent.enclosingScope)
+                    }
             }
+        }
+        
+    public var enclosingStackFrame: StackFrame
+        {
+        self.enclosingScope.enclosingStackFrame
         }
         
     public var block: Block?
@@ -89,7 +115,7 @@ public enum Parent:Storable
             }
         }
         
-    public var type: Type
+    public var type: Type?
         {
         switch(self)
             {
@@ -132,6 +158,21 @@ public enum Parent:Storable
                 return(expression.parent.lookup(name: name))
             case .block(let block):
                 return(block.lookup(name: name))
+            }
+        }
+        
+    public func lookupN(label: Label) -> Symbols?
+        {
+        switch(self)
+            {
+            case .none:
+                return(nil)
+            case .node(let node):
+                return(node.lookupN(label: label))
+            case .expression(let expression):
+                return(expression.parent.lookupN(label: label))
+            case .block(let block):
+                return(block.lookupN(label: label))
             }
         }
         

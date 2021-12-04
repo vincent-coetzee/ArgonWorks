@@ -239,18 +239,6 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         return(self.issues)
         }
         
-    public var type: Type
-        {
-        get
-            {
-            self._type
-            }
-        set
-            {
-            self._type = newValue
-            }
-        }
-        
     internal var frame: StackFrame?
     internal var isMemoryLayoutDone: Bool = false
     internal var isSlotLayoutDone: Bool = false
@@ -264,7 +252,7 @@ public class Symbol:Node,ParseNode,VisitorReceiver
     public private(set) var loader: Loader?
     public var compiler: Compiler!
     public var issues = CompilerIssues()
-    public var _type: Type!
+    public var type: Type?
     
     public required init(label: Label)
         {
@@ -303,6 +291,10 @@ public class Symbol:Node,ParseNode,VisitorReceiver
 //            }
 //        return(self)
 //        }
+        
+    public func defineLocalSymbols(inContext: TypeContext)
+        {
+        }
         
    public func allocateAddresses(using: AddressAllocator)
         {
@@ -387,10 +379,15 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         return(copy)
         }
         
+    public func lookupN(label: Label) -> Symbols?
+        {
+        return(nil)
+        }
+        
     public func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = Self.init(label: self.label)
-        copy._type = substitution.substitute(self._type)
+        copy.type = substitution.substitute(self.type!)
         return(copy)
         }
         

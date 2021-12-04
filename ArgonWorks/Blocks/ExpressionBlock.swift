@@ -31,6 +31,17 @@ public class ExpressionBlock: Block
         super.init()
         }
         
+    public override func display(indent: String)
+        {
+        print("\(indent)EXPRESSION BLOCK \(Swift.type(of: self))")
+        print("\(indent)EXPRESSION:")
+        self.expression.display(indent: indent + "\t")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
     internal override func substitute(from: TypeContext.Substitution) -> Self
         {
         ExpressionBlock(from.substitute(self.expression)) as! Self
@@ -64,6 +75,7 @@ public class ExpressionBlock: Block
     public override func initializeType(inContext: TypeContext) throws
         {
         try self.expression.initializeType(inContext: inContext)
+        self.type = self.expression.type
         }
         
     public override func initializeTypeConstraints(inContext: TypeContext) throws

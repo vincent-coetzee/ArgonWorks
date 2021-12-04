@@ -248,7 +248,7 @@ public class LineNumberTextView: NSTextView
             }
         let characterIndex = text.distance(from: text.startIndex,to: index) - 1
         let glyphIndex = self.layoutManager!.glyphIndexForCharacter(at: characterIndex)
-        var range = NSRange(location: glyphIndex,length: 1)
+        let range = NSRange(location: glyphIndex,length: 1)
         let rect = self.layoutManager!.boundingRect(forGlyphRange: range, in: self.textContainer!)
         return(rect)
         }

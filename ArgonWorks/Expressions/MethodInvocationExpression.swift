@@ -15,7 +15,7 @@ public class MethodInvocationExpression: Expression
         return("\(self.method.label)\(values)")
         }
         
-    private let method: Method
+    private let method: ArgonWorks.Method
     private var arguments: Arguments
     private var methodInstance: MethodInstance?
     
@@ -42,7 +42,7 @@ public class MethodInvocationExpression: Expression
     public override func initializeType(inContext context: TypeContext) throws
         {
         self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
-        self.type = self.method.returnType.freshTypeVariable(inContext: context)
+        self.type = self.method.instances.first!.returnType
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -61,56 +61,33 @@ public class MethodInvocationExpression: Expression
         print("\(indent)ARGUMENTS:")
         for argument in self.arguments
             {
-            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type.displayString)")
+            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type!.displayString)")
             }
         if let instance = self.methodInstance
             {
-            print("\(indent)\tSELECTED METHOD INSTANCE:")
-            instance.display(indent: indent + "\t\t")
+            print("\(indent)\tSELECTED METHOD INSTANCE: \(instance.displayString)")
             }
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
+        print("METHOD INVOCATION EXPRESSION")
         try self.arguments.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        print(context)
-        let instances = method.instancesWithArity(self.arguments.count)
-        var inferredInstances = MethodInstances()
-        for instance in instances
+        let methodMatcher = MethodInstanceMatcher(method: method, argumentExpressions: self.arguments.map{$0.value}, reportErrors: true)
+        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+        methodMatcher.appendReturnType(self.type!)
+        if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            try context.extended(withContentsOf: TaggedTypes())
-                {
-                newContext in
-                let freshInstance = instance.freshTypeVariable(inContext: context)
-                try freshInstance.initializeType(inContext: context)
-                try freshInstance.initializeTypeConstraints(inContext: newContext)
-                for (argument,parameter) in zip(self.arguments,freshInstance.parameters)
-                    {
-                    newContext.append(TypeConstraint(left: parameter.type,right: argument.value.type,origin: .expression(self)))
-                    }
-                let substitution = newContext.unify()
-                let newInstance = substitution.substitute(freshInstance)
-                inferredInstances.append(newInstance)
-                }
-            }
-        inferredInstances = inferredInstances.filter{$0.isConcreteInstance}
-        let types = self.arguments.map{$0.value.type}
-        if let mostSpecificInstance = inferredInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
-            {
-            self.methodInstance = mostSpecificInstance
-            self.type = self.methodInstance!.returnType
-            for (argument,parameter) in zip(self.arguments,self.methodInstance!.parameters)
-                {
-                context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
-                }
+            self.methodInstance = specificInstance
+            print("FOUND MOST SPECIFIC INSTANCE FOR \(self.method.label) = \(specificInstance.displayString)")
+            methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: self.arguments.map{$0.value.type!}, returnType: self.type!, to: context)
             }
         else
             {
-            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation can not be resolved. Trying making it more specific.")
+            print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(method.label)")
+            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(method.label)' ) can not be resolved. Try making it more specific.")
             }
-        let typeNames = self.arguments.map{$0.value.type.displayString}.joined(separator: ",")
-        print("METHOD INVOCATION \(self.method.label) \(typeNames) -> \(self.method.returnType.displayString)")
-        print("SELECTED METHOD INSTANCE \(self.methodInstance?.displayString)")
         }
         
     public override func visit(visitor: Visitor) throws
@@ -124,14 +101,6 @@ public class MethodInvocationExpression: Expression
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        do
-            {
-            self.type = try self.inferType(context: analyzer.typeContext)
-            }
-        catch let error
-            {
-            print(error)
-            }
         }
         
     private func mapLabels(from: Array<Label>,to: TaggedTypes) -> TaggedTypes
@@ -158,7 +127,7 @@ public class MethodInvocationExpression: Expression
             {
             generator.cancelCompletion()
             generator.dispatchError(at: location, message: "Can not find a matching instance for this method, it can not be dispatched.")
-            instance.append(comment: "UNABLE TO MATCH METHOD \(self.method.label) WITH TYPES \(self.arguments.map{$0.value.type.displayString})")
+            instance.append(comment: "UNABLE TO MATCH METHOD \(self.method.label) WITH TYPES \(self.arguments.map{$0.value.type!.displayString})")
             return
             }
         var count:Argon.Integer = 0

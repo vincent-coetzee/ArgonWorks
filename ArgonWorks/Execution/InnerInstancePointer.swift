@@ -98,10 +98,10 @@ public class InnerInstancePointer:InnerPointer
             }
         self.setSlotValue(aClass.memoryAddress,forKey: "_classPointer")
         self.setSlotValue(aClass.magicNumber,forKey: "_magicNumber")
-        for someClass in aClass.localSuperclasses
-            {
-//            self.setClassSlots(inClass: aClass,forClass: someClass)
-            }
+//        for someClass in aClass.localSuperclasses
+//            {
+////            self.setClassSlots(inClass: aClass,forClass: someClass)
+//            }
         }
         
     private func setClassSlots(inClass: Class,forClass: Class)

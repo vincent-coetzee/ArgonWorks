@@ -82,12 +82,12 @@ public class Slot:Symbol
         return(false)
         }
         
-    public private(set) var offset:Int = 0
+    public var offset = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
     
 
-    init(label:Label,type:Type = TypeContext.freshTypeVariable())
+    init(label:Label,type:Type? = nil)
         {
         super.init(label:label)
         self.type = type
@@ -106,7 +106,7 @@ public class Slot:Symbol
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
         super.init(coder: coder)
-        self.type = coder.decodeObject(forKey: "_type") as! Type
+        self.type = coder.decodeObject(forKey: "_type") as? Type
 //        print("END DECODE SLOT \(self.label)")
         }
 
@@ -140,29 +140,12 @@ public class Slot:Symbol
     
     public override func lookup(label: Label) -> Symbol?
         {
-        return(self.type.lookup(label: label))
+        return(self.type?.lookup(label: label))
         }
         
     public func setOffset(_ integer:Int)
         {
         self.offset = integer
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
-        if !self.type.isUnknown
-            {
-            return
-            }
-        else if self.type.isUnknown && self.initialValue.isNotNil
-            {
-            try self.initialValue!.initializeType(inContext: context)
-            self.type = self.initialValue!.type
-            }
-        else
-            {
-            self.type = context.freshTypeVariable()
-            }
         }
         
     public func printFormattedSlotContents(base:WordPointer)

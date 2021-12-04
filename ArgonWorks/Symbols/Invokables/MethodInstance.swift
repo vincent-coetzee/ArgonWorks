@@ -48,8 +48,13 @@ public struct TagSignature: Equatable
         }
     }
     
-public class MethodInstance: Function,Scope
+public class MethodInstance: Function
     {
+    public var isStackFrameScope: Bool
+        {
+        false
+        }
+        
     public override var declaration: Location?
         {
         self.method.declaration
@@ -62,13 +67,13 @@ public class MethodInstance: Function,Scope
         
     public var typeSignature:TypeSignature
         {
-        TypeSignature(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
+        TypeSignature(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
         }
         
     public var mangledName: String
         {
         let start = self.label
-        let next = self.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let next = self.parameters.map{$0.type!.mangledName}.joined(separator: "_")
         let end = "=" + self.returnType.mangledName
         return(start + "." + next + end)
         }
@@ -88,32 +93,12 @@ public class MethodInstance: Function,Scope
             }
         for parameter in self.parameters
             {
-            if parameter.type.isTypeVariable
+            if parameter.type!.isTypeVariable
                 {
                 return(false)
                 }
             }
         return(true)
-        }
-        
-    public var isMethodInstanceScope: Bool
-        {
-        return(true)
-        }
-        
-    public var isClosureScope: Bool
-        {
-        return(false)
-        }
-        
-    public var isInitializerScope: Bool
-        {
-        return(false)
-        }
-        
-    public override var enclosingScope: Scope
-        {
-        return(self)
         }
         
     public override var iconName: String
@@ -141,7 +126,7 @@ public class MethodInstance: Function,Scope
         {
         for parameter in self.parameters
             {
-            if parameter.type.isTypeVariable
+            if parameter.type!.isTypeVariable
                 {
                 return(true)
                 }
@@ -192,7 +177,7 @@ public class MethodInstance: Function,Scope
         
     public func printInstance()
         {
-        let types = self.parameters.map{$0.type.displayString}.joined(separator: ",")
+        let types = self.parameters.map{$0.type!.displayString}.joined(separator: ",")
         print("\(self.label)(\(types)) -> \(self.returnType.displayString)")
         }
         
@@ -202,8 +187,8 @@ public class MethodInstance: Function,Scope
         for index in 0..<types.count
             {
             let argumentType = types[index]
-            let typeA = self.parameters[index].type
-            let typeB = instance.parameters[index].type
+            let typeA = self.parameters[index].type!
+            let typeB = instance.parameters[index].type!
             if typeA.isSubtype(of: typeB)
                 {
                 orderings.append(.more)
@@ -251,11 +236,11 @@ public class MethodInstance: Function,Scope
                 {
                 return(false)
                 }
-            if argument.type.isClass && parameter.type.isClass && !argument.type.isSubtype(of: parameter.type)
+            if argument.type!.isClass && parameter.type!.isClass && !argument.type!.isSubtype(of: parameter.type!)
                 {
                 return(false)
                 }
-            if argument.type.isEnumeration && parameter.type.isEnumeration && argument.type != parameter.type
+            if argument.type!.isEnumeration && parameter.type!.isEnumeration && argument.type! != parameter.type!
                 {
                 return(false)
                 }
@@ -265,7 +250,7 @@ public class MethodInstance: Function,Scope
         
     public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
         {
-        for (inType,myType) in zip(types,self.parameters.map{$0.type})
+        for (inType,myType) in zip(types,self.parameters.map{$0.type!})
             {
             if !inType.isSubtype(of: myType)
                 {
@@ -289,7 +274,7 @@ public class MethodInstance: Function,Scope
         {
         let instance = MethodInstance(label: self.label)
         instance.parameters = self.parameters.map{$0.flatten()}
-        instance.returnType = self.returnType.type
+        instance.returnType = self.returnType.type!
         return(instance)
         }
     }

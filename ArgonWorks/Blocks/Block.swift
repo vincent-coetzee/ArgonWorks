@@ -9,6 +9,40 @@ import Foundation
 
 public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
     {
+    public var isMethodInstanceScope: Bool
+        {
+        false
+        }
+    
+    public var isClosureScope: Bool
+        {
+        false
+        }
+    
+    public var isInitializerScope: Bool
+        {
+        false
+        }
+    
+    public var isSlotScope: Bool
+        {
+        false
+        }
+    
+    public var enclosingStackFrame: StackFrame
+        {
+        if self is StackFrame
+            {
+            return(self as! StackFrame)
+            }
+        return(self.parent.enclosingStackFrame)
+        }
+    
+    public var enclosingScope: Scope
+        {
+        return(self.parent.enclosingScope)
+        }
+        
     public var allIssues: CompilerIssues
         {
         var myIssues = self.issues
@@ -37,11 +71,6 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             returnBlocks.append(contentsOf: block.returnBlocks)
             }
         return(returnBlocks)
-        }
-        
-    public var enclosingScope: Scope
-        {
-        return(self.parent.enclosingScope)
         }
         
     public var enclosingClass: Class?
@@ -83,10 +112,10 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         self.locations.declaration
         }
         
-    public var type: Type = Type()
+    public var type: Type? = nil
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
-    internal var localSlots = Slots()
+    internal var localSymbols = Symbols()
     internal var source: String?
     public let index:UUID
     public private(set) var parent: Parent = .none
@@ -95,6 +124,8 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
     private weak var nextBlock: Block?
     private weak var previousBlock: Block?
     public var issues: CompilerIssues = []
+    private var nextLocalSlotOffset = 0
+    private var nextParameterOffset = 16
     
     public var methodInstance: MethodInstance
         {
@@ -125,13 +156,55 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
     public required init?(coder: NSCoder)
         {
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
-        self.localSlots = coder.decodeObject(forKey:"localSlots") as! Array<Slot>
+        self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Array<Slot>
         self.index = coder.decodeObject(forKey: "index") as! UUID
         self.parent = coder.decodeParent(forKey: "parent")!
         self.previousBlock = coder.decodeObject(forKey: "previousBlock") as? Block
         self.nextBlock = coder.decodeObject(forKey: "nextBlock") as? Block
         self.lastBlock = coder.decodeObject(forKey: "lastBlock") as? Block
         self.firstBlock = coder.decodeObject(forKey: "firstBlock") as? Block
+        }
+    
+    public func appendIssue(at: Location, message: String)
+        {
+        self.issues.append(CompilerIssue(location: at,message: message))
+        }
+    
+    public func appendWarningIssue(at: Location, message: String)
+        {
+        self.issues.append(CompilerIssue(location: at,message: message,isWarning: true))
+        }
+        
+    public func addSymbol(_ symbol: Symbol)
+        {
+        if symbol is Parameter
+            {
+            self.addParameterSlot(symbol as! Parameter)
+            }
+        else if symbol is Slot
+            {
+            self.addSlot(symbol as! Slot)
+            }
+        else
+            {
+            self.localSymbols.append(symbol)
+            }
+        }
+        
+    public func addSlot(_ localSlot: Slot)
+        {
+        self.localSymbols.append(localSlot)
+        localSlot.frame = (self as! StackFrame)
+        localSlot.offset = self.nextLocalSlotOffset
+        self.nextLocalSlotOffset -= 8
+        }
+    
+    public func addParameterSlot(_ parameter: Parameter)
+        {
+        self.localSymbols.append(parameter)
+        parameter.frame = (self as! StackFrame)
+        parameter.offset = self.nextParameterOffset
+        self.nextLocalSlotOffset += 8
         }
         
     public func appendIssue(at: Location,message: String,isWarning:Bool = false)
@@ -149,11 +222,28 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         self.issues.append(issue)
         }
         
+    public func lookupN(label: Label) -> Symbols?
+        {
+        var found = Symbols()
+        for symbol in self.localSymbols
+            {
+            if symbol.label == label
+                {
+                found.append(symbol)
+                }
+            }
+        if let more = self.parent.lookupN(label: label)
+            {
+            found.append(contentsOf: more)
+            }
+        return(found.isEmpty ? nil : found)
+        }
+        
     public func encode(with coder: NSCoder)
         {
         print("ENCODE \(Swift.type(of: self))")
         coder.encode(self.blocks,forKey: "blocks")
-        coder.encode(self.localSlots,forKey: "localSlots")
+        coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.index,forKey: "index")
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encode(self.previousBlock,forKey: "previousBlock")
@@ -182,7 +272,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             {
             newBlock.addBlock(substitution.substitute(block))
             }
-        newBlock.type = substitution.substitute(self.type)
+        newBlock.type = substitution.substitute(self.type!)
         newBlock.setParent(self.parent)
         newBlock.issues = self.issues
         return(newBlock)
@@ -209,11 +299,6 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             }
         self.lastBlock = block
         block.previousBlock = last
-        }
-        
-    public func addLocalSlot(_ localSlot:Slot)
-        {
-        self.localSlots.append(localSlot)
         }
         
     public func setParent(_ block:Block)
@@ -312,11 +397,11 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         
     public func lookup(label: String) -> Symbol?
         {
-        for slot in self.localSlots
+        for symbol in self.localSymbols
             {
-            if slot.label == label
+            if symbol.label == label
                 {
-                return(slot)
+                return(symbol)
                 }
             }
         return(self.parent.lookup(label: label))

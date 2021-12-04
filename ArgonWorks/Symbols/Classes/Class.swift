@@ -10,9 +10,11 @@ import AppKit
 import SwiftUI
 import FFI
 
+public var classesAreLocked = false
+
 public class Class:ContainerSymbol
     {
-    public override var type: Type
+    public override var type: Type!
         {
         get
             {
@@ -521,7 +523,10 @@ public class Class:ContainerSymbol
         super.init(label: label)
         self.addDeclaration(.zero)
         self.layoutSlots.parent = self
-        self._type = Type()
+        if classesAreLocked && self.label == "Void"
+            {
+            fatalError()
+            }
         }
         
     public required init?(coder: NSCoder)
@@ -537,7 +542,6 @@ public class Class:ContainerSymbol
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
         super.init(coder: coder)
-        self._type = Type()
 //        print("END DECODE SYMBOL \(self.label)")
         }
 
@@ -672,7 +676,7 @@ public class Class:ContainerSymbol
     public func mostSpecificInitializer(forArguments arguments: Arguments) -> Initializer?
         {
         let arity = arguments.count
-        let types = arguments.map{$0.value.type}
+        let types = arguments.map{$0.value.type!}
         var possibles = self.initializers.filter{$0.arity == arity && $0.parameterTypesAreSupertypes(ofTypes: types)}
         if possibles.isEmpty
             {

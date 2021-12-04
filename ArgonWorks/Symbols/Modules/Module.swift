@@ -10,6 +10,16 @@ import AppKit
     
 public class Module:ContainerSymbol,Scope
     {
+    public var enclosingStackFrame: StackFrame
+        {
+        fatalError()
+        }
+        
+    public var isStackFrameScope: Bool
+        {
+        false
+        }
+        
     public var isSlotScope: Bool
         {
         false
@@ -29,10 +39,10 @@ public class Module:ContainerSymbol,Scope
         {
         false
         }
-    
+        
     public override var enclosingScope: Scope
         {
-        return(self)
+        self.parent.enclosingScope
         }
         
     public var isMainModule: Bool
@@ -77,7 +87,7 @@ public class Module:ContainerSymbol,Scope
     public required init(label: Label)
         {
         super.init(label: label)
-        self._type = Type()
+        self.type = nil
         }
         
     public required init?(coder: NSCoder)
@@ -112,6 +122,23 @@ public class Module:ContainerSymbol,Scope
         var classes = Array(self.symbols.compactMap{$0 as? Class})
         classes += self.symbols.compactMap{($0 as? Module)?.classes}.flatMap{$0}
         return(classes)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        self.type = (self.enclosingScope.lookup(label: "Module") as! Type)
+        for symbol in self.symbols
+            {
+            try symbol.initializeType(inContext: context)
+            }
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        for symbol in self.symbols
+            {
+            try symbol.initializeTypeConstraints(inContext: context)
+            }
         }
         
     public var methodInstances:MethodInstances
@@ -293,11 +320,13 @@ public class Module:ContainerSymbol,Scope
             {
             for node in self.symbols
                 {
-                try node.initializeType(inContext: analyzer.typeContext)
-                try node.initializeTypeConstraints(inContext: analyzer.typeContext)
+                node.defineLocalSymbols(inContext: analyzer.typeContext)
                 }
-            let substitution = try analyzer.typeContext.unify()
-            print(substitution)
+            try self.initializeType(inContext: analyzer.typeContext)
+            try self.initializeTypeConstraints(inContext: analyzer.typeContext)
+            let substitution = analyzer.typeContext.unify()
+            let newModule = substitution.substitute(self)
+            print(newModule)
             }
         catch let error as CompilerIssue
             {

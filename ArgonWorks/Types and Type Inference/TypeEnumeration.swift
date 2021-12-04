@@ -24,11 +24,11 @@ public class TypeEnumeration: TypeConstructor
         .enumeration(self.enumeration)
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {
-            TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.type})
+            TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.type!})
             }
         set
             {

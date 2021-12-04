@@ -9,7 +9,7 @@ import Foundation
 
 public protocol ParseNode
     {
-    var type: Type { get }
+    var type: Type? { get }
     var privacyScope: PrivacyScope? { get set }
     func emitCode(using: CodeGenerator) throws
     func analyzeSemantics(using: SemanticAnalyzer)

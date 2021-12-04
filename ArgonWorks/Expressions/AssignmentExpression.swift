@@ -31,6 +31,14 @@ public class AssignmentExpression: Expression
         self.rhs = rhs
         self.lhs = lhs
         super.init()
+        self.lhs.setParent(self)
+        self.rhs.setParent(self)
+        }
+        
+    public override func defineLocalSymbols(inContext: TypeContext)
+        {
+        self.lhs.defineLocalSymbols(inContext:inContext)
+        self.rhs.defineLocalSymbols(inContext:inContext)
         }
         
     public override func visit(visitor: Visitor) throws
@@ -42,7 +50,9 @@ public class AssignmentExpression: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs)) as! Self
+        let expression = AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs))
+        expression.type = substitution.substitute(self.type!)
+        return(expression as! Self)
         }
         
     public override func display(indent: String)
@@ -56,8 +66,8 @@ public class AssignmentExpression: Expression
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        self.lhs.type = self.lhs.type.freshTypeVariable(inContext: context)
-        self.rhs.type = self.lhs.type.freshTypeVariable(inContext: context)
+        try self.lhs.initializeTypeConstraints(inContext: context)
+        try self.rhs.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         

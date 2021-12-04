@@ -19,7 +19,7 @@ class ArgonHierarchyBrowserViewController: NSViewController
         self.browser.indentationPerLevel = 20
         self.browser.rowHeight = 18
         self.browser.intercellSpacing = NSSize(width: 0,height: 0)
-        let nib = NSNib(nibNamed:"HierarchyCell",bundle: nil)
+//        let nib = NSNib(nibNamed:"HierarchyCell",bundle: nil)
 //        self.browser.register(nib, forIdentifier: NSUserInterfaceItemIdentifier(rawValue: "HierarchyCellView"))
 //        let classes = HierarchySymbolWrapper(groupNamed: "Classes",symbols: [TopModule.shared.argonModule.object],type: .class)
 //        let constants = HierarchySymbolWrapper(groupNamed: "Constants",symbols: TopModule.shared.allModules,type: .constant)

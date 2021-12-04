@@ -9,7 +9,7 @@ import Foundation
 
 public indirect enum Literal:Hashable,Displayable
     {
-    public var type: Type
+    public var type: Type?
         {
         return(LiteralExpression(self).type)
         }
@@ -155,7 +155,7 @@ public indirect enum Literal:Hashable,Displayable
             }
         }
         
-    public func type(inContext context: TypeContext) -> Type
+    public func type(inContext context: TypeContext) -> Type?
         {
        switch(self)
             {
@@ -173,7 +173,7 @@ public indirect enum Literal:Hashable,Displayable
                 return(context.symbolType)
             case .array(let array):
                 let first = array.first!
-                let elementType = first.type
+                let elementType = first.type(inContext: context)!
                 let arrayType = context.arrayType
                 let arrayClass = (arrayType as! TypeClass).theClass
                 return(TypeClass(class: arrayClass,generics: [elementType]))
@@ -186,9 +186,9 @@ public indirect enum Literal:Hashable,Displayable
             case .enumerationCase:
                 return(context.enumerationCaseType)
             case .methodInstance(let instance):
-                return(TypeFunction(label: instance.label,types: instance.parameters.map{$0.type},returnType: instance.returnType))
+                return(TypeFunction(label: instance.label,types: instance.parameters.map{$0.type!},returnType: instance.returnType))
             case .function(let function):
-                return(TypeFunction(label: function.label,types: function.parameters.map{$0.type},returnType: function.returnType))
+                return(TypeFunction(label: function.label,types: function.parameters.map{$0.type!},returnType: function.returnType))
             case .constant(let constant):
                 return(constant.type)
             }
@@ -196,7 +196,7 @@ public indirect enum Literal:Hashable,Displayable
         
     public func display(indent: String)
         {
-        print("\(indent)LITERAL \(self) \(self.type.displayString)")
+        print("\(indent)LITERAL \(self) \(self.type!.displayString)")
         }
         
     public func substitute(from substitution: TypeContext.Substitution) -> Literal
@@ -445,7 +445,8 @@ public class LiteralExpression: Expression
             case .symbol:
                 context.append(TypeConstraint(left: self.type,right: context.symbolType,origin: .expression(self)))
             case .array:
-                context.append(TypeConstraint(left: self.type,right: context.arrayType,origin: .expression(self)))
+                let aType = self.literal.type(inContext: context)
+                context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
             case .class(let aClass):
                 context.append(TypeConstraint(left: self.type,right: aClass.type,origin: .expression(self)))
             case .module:
@@ -481,16 +482,16 @@ public class LiteralExpression: Expression
                 self.type = context.symbolType
             case .array(let array):
                 let first = array.first!
-                let elementType = first.type
+                let elementType = first.type(inContext: context)
                 let arrayType = context.arrayType
                 let arrayClass = (arrayType as! TypeClass).theClass
-                self.type = TypeClass(class: arrayClass,generics: [elementType])
+                self.type = TypeClass(class: arrayClass,generics: [elementType!])
             case .class(let aClass):
                 self.type = aClass.type
             case .module:
                 self.type = context.moduleType
             case .enumeration(let enumeration):
-                self.type = enumeration.type
+                self.type = enumeration.type!
             case .enumerationCase(let aCase):
                 self.type = aCase.type
             case .methodInstance(let method):
@@ -504,7 +505,7 @@ public class LiteralExpression: Expression
         
     public override func display(indent: String)
         {
-        print("\(indent)LITERAL \(self.literal) \(self.type.displayString)")
+        print("\(indent)LITERAL \(self.literal) \(self.type!.displayString)")
         }
         
     public override func dump(depth: Int)

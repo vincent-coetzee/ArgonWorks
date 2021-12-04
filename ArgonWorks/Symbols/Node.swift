@@ -69,12 +69,6 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         return(lhs.index == rhs.index)
         }
 
-    public func resetParent()
-        {
-        fatalError()
-        self.parent = .none
-        }
-        
     public func setParent(_ node: Symbol)
         {
         self.parent = .node(node)

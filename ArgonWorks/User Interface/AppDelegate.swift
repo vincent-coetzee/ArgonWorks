@@ -34,7 +34,11 @@ class AppDelegate: NSObject, NSApplicationDelegate
         assert(type1 == type2,"Type1 should == type2")
         let type3 = TypeVariable(index: 2001)
         assert(type1 != type3,"Type3 should not == type1")
-        print("hello")
+        let compiler = Compiler()
+        let items = compiler.argonModule.lookupN(label: "-")
+        print(items)
+        let type = compiler.argonModule.lookup(label: "Void") as! Type
+        print(type.fullName.displayString)
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

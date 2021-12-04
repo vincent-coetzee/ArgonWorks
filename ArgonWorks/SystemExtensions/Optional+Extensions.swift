@@ -41,7 +41,7 @@ extension Optional where Wrapped:Displayable
             case .some(let object):
                 return(object.displayString)
             default:
-                return("")
+                return("nil value")
             }
         }
     }

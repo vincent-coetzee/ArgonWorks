@@ -30,14 +30,14 @@ public class PrimitiveMethodInstance: MethodInstance
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
         try self.returnType.initializeTypeConstraints(inContext: context)
-        let parameterTypes = self.parameters.map{$0.type}
+        let parameterTypes = self.parameters.map{$0.type!}
         context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
         }
  
@@ -61,7 +61,7 @@ public class PrimitiveMethodInstance: MethodInstance
         var index = 0
         for parameter in self.parameters
             {
-            print("\(indent)\tPARAMETER[\(index)] \(parameter.label) \(parameter.type.displayString)")
+            print("\(indent)\tPARAMETER[\(index)] \(parameter.label) \(parameter.type!.displayString)")
             index += 1
             }
         print("\(indent)\tRETURN TYPE \(self.returnType.displayString)")

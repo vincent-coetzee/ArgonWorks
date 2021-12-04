@@ -61,14 +61,14 @@ public class GenericClass:Class
         {
         self._typeCode = typeCode
         super.init(label: label)
-        self._type = Type()
+        self.type = nil
         }
         
     required init(label: Label)
         {
         self._typeCode = .other
         super.init(label: label)
-        self._type = Type()
+        self.type = nil
         }
         
     init(label: Label,types: Types)
@@ -76,7 +76,6 @@ public class GenericClass:Class
         self.types = types
         self._typeCode = .other
         super.init(label: label)
-        self._type = Type()
         }
         
     required init?(coder: NSCoder)
@@ -85,7 +84,7 @@ public class GenericClass:Class
         self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClass>
         self._typeCode = .array
         super.init(coder: coder)
-        self._type = Type()
+        self.type = nil
         }
         
     public override func encode(with coder:NSCoder)
@@ -114,7 +113,6 @@ public class GenericClass:Class
         self._typeCode = typeCode
         super.init(label:label)
         self.types = types
-        self._type = Type()
         for aClass in superclasses
             {
             self.addSuperclass(aClass)

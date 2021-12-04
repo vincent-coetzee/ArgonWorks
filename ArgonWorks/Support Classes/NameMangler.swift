@@ -55,7 +55,7 @@ public struct NameMangler
         {
         let count = methodInstance.parameters.count
         let start = "\(methodInstance.label)_\(count)_"
-        let middle = methodInstance.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let middle = methodInstance.parameters.map{$0.type!.mangledName}.joined(separator: "_")
         let end = methodInstance.returnType.mangledName
         return(start + middle + "_" + end)
         }
@@ -64,7 +64,7 @@ public struct NameMangler
         {
         let count = function.parameters.count
         let start = "\(function.label)_\(count)_"
-        let middle = function.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let middle = function.parameters.map{$0.type!.mangledName}.joined(separator: "_")
         let end = function.returnType.mangledName
         return(start + middle + "_" + end)
         }

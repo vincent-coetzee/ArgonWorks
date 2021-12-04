@@ -14,7 +14,11 @@ public class TypeConstraint: Displayable,CustomStringConvertible
         switch(self.origin)
             {
             case .symbol(let symbol):
-                return(symbol.declaration!.line)
+            if let line = symbol.declaration?.line
+                {
+                return(line)
+                }
+            return(0)
             case .expression(let expression):
                 return(expression.declaration!.line)
             case .block(let block):
@@ -69,18 +73,22 @@ public class TypeConstraint: Displayable,CustomStringConvertible
     internal let rhs: Type
     internal let origin: Origin
     
-    init(left: Type,right: Type,origin: Origin)
+    init(left: Type?,right: Type?,origin: Origin)
         {
-        self.lhs = left
-        self.rhs = right
+        assert(left.isNotNil)
+        assert(right.isNotNil)
+        self.lhs = left!
+        self.rhs = right!
         self.origin = origin
         }
     }
     
 public class SubTypeConstraint: TypeConstraint
     {
-    init(subtype left: Type,supertype right: Type,origin: Origin)
+    init(subtype left: Type?,supertype right: Type?,origin: Origin)
         {
+        assert(left.isNotNil)
+        assert(right.isNotNil)
         super.init(left: left,right: right,origin: origin)
         }
     }

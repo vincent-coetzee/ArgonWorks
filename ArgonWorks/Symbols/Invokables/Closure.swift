@@ -9,6 +9,11 @@ import Foundation
 
 public class Closure:Invocable,Scope
     {
+    public var enclosingStackFrame: StackFrame
+        {
+        self
+        }
+        
     public var isSlotScope: Bool
         {
         false

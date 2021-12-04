@@ -24,7 +24,7 @@ public class SymbolGroup:ContainerSymbol
         "IconGroup"
         }
         
-    public override var type: Type
+    public override var type: Type?
         {
         get
             {
@@ -42,11 +42,14 @@ public class SymbolGroup:ContainerSymbol
     /// 
     public override func lookup(label:String) -> Symbol?
         {
-        if let symbol = self.symbolsByLabel[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
-        for element in self.symbolsByLabel.values
+        for element in self.symbols
             {
             if let symbol = element.lookup(label: label)
                 {

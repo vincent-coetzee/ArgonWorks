@@ -7,55 +7,15 @@
 
 import Foundation
 
-public class VirtualReadBlock: Block,Scope
+public class VirtualReadBlock: Block,Scope,StackFrame
     {
-    public var isMethodInstanceScope: Bool
-        {
-        false
-        }
-        
-    public var isClosureScope: Bool
-        {
-        false
-        }
-        
-    public var isInitializerScope: Bool
-        {
-        false
-        }
-        
-    public var isSlotScope: Bool
-        {
-        true
-        }
-        
-    public func addSymbol(_ symbol: Symbol)
-        {
-        self.addLocalSlot(symbol as! LocalSlot)
-        }
-    
-    public func appendIssue(at: Location, message: String)
-        {
-        self.issues.append(CompilerIssue(location: at,message: message))
-        }
-    
-    public func appendWarningIssue(at: Location, message: String)
-        {
-        self.issues.append(CompilerIssue(location: at,message: message,isWarning: true))
-        }
-    
-    public override var enclosingScope: Scope
-        {
-        self.parent.enclosingScope
-        }
-        
     internal var slot: Slot!
     
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let block = VirtualWriteBlock()
         block.slot = self.slot.deepCopy()
-        block.slot.type = substitution.substitute(self.slot.type)
+        block.slot.type = substitution.substitute(self.slot.type!)
         return(block as! Self)
         }
         
@@ -108,9 +68,9 @@ public class VirtualWriteBlock: VirtualReadBlock
         {
         let block = VirtualWriteBlock()
         block.slot = self.slot.deepCopy()
-        block.slot.type = substitution.substitute(self.slot.type)
+        block.slot.type = substitution.substitute(self.slot.type!)
         block.newValueSlot = self.newValueSlot.deepCopy()
-        block.newValueSlot.type = substitution.substitute(self.newValueSlot.type)
+        block.newValueSlot.type = substitution.substitute(self.newValueSlot.type!)
         return(block as! Self)
         }
         
