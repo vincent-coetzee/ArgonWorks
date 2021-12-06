@@ -59,67 +59,28 @@ public class SlotAccessExpression: Expression
         
     public override func display(indent: String)
         {
-        print("\(indent)SLOT EXPRESSION:")
+        print("\(indent)SLOT ACCESS EXPRESSION:")
         self.receiver.display(indent: indent + "\t")
-        print("\(indent)\tSLOT \(self.slotLabel)")
+        let label = self.slot.isNil ? "" : self.slot!.type.displayString
+        print("\(indent)\tSLOT \(self.slotLabel) \(label)")
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = SlotAccessExpression(substitution.substitute(self.receiver),slotLabel: self.slotLabel)
         expression.type = substitution.substitute(self.type!)
+        if let aSlot = self.slot
+            {
+            expression.slot = aSlot
+            expression.slot!.type = substitution.substitute(aSlot.type!)
+            }
         return(expression as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.receiver.initializeType(inContext: context)
-        self.type = TypeSlot(baseType: self.receiver.type!,slotLabel: self.slotLabel)
-//        if let slot = self.slot as? Slot
-//            {
-//            if slot.type.isNil
-//                {
-//                if let slotType = context.lookupBinding(atLabel: slot.label)
-//                    {
-//                    self.type = slotType
-//                    slot.type = slotType
-//                    }
-//                else
-//                    {
-//                    slot.type = context.freshTypeVariable()
-//                    self.type = slot.type
-//                    context.bind(slot.type!,to: slot.label)
-//                    }
-//                }
-//            else if slot.type!.isTypeVariable
-//                {
-//                if let slotType = context.lookupBinding(atLabel: slot.label)
-//                    {
-//                    slot.type = slotType
-//                    self.type = slotType
-//                    }
-//                else
-//                    {
-//                    self.type = slot.type!
-//                    context.bind(slot.type!,to: slot.label)
-//                    }
-//                }
-//            else if slot.type!.isClass || slot.type!.isEnumeration
-//                {
-//                self.type = slot.type
-//                context.bind(slot.type!,to: slot.label)
-//                }
-//            else if slot.initialValue.isNotNil
-//                {
-//                slot.type = slot.initialValue!.type
-//                self.type = slot.type
-//                context.bind(slot.type!,to: slot.label)
-//                }
-//            else
-//                {
-//                fatalError("This should not happen.")
-//                }
-//            }
+        self.type = context.freshTypeVariable()
         }
 
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -155,8 +116,8 @@ public class SlotAccessExpression: Expression
                 return
                 }
             self.slot = aSlot
-            self.type = aSlot.type!
-            context.append(TypeConstraint(left: self.type,right: aSlot.type!,origin: .expression(self)))
+            self.slot!.type = substitution.substitute(aSlot.type!)
+            context.append(TypeConstraint(left: self.type,right: self.slot!.type!,origin: .expression(self)))
             }
         }
         

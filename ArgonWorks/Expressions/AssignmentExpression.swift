@@ -9,8 +9,8 @@ import Foundation
 
 public class AssignmentExpression: Expression
     {
-    private let rhs: Expression
-    private let lhs: Expression
+    internal let rhs: Expression
+    internal let lhs: Expression
     
     public required init?(coder: NSCoder)
         {

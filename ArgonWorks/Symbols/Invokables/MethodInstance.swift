@@ -126,12 +126,12 @@ public class MethodInstance: Function
         {
         for parameter in self.parameters
             {
-            if parameter.type!.isTypeVariable
+            if parameter.type!.hasVariableTypes
                 {
                 return(true)
                 }
             }
-        return(self.returnType.isTypeVariable)
+        return(self.returnType.hasVariableTypes)
         }
         
     public var isGenericMethod = false
@@ -173,6 +173,23 @@ public class MethodInstance: Function
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         return(newInstance)
+        }
+        
+    public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool
+        {
+        var failed = false
+        for (parameter,argument) in zip(self.parameters,arguments)
+            {
+            if parameter.tag != argument.tag
+                {
+                failed = true
+                if parameter.tag != nil
+                    {
+                    expression.appendIssue(at: at, message: "Expected argument tag '\(parameter.tag!)' but found '\(argument.tag ?? "")'")
+                    }
+                }
+            }
+        return(!failed)
         }
         
     public func printInstance()

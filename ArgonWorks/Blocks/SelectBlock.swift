@@ -63,7 +63,8 @@ public class SelectBlock: Block
         try self.value.initializeTypeConstraints(inContext: context)
         for block in self.whenBlocks
             {
-            context.append(TypeConstraint(left: self.value.type,right: block.type,origin: .block(self)))
+            try block.initializeTypeConstraints(inContext: context)
+            context.append(TypeConstraint(left: self.value.type,right: block.condition.type,origin: .block(self)))
             }
         try self.otherwiseBlock?.initializeTypeConstraints(inContext: context)
         }

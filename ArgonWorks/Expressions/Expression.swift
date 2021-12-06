@@ -134,6 +134,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     public func initializeType(inContext context: TypeContext) throws
         {
         print("WARNING: initializeType not implemented in \(Swift.type(of: self))")
+        self.type = context.voidType
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -161,7 +162,12 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public func lookup(label: Label) -> Symbol?
         {
-        return(nil)
+        return(self.parent.lookup(label: label))
+        }
+        
+    public func lookupN(name: Name) -> Symbols?
+        {
+        return(self.parent.lookupN(name: name))
         }
 
     public func analyzeSemantics(using analyzer: SemanticAnalyzer)

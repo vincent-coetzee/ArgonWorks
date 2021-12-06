@@ -28,6 +28,8 @@ public protocol Visitor
     func accept(_ expression: Expression) throws
     
     func accept(_ argument: Argument) throws
+    
+    func accept(_ tuple: Tuple) throws
     }
 
 extension Visitor

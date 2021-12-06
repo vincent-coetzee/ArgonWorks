@@ -47,7 +47,7 @@ public class WhenBlock: Block
             {
             try block.initializeType(inContext: context)
             }
-        self.type = self.condition.type
+        self.type = context.voidType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -61,7 +61,13 @@ public class WhenBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        WhenBlock(condition: substitution.substitute(self.condition)) as! Self
+        let when = WhenBlock(condition: substitution.substitute(self.condition))
+        for block in self.blocks
+            {
+            when.addBlock(substitution.substitute(block))
+            }
+        when.type = self.type
+        return(when as! Self)
         }
     }
     

@@ -51,6 +51,12 @@ public class ReturnBlock: Block
         super.encode(with:coder)
         }
     
+    public override func display(indent: String)
+        {
+        print("\(indent)RETURN: \(Swift.type(of: self))")
+        self.value.display(indent: indent + "\t")
+        }
+        
     public override func visit(visitor: Visitor) throws
         {
         try self.value.visit(visitor: visitor)

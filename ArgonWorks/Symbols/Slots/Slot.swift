@@ -161,6 +161,46 @@ public class Slot:Symbol
         {
         }
         
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        if self.type.isNil
+            {
+            if let slotType = context.lookupBinding(atLabel: self.label)
+                {
+                self.type = slotType
+                }
+            else
+                {
+                self.type = context.freshTypeVariable()
+                context.bind(self.type!,to: self.label)
+                }
+            }
+        else if self.type!.isTypeVariable
+            {
+            if let slotType = context.lookupBinding(atLabel: self.label)
+                {
+                self.type = slotType
+                }
+            else
+                {
+                context.bind(self.type!,to: self.label)
+                }
+            }
+        else if self.type!.isClass || self.type!.isEnumeration
+            {
+            context.bind(self.type!,to: self.label)
+            }
+        else if self.initialValue.isNotNil
+            {
+            self.type = self.initialValue!.type
+            context.bind(self.type!,to: self.label)
+            }
+        else
+            {
+            fatalError("This should not happen.")
+            }
+        }
+        
     public func layoutSymbol(in vm: VirtualMachine)
         {
 //        guard !self.isMemoryLayoutDone else

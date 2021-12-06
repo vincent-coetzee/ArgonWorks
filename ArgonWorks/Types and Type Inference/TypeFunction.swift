@@ -9,33 +9,44 @@ import Foundation
 
 public class TypeFunction: TypeConstructor
     {
-    internal let types: Types
+    public override var hasVariableTypes: Bool
+        {
+        for type in self.generics
+            {
+            if type.hasVariableTypes
+                {
+                return(true)
+                }
+            }
+        if self.returnType.hasVariableTypes
+            {
+            return(true)
+            }
+        return(false)
+        }
+        
     internal var returnType: Type
     
     init(label: Label,types: Types,returnType: Type)
         {
-        self.types = types
         self.returnType = returnType
-        super.init(label: label)
+        super.init(label: label,generics:types)
         }
         
     required init?(coder: NSCoder)
         {
-        self.types = coder.decodeObject(forKey: "types") as! Types
         self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         super.init(coder: coder)
         }
         
     required init(label: Label)
         {
-        self.types = Types()
         self.returnType = Type()
         super.init(label: label)
         }
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self.types,forKey: "types")
         coder.encode(self.returnType,forKey: "returnType")
         super.encode(with: coder)
         }

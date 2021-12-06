@@ -81,6 +81,11 @@ public class TypeInstanciationTerm: Expression
                 context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
                 }
             }
+        if let className = self.initializer?.declaringClass?.fullName,let aType = self.enclosingScope.lookup(name: className) as? Type
+            {
+            context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
+            context.append(TypeConstraint(left: self.type,right: TypeConstructor(label: className.displayString,generics: self.initializer!.parameters.map{$0.type!}),origin: .expression(self)))
+            }
         }
         
     public override func visit(visitor: Visitor) throws

@@ -81,7 +81,7 @@ public class MethodInvocationExpression: Expression
             {
             self.methodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE FOR \(self.method.label) = \(specificInstance.displayString)")
-            methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: self.arguments.map{$0.value.type!}, returnType: self.type!, to: context)
+            methodMatcher.appendTypeConstraints(to: context)
             }
         else
             {

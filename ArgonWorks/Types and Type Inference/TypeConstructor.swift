@@ -30,6 +30,18 @@ public class TypeConstructor: Type
         return(lhs.label == right.label && lhs.generics == right.generics)
         }
         
+    public override var hasVariableTypes: Bool
+        {
+        for type in self.generics
+            {
+            if type.hasVariableTypes
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
     public override var typeVariables: TypeVariables
         {
         self.generics.flatMap{$0.typeVariables}

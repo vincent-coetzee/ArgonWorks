@@ -33,6 +33,11 @@ public class TypeVariable: Type
         true
         }
         
+    public override var hasVariableTypes: Bool
+        {
+        true
+        }
+        
     public override var typeVariables: TypeVariables
         {
         [self]

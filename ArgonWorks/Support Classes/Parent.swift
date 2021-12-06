@@ -176,6 +176,21 @@ public enum Parent:Storable
             }
         }
         
+    public func lookupN(name: Name) -> Symbols?
+        {
+        switch(self)
+            {
+            case .none:
+                return(nil)
+            case .node(let node):
+                return(node.lookupN(name: name))
+            case .expression(let expression):
+                return(expression.parent.lookupN(name: name))
+            case .block(let block):
+                return(block.lookupN(name: name))
+            }
+        }
+        
     public var enclosingClass: Class?
         {
         switch(self)

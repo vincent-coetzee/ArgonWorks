@@ -318,10 +318,6 @@ public class Module:ContainerSymbol,Scope
         {
         do
             {
-            for node in self.symbols
-                {
-                node.defineLocalSymbols(inContext: analyzer.typeContext)
-                }
             try self.initializeType(inContext: analyzer.typeContext)
             try self.initializeTypeConstraints(inContext: analyzer.typeContext)
             let substitution = analyzer.typeContext.unify()

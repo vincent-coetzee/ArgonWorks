@@ -260,6 +260,25 @@ public class Method:Symbol
         instance.method = self
         }
         
+    public func validateArguments(_ arguments: Arguments,for expression: Expression,at: Location)
+        {
+        let count = arguments.count
+        let instancesWithArity = self.instancesWithArity(count)
+        if instancesWithArity.isEmpty
+            {
+            expression.appendIssue(at: at, message: "\(count) arguments were found, but there is no instance of method '\(self.label)' that has '\(count)' parameters.")
+            return
+            }
+        for instance in instancesWithArity
+            {
+            if instance.parametersMatchArguments(arguments,for: expression,at: at)
+                {
+                return
+                }
+            }
+        expression.appendIssue(at: at, message: "There are no instances of method '\(self.label)' with parameters that match these arguments.")
+        }
+        
     public func filledInTagSignature(forArguments: Arguments) -> TagSignature?
         {
         let incoming = TagSignature(arguments: forArguments)
@@ -376,3 +395,15 @@ public enum ArgumentType
     }
     
 
+public class PrimitiveMethod: Symbol
+    {
+    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> Method
+        {
+        let instance = PrimitiveMethodInstance(label: label)
+        instance.parameters = [Parameter(label: arg1, relabel: nil, type: arg1Type, isVisible: true, isVariadic: false)]
+        instance.returnType = ret
+        let method = Method(label: label)
+        method.addInstance(instance)
+        return(method)
+        }
+    }

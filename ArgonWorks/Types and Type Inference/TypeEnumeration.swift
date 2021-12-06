@@ -24,6 +24,11 @@ public class TypeEnumeration: TypeConstructor
         .enumeration(self.enumeration)
         }
         
+    public override var enumerationValue: Enumeration
+        {
+        self.enumeration
+        }
+        
     public override var type: Type?
         {
         get

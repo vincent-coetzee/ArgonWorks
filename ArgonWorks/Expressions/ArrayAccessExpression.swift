@@ -55,9 +55,20 @@ public class ArrayAccessExpression: Expression
         try visitor.accept(self)
         }
         
+    public override func display(indent: String)
+        {
+        print("\(indent)ARRAY ACCESS:")
+        print("\(indent)\tARRAY: \(self.array.type!.displayString)")
+        self.array.display(indent: indent + "\t\t")
+        print("\(indent)\tINDEX: \(self.index.type!.displayString)")
+        self.index.display(indent: indent + "\t\t")
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        ArrayAccessExpression(array: substitution.substitute(self.array),index: substitution.substitute(self.index)) as! Self
+        let expression = ArrayAccessExpression(array: substitution.substitute(self.array),index: substitution.substitute(self.index))
+        expression.type = substitution.substitute(self.type!)
+        return(expression as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -65,19 +76,11 @@ public class ArrayAccessExpression: Expression
         try self.array.initializeTypeConstraints(inContext: context)
         try self.index.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
-        let elementType = context.freshTypeVariable()
-        context.append(TypeConstraint(left: self.type,right: elementType,origin: .expression(self)))
         let arrayClass = (context.arrayType as! TypeClass).theClass
-        let arrayType = TypeClass(class: arrayClass,generics: [elementType])
-        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
+        let arrayType = TypeClass(class: arrayClass,generics: [self.type!])
+//        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
         }
-        
-    public override func defineLocalSymbols(inContext: TypeContext)
-        {
-        self.array.defineLocalSymbols(inContext:inContext)
-        self.index.defineLocalSymbols(inContext:inContext)
-        }
-        
+
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.array.initializeType(inContext: context)

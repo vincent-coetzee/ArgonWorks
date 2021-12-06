@@ -37,6 +37,7 @@ public class PostfixExpression: OperatorExpression
         {
         let expression = PostfixExpression(operation: self.operation, lhs: substitution.substitute(self.lhs))
         expression.type = substitution.substitute(self.type!)
+        expression.methodInstance = self.methodInstance
         return(expression as! Self)
         }
         
@@ -65,7 +66,7 @@ public class PostfixExpression: OperatorExpression
             {
             self.methodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
-            methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: [self.lhs.type!], returnType: context.voidType, to: context)
+            methodMatcher.appendTypeConstraints(to: context)
             }
         else
             {

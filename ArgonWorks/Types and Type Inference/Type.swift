@@ -67,6 +67,11 @@ public class Type: Symbol,Displayable
         false
         }
         
+    public var hasVariableTypes: Bool
+        {
+        false
+        }
+        
     public var inferredType: Type
         {
         self
@@ -130,6 +135,11 @@ public class Type: Symbol,Displayable
     public var allSubclasses: Types
         {
         Types()
+        }
+        
+    public var enumerationValue: Enumeration
+        {
+        fatalError()
         }
         
     public override var type: Type?

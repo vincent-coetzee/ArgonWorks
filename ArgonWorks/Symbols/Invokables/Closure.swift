@@ -41,26 +41,24 @@ public class Closure:Invocable,Scope
         
     public let block: Block
     public let buffer: T3ABuffer
-    public var symbols = Symbols()
     
     required init(label:Label)
         {
         self.block = Block()
         self.buffer = T3ABuffer()
         super.init(label: label)
+        self.block.setParent(self)
         }
     
     public required init?(coder: NSCoder)
         {
         self.block = coder.decodeObject(forKey: "block") as! Block
-        self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
         self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self.symbols,forKey: "symbols")
         coder.encode(self.block,forKey: "block")
         coder.encode(self.buffer,forKey: "buffer")
         super.encode(with: coder)
@@ -68,7 +66,7 @@ public class Closure:Invocable,Scope
         
     public override func lookup(label: Label) -> Symbol?
         {
-        for symbol in self.symbols
+        for symbol in self.localSymbols
             {
             if symbol.label == label
                 {
@@ -76,6 +74,54 @@ public class Closure:Invocable,Scope
                 }
             }
         return(self.parent.lookup(label: label))
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let newClosure = Closure(label: self.label)
+        newClosure.localSymbols = self.localSymbols.map{$0.substitute(from: substitution)}
+        newClosure.parameters = self.parameters.map{$0.substitute(from: substitution)}
+        newClosure.returnType = substitution.substitute(self.returnType)
+        for block in self.block.blocks
+            {
+            newClosure.block.addBlock(substitution.substitute(block))
+            }
+        self.type = substitution.substitute(self.type!)
+        return(newClosure as! Self)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)CLOSURE: \(self.type.displayString)")
+        for block in self.block.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        for symbol in self.localSymbols
+            {
+            try symbol.initializeType(inContext: context)
+            }
+        for block in block.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        for symbol in self.localSymbols
+            {
+            try symbol.initializeTypeConstraints(inContext: context)
+            }
+        for block in self.block.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
         }
         
     public override func allocateAddresses(using allocator:AddressAllocator)

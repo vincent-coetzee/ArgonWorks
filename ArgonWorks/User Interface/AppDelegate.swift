@@ -39,6 +39,27 @@ class AppDelegate: NSObject, NSApplicationDelegate
         print(items)
         let type = compiler.argonModule.lookup(label: "Void") as! Type
         print(type.fullName.displayString)
+        let slot1 = Slot(label: "slot1",type: compiler.argonModule.integer)
+        let slot2 = Slot(label: "slot2",type: compiler.argonModule.string)
+        let tuple1 = Tuple(.slot(slot1),.slot(slot2))
+        do
+            {
+            let context = TypeContext(scope: compiler.argonModule)
+            try tuple1.initializeType(inContext: context)
+            print(tuple1.type.displayString)
+            let slot1Expression = SlotExpression(slot: slot1)
+            let slot2Expression = SlotExpression(slot: slot2)
+            let right1Expression = LiteralExpression(.integer(10))
+            let right2Expression = LiteralExpression(.string("hello"))
+            let assignmentExpression = AssignmentExpression(TupleExpression(slot1Expression,slot2Expression),TupleExpression(right1Expression,right2Expression))
+            try assignmentExpression.initializeType(inContext: context)
+            print(assignmentExpression.lhs.type!.displayString)
+            print(assignmentExpression.rhs.type!.displayString)
+            }
+        catch let error
+            {
+            print(error)
+            }
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

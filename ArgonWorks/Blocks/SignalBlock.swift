@@ -33,10 +33,20 @@ public class SignalBlock: Block
         {
         buffer.append(nil,"SIG",.literal(.symbol(self.symbol)),.none,.none)
         }
+
+    public override func display(indent: String)
+        {
+        print("\(indent)SIGNAL: \(Swift.type(of: self))")
+        print("\(indent)SYMBOLS: \(self.symbol)")
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        self.type = context.symbolType
+        self.type = context.voidType
         }
     }
 

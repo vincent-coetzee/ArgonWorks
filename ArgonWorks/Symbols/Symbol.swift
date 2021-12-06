@@ -379,11 +379,6 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         return(copy)
         }
         
-    public func lookupN(label: Label) -> Symbols?
-        {
-        return(nil)
-        }
-        
     public func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = Self.init(label: self.label)

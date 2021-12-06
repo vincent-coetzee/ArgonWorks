@@ -88,7 +88,7 @@ public class InfixExpression: OperatorExpression
             {
             self.methodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operation.label) = \(specificInstance.displayString)")
-            methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: [self.lhs.type!], returnType: self.type!, to: context)
+            methodMatcher.appendTypeConstraints(to: context)
             }
         else
             {
@@ -101,6 +101,7 @@ public class InfixExpression: OperatorExpression
         {
         let expression = InfixExpression(operation: self.operation,lhs: substitution.substitute(self.lhs),rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
+        expression.methodInstance = self.methodInstance
         return(expression as! Self)
         }
     }

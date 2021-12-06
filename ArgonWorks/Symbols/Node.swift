@@ -74,6 +74,11 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         self.parent = .node(node)
         }
         
+    public func setParent(_ expression: Expression)
+        {
+        self.parent = .expression(expression)
+        }
+        
     public func setParent(_ block: Block)
         {
         self.parent = .block(block)
@@ -148,7 +153,59 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         return(self.parent.lookup(name: name))
         }
         
+    public func lookupN(name: Name) -> Symbols?
+        {
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let starts = self.topModule.lookupN(label: name.first)
+                {
+                var results = Symbols()
+                for start in starts
+                    {
+                    if let symbols = start.lookupN(name: name.withoutFirst)
+                        {
+                        results.append(contentsOf: symbols)
+                        }
+                    }
+                return(results.isEmpty ? nil : results)
+                }
+            }
+        else if name.count == 1
+            {
+            if let symbols = self.lookupN(label: name.first)
+                {
+                return(symbols)
+                }
+            }
+        else if let starts = self.lookupN(label: name.first)
+            {
+            var results = Symbols()
+            for start in starts
+                {
+                if let symbols = start.lookupN(name: name.withoutFirst)
+                    {
+                    results.append(contentsOf: symbols)
+                    }
+                }
+            return(results.isEmpty ? nil : results)
+            }
+        return(self.parent.lookupN(name: name))
+        }
+        
     public func lookup(label: Label) -> Symbol?
+        {
+        return(nil)
+        }
+        
+    public func lookupN(label: Label) -> Symbols?
         {
         return(nil)
         }

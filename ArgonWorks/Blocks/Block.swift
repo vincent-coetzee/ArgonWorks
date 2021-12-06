@@ -239,6 +239,34 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         return(found.isEmpty ? nil : found)
         }
         
+    public func lookupN(name: Name) -> Symbols?
+        {
+        if name.isRooted
+            {
+            return(self.parent.lookupN(name: name))
+            }
+        else if name.count == 1
+            {
+            var results = Symbols()
+            for symbol in self.localSymbols
+                {
+                if symbol.label == name.last
+                    {
+                    results.append(symbol)
+                    }
+                }
+            if let upper = self.parent.lookupN(name: name)
+                {
+                results.append(contentsOf: upper)
+                }
+            return(results.isEmpty ? nil : results)
+            }
+        else
+            {
+            return(self.parent.lookupN(name: name))
+            }
+        }
+        
     public func encode(with coder: NSCoder)
         {
         print("ENCODE \(Swift.type(of: self))")

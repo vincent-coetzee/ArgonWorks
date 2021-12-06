@@ -19,6 +19,7 @@ public class ClosureExpression: Expression
         self.closureSlot = nil
         self.arguments = []
         super.init()
+        self.closure!.setParent(self)
         }
         
     public init(slot:Slot,arguments: Arguments)
@@ -54,6 +55,31 @@ public class ClosureExpression: Expression
             try argument.visit(visitor: visitor)
             }
         try visitor.accept(self)
+        }
+        
+   public override func display(indent: String)
+        {
+        print("\(indent)CLOSURE EXPRESSION: \(self.type.displayString)")
+        self.closure!.display(indent: indent + "\t")
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let expression = ClosureExpression(closure: substitution.substitute(self.closure!))
+        expression.type = substitution.substitute(self.type!)
+        return(expression as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.closure!.initializeType(inContext: context)
+        let label = self.closure!.parameters.map{$0.type!.displayString}.joined(separator: "x") + "->" + self.closure!.returnType.displayString
+        self.type = TypeFunction(label: label, types: self.closure!.parameters.map{$0.type!}, returnType: self.closure!.returnType)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.closure!.initializeTypeConstraints(inContext: context)
         }
         
     public override func allocateAddresses(using allocator:AddressAllocator)

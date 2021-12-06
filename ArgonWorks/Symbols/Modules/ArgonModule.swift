@@ -414,6 +414,7 @@ public class ArgonModule: SystemModule
         self.addSymbol(InfixOperator(label: "%=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
         
         self.addSymbol(InfixOperator(label: "==").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(InfixOperator(label: "!=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
         self.addSymbol(InfixOperator(label: "<=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
         self.addSymbol(InfixOperator(label: ">=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
         self.addSymbol(InfixOperator(label: ">").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
@@ -432,6 +433,8 @@ public class ArgonModule: SystemModule
         
         self.addSymbol(PostfixOperator(label: "++").double(self,.generic("number"),.void,where: ("number",self.number)))
         self.addSymbol(PostfixOperator(label: "--").double(self,.generic("number"),.void,where: ("number",self.number)))
+        
+        self.addSymbol(PrimitiveMethod.label("class","of",self.object,ret: self.class))
         }
         
     public override func lookupN(label: Label) -> Symbols?

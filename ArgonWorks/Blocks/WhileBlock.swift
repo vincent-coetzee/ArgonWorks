@@ -30,6 +30,17 @@ public class WhileBlock: Block,StackFrame,Scope
         super.init()
         }
         
+    public override func display(indent: String)
+        {
+        print("\(indent)WHILE: \(Swift.type(of: self))")
+        print("\(indent)CONDITION: \(self.condition.type.displayString)")
+        self.condition.display(indent: indent + "\t")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.condition.initializeTypeConstraints(inContext: context)
@@ -67,7 +78,13 @@ public class WhileBlock: Block,StackFrame,Scope
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        WhileBlock(condition: substitution.substitute(self.condition)) as! Self
+        let aBlock = WhileBlock(condition: substitution.substitute(self.condition))
+        aBlock.type = substitution.substitute(self.type!)
+        for block in self.blocks
+            {
+            aBlock.addBlock(substitution.substitute(block))
+            }
+        return(aBlock as! Self)
         }
         
     public override func visit(visitor: Visitor) throws

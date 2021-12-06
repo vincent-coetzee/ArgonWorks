@@ -13,9 +13,14 @@ public class VirtualReadBlock: Block,Scope,StackFrame
     
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let block = VirtualWriteBlock()
-        block.slot = self.slot.deepCopy()
+        let block = VirtualReadBlock()
+        block.slot = substitution.substitute(self.slot)
         block.slot.type = substitution.substitute(self.slot.type!)
+        for aBlock in self.blocks
+            {
+            block.addBlock(substitution.substitute(aBlock))
+            }
+        block.type = substitution.substitute(self.type!)
         return(block as! Self)
         }
         
@@ -61,25 +66,33 @@ public class VirtualWriteBlock: VirtualReadBlock
             {
             try block.initializeType(inContext: context)
             }
+        try self.newValueSlot.initializeType(inContext: context)
         self.type = self.slot.type
         }
 
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let block = VirtualWriteBlock()
-        block.slot = self.slot.deepCopy()
+        block.slot = substitution.substitute(self.slot)
         block.slot.type = substitution.substitute(self.slot.type!)
-        block.newValueSlot = self.newValueSlot.deepCopy()
+        for aBlock in self.blocks
+            {
+            block.addBlock(substitution.substitute(aBlock))
+            }
+        block.type = substitution.substitute(self.type!)
+        block.newValueSlot = substitution.substitute(self.newValueSlot)
         block.newValueSlot.type = substitution.substitute(self.newValueSlot.type!)
         return(block as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
+        try self.slot.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
             try block.initializeTypeConstraints(inContext: context)
             }
-        context.append(TypeConstraint(left: type,right: self.type,origin: .block(self)))
+        try self.newValueSlot.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.type,right: self.slot.type,origin: .block(self)))
         }
     }

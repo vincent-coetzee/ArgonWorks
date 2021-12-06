@@ -26,7 +26,7 @@ public class Parameter:Slot,Displayable
         
     public var tag: Label?
         {
-        self.isVisible ? self.label : nil
+        self.isVisible ? super.label : nil
         }
         
     public override var label: Label
@@ -39,7 +39,7 @@ public class Parameter:Slot,Displayable
             {
             }
         }
-
+        
     public let isVisible:Bool
     public let isVariadic: Bool
     public var place: T3AInstruction.Operand = .none
@@ -94,8 +94,7 @@ public class Parameter:Slot,Displayable
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        self.type = substitution.substitute(self.type!)
-        return(Parameter(label: self.label, relabel: self.relabel, type: self.type!, isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
+        return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type!), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
         }
         
     public override func deepCopy() -> Self

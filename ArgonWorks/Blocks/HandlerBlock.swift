@@ -33,4 +33,31 @@ public class HandlerBlock: ClosureBlock
             }
         buffer.pendingLabel = label
         }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)HANDLER: \(Swift.type(of: self))")
+        print("\(indent)SYMBOLS: \(self.symbols)")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeTypeConstraints(inContext: context)
+            }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        for block in self.blocks
+            {
+            try block.initializeType(inContext: context)
+            }
+        self.type = context.voidType
+        }
     }

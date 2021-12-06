@@ -38,6 +38,11 @@ public class TestVisitor: Visitor
         print("\(Swift.type(of: argument)) \(argument.displayString)")
         }
         
+    public func accept(_ tuple: Tuple) throws
+        {
+        print("\(Swift.type(of: tuple)) \(tuple.displayString)")
+        }
+        
     public func startVisit()
         {
         }
@@ -76,6 +81,11 @@ public class TestWalker: Visitor
     public func accept(_ argument: Argument) throws
         {
         print("\(Swift.type(of: argument)) \(argument.displayString) =====>> \(argument.value.type.displayString)")
+        }
+        
+    public func accept(_ tuple: Tuple) throws
+        {
+        print("\(Swift.type(of: tuple)) \(tuple.displayString) =====>> \(tuple.type.displayString)")
         }
         
     public func startVisit()

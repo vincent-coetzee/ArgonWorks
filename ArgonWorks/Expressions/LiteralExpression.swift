@@ -25,7 +25,7 @@ public indirect enum Literal:Hashable,Displayable
     case module(Module)
     case enumeration(Enumeration)
     case enumerationCase(EnumerationCase)
-    case methodInstance(MethodInstance)
+    case method(Method)
     case constant(Constant)
     case function(Function)
     
@@ -62,7 +62,7 @@ public indirect enum Literal:Hashable,Displayable
             case 11:
                 self = .enumerationCase(coder.decodeObject(forKey: "enumerationCase") as! EnumerationCase)
             case 12:
-                self = .methodInstance(coder.decodeObject(forKey: "methodInstance") as! MethodInstance)
+                self = .method(coder.decodeObject(forKey: "method") as! Method)
             case 13:
                 self = .constant(coder.decodeObject(forKey: "constant") as! Constant)
             case 14:
@@ -98,7 +98,7 @@ public indirect enum Literal:Hashable,Displayable
                 return("\(enumeration.label)")
             case .enumerationCase(let aCase):
                 return("\(aCase.label)")
-            case .methodInstance(let method):
+            case .method(let method):
                 return("\(method.label)")
             case .function(let function):
                 return("\(function.label)")
@@ -140,9 +140,9 @@ public indirect enum Literal:Hashable,Displayable
             case .enumeration(let enumeration):
                 coder.encode(10,forKey:"kind")
                 coder.encode(enumeration,forKey:"enumeration")
-            case .methodInstance(let method):
+            case .method(let method):
                 coder.encode(12,forKey:"kind")
-                coder.encode(method,forKey:"methodInstance")
+                coder.encode(method,forKey:"method")
             case .constant(let constant):
                 coder.encode(13,forKey:"kind")
                 coder.encode(constant,forKey:"constant")
@@ -185,8 +185,8 @@ public indirect enum Literal:Hashable,Displayable
                 return(TypeEnumeration(enumeration: enumeration,generics: enumeration.genericTypes))
             case .enumerationCase:
                 return(context.enumerationCaseType)
-            case .methodInstance(let instance):
-                return(TypeFunction(label: instance.label,types: instance.parameters.map{$0.type!},returnType: instance.returnType))
+            case .method(let instance):
+                return(TypeMethod(label: instance.fullName.displayString,method: instance))
             case .function(let function):
                 return(TypeFunction(label: function.label,types: function.parameters.map{$0.type!},returnType: function.returnType))
             case .constant(let constant):
@@ -226,8 +226,8 @@ public indirect enum Literal:Hashable,Displayable
                 return(.enumeration(substitution.substitute(enumeration) as! Enumeration))
             case .enumerationCase(let aCase):
                 return(.enumerationCase(substitution.substitute(aCase) as! EnumerationCase))
-            case .methodInstance(let instance):
-                return(.methodInstance(substitution.substitute(instance)))
+            case .method(let instance):
+                return(.method(substitution.substitute(instance) as! Method))
             case .function(let function):
                 return(.function(substitution.substitute(function) as! Function))
             case .constant(let constant):
@@ -280,7 +280,7 @@ public class LiteralExpression: Expression
         {
         switch(self.literal)
             {
-            case .methodInstance:
+            case .method:
                 return(true)
             default:
                 return(false)
@@ -320,11 +320,11 @@ public class LiteralExpression: Expression
             }
         }
         
-    public var methodInstanceLiteral: MethodInstance
+    public var methodLiteral: Method
         {
         switch(self.literal)
             {
-            case .methodInstance(let symbol):
+            case .method(let symbol):
                 return(symbol)
             default:
                 fatalError("Should not have been called")
@@ -448,14 +448,24 @@ public class LiteralExpression: Expression
                 let aType = self.literal.type(inContext: context)
                 context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
             case .class(let aClass):
-                context.append(TypeConstraint(left: self.type,right: aClass.type,origin: .expression(self)))
+                var aType: Type
+                if aClass is GenericClass
+                    {
+                    let genericClass = aClass as! GenericClass
+                    aType = TypeClass(class: aClass,generics: genericClass.types)
+                    }
+                else
+                    {
+                    aType = TypeClass(class: aClass,generics: [])
+                    }
+                context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
             case .module:
                 context.append(TypeConstraint(left: self.type,right: context.moduleType,origin: .expression(self)))
             case .enumeration(let enumeration):
                 context.append(TypeConstraint(left: self.type,right: enumeration.type,origin: .expression(self)))
             case .enumerationCase(let aCase):
                 context.append(TypeConstraint(left: self.type,right: aCase.type,origin: .expression(self)))
-            case .methodInstance(let method):
+            case .method(let method):
                 context.append(TypeConstraint(left: self.type,right: method.type,origin: .expression(self)))
             case .function(let function):
                 context.append(TypeConstraint(left: self.type,right: function.type,origin: .expression(self)))
@@ -487,14 +497,22 @@ public class LiteralExpression: Expression
                 let arrayClass = (arrayType as! TypeClass).theClass
                 self.type = TypeClass(class: arrayClass,generics: [elementType!])
             case .class(let aClass):
-                self.type = aClass.type
+                if aClass is GenericClass
+                    {
+                    let genericClass = aClass as! GenericClass
+                    self.type = TypeClass(class: aClass,generics: genericClass.types)
+                    }
+                else
+                    {
+                    self.type = TypeClass(class: aClass,generics: [])
+                    }
             case .module:
                 self.type = context.moduleType
             case .enumeration(let enumeration):
                 self.type = enumeration.type!
             case .enumerationCase(let aCase):
                 self.type = aCase.type
-            case .methodInstance(let method):
+            case .method(let method):
                 self.type = method.type
             case .function(let function):
                 self.type = function.type
@@ -604,8 +622,8 @@ public class LiteralExpression: Expression
                  instance.append(nil,"LOAD",.relocatable(.enumeration(enumeration)),.none,temp)
             case .enumerationCase(let enumerationCase):
                  instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
-            case .methodInstance(let method):
-                 instance.append(nil,"LOAD",.relocatable(.methodInstance(method)),.none,temp)
+            case .method(let method):
+                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
                  instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
             case .function(let constant):

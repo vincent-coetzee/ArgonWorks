@@ -190,6 +190,11 @@ public class Parser: CompilerPass
         return(self.tokenSource.peekToken(count: 1))
         }
 
+    private func peekToken0() throws -> Token
+        {
+        return(self.tokenSource.peekToken(count: 0))
+        }
+        
     private func pushContext(_ aNode:Symbol)
         {
         let context = Context.node(aNode)
@@ -1193,6 +1198,7 @@ public class Parser: CompilerPass
         else
             {
             slot = slotType.newSlot(label: label)
+            slot!.type = type
             slot?.addDeclaration(location)
             }
         slot!.initialValue = initialValue
@@ -1571,9 +1577,10 @@ public class Parser: CompilerPass
             }
         guard var type = self.currentContext.lookup(name: name) as? Type else
             {
-            let typeClass = TypeClass(label: name.last)
+            let typeVariable = TypeContext.freshTypeVariable()
+            typeVariable.label = name.displayString
             compilerIssues.appendIssue(at: location,message: "The identifier \(name) could not be resolved, a type with that label could not be found.")
-            return(typeClass)
+            return(typeVariable)
             }
         type.addReference(location)
         if type.isEnumeration
@@ -1803,7 +1810,9 @@ public class Parser: CompilerPass
                 try self.parseComma()
                 self.tokenRenderer.setKind(.genericClassParameter,ofToken: self.token)
                 let label = try self.parseLabel()
-                parameters.append(TypeVariable(label: label))
+                let typeVariable = TypeContext.freshTypeVariable()
+                typeVariable.label = label
+                parameters.append(typeVariable)
                 }
             while self.token.isComma
             }
@@ -2087,18 +2096,24 @@ public class Parser: CompilerPass
         if self.token.isPlusPlus || self.token.isMinusMinus
             {
             let symbol = self.token.operator
-            let operation = self.enclosingScope.lookup(label: symbol.name) as! Operator
-            try self.nextToken()
-            if !(expression is SlotExpression)
+            if let operation = self.enclosingScope.lookup(label: symbol.name) as? Operator
                 {
-                self.cancelCompletion()
-                expression.appendIssue(at: location, message: "Postfix increment or decrement operators can only be performed on slots.")
-                return(expression)
+                try self.nextToken()
+                if !(expression is SlotExpression)
+                    {
+                    self.cancelCompletion()
+                    expression.appendIssue(at: location, message: "Postfix increment or decrement operators can only be performed on slots.")
+                    return(expression)
+                    }
+                else
+                    {
+                    let slotExpression = expression as! SlotExpression
+                    return(PostfixExpression(operation: operation,lhs: slotExpression))
+                    }
                 }
             else
                 {
-                let slotExpression = expression as! SlotExpression
-                return(PostfixExpression(operation: operation,lhs: slotExpression))
+                expression.appendIssue(at: location, message: "Operator '\(symbol.name)' could not be resolved.")
                 }
             }
         return(expression)
@@ -2364,7 +2379,7 @@ public class Parser: CompilerPass
             let expression = try self.parseExpression()
             if expression.isUnresolved
                 {
-                let tuple = DestructuringExpression()
+                let tuple = TupleExpression()
                 tuple.isArrayDestructure = true
                 if self.token.isComma
                     {
@@ -2421,7 +2436,7 @@ public class Parser: CompilerPass
                 let expression = try self.parseExpression()
                 if self.token.isComma
                     {
-                    let tuple = DestructuringExpression()
+                    let tuple = TupleExpression()
                     tuple.append(expression)
                     while self.token.isComma
                         {
@@ -2493,144 +2508,213 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
-        let aSymbol = self.currentContext.lookup(name: name)
-        if var type = aSymbol as? Type
+        if name.last == "count"
             {
-            if type.isClass
+            print("halt")
+            }
+        if self.token.isLeftPar
+            {
+            if let methods = self.enclosingScope.lookupMethods(name: name)
                 {
-                self.tokenRenderer.setKind(.class,ofToken: nameToken)
-                }
-            else if type.isEnumeration
-                {
-                self.tokenRenderer.setKind(.enumeration,ofToken: nameToken)
-                }
-            if self.token.isLeftBrocket
-                {
-                var issues = CompilerIssues()
-                let someTypes = try self.parseTypeArguments(&issues)
-                let newType = TypeClass(class: (type as! TypeClass).theClass,generics: someTypes)
-                type = newType
-                type.appendIssues(issues)
-                }
-            if self.token.isLeftPar && type.isClass
-                {
-                if type.isSystemClass
+                let method = methods.first!
+                self.tokenRenderer.setKind(.methodInvocation,ofToken: nameToken)
+                let arguments = try parseParentheses
                     {
-                    self.tokenRenderer.setKind(.systemClass,ofToken: nameToken)
+                    try self.parseArguments()
                     }
-                return(try self.parseInstanciationTerm(ofType: type))
+
+                let expression = MethodInvocationExpression(method: method, arguments: arguments)
+                method.validateArguments(arguments,for: expression,at: location)
+                expression.addDeclaration(location)
+                return(expression)
                 }
-            let expression = LiteralExpression(type.literal)
-            expression.addDeclaration(location)
-            return(expression)
-            }
-        ///
-        /// Or a Module ?
-        ///
-        else if let symbol = aSymbol as? Module
-            {
-            let module = LiteralExpression(.module(symbol))
-            module.addDeclaration(location)
-            return(module)
-            }
-        ///
-        /// Or a Constant ?
-        ///
-        else if let symbol = aSymbol as? Constant
-            {
-            return(LiteralExpression(.constant(symbol)))
-            }
-        ///
-        /// Or a slot, Parameter or Closure containing Slot
-        ///
-        else if aSymbol is LocalSlot || aSymbol is Parameter
-            {
-            ///
-            /// Could be a closure
-            ///
-            if self.token.isLeftPar
+            else if let types = self.enclosingScope.lookupTypes(name: name)
                 {
-                let slot = aSymbol as! Slot
-                var arguments = Arguments()
-                try self.parseParentheses
+                let type = types.first!
+                if type.isClass
                     {
-                    arguments = try self.parseArguments()
+                    var issues = CompilerIssues()
+                    let someTypes = try self.parseTypeArguments(&issues)
+                    let newType = TypeClass(class: (type as! TypeClass).theClass,generics: someTypes)
+                    if self.token.isLeftPar
+                        {
+                        return(try self.parseInstanciationTerm(ofType: newType))
+                        }
+                    return(LiteralExpression(Literal.class((type as! TypeClass).theClass)))
                     }
-                if slot.type!.isLambda
+                else if type.isEnumeration
                     {
-                    let expression = ClosureExpression(slot: slot,arguments: arguments)
-                    expression.addDeclaration(location)
+                    var issues = CompilerIssues()
+                    let someTypes = try self.parseTypeArguments(&issues)
+                    let newType = TypeEnumeration(enumeration: (type as! TypeEnumeration).enumeration,generics: someTypes)
+                    if self.token.isLeftPar
+                        {
+                        return(try self.parseInstanciationTerm(ofType: newType))
+                        }
+                    return(LiteralExpression(Literal.enumeration((type as! TypeEnumeration).enumeration)))
+                    }
+                else
+                    {
+                    let expression = Expression()
+                    expression.appendIssue(at: location, message: "'\(name.displayString)' was expected to be a class or an enumeration but was neither.")
                     return(expression)
                     }
                 }
-            let read = SlotExpression(slot: aSymbol as! Slot)
-            read.addReference(location)
-            return(read)
-            }
-        ///
-        /// Or an import expression ?
-        ///
-        else if let symbol = aSymbol as? Importer
-            {
-            let expression = ImportExpression(import:symbol)
-            expression.addDeclaration(location)
-            return(expression)
-            }
-        ///
-        /// Or a literal reference to a Method ?
-        ///
-        else if let symbol = aSymbol as? Method
-            {
-            if self.token.isLeftPar
+            else if let functions = self.enclosingScope.lookupFunctions(name: name)
                 {
-                self.tokenRenderer.setKind(.methodInvocation,ofToken: nameToken)
-                return(try self.parseMethodInvocationTerm(symbol))
+                let arguments = try parseParentheses
+                    {
+                    try self.parseArguments()
+                    }
+                let expression = FunctionInvocationExpression(function: functions.first!, arguments: arguments)
+                expression.addDeclaration(location)
+                return(expression)
                 }
-//            return(LiteralExpression(.method(symbol)))
-            fatalError()
-            }
-        ///
-        /// Or a Function ?
-        ///
-        else if let symbol = aSymbol as? Function
-            {
-            if self.token.isLeftPar
+            else
                 {
-                self.tokenRenderer.setKind(.methodInvocation,ofToken: nameToken)
-                return(try self.parseFunctionInvocationTerm(symbol))
+                let expression = Expression()
+                expression.appendIssue(at: location, message: "A method labeled '\(name.displayString)' can not be resolved.")
+                return(expression)
                 }
-            return(LiteralExpression(.function(symbol)))
             }
-        ///
-        /// An invocation of a method or function ?
-        ///
-        else if self.token.isLeftPar
+        if let types = self.enclosingScope.lookupTypes(name: name)
             {
-            let arguments = try parseParentheses
+            if self.token.isLeftBrocket
                 {
-                try self.parseArguments()
+                let type = types.first!
+                if type.isClass
+                    {
+                    var issues = CompilerIssues()
+                    let someTypes = try self.parseTypeArguments(&issues)
+                    let newType = TypeClass(class: (type as! TypeClass).theClass,generics: someTypes)
+                    if self.token.isLeftPar
+                        {
+                        return(try self.parseInstanciationTerm(ofType: newType))
+                        }
+                    return(LiteralExpression(Literal.class((type as! TypeClass).theClass)))
+                    }
+                else if type.isEnumeration
+                    {
+                    var issues = CompilerIssues()
+                    let someTypes = try self.parseTypeArguments(&issues)
+                    let newType = TypeEnumeration(enumeration: (type as! TypeEnumeration).enumeration,generics: someTypes)
+                    if self.token.isLeftPar
+                        {
+                        return(try self.parseInstanciationTerm(ofType: newType))
+                        }
+                    return(LiteralExpression(Literal.enumeration((type as! TypeEnumeration).enumeration)))
+                    }
+                else
+                    {
+                    let expression = Expression()
+                    expression.appendIssue(at: location, message: "'\(name.displayString)' was expected to be a class or an enumeration but was neither.")
+                    return(expression)
+                    }
                 }
-            return(InvocationExpression(name: name,arguments: arguments,location: location))
+            else
+                {
+                let type = types.first!
+                if type.isClass
+                    {
+                    return(LiteralExpression(.class(type.classValue)))
+                    }
+                else if type.isEnumeration
+                    {
+                    return(LiteralExpression(.enumeration(type.enumerationValue)))
+                    }
+                else
+                    {
+                    let expression = Expression()
+                    expression.appendIssue(at: location, message: "This type can not be used as a literal value.")
+                    return(expression)
+                    }
+                }
+            }
+        if let aSymbol = self.enclosingScope.lookup(name: name)
+            {
+            ///
+            /// Or a Module ?
+            ///
+            if let symbol = aSymbol as? Module
+                {
+                let module = LiteralExpression(.module(symbol))
+                module.addDeclaration(location)
+                return(module)
+                }
+            ///
+            /// Or a Constant ?
+            ///
+            else if let symbol = aSymbol as? Constant
+                {
+                return(LiteralExpression(.constant(symbol)))
+                }
+            ///
+            /// Or a slot, Parameter or Closure containing Slot
+            ///
+            else if aSymbol is LocalSlot || aSymbol is Parameter
+                {
+                ///
+                /// Could be a closure
+                ///
+                if self.token.isLeftPar
+                    {
+                    let slot = aSymbol as! Slot
+                    let arguments = try self.parseParentheses
+                        {
+                        try self.parseArguments()
+                        }
+                    if slot.type!.isLambda
+                        {
+                        let expression = ClosureExpression(slot: slot,arguments: arguments)
+                        expression.addDeclaration(location)
+                        return(expression)
+                        }
+                    }
+                let read = SlotExpression(slot: aSymbol as! Slot)
+                read.addReference(location)
+                return(read)
+                }
+            ///
+            /// Or an import expression ?
+            ///
+            else if let symbol = aSymbol as? Importer
+                {
+                let expression = ImportExpression(import:symbol)
+                expression.addDeclaration(location)
+                return(expression)
+                }
+            ///
+            /// Or a literal reference to a Method ?
+            ///
+            else if let symbol = aSymbol as? Method
+                {
+    //            return(LiteralExpression(.method(symbol)))
+                return(LiteralExpression(.method(symbol)))
+                }
+            ///
+            /// Or a Function ?
+            ///
+            else if let symbol = aSymbol as? Function
+                {
+                return(LiteralExpression(.function(symbol)))
+                }
             }
         ///
         /// Or a "we don't have a fucking clue so we'll make it a slot"
         ///
-        else
+        var type: Type = TypeContext.freshTypeVariable()
+        var issues = CompilerIssues()
+        if self.token.isGluon
             {
-            var type: Type = TypeContext.freshTypeVariable()
-            var issues = CompilerIssues()
-            if self.token.isGluon
-                {
-                try self.nextToken()
-                type = try self.parseType(&issues)
-                }
-            let localSlot = LocalSlot(label: name.last,type: type,value: nil)
-            let term = SlotExpression(slot: localSlot)
-            term.appendIssues(issues)
-            localSlot.addDeclaration(location)
-            term.addDeclaration(location)
-            return(term)
+            try self.nextToken()
+            type = try self.parseType(&issues)
             }
+        let localSlot = LocalSlot(label: name.last,type: type,value: nil)
+        let term = SlotExpression(slot: localSlot)
+        term.appendIssues(issues)
+        localSlot.addDeclaration(location)
+        term.addDeclaration(location)
+        return(term)
         }
         
     private func parseClosureTerm() throws -> Expression
@@ -2671,30 +2755,6 @@ public class Parser: CompilerPass
             try self.parseArguments()
             }
         let expression = MethodInvocationExpression(method: method,arguments: args)
-        expression.addDeclaration(location)
-        return(expression)
-        }
-        
-    private func parseMethodInvocationTerm(_ method: Method) throws -> Expression
-        {
-        let location = self.token.location
-        let args = try self.parseParentheses
-            {
-            try self.parseArguments()
-            }
-        let expression = MethodInvocationExpression(method: method,arguments: args)
-        expression.addDeclaration(location)
-        return(expression)
-        }
-        
-    private func parseFunctionInvocationTerm(_ function: Function) throws -> Expression
-        {
-        let location = self.token.location
-        let args = try self.parseParentheses
-            {
-            try self.parseArguments()
-            }
-        let expression = FunctionInvocationExpression(function: function,arguments: args)
         expression.addDeclaration(location)
         return(expression)
         }
@@ -3077,12 +3137,7 @@ public class Parser: CompilerPass
             {
             expressionTuple = Tuple(try self.parseExpression())
             }
-        var tuples: Array<(TupleElement,TupleElement)> = []
-        for (left,right) in zip(tuple.elements,expressionTuple.elements)
-            {
-            tuples.append((left,right))
-            }
-        let statement = LetBlock(location: location,pairs: tuple.paired(with: expressionTuple))
+        let statement = LetBlock(location: location,lhs: tuple,rhs: expressionTuple)
         block.addBlock(statement)
         statement.addDeclaration(location)
         self.stopClip(into: statement)

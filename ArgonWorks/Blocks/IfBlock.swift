@@ -14,7 +14,7 @@ public class IfBlock: Block
         "IFBlock " + self.condition.displayString  + " " + self.elseBlock.displayString
         }
         
-    private var condition:Expression
+    internal var condition:Expression
     
     internal var elseBlock: Block?
         {
@@ -54,9 +54,26 @@ public class IfBlock: Block
             }
         }
         
+    public override func display(indent: String)
+        {
+        print("\(indent)IF \(Swift.type(of: self))")
+        self.condition.display(indent: indent + "\t")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        self.elseBlock?.display(indent: indent + "\t")
+        }
+        
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        IfBlock(condition: substitution.substitute(self.condition)) as! Self
+        let ifBlock = IfBlock(condition: substitution.substitute(self.condition))
+        for block in self.blocks
+            {
+            ifBlock.addBlock(substitution.substitute(block))
+            }
+        ifBlock.type = substitution.substitute(self.type!)
+        return(ifBlock as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -66,6 +83,7 @@ public class IfBlock: Block
             {
             try block.initializeType(inContext: context)
             }
+        try self.elseBlock?.initializeType(inContext: context)
         self.type = context.voidType
         }
         

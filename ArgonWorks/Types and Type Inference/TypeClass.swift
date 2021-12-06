@@ -100,10 +100,6 @@ public class TypeClass: TypeConstructor
         
     required init(label: Label)
         {
-        if label == "String" || label == "Float"
-            {
-            print("halt")
-            }
         self.theClass = Class(label: "")
         super.init(label: label)
         }

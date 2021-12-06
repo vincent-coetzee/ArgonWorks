@@ -30,6 +30,7 @@ public class ComparisonExpression: BinaryExpression
         {
         let expression = ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
+        expression.methodInstance = self.methodInstance
         return(expression as! Self)
         }
         

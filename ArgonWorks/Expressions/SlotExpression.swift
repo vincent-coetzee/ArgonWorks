@@ -63,48 +63,8 @@ public class SlotExpression: Expression
         
     public override func initializeType(inContext context: TypeContext) throws
         {
-        if self.slot.type.isNil
-            {
-            if let slotType = context.lookupBinding(atLabel: self.slot.label)
-                {
-                self.type = slotType
-                self.slot.type = slotType
-                }
-            else
-                {
-                self.slot.type = context.freshTypeVariable()
-                self.type = self.slot.type
-                context.bind(self.slot.type!,to: self.slot.label)
-                }
-            }
-        else if self.slot.type!.isTypeVariable
-            {
-            if let slotType = context.lookupBinding(atLabel: self.slot.label)
-                {
-                self.slot.type = slotType
-                self.type = slotType
-                }
-            else
-                {
-                self.type = self.slot.type!
-                context.bind(self.slot.type!,to: self.slot.label)
-                }
-            }
-        else if self.slot.type!.isClass || self.slot.type!.isEnumeration
-            {
-            self.type = self.slot.type
-            context.bind(self.slot.type!,to: self.slot.label)
-            }
-        else if self.slot.initialValue.isNotNil
-            {
-            self.slot.type = self.slot.initialValue!.type
-            self.type = self.slot.type
-            context.bind(self.slot.type!,to: self.slot.label)
-            }
-        else
-            {
-            fatalError("This should not happen.")
-            }
+        try self.slot.initializeType(inContext: context)
+        self.type = self.slot.type
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws

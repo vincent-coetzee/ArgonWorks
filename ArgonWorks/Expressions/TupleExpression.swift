@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class DestructuringExpression: Expression
+public class TupleExpression: Expression
     {
     public override var displayString: String
         {
@@ -17,16 +17,27 @@ public class DestructuringExpression: Expression
 
     private var expressions = Expressions()
     public var isArrayDestructure: Bool = false
+    private var tuple: Tuple
     
     public override init()
         {
+        self.tuple = Tuple()
+        super.init()
+        }
+        
+    public init(_ expressions: Expression...)
+        {
+        self.expressions = expressions
+        self.tuple = Tuple(expressions)
         super.init()
         }
         
     required init?(coder: NSCoder)
         {
-        self.expressions = coder.decodeObject(forKey: "expressions") as! Expressions
+        let expressions = coder.decodeObject(forKey: "expressions") as! Expressions
         self.isArrayDestructure = coder.decodeBool(forKey: "isArrayDestructure")
+        self.tuple = Tuple(expressions)
+        self.expressions = expressions
         super.init(coder: coder)
         }
         
@@ -52,6 +63,12 @@ public class DestructuringExpression: Expression
             {
             expression.becomeLValue()
             }
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.tuple.initializeType(inContext: context)
+        self.type = self.tuple.type!
         }
         
     public func append(_ expression: Expression)

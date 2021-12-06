@@ -13,7 +13,7 @@ public enum TupleElement
          {
         switch(self)
             {
-            case .localSlot(let slot):
+            case .slot(let slot):
                 return(slot.displayString)
             case .tuple(let tuple):
                 return(tuple.displayString)
@@ -21,6 +21,8 @@ public enum TupleElement
                 return(expression.displayString)
             case .literal(let literal):
                 return(literal.displayString)
+            case .type(let type):
+                return(type.displayString)
             }
         }
         
@@ -28,7 +30,7 @@ public enum TupleElement
         {
         switch(self)
             {
-            case .localSlot(let slot):
+            case .slot(let slot):
                 return(slot.type)
             case .literal(let literal):
                 return(literal.type)
@@ -36,6 +38,8 @@ public enum TupleElement
                 return(expression.type)
             case .tuple(let tuple):
                 return(tuple.type)
+            case .type(let type):
+                return(type)
             }
         }
         
@@ -48,8 +52,9 @@ public enum TupleElement
         return(false)
         }
         
+    case type(Type)
     case literal(Literal)
-    case localSlot(LocalSlot)
+    case slot(Slot)
     case tuple(Tuple)
     case expression(Expression)
     
@@ -62,7 +67,7 @@ public enum TupleElement
             }
         else if kind == 2
             {
-            self = .localSlot(coder.decodeObject(forKey: "slot") as! LocalSlot)
+            self = .slot(coder.decodeObject(forKey: "slot") as! LocalSlot)
             }
         else if kind == 3
             {
@@ -71,6 +76,10 @@ public enum TupleElement
         else if kind == 4
             {
             self = .expression(coder.decodeObject(forKey: "expression") as! Expression)
+            }
+        else if kind == 5
+            {
+            self = .type(coder.decodeObject(forKey: "type") as! Type)
             }
         else
             {
@@ -82,14 +91,16 @@ public enum TupleElement
         {
         switch(self)
             {
-            case .localSlot(let slot):
-                return(.localSlot(substitution.substitute(slot) as! LocalSlot))
+            case .slot(let slot):
+                return(.slot(substitution.substitute(slot) as! LocalSlot))
             case .literal(let literal):
                 return(.literal(substitution.substitute(literal)))
             case .expression(let expression):
                 return(.expression(substitution.substitute(expression)))
             case .tuple(let tuple):
                 return(.tuple(substitution.substitute(tuple)))
+            case .type(let type):
+                return(.type(substitution.substitute(type)))
             }
         }
         
@@ -97,7 +108,7 @@ public enum TupleElement
         {
         switch(self)
             {
-            case .localSlot(let slot):
+            case .slot(let slot):
                 try slot.visit(visitor: visitor)
             case .tuple(let tuple):
                 try tuple.visit(visitor: visitor)
@@ -112,7 +123,7 @@ public enum TupleElement
         {
         switch(self)
             {
-            case .localSlot(let slot):
+            case .slot(let slot):
                 try slot.initializeTypeConstraints(inContext: context)
             case .tuple(let tuple):
                 try tuple.initializeTypeConstraints(inContext: context)
@@ -131,7 +142,7 @@ public enum TupleElement
             case .literal(let value):
                 coder.encode(1,forKey: "kind")
                 value.encode(with: coder)
-            case .localSlot(let slot):
+            case .slot(let slot):
                 coder.encode(2,forKey: "kind")
                 coder.encode(slot,forKey: "slot")
             case .tuple(let tuple):
@@ -140,24 +151,68 @@ public enum TupleElement
             case .expression(let expression):
                 coder.encode(4,forKey: "kind")
                 coder.encode(expression,forKey: "expression")
+            case .type(let type):
+                coder.encode(5,forKey: "kind")
+                coder.encode(type,forKey: "type")
             }
         }
         
-    public func initializeType(inContext context: TypeContext) throws -> TupleElement
+    public func initializeType(inContext context: TypeContext) throws -> Type
         {
         switch(self)
             {
-            case .literal:
-                return(self)
-            case .localSlot(let slot):
-                try slot.initializeType(inContext: context)
-                return(.localSlot(slot))
+            case .literal(let literal):
+                return(literal.type(inContext: context)!)
+            case .slot(let slot):
+                return(self.slotType(slot: slot,inContext: context))
             case .tuple(let tuple):
                 try tuple.initializeType(inContext: context)
-                return(.tuple(tuple))
+                return(tuple.type!)
             case .expression(let expression):
                 try expression.initializeType(inContext: context)
-                return(.expression(expression))
+                return(expression.type!)
+            case .type(let type):
+                return(type)
+            }
+        }
+        
+    private func slotType(slot: Slot,inContext context: TypeContext) -> Type
+        {
+        if slot.type.isNil
+            {
+            if let slotType = context.lookupBinding(atLabel: slot.label)
+                {
+                slot.type = slotType
+                return(slotType)
+                }
+            else
+                {
+                slot.type = context.freshTypeVariable()
+                context.bind(slot.type!,to: slot.label)
+                return(slot.type!)
+                }
+            }
+        else if slot.type!.isTypeVariable
+            {
+            if let slotType = context.lookupBinding(atLabel: slot.label)
+                {
+                slot.type = slotType
+                return(slotType)
+                }
+            else
+                {
+                context.bind(slot.type!,to: slot.label)
+                return(slot.type!)
+                }
+            }
+        else if slot.type!.isClass || slot.type!.isEnumeration
+            {
+            context.bind(slot.type!,to: slot.label)
+            return(slot.type!)
+            }
+        else
+            {
+            fatalError("This should not happen.")
             }
         }
         
@@ -165,7 +220,7 @@ public enum TupleElement
         {
         switch(self)
             {
-            case .localSlot(let slot):
+            case .slot(let slot):
                 slot.display(indent: indent + "\t")
             case .literal(let literal):
                 literal.display(indent: indent + "\t")
@@ -173,22 +228,25 @@ public enum TupleElement
                 expression.display(indent: indent + "\t")
             case .tuple(let tuple):
                 tuple.display(indent: indent + "\t")
+            case .type(let type):
+                type.display(indent: indent + "\t")
             }
         }
         
-    func setParent(_ block: Block)
+    func setParent(_ parent: Parent)
         {
         switch(self)
             {
             case .expression(let expression):
-                expression.setParent(block)
+                expression.setParent(parent)
             default:
                 break
             }
         }
     }
+
     
-public struct TupleElementPair
+public class TupleElementPair
     {
     public var displayString: String
         {
@@ -197,7 +255,16 @@ public struct TupleElementPair
         
     internal let lhs: TupleElement
     internal let rhs: TupleElement
+    internal var lhsType: Type?
+    internal var rhsType: Type?
+    internal var type:Type?
     
+    init(lhs: TupleElement,rhs: TupleElement)
+        {
+        self.lhs = lhs
+        self.rhs = rhs
+        }
+        
     public func display(indent: String)
         {
         print("\(indent)TUPLE ELEMENT LHS:")
@@ -206,20 +273,21 @@ public struct TupleElementPair
         self.rhs.display(indent: indent + "\t")
         }
         
-    public func setParent(_ block: Block)
+    public func setParent(_ parent: Parent)
         {
-        lhs.setParent(block)
-        rhs.setParent(block)
+        lhs.setParent(parent)
+        rhs.setParent(parent)
         }
         
-    public func initializeType(inContext context: TypeContext) throws -> TupleElementPair
+    public func initializeType(inContext context: TypeContext) throws
         {
-        let newLeft = try self.lhs.initializeType(inContext: context)
-        let newRight = try self.rhs.initializeType(inContext: context)
-        return(TupleElementPair(lhs: newLeft,rhs: newRight))
+        self.lhsType = try self.lhs.initializeType(inContext: context)
+        self.rhsType = try self.rhs.initializeType(inContext: context)
+        let label = "\(self.lhsType!.displayString)x\(self.rhsType!.displayString)"
+        self.type = TypeConstructor(label: label,generics: [self.lhsType!,self.rhsType!])
         }
         
-    public func initializeEqualityTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.lhs.initializeTypeConstraints(inContext: context)
         try self.rhs.initializeTypeConstraints(inContext: context)
@@ -248,8 +316,14 @@ extension TupleElementPairs
         }
     }
     
-public class Tuple: Class,Collection
+public class Tuple: Collection,VisitorReceiver
     {
+    public var displayString: String
+        {
+        let strings = self.elements.map{$0.displayString}.joined(separator: ",")
+        return("Tuple(\(strings))")
+        }
+        
     public var startIndex: Int
         {
         return(self.elements.startIndex)
@@ -261,10 +335,27 @@ public class Tuple: Class,Collection
         }
         
     internal private(set) var elements = Array<TupleElement>()
+    internal var type: Type?
+    internal var parent: Parent = .none
+        {
+        didSet
+            {
+            self.elements.forEach{$0.setParent(parent)}
+            }
+        }
     
     init()
         {
-        super.init(label: Argon.nextName("1_TUPLE_"))
+        }
+        
+    init(_ elements: TupleElement...)
+        {
+        self.elements = elements
+        }
+        
+    init(_ types: Type...)
+        {
+        self.elements = types.map{TupleElement.type($0)}
         }
         
     required init?(coder: NSCoder)
@@ -274,19 +365,16 @@ public class Tuple: Class,Collection
             {
             self.elements.append(TupleElement(coder: coder))
             }
-        super.init(coder: coder)
         }
         
     init(_ slot: LocalSlot)
         {
-        self.elements.append(.localSlot(slot))
-        super.init(label: Argon.nextName("1_TUPLE_"))
+        self.elements.append(.slot(slot))
         }
         
     init(_ expression: Expression)
         {
         self.elements.append(.expression(expression))
-        super.init(label: Argon.nextName("1_TUPLE_"))
         }
         
     convenience init(elements: Array<TupleElement>)
@@ -295,24 +383,30 @@ public class Tuple: Class,Collection
         self.elements = elements
         }
         
-    required init(label: Label)
+    convenience init(_ expressions: Expressions)
         {
-        super.init(label: label)
+        self.init()
+        self.elements = expressions.map{TupleElement.expression($0)}
         }
         
-    public override func encode(with coder:NSCoder)
+//    required init(label: Label)
+//        {
+//        super.init(label: label)
+//        }
+        
+    public func encode(with coder:NSCoder)
         {
         coder.encode(self.elements.count,forKey: "count")
         for element in self.elements
             {
             element.encode(with: coder)
             }
-        super.encode(with: coder)
+//        super.encode(with: coder)
         }
         
-    internal func append(_ slot: LocalSlot)
+    internal func append(_ slot: Slot)
         {
-        self.elements.append(.localSlot(slot))
+        self.elements.append(.slot(slot))
         }
         
     internal func append(_ tuple: Tuple)
@@ -340,12 +434,20 @@ public class Tuple: Class,Collection
         zip(self.elements,with.elements).map{TupleElementPair(lhs: $0.0,rhs: $0.1)}
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public func initializeType(inContext context: TypeContext) throws
         {
-        self.elements = try self.elements.map{try $0.initializeType(inContext: context)}
+        try self.elements.forEach{try $0.initializeType(inContext: context)}
+        let types = self.elements.map{$0.type!}
+        let label = types.map{$0.displayString}.joined(separator: "x")
+        self.type = TypeConstructor(label: label,generics: types)
         }
         
-    public override func visit(visitor: Visitor) throws
+    public func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.elements.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        }
+        
+    public func visit(visitor: Visitor) throws
         {
         for element in self.elements
             {
@@ -354,7 +456,7 @@ public class Tuple: Class,Collection
         try visitor.accept(self)
         }
         
-    public override func display(indent: String)
+    public  func display(indent: String)
         {
         print("\(indent)TUPLE:")
         for element in self.elements

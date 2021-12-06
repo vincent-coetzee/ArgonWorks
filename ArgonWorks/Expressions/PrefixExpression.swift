@@ -10,6 +10,7 @@ import Foundation
 public class PrefixExpression: OperatorExpression
     {
     private let rhs: Expression
+    private var methodInstance: MethodInstance?
     
     init(operation: Operator,rhs: Expression)
         {
@@ -60,6 +61,26 @@ public class PrefixExpression: OperatorExpression
         let expression = PrefixExpression(operation: self.operation,rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
         return(expression as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.rhs.initializeTypeConstraints(inContext: context)
+        let methodMatcher = MethodInstanceMatcher(method: self.operation, argumentExpressions: [self.rhs], reportErrors: true)
+        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+        methodMatcher.appendReturnType(self.type!)
+        if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
+            {
+            self.methodInstance = specificInstance
+            print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
+            methodMatcher.appendTypeConstraints(to: context)
+            }
+        else
+            {
+            print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
+            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operation.label)' ) can not be resolved. Try making it more specific.")
+            }
         }
     }
 

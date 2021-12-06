@@ -150,6 +150,8 @@ public class BinaryExpression: Expression
         {
         let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
+        expression.method = self.method
+        expression.methodInstance = self.methodInstance
         return(expression as! Self)
         }
         
@@ -168,7 +170,7 @@ public class BinaryExpression: Expression
                 {
                 self.methodInstance = specificInstance
                 print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operation.rawValue) = \(specificInstance.displayString)")
-                methodMatcher.appendTypeConstraints(for: specificInstance, argumentTypes: [self.lhs.type!], returnType: self.type!, to: context)
+                methodMatcher.appendTypeConstraints(to: context)
                 }
             else
                 {

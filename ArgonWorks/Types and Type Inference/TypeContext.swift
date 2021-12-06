@@ -32,6 +32,7 @@ public class TypeContext
         init(_ substitution: Substitution)
             {
             self.typeVariables = substitution.typeVariables
+            self.typeContext = substitution.typeContext
             }
             
         public func freshTypeVariable(forTypeVariable old: Type) -> TypeVariable
@@ -142,6 +143,7 @@ public class TypeContext
                     return(self.substitute(self.type(atIndex: typeVariable.id)))
                     }
                 return(type)
+//                return(self.typeContext!.objectType)
                 }
             if let typeClass = type as? TypeClass
                 {
@@ -193,6 +195,21 @@ public class TypeContext
             newExpression.setParent(expression.parent)
             newExpression.issues = expression.issues
             return(newExpression)
+            }
+            
+        public func substitute(_ closure: Closure) -> Closure
+            {
+            let newClosure = Closure(label: closure.label)
+            for block in closure.block.blocks
+                {
+                newClosure.block.addBlock(self.substitute(block))
+                }
+            for symbol in closure.localSymbols
+                {
+                newClosure.localSymbols.append(self.substitute(symbol))
+                }
+            newClosure.type = self.substitute(closure.type!)
+            return(newClosure)
             }
             
         public func substitute(_ container: ContainerSymbol) -> ContainerSymbol
@@ -251,13 +268,35 @@ public class TypeContext
                     }
                 return
                 }
+            if let left = lhs as? TypeConstructor,let right = rhs as? TypeConstructor
+                {
+                if left.label != right.label
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.label) != \(right.label)"))
+                    }
+                for (leftType,rightType) in zip(left.generics,right.generics)
+                    {
+                    try self.unifySubtypes(leftType,rightType)
+                    }
+                return
+                }
             if let left = lhs as? TypeFunction,let right = rhs as? TypeFunction
                 {
                 try self.unifySubtypes(left.returnType,right.returnType)
+                for (leftType,rightType) in zip(left.generics,right.generics)
+                    {
+                    try self.unifySubtypes(leftType,rightType)
+                    }
+                return
+                }
+            if let left = lhs as? TypeApplication,let right = rhs as? TypeApplication
+                {
+                try self.unifySubtypes(left.function,right.function)
                 for (leftType,rightType) in zip(left.types,right.types)
                     {
                     try self.unifySubtypes(leftType,rightType)
                     }
+                try self.unifySubtypes(left.returnType,right.returnType)
                 return
                 }
             if let left = lhs as? TypeVariable,let right = rhs as? TypeVariable
@@ -302,7 +341,7 @@ public class TypeContext
             {
             if let left = lhs as? TypeClass,let right = rhs as? TypeClass
                 {
-                if left.theClass != right.theClass
+                if left.theClass != right.theClass && left.theClass != self.typeContext!.objectClass && right.theClass != self.typeContext!.objectClass
                     {
                     throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.theClass.fullName.displayString)-\(left.theClass.index) \(right.theClass.fullName.displayString)-\(right.theClass.index)"))
                     }
@@ -324,22 +363,36 @@ public class TypeContext
                     }
                 return
                 }
-            if let left = lhs as? TypeFunction,let right = rhs as? TypeFunction
+            if let left = lhs as? TypeConstructor,let right = rhs as? TypeConstructor
                 {
-                try self.unify(left.returnType,right.returnType)
-                for (leftType,rightType) in zip(left.types,right.types)
+                if left.label != right.label
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.label) != \(right.label)"))
+                    }
+                for (leftType,rightType) in zip(left.generics,right.generics)
                     {
                     try self.unify(leftType,rightType)
                     }
                 return
                 }
-            if let left = lhs as? TypeSlot,let right = rhs as? TypeSlot
+            if let left = lhs as? TypeFunction,let right = rhs as? TypeFunction
                 {
-                if left.slotLabel != right.slotLabel
+                try self.unify(left.returnType,right.returnType)
+                for (leftType,rightType) in zip(left.generics,right.generics)
                     {
-                    throw(CompilerIssue(location: .zero,message: "slot(\(left.slotLabel)) does not match slot(\(right.slotLabel))."))
+                    try self.unify(leftType,rightType)
                     }
-                try self.unify(left.baseType,right.baseType)
+                return
+                }
+            if let left = lhs as? TypeApplication,let right = rhs as? TypeApplication
+                {
+                try self.unify(left.function,right.function)
+                for (leftType,rightType) in zip(left.types,right.types)
+                    {
+                    try self.unify(leftType,rightType)
+                    }
+                try self.unify(left.returnType,right.returnType)
+                return
                 }
             if let left = lhs as? TypeVariable,let right = rhs as? TypeVariable
                 {
@@ -358,6 +411,9 @@ public class TypeContext
                     }
                 if self.occursIn(left.id,rhs)
                     {
+                    print("INFINITELY RECURSIVE TYPES")
+                    print("LHS: \(lhs.displayString)")
+                    print("RHS: \(rhs.displayString)")
                     throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString)"))
                     }
                 self.typeVariables[left.id] = rhs
@@ -392,6 +448,16 @@ public class TypeContext
     public static func freshTypeVariable(named: String) -> TypeVariable
         {
         self.initialSubstitution.freshTypeVariable(named: named)
+        }
+        
+    public var objectClass: Class
+        {
+        (self.scope.topModule.argonModule.object as! TypeClass).theClass
+        }
+        
+    public var objectType: Type
+        {
+        self.scope.topModule.argonModule.object
         }
         
     public var voidType: Type

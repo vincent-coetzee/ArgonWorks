@@ -91,13 +91,10 @@ public class MethodInstanceMatcher
             return(false)
             }
         print("OK: FOUND \(instances.count) INSTANCES WITH ARITY \(arity)")
-        let typedInstances = instances.filter{!$0.hasVariableTypes}
-        let untypedInstances = instances.filter{$0.hasVariableTypes}
-        var readyInstances = typedInstances
-        print("OK: FOUND \(readyInstances.count) INSTANCES READY TO TEST")
-        print("OK: INFERRING TYPES FOR \(untypedInstances.count) INSTANCES")
+        print("OK: INFERRING TYPES FOR \(instances.count) INSTANCES")
+        var readyInstances = MethodInstances()
         var mostSpecificInstance:MethodInstance?
-        for instance in untypedInstances
+        for instance in instances
             {
             print("OK: TESTING INSTANCE \(instance.displayString)")
             try self.typeContext.extended(withContentsOf: [])
@@ -139,9 +136,9 @@ public class MethodInstanceMatcher
                     if newInstance.parameterTypesAreSupertypes(ofTypes: types)
                         {
                         print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
-                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
                         readyInstances.append(newInstance)
                         mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
+                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
                         }
                     else
                         {
@@ -165,26 +162,26 @@ public class MethodInstanceMatcher
         return(true)
         }
         
-    public func appendTypeConstraints(for instance: MethodInstance,argumentTypes: Types,returnType: Type,to context: TypeContext)
+    public func appendTypeConstraints(to context: TypeContext)
         {
         var offset = 0
-        for (argument,parameter) in zip(self.argumentTypes,instance.parameters)
+        for (argument,parameter) in zip(argumentTypes,self.methodInstance!.parameters)
             {
             context.append(TypeConstraint(left: argument,right: parameter.type,origin: self.origin))
-            if parameter.type == instance.returnType
+            if parameter.type == self.methodInstance!.returnType
                 {
-                context.append(TypeConstraint(left: argument,right: instance.returnType,origin: self.origin))
+                context.append(TypeConstraint(left: argument,right: self.methodInstance!.returnType,origin: self.origin))
                 }
             for index in 0..<max(offset - 1,0)
                 {
-                if parameter.type == instance.parameters[index].type
+                if parameter.type == self.methodInstance!.parameters[index].type
                     {
                     context.append(TypeConstraint(left: argument,right: self.argumentTypes[index],origin: self.origin))
                     }
                 }
             offset += 1
             }
-        context.append(TypeConstraint(left: instance.returnType,right: returnType,origin: self.origin))
+        context.append(TypeConstraint(left: self.methodInstance!.returnType,right: self.returnType,origin: self.origin))
         }
         
     private func append(_ issue: CompilerIssue)
