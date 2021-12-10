@@ -22,8 +22,18 @@ public class SelectBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        self.value = Expression()
+        self.value = coder.decodeObject(forKey: "value") as! Expression
+        self.whenBlocks = coder.decodeObject(forKey: "whenBlocks") as! Array<WhenBlock>
+        self.otherwiseBlock = coder.decodeObject(forKey: "otherwiseBlock") as? OtherwiseBlock
         super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.value,forKey: "value")
+        coder.encode(self.whenBlocks,forKey: "whenBlocks")
+        coder.encode(self.otherwiseBlock,forKey: "otherwiseBlock")
+        super.encode(with: coder)
         }
         
     public required init()

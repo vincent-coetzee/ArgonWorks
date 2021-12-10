@@ -9,15 +9,16 @@ import Foundation
 
 public class ImportUnarchiver: NSKeyedUnarchiver
     {
-    public static var domain = Domain(label: "")
-    public static var loader: Loader = ImportUnarchiver.domain
-    public static var topModule: TopModule = ImportUnarchiver.domain.topModule
+//    public static var domain = Domain(label: "")
+//    public static var loader: Loader = ImportUnarchiver.domain
+    public static var topModule: TopModule!
     
     public private(set) var missingSymbols = Array<(String?,Name)>()
-    public var loader: Loader
-        {
-        Self.loader
-        }
+    
+//    public var loader: Loader
+//        {
+//        Self.loader
+//        }
     public var topModule: TopModule
         {
         Self.topModule

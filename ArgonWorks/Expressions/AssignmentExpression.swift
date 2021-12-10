@@ -52,6 +52,14 @@ public class AssignmentExpression: Expression
         {
         let expression = AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
+        expression.issues = self.issues
+        return(expression as! Self)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = AssignmentExpression(self.lhs.freshTypeVariable(inContext: context),self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type!.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         

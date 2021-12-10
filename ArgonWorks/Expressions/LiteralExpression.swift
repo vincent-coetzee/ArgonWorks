@@ -34,7 +34,7 @@ public indirect enum Literal:Hashable,Displayable
         self = type.literal
         }
         
-    init(coder: NSCoder)
+    init(coder: NSCoder,forKey: String)
         {
         let kind = coder.decodeInteger(forKey: "kind")
         switch(kind)
@@ -42,31 +42,37 @@ public indirect enum Literal:Hashable,Displayable
             case 1:
                 self = .nil
             case 2:
-                self = .integer(Argon.Integer(coder.decodeInteger(forKey: "integer")))
+                self = .integer(Argon.Integer(coder.decodeInteger(forKey: forKey + "integer")))
             case 3:
-                self = .float(Argon.Float(coder.decodeDouble(forKey: "float")))
+                self = .float(Argon.Float(coder.decodeDouble(forKey:forKey +  "float")))
             case 4:
-                self = .string(coder.decodeObject(forKey: "string") as! String)
+                self = .string(coder.decodeObject(forKey: forKey + "string") as! String)
             case 5:
-                self = .boolean(coder.decodeBool(forKey: "boolean") ? .trueValue : .falseValue)
+                self = .boolean(coder.decodeBool(forKey: forKey + "boolean") ? .trueValue : .falseValue)
             case 6:
-                self = .symbol(coder.decodeObject(forKey: "symbol") as! Argon.Symbol)
+                self = .symbol(coder.decodeObject(forKey: forKey + "symbol") as! Argon.Symbol)
             case 7:
-                self = .array(coder.decodeObject(forKey: "array") as! Array<Literal>)
+                let count = coder.decodeInteger(forKey: forKey + "arrayCount")
+                var array = Array<Literal>()
+                for index in 0..<count
+                    {
+                    array.append(Literal(coder: coder,forKey: forKey + "element\(index)"))
+                    }
+                self = .array(array)
             case 8:
-                self = .class(coder.decodeObject(forKey: "class") as! Class)
+                self = .class(coder.decodeObject(forKey: forKey + "class") as! Class)
             case 9:
-                self = .module(coder.decodeObject(forKey: "module") as! Module)
+                self = .module(coder.decodeObject(forKey: forKey + "module") as! Module)
             case 10:
-                self = .enumeration(coder.decodeObject(forKey: "enumeration") as! Enumeration)
+                self = .enumeration(coder.decodeObject(forKey: forKey + "enumeration") as! Enumeration)
             case 11:
-                self = .enumerationCase(coder.decodeObject(forKey: "enumerationCase") as! EnumerationCase)
+                self = .enumerationCase(coder.decodeObject(forKey: forKey + "enumerationCase") as! EnumerationCase)
             case 12:
-                self = .method(coder.decodeObject(forKey: "method") as! Method)
+                self = .method(coder.decodeObject(forKey: forKey + "method") as! Method)
             case 13:
-                self = .constant(coder.decodeObject(forKey: "constant") as! Constant)
+                self = .constant(coder.decodeObject(forKey: forKey + "constant") as! Constant)
             case 14:
-                self = .function(coder.decodeObject(forKey: "function") as! Function)
+                self = .function(coder.decodeObject(forKey: forKey + "function") as! Function)
             default:
                 self = .nil
             }
@@ -107,51 +113,57 @@ public indirect enum Literal:Hashable,Displayable
             }
         }
         
-    public func encode(with coder:NSCoder)
+    public func encode(with coder:NSCoder,forKey: String)
         {
         switch(self)
             {
             case .nil:
-                coder.encode(1,forKey:"kind")
+                coder.encode(1,forKey:forKey + "kind")
             case .integer(let integer):
-                coder.encode(2,forKey:"kind")
-                coder.encode(integer,forKey:"integer")
+                coder.encode(2,forKey:forKey + "kind")
+                coder.encode(integer,forKey:forKey + "integer")
             case .float(let float):
-                coder.encode(3,forKey:"kind")
-                coder.encode(float,forKey:"float")
+                coder.encode(3,forKey:forKey + "kind")
+                coder.encode(float,forKey:forKey + "float")
             case .string(let string):
-                coder.encode(4,forKey:"kind")
-                coder.encode(string,forKey:"string")
+                coder.encode(4,forKey:forKey + "kind")
+                coder.encode(string,forKey:forKey + "string")
             case .boolean(let boolean):
-                coder.encode(5,forKey:"kind")
-                coder.encode(boolean,forKey:"boolean")
+                coder.encode(5,forKey:forKey + "kind")
+                coder.encode(boolean,forKey:forKey + "boolean")
             case .symbol(let symbol):
-                coder.encode(6,forKey:"kind")
-                coder.encode(symbol,forKey:"symbol")
+                coder.encode(6,forKey:forKey + "kind")
+                coder.encode(symbol,forKey:forKey + "symbol")
             case .array(let array):
-                coder.encode(7,forKey:"kind")
-                coder.encode(array,forKey:"array")
+                coder.encode(7,forKey:forKey + "kind")
+                coder.encode(array.count,forKey: forKey + "arrayCount")
+                var index = 0
+                for element in array
+                    {
+                    element.encode(with: coder,forKey: forKey + "element\(index)")
+                    index += 1
+                    }
             case .class(let aClass):
-                coder.encode(8,forKey:"kind")
-                coder.encode(aClass,forKey:"class")
+                coder.encode(8,forKey:forKey + "kind")
+                coder.encode(aClass,forKey:forKey + "class")
             case .module(let module):
-                coder.encode(9,forKey:"kind")
-                coder.encode(module,forKey:"module")
+                coder.encode(9,forKey:forKey + "kind")
+                coder.encode(module,forKey:forKey + "module")
             case .enumeration(let enumeration):
-                coder.encode(10,forKey:"kind")
-                coder.encode(enumeration,forKey:"enumeration")
+                coder.encode(10,forKey:forKey + "kind")
+                coder.encode(enumeration,forKey:forKey + "enumeration")
             case .method(let method):
-                coder.encode(12,forKey:"kind")
-                coder.encode(method,forKey:"method")
+                coder.encode(12,forKey:forKey + "kind")
+                coder.encode(method,forKey:forKey + "method")
             case .constant(let constant):
-                coder.encode(13,forKey:"kind")
-                coder.encode(constant,forKey:"constant")
+                coder.encode(13,forKey:forKey + "kind")
+                coder.encode(constant,forKey:forKey + "constant")
             case .enumerationCase(let aCase):
-                coder.encode(11,forKey:"kind")
-                coder.encode(aCase,forKey:"enumerationCase")
+                coder.encode(11,forKey:forKey + "kind")
+                coder.encode(aCase,forKey:forKey + "enumerationCase")
             case .function(let aCase):
-                coder.encode(14,forKey:"kind")
-                coder.encode(aCase,forKey:"function")
+                coder.encode(14,forKey:forKey + "kind")
+                coder.encode(aCase,forKey:forKey + "function")
             }
         }
         
@@ -185,12 +197,15 @@ public indirect enum Literal:Hashable,Displayable
                 return(TypeEnumeration(enumeration: enumeration,generics: enumeration.genericTypes))
             case .enumerationCase:
                 return(context.enumerationCaseType)
-            case .method(let instance):
-                return(TypeMethod(label: instance.fullName.displayString,method: instance))
+//            case .method(let instance):
+//                return(TypeFunction(label: instance.fullName.displayString,method: instance))
+//                fatalError()
             case .function(let function):
                 return(TypeFunction(label: function.label,types: function.parameters.map{$0.type!},returnType: function.returnType))
             case .constant(let constant):
                 return(constant.type)
+            default:
+                fatalError()
             }
         }
         
@@ -412,14 +427,14 @@ public class LiteralExpression: Expression
         
     required init?(coder: NSCoder)
         {
-        self.literal = Literal(coder: coder)
+        self.literal = Literal(coder: coder,forKey: "literal")
         super.init(coder: coder)
         }
     
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        self.literal.encode(with: coder)
+        self.literal.encode(with: coder,forKey: "literal")
         }
         
     public override func visit(visitor: Visitor) throws

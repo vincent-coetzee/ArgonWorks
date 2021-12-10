@@ -69,7 +69,10 @@ public class AssignmentOperatorExpression: Expression
 
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs)) as! Self
+        let expression = AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs))
+        expression.issues = self.issues
+        expression.type = substitution.substitute(self.type!)
+        return(expression as! Self)
         }
         
     public override var displayString: String

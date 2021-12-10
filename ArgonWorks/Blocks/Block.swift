@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
+public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,ErrorScope
     {
     public var isMethodInstanceScope: Bool
         {
@@ -109,7 +109,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         
     public var declaration: Location?
         {
-        self.locations.declaration
+        self.locations.declaration.isNil ? .zero : self.locations.declaration
         }
         
     public var type: Type? = nil
@@ -163,8 +163,26 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
         self.nextBlock = coder.decodeObject(forKey: "nextBlock") as? Block
         self.lastBlock = coder.decodeObject(forKey: "lastBlock") as? Block
         self.firstBlock = coder.decodeObject(forKey: "firstBlock") as? Block
+        self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
+        self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
         }
     
+        
+    public func encode(with coder: NSCoder)
+        {
+        print("ENCODE \(Swift.type(of: self))")
+        coder.encode(self.blocks,forKey: "blocks")
+        coder.encode(self.localSymbols,forKey: "localSymbols")
+        coder.encode(self.index,forKey: "index")
+        coder.encodeParent(self.parent,forKey: "parent")
+        coder.encode(self.previousBlock,forKey: "previousBlock")
+        coder.encode(self.firstBlock,forKey: "firstBlock")
+        coder.encode(self.lastBlock,forKey: "lastBlock")
+        coder.encode(self.nextBlock,forKey: "nextBlock")
+        coder.encode(self.nextLocalSlotOffset,forKey: "nextLocalSlotOffset")
+        coder.encode(self.nextParameterOffset,forKey: "nextParameterOffset")
+        }
+        
     public func appendIssue(at: Location, message: String)
         {
         self.issues.append(CompilerIssue(location: at,message: message))
@@ -189,6 +207,18 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             {
             self.localSymbols.append(symbol)
             }
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> Block
+        {
+//        let newBlock = Self()
+//        for block in self.blocks
+//            {
+//            newBlock.addBlock(block.freshTypeVariable(inContext: context))
+//            }
+//        newBlock.type = self.type!.freshTypeVariable(inContext: context)
+//        return(newBlock)
+        self
         }
         
     public func addSlot(_ localSlot: Slot)
@@ -267,19 +297,6 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             }
         }
         
-    public func encode(with coder: NSCoder)
-        {
-        print("ENCODE \(Swift.type(of: self))")
-        coder.encode(self.blocks,forKey: "blocks")
-        coder.encode(self.localSymbols,forKey: "localSymbols")
-        coder.encode(self.index,forKey: "index")
-        coder.encodeParent(self.parent,forKey: "parent")
-        coder.encode(self.previousBlock,forKey: "previousBlock")
-        coder.encode(self.firstBlock,forKey: "firstBlock")
-        coder.encode(self.lastBlock,forKey: "lastBlock")
-        coder.encode(self.nextBlock,forKey: "nextBlock")
-        }
-        
     public func visit(visitor: Visitor) throws
         {
         for block in self.blocks
@@ -287,6 +304,14 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
             try block.visit(visitor: visitor)
             }
         try visitor.accept(self)
+        }
+        
+    public func typeCheck() throws
+        {
+        for block in self.blocks
+            {
+            try block.typeCheck()
+            }
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -473,7 +498,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver
                 return(symbol)
                 }
             }
-        return(nil)
+        return(self.parent.lookup(name: name))
         }
         
         

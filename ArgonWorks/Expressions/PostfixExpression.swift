@@ -10,12 +10,11 @@ import Foundation
 public class PostfixExpression: OperatorExpression
     {
     private let lhs: Expression
-    private var methodInstance: MethodInstance?
     
-    init(operation: Operator,lhs: Expression)
+    init(operatorLabel: Label,operators: MethodInstances,lhs: Expression)
         {
         self.lhs = lhs
-        super.init(operation: operation)
+        super.init(operatorLabel: operatorLabel,operators: operators)
         self.lhs.setParent(self)
         }
         
@@ -35,9 +34,10 @@ public class PostfixExpression: OperatorExpression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = PostfixExpression(operation: self.operation, lhs: substitution.substitute(self.lhs))
+        let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators, lhs: substitution.substitute(self.lhs))
         expression.type = substitution.substitute(self.type!)
-        expression.methodInstance = self.methodInstance
+        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.issues = self.issues
         return(expression as! Self)
         }
         
@@ -49,7 +49,7 @@ public class PostfixExpression: OperatorExpression
 
     public override func display(indent: String)
         {
-        print("\(indent)POSTFIX EXPRESSION: \(self.operation.label)")
+        print("\(indent)POSTFIX EXPRESSION: \(self.operatorLabel)")
         print("\(indent)LHS:")
         self.lhs.display(indent: indent + "\t")
         }
@@ -58,20 +58,20 @@ public class PostfixExpression: OperatorExpression
         {
         try self.lhs.initializeTypeConstraints(inContext: context)
         context.append(SubTypeConstraint(subtype: self.lhs.type,supertype: context.integerType,origin:.expression(self)))
-        let methodMatcher = MethodInstanceMatcher(method: self.operation, argumentExpressions: [self.lhs], reportErrors: true)
+        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.lhs], reportErrors: true)
         methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
         methodMatcher.appendReturnType(context.voidType)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            self.methodInstance = specificInstance
+            self.selectedMethodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
             methodMatcher.appendTypeConstraints(to: context)
             }
         else
             {
             print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
-            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operation.label)' ) can not be resolved. Try making it more specific.")
+            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operatorLabel)' ) can not be resolved. Try making it more specific.")
             }
         }
         

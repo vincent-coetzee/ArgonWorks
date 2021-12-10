@@ -29,17 +29,6 @@ public class Parameter:Slot,Displayable
         self.isVisible ? super.label : nil
         }
         
-    public override var label: Label
-        {
-        get
-            {
-            self.relabel.isNotNil ? self.relabel! : super.label
-            }
-        set
-            {
-            }
-        }
-        
     public let isVisible:Bool
     public let isVariadic: Bool
     public var place: T3AInstruction.Operand = .none
@@ -85,11 +74,11 @@ public class Parameter:Slot,Displayable
         coder.encode(self.relabel,forKey: "relabel")
         }
         
-    public func freshTypeVariable(inContext context: TypeContext) -> Parameter
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let newType = self.type is TypeVariable ? context.freshTypeVariable(forTypeVariable: self.type!) : self.type!
+        let newType = self.type!.freshTypeVariable(inContext: context)
         let newParameter = Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic)
-        return(newParameter)
+        return(newParameter as! Self)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self

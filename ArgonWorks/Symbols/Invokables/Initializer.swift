@@ -50,12 +50,11 @@ public class Initializer:Function,Scope
         }
         
     internal private(set) var block = Block()
-    internal var declaringClass: Class?
+    internal var declaringType: Type
         {
         didSet
             {
-            let aType = self.enclosingScope.lookup(label: self.declaringClass!.label) as! Type
-            self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: aType)
+            self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.declaringType)
             }
         }
     private let buffer = T3ABuffer()
@@ -68,6 +67,7 @@ public class Initializer:Function,Scope
 
     public required init(label: Label)
         {
+        self.declaringType = Type()
         super.init(label: label)
         self.block = InitializerBlock(initializer: self)
         self.block.setParent(self)
@@ -77,7 +77,7 @@ public class Initializer:Function,Scope
         {
         self.symbols = coder.decodeObject(forKey: "symbols") as! Symbols
         self.block = coder.decodeObject(forKey: "block") as! Block
-        self.declaringClass = coder.decodeObject(forKey: "declaringClass") as? Class
+        self.declaringType = coder.decodeObject(forKey: "declaringType") as! Type
         super.init(coder: coder)
         }
         
@@ -85,7 +85,7 @@ public class Initializer:Function,Scope
         {
         coder.encode(self.symbols,forKey:"symbols")
         coder.encode(self.block,forKey: "block")
-        coder.encode(self.declaringClass,forKey: "declaringClass")
+        coder.encode(self.declaringType,forKey: "declaringType")
         super.encode(with: coder)
         }
         
@@ -106,16 +106,20 @@ public class Initializer:Function,Scope
         return(self.parent.lookup(label: label))
         }
         
+    public override func typeCheck() throws
+        {
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.parameters.forEach{try $0.initializeType(inContext: context)}
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.declaringClass!.type)
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.declaringType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        context.append(TypeConstraint(left: self.type,right: self.declaringClass!.type,origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.type,right: self.declaringType,origin: .symbol(self)))
         }
         
     public func moreSpecific(than instance:Initializer,forTypes types: Types) -> Bool

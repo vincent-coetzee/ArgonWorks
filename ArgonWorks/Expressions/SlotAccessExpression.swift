@@ -74,6 +74,7 @@ public class SlotAccessExpression: Expression
             expression.slot = aSlot
             expression.slot!.type = substitution.substitute(aSlot.type!)
             }
+        expression.issues = self.issues
         return(expression as! Self)
         }
         
@@ -133,14 +134,6 @@ public class SlotAccessExpression: Expression
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        self.receiver.analyzeSemantics(using: analyzer)
-        self.slotExpression?.analyzeSemantics(using: analyzer)
-        let selector = (self.slotExpression as! SlotSelectorExpression).selector
-        if self.receiver.lookupSlot(selector: selector).isNil
-            {
-            analyzer.cancelCompletion()
-            analyzer.dispatchError(at: self.declaration!, message: "Slot '\(selector)' was not found on the receiver, unable to resolve the slot, the receiver may need to have it's type defined.")
-            }
         }
         
     public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
@@ -160,7 +153,7 @@ public class SlotAccessExpression: Expression
         {
         try value.emitCode(into: instance, using: using)
         try self.receiver.emitAddress(into: instance,using: using)
-        let aSlot = self.slot as! Slot
+        let aSlot = self.slot!
         let aClass = aSlot.parent.node as! Class
         let actualSlot = aClass.layoutSlot(atLabel: aSlot.label)!
         instance.append("STORE",value.place,.none,.indirect(self.receiver.place,actualSlot.offset))
@@ -168,59 +161,6 @@ public class SlotAccessExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        if slot.isNotNil && slot is Slot
-            {
-            let temp = instance.nextTemporary()
-            try self.receiver.emitCode(into: instance,using: generator)
-            instance.append(nil,"MOV",self.receiver.place,.none,temp)
-            instance.append(nil,"IADD",temp,.literal(.integer(Argon.Integer((slot as! Slot).offset))),temp)
-            self._place = temp
-            }
-        else if let expression = self.slotExpression,let aSlot = self.receiver.lookupSlot(selector: (expression as! SlotSelectorExpression).selector)
-            {
-            let temp = instance.nextTemporary()
-            try self.receiver.emitCode(into: instance,using: generator)
-            instance.append(nil,"MOV",self.receiver.place,.none,temp)
-            instance.append(nil,"IADD",temp,.literal(.integer(Argon.Integer(aSlot.offset))),temp)
-            self._place = temp
-            }
-        else
-            {
-//            fatalError("SLOT is not found")
-            }
         }
     }
 
-public class SlotSelectorExpression: Expression
-    {
-    public override var displayString: String
-        {
-        return("\(self.selector)")
-        }
-        
-    public let selector: String
-    
-    init(selector: String)
-        {
-        self.selector = selector
-        super.init()
-        }
-        
-    required init?(coder: NSCoder)
-        {
-        self.selector = coder.decodeObject(forKey: "selector") as! String
-        super.init(coder: coder)
-        }
-        
- 
-        
-    public override func encode(with coder: NSCoder)
-        {
-        super.encode(with: coder)
-        coder.encode(self.selector,forKey: "selector")
-        }
-    }

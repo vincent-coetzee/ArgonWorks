@@ -260,6 +260,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case IN
         case INFIX
         case INIT
+        case CAST
         case IS
         case LET
         case LOADED
@@ -1940,6 +1941,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .ELSE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isCast:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .CAST)
             default:
                 return(false)
             }

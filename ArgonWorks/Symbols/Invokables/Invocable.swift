@@ -57,15 +57,35 @@ public class Invocable: Symbol,StackFrame
         {
 //        print("ENCODE INVOKABLE \(self.label)")
         coder.encode(self.localSymbols,forKey: "localSymbols")
-        super.encode(with: coder)
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
         coder.encode(self.returnType,forKey: "returnType")
+        super.encode(with: coder)
         }
         
     public override func isElement(ofType: Group.ElementType) -> Bool
         {
         return(ofType == .method)
+        }
+        
+    public override func lookup(label: Label) -> Symbol?
+        {
+        for symbol in self.localSymbols
+            {
+            if symbol.label == label
+                {
+                return(symbol)
+                }
+            }
+        return(self.parent.lookup(label: label))
+        }
+        
+    public func addTemporaries(_ types: Types)
+        {
+        for aType in types
+            {
+            self.localSymbols.append(aType)
+            }
         }
         
     public func addSlot(_ localSlot:Slot)

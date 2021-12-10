@@ -57,10 +57,18 @@ public class LoopBlock: Block,StackFrame,Scope
         
     public required init?(coder: NSCoder)
         {
-        self.startExpressions = []
-        self.endExpression = Expression()
-        self.updateExpressions = []
+        self.startExpressions = (coder.decodeObject(forKey: "startExpressions") as! Expressions)
+        self.endExpression = (coder.decodeObject(forKey: "endExpression") as! Expression)
+        self.updateExpressions = (coder.decodeObject(forKey: "updateExpressions") as! Expressions)
         super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.startExpressions,forKey: "startExpressions")
+        coder.encode(self.endExpression,forKey: "endExpression")
+        coder.encode(self.updateExpressions,forKey: "updateExpressions")
+        super.encode(with: coder)
         }
         
     public override func visit(visitor: Visitor) throws

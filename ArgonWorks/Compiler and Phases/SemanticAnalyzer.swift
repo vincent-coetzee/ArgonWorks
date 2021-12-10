@@ -13,19 +13,12 @@ public class SemanticAnalyzer: CompilerPass
     public var wasCancelled = false
     public let typeContext: TypeContext
     
-//    @discardableResult
-//    public static func analyzeModule(_ module: Module) -> Bool
-//        {
-//        let analyzer = SemanticAnalyzer(compiler: self.compiler)
-//        return(analyzer.analyze(node))
-//        }
-        
     public var virtualMachine: VirtualMachine
         {
         fatalError("Virtual Machine needed")
         }
         
-    init(compiler: Compiler)
+    init(_ compiler: Compiler)
         {
         self.compiler = compiler
         self.typeContext = TypeContext(scope: compiler.topModule.argonModule)
@@ -36,44 +29,16 @@ public class SemanticAnalyzer: CompilerPass
         self.wasCancelled = true
         }
         
-    @discardableResult
-    public static func analyzeModule(_ module: Module,in compiler: Compiler) -> Bool
+    public func processModule(_ module: Module?) -> Module?
         {
-        let analyzer = SemanticAnalyzer(compiler: compiler)
-        module.analyzeSemantics(using: analyzer)
-        return(!analyzer.wasCancelled)
+        guard let module = module else
+            {
+            return(nil)
+            }
+        guard let newModule = module.moduleWithSemanticsAnalyzed(using: self),!self.wasCancelled else
+            {
+            return(nil)
+            }
+        return(newModule)
         }
     }
-
-//public class TypeInferencer
-//    {
-//    public class Environment
-//        {
-//        private var types:[String:LocalType] = [:]
-//        }
-//        
-//    public indirect enum LocalType
-//        {
-//        case named(Class)
-//        case variable(String)
-//        case function(String,LocalType,LocalType)
-//        }
-//        
-//    private var nextVariable = 0
-//    
-//    public func infer(expression: Expression) -> LocalType
-//        {
-//        if expression is LiteralExpression
-//            {
-//            let literal = expression as! LiteralExpression
-//            return(.named(literal.resultType.class!))
-//            }
-//        else if expression is LocalSlotExpression
-//            {
-//            let local = expression as! LocalSlotExpression
-//            let localSlot = local.localSlot
-//            return(.named(localSlot.type))
-//            }
-//        return(.named(self.compiler.topModule.argonModule.void))
-//        }
-//    }

@@ -92,10 +92,10 @@ public class Module:ContainerSymbol,Scope
         
     public required init?(coder: NSCoder)
         {
-//        print("START DECODE MODULE")
+        print("START DECODE MODULE")
         self.imports = coder.decodeObject(forKey: "imports") as! Array<Importer>
         super.init(coder: coder)
-//        print("END DECODE MODULE \(self.label)")
+        print("END DECODE MODULE \(self.label)")
         }
         
     public override func encode(with coder: NSCoder)
@@ -104,12 +104,13 @@ public class Module:ContainerSymbol,Scope
         super.encode(with: coder)
         }
         
-    public override func emitCode(using generator: CodeGenerator) throws
+    public func emitCode(using generator: CodeGenerator) throws -> Module
         {
         for symbol in self.symbols
             {
             try symbol.emitCode(using: generator)
             }
+        return(self)
         }
     
     public override var typeCode:TypeCode
@@ -280,59 +281,61 @@ public class Module:ContainerSymbol,Scope
         return(false)
         }
         
-    public override func allocateAddresses(using: AddressAllocator)
+    public func moduleWithEmittedCode(using: CodeGenerator) -> Module?
+        {
+        return(nil)
+        }
+        
+    public func moduleWithAllocatedAddresses(using: AddressAllocator) -> Module
         {
         for aClass in self.classes
             {
             aClass.allocateAddresses(using: using)
             }
         self.layoutInMemory()
-        }
-
-    public func checkTypes() -> Module
-        {
-        do
-            {
-            let typeContext = TypeContext(scope: self.enclosingScope)
-            for node in self.symbols
-                {
-                try node.initializeType(inContext: typeContext)
-                try node.initializeTypeConstraints(inContext: typeContext)
-                }
-            let substitution = typeContext.unify()
-            return(substitution.substitute(self) as! Module)
-            }
-        catch let error as CompilerIssue
-            {
-            self.appendIssue(error)
-            print(error)
-            }
-        catch let error
-            {
-            self.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
-            }
         return(self)
         }
-        
-    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
+
+    public func typeCheckModule() throws -> Self
         {
-        do
-            {
-            try self.initializeType(inContext: analyzer.typeContext)
-            try self.initializeTypeConstraints(inContext: analyzer.typeContext)
-            let substitution = analyzer.typeContext.unify()
-            let newModule = substitution.substitute(self)
-            print(newModule)
-            }
-        catch let error as CompilerIssue
-            {
-            self.appendIssue(error)
-            print(error)
-            }
-        catch let error
-            {
-            self.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
-            }
+            let typeContext = TypeContext(scope: self.enclosingScope)
+            let newModule = Self(label: self.label)
+            for symbol in self.symbols
+                {
+                try symbol.initializeType(inContext: typeContext)
+                try symbol.initializeTypeConstraints(inContext: typeContext)
+                }
+            let substitution = typeContext.unify()
+            for symbol in self.symbols
+                {
+                newModule.addSymbol(substitution.substitute(symbol))
+                }
+            for symbol in newModule.symbols
+                {
+                do
+                    {
+                    try symbol.typeCheck()
+                    }
+                catch let issue as CompilerIssue
+                    {
+                    symbol.appendIssue(issue)
+                    }
+                catch let error
+                    {
+                    symbol.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
+                    }
+                }
+            return(newModule)
+        }
+        
+    public func moduleWithOptimization(using: Optimizer) -> Module?
+        {
+        return(nil)
+        }
+        
+    public func moduleWithSemanticsAnalyzed(using analyzer:SemanticAnalyzer) -> Module?
+        {
+        return(nil)
         }
     }
 

@@ -53,6 +53,7 @@ public class SlotExpression: Expression
         let newSlot = substitution.substitute(self.slot)
         let expression = SlotExpression(slot: newSlot) as! Self
         substitution.typeContext?.bind(newSlot.type!,to: newSlot.label)
+        expression.issues = self.issues
         return(expression)
         }
         

@@ -190,7 +190,8 @@ public class LineNumberTextView: NSTextView
     /// Add observers to redraw the line number gutter, when necessary.
     internal func addObservers() {
         self.postsFrameChangedNotifications = true
-
+        self.postsBoundsChangedNotifications = true
+        NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSView.boundsDidChangeNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSView.frameDidChangeNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSText.didChangeNotification, object: self)
     }

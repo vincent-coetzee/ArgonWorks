@@ -9,6 +9,16 @@ import Foundation
 
 public class Expression: NSObject,NSCoding,VisitorReceiver
     {
+    public var declarationLine: Int
+        {
+        if let location = self.declaration
+            {
+            return(location.line)
+            }
+//        print("\(Swift.type(of: self)) missing declaration location. Parent is \(self.parent).")
+        return(0)
+        }
+        
     public var diagnosticString: String
         {
         ""
@@ -65,7 +75,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public var declaration: Location?
         {
-        return(self.locations.declaration)
+        return(self.locations.declaration.isNil ? .zero : self.locations.declaration)
         }
         
     public var unresolvedLabel: String
@@ -122,6 +132,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         self.parent = coder.decodeParent(forKey: "parent")!
         self.locations = coder.decodeSourceLocations(forKey: "locations")
+        self.type = coder.decodeObject(forKey: "type") as? Type
         super.init()
         }
 
@@ -129,6 +140,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeSourceLocations(self.locations,forKey:"locations")
+        coder.encode(self.type,forKey: "type")
         }
         
     public func initializeType(inContext context: TypeContext) throws
@@ -276,6 +288,25 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         self.setParent(expression)
         index.setParent(expression)
         return(expression)
+        }
+        
+    public func typeCheck(inContext: TypeContext) throws -> Self
+        {
+        var expression = Expression()
+        try inContext.extended(withContentsOf: [])
+            {
+            newContext in
+            try self.initializeTypeConstraints(inContext: newContext)
+            let substitution = inContext.unify()
+            expression = substitution.substitute(self) as! Self
+            }
+        try expression.initializeTypeConstraints(inContext: inContext)
+        return(expression as! Self)
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        return(self)
         }
         
     public func defineLocalSymbols(inContext: TypeContext)

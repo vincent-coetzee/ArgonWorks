@@ -21,7 +21,7 @@ public class ExpressionBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        self.expression = Expression()
+        self.expression = coder.decodeObject(forKey: "expression") as! Expression
         super.init(coder: coder)
         }
         
@@ -29,6 +29,24 @@ public class ExpressionBlock: Block
         {
         self.expression = Expression()
         super.init()
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.expression,forKey: "expression")
+        super.encode(with: coder)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Block
+        {
+        let newBlock = Self()
+        for block in self.blocks
+            {
+            newBlock.addBlock(block.freshTypeVariable(inContext: context))
+            }
+        newBlock.type = self.type!.freshTypeVariable(inContext: context)
+        newBlock.expression = self.expression.freshTypeVariable(inContext: context)
+        return(newBlock)
         }
         
     public override func display(indent: String)

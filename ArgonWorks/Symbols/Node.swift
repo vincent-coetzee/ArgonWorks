@@ -15,8 +15,8 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         return(self.parent.enclosingScope)
         }
         
-    public var index: UUID
-    public var label: String
+    public private(set) var index: UUID
+    public private(set) var label: String
     public private(set) var parent: Parent = .none
     private var locations = NodeLocations()
     
@@ -38,6 +38,12 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         self.label = label
         }
         
+    public init(label: Label,index: UUID)
+        {
+        self.label = label
+        self.index = index
+        }
+        
     required public init?(coder: NSCoder)
         {
         self.index = coder.decodeObject(forKey: "index") as! UUID
@@ -54,6 +60,16 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
 
+    public func setLabel(_ label: Label)
+        {
+        self.label = label
+        }
+        
+    public func setIndex(_ index:UUID)
+        {
+        self.index = index
+        }
+        
     public var enclosingClass: Class?
         {
         return(self.parent.enclosingClass)
@@ -87,6 +103,13 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
     public func setParent(_ aParent: Parent)
         {
         self.parent = aParent
+        switch(parent)
+            {
+            case .none:
+                print("halt")
+            default:
+                break
+            }
         }
         
     public func setParent(_ context: Context)
@@ -202,12 +225,12 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         
     public func lookup(label: Label) -> Symbol?
         {
-        return(nil)
+        self.parent.lookup(label: label)
         }
         
     public func lookupN(label: Label) -> Symbols?
         {
-        return(nil)
+        self.parent.lookupN(label: label)
         }
         
     public func addSymbol(_ symbol:Symbol)

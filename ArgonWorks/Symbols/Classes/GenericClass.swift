@@ -16,14 +16,14 @@ public class GenericClass:Class
         return("\(self.label)\(string)")
         }
         
-    public override var classType: Type
-        {
-        TypeClass(class: self,generics: self.types)
-        }
-        
     public override var isGenericClass: Bool
         {
         return(true)
+        }
+        
+    public override var genericTypes: Types
+        {
+        self.types
         }
         
     public override var typeCode:TypeCode
@@ -61,14 +61,12 @@ public class GenericClass:Class
         {
         self._typeCode = typeCode
         super.init(label: label)
-        self.type = nil
         }
         
     required init(label: Label)
         {
         self._typeCode = .other
         super.init(label: label)
-        self.type = nil
         }
         
     init(label: Label,types: Types)
@@ -84,7 +82,6 @@ public class GenericClass:Class
         self.instances = coder.decodeObject(forKey: "instances") as! Array<GenericClass>
         self._typeCode = .array
         super.init(coder: coder)
-        self.type = nil
         }
         
     public override func encode(with coder:NSCoder)
@@ -94,13 +91,9 @@ public class GenericClass:Class
         super.encode(with: coder)
         }
         
-    public override func deepCopy() -> Self
+    internal override func createType() -> Type
         {
-        let copy = super.deepCopy()
-        copy.type = TypeClass(class: copy,generics: self.types)
-        copy.types = self.types
-        copy._typeCode = self._typeCode
-        return(copy)
+        TypeClass(class: self,generics: self.types)
         }
     ///
     ///
@@ -173,21 +166,25 @@ public class GenericClass:Class
         return(copy)
         }
         
-   public func of(_ type:Type) -> Type
+   public func of(_ innerType:Type) -> Type
         {
-        TypeClass(class: self,generics: [type])
+        if self.types == [innerType]
+            {
+            return(self.type!)
+            }
+        return(TypeClass(class: self,generics: [innerType]))
         }
         
-    public override func instanciate(withType: Type) -> Type
-        {
-        TypeClass(class: self,generics: [type])
-        }
-        
-    public override func instanciate(withTypes types: Types,reportingContext: Reporter) -> Type
-        {
-        TypeClass(class: self,generics: types)
-        }
-        
+//    public override func instanciate(withType: Type) -> Type
+//        {
+//        TypeClass(class: self,generics: [type])
+//        }
+//        
+//    public override func instanciate(withTypes types: Types,reportingContext: Reporter) -> Type
+//        {
+//        TypeClass(class: self,generics: types)
+//        }
+//        
     private func congruentInstance(matchingTypes: Types) -> GenericClass?
         {
         for instance in self.instances

@@ -22,7 +22,7 @@ public class TypeConstraint: Displayable,CustomStringConvertible
             case .expression(let expression):
                 return(expression.declaration!.line)
             case .block(let block):
-                return(block.declaration!.line)
+                return(block.declaration.isNil ? 0 : block.declaration!.line)
             }
         }
         

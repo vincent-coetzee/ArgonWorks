@@ -19,15 +19,8 @@ public class CodeGenerator: CompilerPass
         {
         fatalError("Virtual Machine needed")
         }
-        
-    @discardableResult
-    public static func emit(into node:ParseNode,in compiler:Compiler) -> Bool
-        {
-        let generator = CodeGenerator(compiler: compiler)
-        return(generator.emitCode(into: node))
-        }
-        
-    public init(compiler: Compiler)
+
+    public init(_ compiler: Compiler)
         {
         self.compiler = compiler
 //        self.registerFile = RegisterFile()
@@ -38,26 +31,17 @@ public class CodeGenerator: CompilerPass
         self.wasCancelled = true
         }
         
-    private func emitCode(into node: ParseNode) -> Bool
+    public func processModule(_ module: Module?) -> Module?
         {
-        do
+        guard let module = module else
             {
-            try node.emitCode(using: self)
-            return(!self.wasCancelled)
+            return(nil)
             }
-        catch let error
+        let newModule = module.moduleWithEmittedCode(using: self)
+        guard !self.wasCancelled else
             {
-            compiler.reportingContext.dispatchError(at: .zero, message: "Code generation error: \(error)")
-            return(false)
+            return(nil)
             }
-        }
-        
-    public func start()
-        {
-        }
-        
-    public func finish()
-        {
-        self.compiler.reportingContext.pushIssues(compiler.allIssues)
+        return(newModule)
         }
     }

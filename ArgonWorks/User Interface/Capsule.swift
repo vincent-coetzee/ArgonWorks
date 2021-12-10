@@ -12,7 +12,6 @@ public class Capsule
     public let path: URL
     public let date: Date
     public let key: UUID
-    public var compilationProduct: ParseNode?
     public var source: String = ""
     
     init(path: URL)
@@ -20,11 +19,5 @@ public class Capsule
         self.path = path
         self.date = Date()
         self.key = UUID()
-        }
-        
-    public func with(source:String, product: ParseNode)
-        {
-        self.source = source
-        self.compilationProduct = product
         }
     }

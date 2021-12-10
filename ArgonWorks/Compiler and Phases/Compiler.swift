@@ -25,7 +25,6 @@ public class Compiler
     public private(set) var allIssues: CompilerIssues = []
     internal var reportingContext:Reporter
     private var parser: Parser!
-    internal var lastNode: ParseNode?
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
     internal var topModule: TopModule!
@@ -38,7 +37,6 @@ public class Compiler
         Self.instanceCounter += 1
         self.parser = nil
         self.currentPass = nil
-        self.lastNode = nil
         self.reportingContext = NullReporter()
         self.tokenRenderer = NullTokenRenderer()
         self.topModule = TopModule(compiler: self)
@@ -54,7 +52,6 @@ public class Compiler
         Self.instanceCounter += 1
         self.parser = nil
         self.currentPass = nil
-        self.lastNode = nil
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
@@ -70,7 +67,6 @@ public class Compiler
         Self.instanceCounter += 1
         self.parser = nil
         self.currentPass = nil
-        self.lastNode = nil
         print("COMPILER TOPMODULE ADDRESS \(unsafeBitCast(self.topModule,to: Int.self))")
         self.reportingContext = reportingContext
         self.tokenRenderer = tokenRenderer
@@ -87,25 +83,36 @@ public class Compiler
         }
 
     @discardableResult
-    public func compile(parseOnly: Bool = false) -> ParseNode?
+    public func compile(parseOnly: Bool = false) -> Module?
         {
         self.reportingContext.resetReporting()
-        if let module = self.parser.parse(),!parseOnly
+        if let module = self.parser.processModule(nil)
             {
-            SemanticAnalyzer.analyzeModule(module,in:self)
-            AddressAllocator.allocateAddresses(module,in: self)
-            CodeGenerator.emit(into: module,in:self)
-            Optimizer.optimize(module,in:self)
-            let visitor = TestVisitor.visit(module)
-            self.allIssues = visitor.allIssues
-            let someIssues = module.issues
-            print(someIssues)
-            self.reportingContext.pushIssues(self.allIssues)
-            let newModule = module.checkTypes()
-            module.display(indent: "")
-            newModule.display(indent:"")
-            return(module)
-            }
+//            if let module = SemanticAnalyzer(self).processModule(module)
+//                {
+//                if let module = AddressAllocator(self).processModule(module)
+//                    {
+//                    if let module = CodeGenerator(self).processModule(module)
+//                        {
+//                        if let module = Optimizer(self).processModule(module)
+//                            {
+                            let newModule = try! module.typeCheckModule()
+                            try! ObjectFile.write(module: newModule, topModule: self.topModule, atPath: "file:///Users/vincent/Desktop/module.argono")
+                            let objectFile = try! ObjectFile.read(atPath: "file:///Users/vincent/Desktop/module.argono",topModule: self.topModule)
+                            objectFile.module.display(indent: "")
+//                            module.display(indent: "")
+//                            newModule.display(indent:"")
+                            let visitor = TestVisitor.visit(newModule)
+                            self.allIssues = visitor.allIssues
+                            let someIssues = module.issues
+                            print(someIssues)
+                            self.reportingContext.pushIssues(self.allIssues)
+                            return(newModule)
+                            }
+//                        }
+//                    }
+//                }
+//            }
         return(nil)
         }
     }

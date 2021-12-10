@@ -119,8 +119,8 @@ public class ContainerSymbol:Symbol
     
     public override func encode(with coder: NSCoder)
         {
+        coder.encode(self.symbols,forKey: "symbols")
         super.encode(with: coder)
-        coder.encode(self.symbols,forKey: "symbolsByLabel")
         }
     ///
     ///
@@ -185,7 +185,6 @@ public class ContainerSymbol:Symbol
             {
             try symbol.initializeTypeConstraints(inContext: context)
             }
-        self.type = context.voidType
         }
 
     public override func visit(visitor: Visitor) throws

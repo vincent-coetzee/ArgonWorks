@@ -24,21 +24,28 @@ public class TypeEnumeration: TypeConstructor
         .enumeration(self.enumeration)
         }
         
+    public override var userString: String
+        {
+        self.enumeration.fullName.displayString
+        }
+        
     public override var enumerationValue: Enumeration
         {
         self.enumeration
         }
         
-    public override var type: Type?
-        {
-        get
-            {
-            TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.type!})
-            }
-        set
-            {
-            }
-        }
+//    public override var type: Type?
+//        {
+//        get
+//            {
+//            let anEnum = TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.type!})
+//            anEnum.setParent(self.parent)
+//            return(anEnum)
+//            }
+//        set
+//            {
+//            }
+//        }
         
     internal let enumeration: Enumeration
     
@@ -46,38 +53,45 @@ public class TypeEnumeration: TypeConstructor
         {
         self.enumeration = enumeration
         super.init(label: label,generics: [])
+        self.enumeration.setParent(self)
         }
         
     init(enumeration: Enumeration,generics: Types)
         {
         self.enumeration = enumeration
         super.init(label: enumeration.label,generics: generics)
+        self.enumeration.setParent(self)
         }
         
     required init(label: Label)
         {
         self.enumeration = Enumeration(label: "")
         super.init(label: label)
+        self.enumeration.setParent(self)
         }
         
     required init?(coder: NSCoder)
         {
-        fatalError()
+        self.enumeration = coder.decodeObject(forKey: "enumeration") as! Enumeration
+        super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
-        fatalError()
+        coder.encode(self.enumeration,forKey: "enumeration")
+        super.encode(with: coder)
         }
         
-    public override var inferredType: Type
+    public override func typeCheck() throws
         {
-        TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.inferredType})
+        fatalError()
         }
         
     public override func deepCopy() -> Self
         {
-        TypeEnumeration(label: self.label,enumeration: self.enumeration) as! Self
+        let anEnum = TypeEnumeration(label: self.label,enumeration: self.enumeration)
+        anEnum.setParent(self)
+        return(anEnum as! Self)
         }
         
     public override func lookup(label: Label) -> Symbol?

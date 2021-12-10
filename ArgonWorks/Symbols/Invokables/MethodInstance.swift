@@ -135,6 +135,7 @@ public class MethodInstance: Function
         }
         
     public var isGenericMethod = false
+    public var isMainMethod: Bool = false
     public var conditionalTypes: Types = []
     public weak var method: Method!
     
@@ -165,7 +166,7 @@ public class MethodInstance: Function
         return(instance as! Self)
         }
         
-    public func freshTypeVariable(inContext context: TypeContext) -> MethodInstance
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
         let newReturnType = self.returnType.freshTypeVariable(inContext: context)
@@ -192,10 +193,21 @@ public class MethodInstance: Function
         return(!failed)
         }
         
-    public func printInstance()
+    public func emitCode(forArguments: Expressions,into: T3ABuffer,using: CodeGenerator) throws
         {
-        let types = self.parameters.map{$0.type!.displayString}.joined(separator: ",")
-        print("\(self.label)(\(types)) -> \(self.returnType.displayString)")
+        }
+        
+    public override func initializeType(inContext context: TypeContext) throws
+        {
+        try self.parameters.forEach{try $0.initializeType(inContext: context)}
+        try self.returnType.initializeType(inContext: context)
+        self.type = self.returnType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+        {
+        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        try self.returnType.initializeTypeConstraints(inContext: context)
         }
         
     public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
@@ -275,24 +287,6 @@ public class MethodInstance: Function
                 }
             }
         return(true)
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
-        self.type = context.freshTypeVariable()
-        }
-        
-    public func instanciate() -> MethodInstance
-        {
-        fatalError()
-        }
-        
-    public func flatten() -> MethodInstance
-        {
-        let instance = MethodInstance(label: self.label)
-        instance.parameters = self.parameters.map{$0.flatten()}
-        instance.returnType = self.returnType.type!
-        return(instance)
         }
     }
 

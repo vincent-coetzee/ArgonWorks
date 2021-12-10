@@ -76,6 +76,17 @@ public class IfBlock: Block
         return(ifBlock as! Self)
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let ifBlock = IfBlock(condition: self.condition.freshTypeVariable(inContext: context))
+        for block in self.blocks
+            {
+            ifBlock.addBlock(block.freshTypeVariable(inContext: context))
+            }
+        ifBlock.type = self.type!.freshTypeVariable(inContext: context)
+        return(ifBlock as! Self)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.condition.initializeType(inContext: context)

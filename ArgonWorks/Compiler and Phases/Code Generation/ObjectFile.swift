@@ -15,6 +15,33 @@ public class ObjectFile: NSObject,NSCoding
     public let filename: String
     public let root: Symbol
     
+    public static func write(module: Module,topModule: TopModule,atPath: String) throws
+        {
+        let objectFile = ObjectFile(filename: atPath,module: module,root: topModule,date: Date())
+        if let url = URL(string: atPath)
+            {
+            ImportArchiver.isSwappingSystemTypes = true
+            let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
+            try data.write(to: url)
+            }
+        }
+        
+    public static func read(atPath: String,topModule: TopModule) throws -> ObjectFile
+        {
+        if let url = URL(string: atPath)
+            {
+            let data = try Data(contentsOf: url)
+            ImportUnarchiver.topModule = topModule
+            let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(data)
+            if let objectFile = result as? ObjectFile
+                {
+                return(objectFile)
+                }
+            throw(CompilerIssue(location: .zero, message: "Expected an ObjectFile but did not find one."))
+            }
+        throw(CompilerIssue(location: .zero,message: "The path '\(atPath)' can not be accessed."))
+        }
+        
     init(filename: String,module: Module,root: Symbol,date:Date = Date(),version: SemanticVersion = SemanticVersion(major: 1, minor: 0, patch: 0))
         {
         self.module = module

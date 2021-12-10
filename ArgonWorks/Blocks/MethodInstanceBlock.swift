@@ -45,6 +45,12 @@ public class MethodInstanceBlock: Block,StackFrame,Scope
         super.init(coder: coder)
         }
     
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self._methodInstance,forKey: "methodInstance")
+        super.encode(with: coder)
+        }
+        
     public override func lookup(label: String) -> Symbol?
         {
         for symbol in self.localSymbols
@@ -123,13 +129,6 @@ public class MethodInstanceBlock: Block,StackFrame,Scope
         let newBlock = super.deepCopy()
         newBlock._methodInstance = self.methodInstance
         return(newBlock)
-        }
-        
-    public override func encode(with coder: NSCoder)
-        {
-        print("START ENCODE \(Swift.type(of: self))")
-        coder.encode(self._methodInstance,forKey: "methodInstance")
-        super.encode(with: coder)
         }
         
     public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws

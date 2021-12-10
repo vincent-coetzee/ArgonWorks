@@ -161,8 +161,23 @@ public class Slot:Symbol
         {
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        if self.type.isNil
+            {
+            return(self)
+            }
+        let slot = Self.init(label: label)
+        slot.type = self.type!.freshTypeVariable(inContext: context)
+        return(slot)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
+        if self.label == "newArray"
+            {
+            print("halt")
+            }
         if self.type.isNil
             {
             if let slotType = context.lookupBinding(atLabel: self.label)

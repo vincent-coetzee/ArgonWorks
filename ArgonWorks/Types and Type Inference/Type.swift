@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Type: Symbol,Displayable
+public class Type: Symbol,Displayable,UserDisplayable
     {
     private static var typeMappings = Dictionary<Name,Type>()
     
@@ -52,6 +52,11 @@ public class Type: Symbol,Displayable
         lhs === rhs
         }
         
+    public var userString: String
+        {
+        "Type"
+        }
+        
     public override var description: String
         {
         self.displayString
@@ -62,19 +67,9 @@ public class Type: Symbol,Displayable
         []
         }
         
-    public var isUnknown: Bool
-        {
-        false
-        }
-        
     public var hasVariableTypes: Bool
         {
         false
-        }
-        
-    public var inferredType: Type
-        {
-        self
         }
         
     public var rawClass: Class
@@ -87,17 +82,27 @@ public class Type: Symbol,Displayable
         fatalError()
         }
         
+    public var arrayElementType: Type
+        {
+        fatalError()
+        }
+        
+    public var isArray: Bool
+        {
+        false
+        }
+        
     public var isTypeVariable: Bool
         {
         false
         }
         
-    public var isTypeConstructor: Bool
+    public var isFunction: Bool
         {
         false
         }
         
-    public var isLambda: Bool
+    public var isTypeConstructor: Bool
         {
         false
         }
@@ -165,7 +170,9 @@ public class Type: Symbol,Displayable
         
     required init?(coder: NSCoder)
         {
-        fatalError()
+        print("START DECODE TYPE")
+        super.init(coder: coder)
+        print("END DECODE TYPE")
         }
         
     public func of(_ type: Type) -> Type
@@ -175,7 +182,9 @@ public class Type: Symbol,Displayable
         
     public override func encode(with coder: NSCoder)
         {
-        fatalError()
+        print("START ENCODE TYPE \(self.label)")
+        super.encode(with: coder)
+        print("END ENCODE TYPE")
         }
         
     internal func freshType(inContext: TypeContext) -> Type
@@ -183,14 +192,14 @@ public class Type: Symbol,Displayable
         return(self)
         }
         
+    public func initializer(_ primitiveIndex: Int,_ args:Type...)
+        {
+        fatalError()
+        }
+        
     public func isSubtype(of: Type) -> Bool
         {
         false
-        }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(nil)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -198,7 +207,11 @@ public class Type: Symbol,Displayable
         substitution.substitute(self) as! Self
         }
         
-    public func freshTypeVariable(inContext: TypeContext) -> Type
+    public override func typeCheck() throws
+        {
+        }
+        
+    public override func freshTypeVariable(inContext: TypeContext) -> Self
         {
         self
         }

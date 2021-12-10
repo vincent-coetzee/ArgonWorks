@@ -27,8 +27,8 @@ public class BinaryExpression: Expression
     internal let operation: Token.Symbol
     internal let rhs: Expression
     internal let lhs: Expression
-    internal var method: Method?
-    internal var methodInstance: MethodInstance?
+    internal var methodInstances: MethodInstances = []
+    internal var selectedMethodInstance: MethodInstance?
     
     init(_ lhs:Expression,_ operation:Token.Symbol,_ rhs:Expression)
         {
@@ -47,51 +47,6 @@ public class BinaryExpression: Expression
 
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-//        let left = self.lhs.type
-//        let right = self.rhs.type
-//        switch(self.operation)
-//            {
-//            case .and:
-//                fallthrough
-//            case .or:
-//                if left.isSameClass(self.enclosingScope.topModule.argonModule.boolean) && right.isSameClass(self.enclosingScope.topModule.argonModule.boolean)
-//                    {
-//                    break
-//                    }
-//                analyzer.cancelCompletion()
-//                analyzer.dispatchError(at: self.declaration!,message: "Invalid argument types for \(self.operation).")
-//            case .leftBrocket:
-//                fallthrough
-//            case .leftBrocketEquals:
-//                fallthrough
-//            case .equals:
-//                fallthrough
-//            case .rightBrocket:
-//                fallthrough
-//            case .rightBrocketEquals:
-//                if left.isPrimitiveClass && right.isPrimitiveClass
-//                    {
-//                    break
-//                    }
-//                if left.isEnumeration && right.isEnumeration
-//                    {
-//                    break
-//                    }
-//                if left.isObjectClass && right.isObjectClass
-//                    {
-//                    break
-//                    }
-//                analyzer.cancelCompletion()
-//                analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
-//                return
-//        default:
-//            if left == right
-//                {
-//                break
-//                }
-//            analyzer.cancelCompletion()
-//            analyzer.dispatchError(at: self.declaration!,message: "The types on the left side and right side of this expression do not match.")
-//            }
         }
         
     required init?(coder: NSCoder)
@@ -99,6 +54,7 @@ public class BinaryExpression: Expression
         self.operation = coder.decodeTokenSymbol(forKey: "operation")
         self.lhs = coder.decodeObject(forKey:"lhs") as! Expression
         self.rhs = coder.decodeObject(forKey:"rhs") as! Expression
+        self.selectedMethodInstance = coder.decodeObject(forKey: "selectedMethodInstance") as? MethodInstance
         super.init(coder: coder)
         }
         
@@ -120,80 +76,111 @@ public class BinaryExpression: Expression
         coder.encodeTokenSymbol(self.operation,forKey: "operation")
         coder.encode(self.lhs,forKey: "lhs")
         coder.encode(self.rhs,forKey: "rhs")
+        coder.encode(self.selectedMethodInstance,forKey: "selectedMethodInstance")
+        super.encode(with: coder)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.lhs.initializeType(inContext: context)
         try self.rhs.initializeType(inContext: context)
-        if let methods = self.enclosingScope.lookupN(label: operation.rawValue)
+        self.type = context.freshTypeVariable()
+        try context.extended(withContentsOf: [])
             {
-            if let selectedMethod = methods.filter({$0 is InfixOperator}).first as? InfixOperator
-                {
-                self.method = selectedMethod
-                self.type = selectedMethod.returnType
-                }
-            else
-                {
-                self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) of the correct type can not be resolved.")
-                self.type = context.voidType
-                }
+            newContext in
+            newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+            newContext.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
+            newContext.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
+            try self.lhs.initializeTypeConstraints(inContext: newContext)
+            try self.rhs.initializeTypeConstraints(inContext: newContext)
+            let substitution = newContext.unify()
+            let leftType = substitution.substitute(self.lhs.type!)
+            let rightType = substitution.substitute(self.rhs.type!)
+            self.type = leftType
+            self.selectedMethodInstance = MethodInstance(label: self.operation.rawValue)
+            self.selectedMethodInstance!.parameters = [Parameter(label: "left", relabel: nil, type: leftType, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rightType, isVisible: false, isVariadic: false)]
+            self.selectedMethodInstance!.returnType = leftType
             }
-        else
-            {
-            self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) can not be resolved.")
-            self.type = context.voidType
-            }
+//        if let methods = self.enclosingScope.lookupN(label: operation.rawValue)
+//            {
+//            self.methodInstances = methods.filter{$0 is InfixOperatorInstance}.map{$0 as! InfixOperatorInstance}
+//            if !methodInstances.isEmpty
+//                {
+//                self.type = methodInstances.first!.returnType
+//                }
+//            else
+//                {
+//                self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) of the correct type can not be resolved.")
+//                self.type = context.voidType
+//                }
+//            }
+//        else
+//            {
+//            self.appendIssue(at: self.declaration!, message: "The operator \(self.operation) can not be resolved.")
+//            self.type = context.voidType
+//            }
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = BinaryExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type!.freshTypeVariable(inContext: context)
+        expression.selectedMethodInstance = self.selectedMethodInstance
+        return(expression as! Self)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
-        expression.method = self.method
-        expression.methodInstance = self.methodInstance
+        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.issues = self.issues
         return(expression as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
-        print("BINARY EXPRESSION")
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
-        if let method = self.method
-            {
-            let methodMatcher = MethodInstanceMatcher(method: method, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
-            methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
-            methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-            methodMatcher.appendReturnType(self.type!)
-            if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
-                {
-                self.methodInstance = specificInstance
-                print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operation.rawValue) = \(specificInstance.displayString)")
-                methodMatcher.appendTypeConstraints(to: context)
-                }
-            else
-                {
-                print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(method.label)")
-                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(method.label)' ) can not be resolved. Try making it more specific.")
-                }
-            }
+//        print("BINARY EXPRESSION")
+//        try self.lhs.initializeTypeConstraints(inContext: context)
+//        try self.rhs.initializeTypeConstraints(inContext: context)
+//        if !self.methodInstances.isEmpty
+//            {
+//            let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
+//            methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+//            methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+//            methodMatcher.appendReturnType(self.type!)
+//            if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
+//                {
+//                self.selectedMethodInstance = specificInstance
+//                print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operation.rawValue) = \(specificInstance.displayString)")
+//                }
+//            else
+//                {
+//                print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(self.methodInstances.first!.label)")
+//                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.methodInstances.first!.label)' ) can not be resolved. Try making it more specific.")
+//                }
+//            }
+
         }
         
     public override func display(indent: String)
         {
         print("\(indent)BINARY EXPRESSION: \(self.operation)")
+        if self.lhs.type.isNil
+            {
+            print("halt")
+            }
         print("\(indent)LHS: \(self.lhs.type.displayString)")
         self.lhs.display(indent: indent + "\t")
         print("\(indent)RHS: \(self.rhs.type.displayString)")
         self.rhs.display(indent: indent + "\t")
-        if self.methodInstance.isNil
+        if self.selectedMethodInstance.isNil
             {
             print("\(indent)SELECTED INSTANCE - NONE")
             }
         else
             {
-            print("\(indent)SELECTED INSTANCE \(self.methodInstance!.displayString)")
+            print("\(indent)SELECTED INSTANCE \(self.selectedMethodInstance!.displayString)")
             }
         }
         
@@ -208,6 +195,7 @@ public class BinaryExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
+        try self.selectedMethodInstance?.emitCode(forArguments: [self.lhs,self.rhs],into: instance,using: generator)
 //        if let location = self.declaration
 //            {
 //            instance.append(lineNumber: location.line)

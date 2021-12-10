@@ -27,3 +27,22 @@ extension Array where Element:Block
         self.map{$0.displayString}.joined(separator: "; ")
         }
     }
+
+public protocol UserDisplayable
+    {
+    var userString: String { get }
+    }
+
+extension Optional where Wrapped:UserDisplayable
+    {
+    public var userString: String
+        {
+        switch(self)
+            {
+            case .some(let value):
+                return(value.userString)
+            case .none:
+                return("Nil")
+            }
+        }
+    }

@@ -9,15 +9,15 @@ import Foundation
 
 public class ImportArchiver: NSKeyedArchiver
     {
-    public static var isSwappingSystemSymbols: Bool = false
+    public static var isSwappingSystemTypes: Bool = false
     public static var isSwappingImportedSymbols: Bool = false
     
-    public private(set) var swappedSystemSymbolNames = Array<String>()
+    public private(set) var swappedSystemTypeNames = Array<String>()
     public private(set) var swappedImportedSymbolNames = Array<String>()
     
-    public var isSwappingSystemSymbols: Bool
+    public var isSwappingSystemTypes: Bool
         {
-        Self.isSwappingSystemSymbols
+        Self.isSwappingSystemTypes
         }
         
     public var isSwappingImportedSymbols: Bool
@@ -35,13 +35,13 @@ public class ImportArchiver: NSKeyedArchiver
         super.init()
         }
         
-    public func noteSwappedSystemSymbol(_ symbol: Symbol)
+    public func noteSwappedSystemType(_ symbol: Symbol)
         {
-        self.swappedSystemSymbolNames.append(symbol.fullName.displayString)
+        self.swappedSystemTypeNames.append(symbol.fullName.displayString)
         }
         
     public func noteSwappedImportedSymbol(_ symbol: Symbol)
         {
-        self.swappedSystemSymbolNames.append(symbol.fullName.displayString)
+        self.swappedImportedSymbolNames.append(symbol.fullName.displayString)
         }
     }

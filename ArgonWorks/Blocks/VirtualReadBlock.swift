@@ -11,6 +11,23 @@ public class VirtualReadBlock: Block,Scope,StackFrame
     {
     internal var slot: Slot!
     
+    required init?(coder: NSCoder)
+        {
+        self.slot = coder.decodeObject(forKey: "slot") as? Slot
+        super.init(coder: coder)
+        }
+    
+    required init()
+        {
+        super.init()
+        }
+    
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.slot,forKey:"slot")
+        super.encode(with: coder)
+        }
+        
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let block = VirtualReadBlock()
@@ -59,6 +76,23 @@ public class VirtualWriteBlock: VirtualReadBlock
     {
     internal var newValueSlot: Slot!
     
+    required init?(coder: NSCoder)
+        {
+        self.newValueSlot = coder.decodeObject(forKey: "newValueSlot") as? Slot
+        super.init(coder: coder)
+        }
+    
+    required init()
+        {
+        super.init()
+        }
+    
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.newValueSlot,forKey:"newValueSlot")
+        super.encode(with: coder)
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.slot.initializeType(inContext: context)

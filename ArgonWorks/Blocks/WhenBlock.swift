@@ -24,7 +24,7 @@ public class WhenBlock: Block
         
     public required init?(coder: NSCoder)
         {
-        self.condition = Expression()
+        self.condition = coder.decodeObject(forKey: "condition") as! Expression
         super.init(coder: coder)
         }
         
@@ -32,6 +32,12 @@ public class WhenBlock: Block
         {
         self.condition = Expression()
         super.init()
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.condition,forKey: "condition")
+        super.encode(with: coder)
         }
         
     public override func visit(visitor: Visitor) throws

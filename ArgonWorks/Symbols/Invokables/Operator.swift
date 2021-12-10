@@ -157,39 +157,35 @@ public class SystemInfixOperator: InfixOperator
     
 public class Infix
     {
-    var method: SystemInfixOperator
+    private let label: Label
+    
+    init(label: Label)
         {
-        let method = SystemInfixOperator(self.operation)
-        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left),Parameter(label: "b", type: self.right)], returnType: self.out)
-        method.addInstance(instance)
-        return(method)
+        self.label = label
         }
         
-    var instance: MethodInstance
+    func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
         {
-        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left),Parameter(label: "b", type: self.right)], returnType: self.out)
+        let random = Int.random(in: 0..<1000000)
+        
+        let parameters = [type1.parameter(random),type2.parameter(random)]
+        let returnType = type3.value(random,argonModule)
+        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
         return(instance)
         }
         
-    let left: Type
-    let operation: Token.Operator
-    let right: Type
-    let out: Type
-    
-    init(left: String,_ op: String,right: String,out: String)
+    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
         {
-        self.left = TypeVariable(label: left)
-        self.operation = Token.Operator(op)
-        self.right = right == left ? self.left : TypeVariable(label: right)
-        self.out = out == left ? self.left : ( out == right ? self.right : TypeVariable(label: out))
-        }
+        let random = Int.random(in: 0..<1000000)
         
-    init(_ a:Type,_ op:String,_ b:Type,_ out:Type)
-        {
-        self.left = a
-        self.right = b == a ? a : b
-        self.out = out == a ? a : (out == b ? b : out)
-        self.operation = Token.Operator(op)
+        let parameters = [type1.parameter(random)]
+        let returnType = type3.value(random,argonModule)
+        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
         }
     }
     
@@ -212,26 +208,23 @@ public class PrefixOperator: Operator
     
 public class Prefix
     {
-    var method: SystemPrefixOperator
+    private let label: Label
+    
+    init(label: Label)
         {
-        let method = SystemPrefixOperator(self.operation)
-        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: [Parameter(label: "a", type: self.left)], returnType: self.out)
-        method.addInstance(instance)
-        return(method)
+        self.label = label
         }
         
-    let left: Type
-    let operation: Token.Operator
-    let right: Type?
-    let out: Type
-    
-    init(_ op: String,_ left: Type,_ right: Type? = nil,out: Class)
+    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitivePrefixOperatorInstance
         {
-        let r = right == left ? left : right
-        self.left = left
-        self.operation = Token.Operator(op)
-        self.right = right.isNil ? nil : r
-        self.out = out.type
+        let random = Int.random(in: 0..<1000000)
+        
+        let parameters = [type1.parameter(random)]
+        let returnType = type3.value(random,argonModule)
+        let instance = PrimitivePrefixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
         }
     }
 
@@ -245,29 +238,22 @@ public class SystemPrefixOperator: PrefixOperator
 
 public class Postfix
     {
-    var method: SystemPostfixOperator
+    private let label: Label
+    
+    init(label: Label)
         {
-        let method = SystemPostfixOperator(self.operation)
-        var parms = [Parameter(label: "a", type: self.left)]
-        if self.right.isNotNil
-            {
-            parms.append(Parameter(label: "b", type: self.right!))
-            }
-        let instance = PrimitiveMethodInstance(label: self.operation.name, parameters: parms, returnType: self.out)
-        method.addInstance(instance)
-        return(method)
+        self.label = label
         }
         
-    let left: Type
-    let operation: Token.Operator
-    let right: Type?
-    let out: Type
-    
-    init(_ op: String,_ left: Type,_ right: Type? = nil,out: Type)
+    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitivePostfixOperatorInstance
         {
-        self.left = left
-        self.operation = Token.Operator(op)
-        self.right = right.isNil ? nil : (right! == left ? left : right!)
-        self.out = out
+        let random = Int.random(in: 0..<1000000)
+        
+        let parameters = [type1.parameter(random)]
+        let returnType = type3.value(random,argonModule)
+        let instance = PrimitivePostfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
         }
     }

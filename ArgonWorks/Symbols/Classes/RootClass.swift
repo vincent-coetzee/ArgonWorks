@@ -19,10 +19,10 @@ public class RootClass: SystemClass
         return(true)
         }
         
-    public override class func classForKeyedUnarchiver() -> AnyClass
-        {
-        return(ImportedRootClass.self)
-        }
+//    public override class func classForKeyedUnarchiver() -> AnyClass
+//        {
+//        return(ImportedRootClass.self)
+//        }
     }
 
 public class ImportedRootClass: RootClass

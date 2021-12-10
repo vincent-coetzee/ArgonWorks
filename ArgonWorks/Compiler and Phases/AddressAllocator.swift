@@ -9,13 +9,6 @@ import Foundation
 
 public class AddressAllocator: CompilerPass
     {
-    @discardableResult
-    public static func allocateAddresses(_ node:ParseNode,in compiler: Compiler) -> Bool
-        {
-        let allocator = AddressAllocator(compiler: compiler)
-        return(allocator.allocateAddresses(node))
-        }
-        
     public var virtualMachine: VirtualMachine
         {
         fatalError("Virtual Machine needed")
@@ -24,7 +17,7 @@ public class AddressAllocator: CompilerPass
     public let compiler: Compiler
     public var wasCancelled = false
     
-    init(compiler: Compiler)
+    init(_ compiler: Compiler)
         {
         self.compiler = compiler
         }
@@ -34,9 +27,17 @@ public class AddressAllocator: CompilerPass
         self.wasCancelled = true
         }
         
-    private func allocateAddresses(_ node:ParseNode) -> Bool
+    public func processModule(_ module: Module?) -> Module?
         {
-        node.allocateAddresses(using: self)
-        return(!self.wasCancelled)
+        guard let module = module else
+            {
+            return(nil)
+            }
+        let newModule = module.moduleWithAllocatedAddresses(using: self)
+        guard !self.wasCancelled else
+            {
+            return(nil)
+            }
+        return(newModule)
         }
     }

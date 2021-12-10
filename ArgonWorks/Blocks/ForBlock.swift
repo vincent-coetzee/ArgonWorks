@@ -21,6 +21,19 @@ public class ForBlock: Block,StackFrame,Scope
         self.inductionSlot.setParent(self)
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let forBlock = ForBlock(inductionSlot: self.inductionSlot.freshTypeVariable(inContext: context), elements: self.elements.freshTypeVariable(inContext: context))
+        for block in self.blocks
+            {
+            let newBlock = block.freshTypeVariable(inContext: context)
+            newBlock.type = block.type!.freshTypeVariable(inContext: context)
+            forBlock.addBlock(newBlock)
+            }
+        forBlock.type = self.type!.freshTypeVariable(inContext: context)
+        return(forBlock as! Self)
+        }
+        
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let forBlock = ForBlock(inductionSlot: substitution.substitute(self.inductionSlot) as! LocalSlot, elements: substitution.substitute(self.elements))

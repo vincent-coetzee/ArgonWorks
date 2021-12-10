@@ -62,12 +62,16 @@ public class TypeConstructor: Type
         
     required init?(coder: NSCoder)
         {
-        fatalError()
+        print("START DECODE TYPE CONSTRUCTOR")
+        self.generics = coder.decodeObject(forKey: "generics") as! Types
+        super.init(coder: coder)
+        print("END DECODE TYPE CONSTRUCTOR")
         }
         
     public override func encode(with coder: NSCoder)
         {
-        fatalError()
+        coder.encode(self.generics,forKey:"generics")
+        super.encode(with: coder)
         }
         
     public override func contains(_ type:Type) -> Bool
@@ -84,5 +88,9 @@ public class TypeConstructor: Type
                 }
             }
         return(false)
+        }
+        
+    public override func typeCheck() throws
+        {
         }
     }

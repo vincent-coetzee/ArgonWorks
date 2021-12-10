@@ -34,13 +34,13 @@ public class Metaclass: Class
     
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(self.theClass,forKey: "theClass")
+        coder.encode(self.theClass,forKey: "theMetaClass")
         super.encode(with: coder)
         }
         
     required init?(coder: NSCoder)
         {
-        self.theClass = coder.decodeObject(forKey: "theClass") as? Class
+        self.theClass = coder.decodeObject(forKey: "theMetaClass") as? Class
         super.init(coder: coder)
         }
         

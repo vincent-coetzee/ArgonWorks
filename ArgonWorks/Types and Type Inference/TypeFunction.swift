@@ -9,6 +9,11 @@ import Foundation
 
 public class TypeFunction: TypeConstructor
     {
+    public override var isFunction: Bool
+        {
+        true
+        }
+        
     public override var hasVariableTypes: Bool
         {
         for type in self.generics

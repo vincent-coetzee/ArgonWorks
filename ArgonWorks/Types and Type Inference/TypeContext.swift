@@ -129,6 +129,23 @@ public class TypeContext
             Argument(tag: argument.tag, value: self.substitute(argument.value))
             }
             
+        public func substitute(_ element: TupleElement) -> TupleElement
+            {
+            switch(element)
+                {
+                case .literal(let literal):
+                    return(.literal(self.substitute(literal)))
+                case .slot(let slot):
+                    return(.slot(self.substitute(slot)))
+                case .tuple(let tuple):
+                    return(.tuple(self.substitute(tuple)))
+                case .expression(let expression):
+                    return(.expression(self.substitute(expression)))
+                case .type(let type):
+                    return(.type(self.substitute(type)))
+                }
+            }
+            
         public func substitute(_ parameter: Parameter) -> Parameter
             {
             Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type!), isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
@@ -147,11 +164,29 @@ public class TypeContext
                 }
             if let typeClass = type as? TypeClass
                 {
-                return(TypeClass(class: typeClass.theClass,generics: typeClass.generics.map{self.substitute($0)}))
+                let aClass = typeClass.theClass
+                if aClass.isSystemClass && aClass.isGenericClass
+                    {
+                    let aType = TypeClass(systemClass: aClass,generics: typeClass.generics.map{self.substitute($0)})
+                    aType.setParent(type.parent)
+                    return(aType)
+                    }
+                else if aClass.isSystemClass
+                    {
+                    return(typeClass)
+                    }
+                else
+                    {
+                    let aType = TypeClass(class: aClass,generics: typeClass.generics.map{self.substitute($0)})
+                    aType.setParent(type.parent)
+                    return(aType)
+                    }
                 }
             if let typeEnumeration = type as? TypeEnumeration
                 {
-                return(TypeEnumeration(enumeration: typeEnumeration.enumeration,generics: typeEnumeration.generics.map{self.substitute($0)}))
+                let anEnum = TypeEnumeration(enumeration: typeEnumeration.enumeration,generics: typeEnumeration.generics.map{self.substitute($0)})
+                anEnum.setParent(type)
+                return(anEnum)
                 }
             if let constructor = type as? TypeConstructor
                 {
@@ -171,7 +206,16 @@ public class TypeContext
             
         public func substitute(_ tuple: Tuple) -> Tuple
             {
-            Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
+            if tuple.isEmpty
+                {
+                print("halt")
+                }
+            let newTuple = Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
+            if newTuple.isEmpty
+                {
+                print("halt")
+                }
+            return(newTuple)
             }
             
         public func substitute(_ symbol: Symbol) -> Symbol
@@ -244,11 +288,20 @@ public class TypeContext
             
         public func unifySubtypes(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
+                {
+                if !left.typeClass.theClass.isSubclass(of: right.typeClass.theClass)
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.typeClass.fullName.displayString) is not subclass of \(right.typeClass.fullName.displayString)"))
+                    }
+                try self.unifySubtypes(left.typeClass,right.typeClass)
+                return
+                }
             if let left = lhs as? TypeClass,let right = rhs as? TypeClass
                 {
                 if !left.theClass.isSubclass(of: right.theClass)
                     {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.theClass.fullName.displayString) is not subclass of \(right.theClass.fullName.displayString)"))
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.theClass.index) is not equivalent to \(right.displayString)-\(right.theClass.index) [\(right.fullName.displayString)]"))
                     }
                 for (leftType,rightType) in zip(left.generics,right.generics)
                     {
@@ -316,7 +369,7 @@ public class TypeContext
                     }
                 if self.occursIn(left.id,rhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString)"))
+                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
                     }
                 self.typeVariables[left.id] = rhs
                 return
@@ -330,7 +383,7 @@ public class TypeContext
                     }
                 if self.occursIn(right.id,lhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(right.displayString)"))
+                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(right.displayString) \(lhs.displayString)"))
                     }
                 self.typeVariables[right.id] = lhs
                 return
@@ -339,11 +392,16 @@ public class TypeContext
             
         public func unify(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
+                {
+                try self.unify(left.typeClass,right.typeClass)
+                return
+                }
             if let left = lhs as? TypeClass,let right = rhs as? TypeClass
                 {
                 if left.theClass != right.theClass && left.theClass != self.typeContext!.objectClass && right.theClass != self.typeContext!.objectClass
                     {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.theClass.fullName.displayString)-\(left.theClass.index) \(right.theClass.fullName.displayString)-\(right.theClass.index)"))
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.theClass.index) is not equivalent to \(right.displayString)-\(right.theClass.index) [\(right.fullName.displayString)]"))
                     }
                 for (leftType,rightType) in zip(left.generics,right.generics)
                     {
@@ -414,7 +472,7 @@ public class TypeContext
                     print("INFINITELY RECURSIVE TYPES")
                     print("LHS: \(lhs.displayString)")
                     print("RHS: \(rhs.displayString)")
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString)"))
+                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
                     }
                 self.typeVariables[left.id] = rhs
                 return
@@ -428,7 +486,7 @@ public class TypeContext
                     }
                 if self.occursIn(right.id,lhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(right.displayString)"))
+                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(lhs.displayString) \(right.displayString)"))
                     }
                 self.typeVariables[right.id] = lhs
                 return
@@ -547,7 +605,7 @@ public class TypeContext
         
     private let scope: Scope
     private var environment = Environment()
-    private var stack = Stack<Context>()
+    private static var stack = Stack<Context>()
     private var substitution:Substitution
     internal private(set) var constraints = TypeConstraints()
     
@@ -600,46 +658,29 @@ public class TypeContext
         self.environment[label]
         }
         
-    private func deepCopy() -> TypeContext
-        {
-        let newContext = TypeContext(scope: self.scope)
-        newContext.environment = self.environment
-        newContext.substitution = Substitution(self.substitution)
-        return(newContext)
-        }
-        
-    public func push() -> TypeContext
-        {
-        self.stack.push(Context(environment: self.environment,constraints: self.constraints))
-        return(self)
-        }
-        
-    @discardableResult
-    public func pop() -> TypeContext
-        {
-        let context = self.stack.pop()
-        self.environment = context.environment
-        self.constraints = context.constraints
-        return(self)
-        }
-        
     public func extended<T>(withContentsOf: TaggedTypes,closure: (TypeContext) throws -> T) throws -> T
         {
-        let newContext = self.push()
-        defer
-            {
-            self.pop()
-            }
+        let context = TypeContext(scope: self.scope)
+        let newSubstitution = Substitution(self.substitution)
+        context.substitution = newSubstitution
+        context.substitution.typeContext = context
+        context.environment = self.environment
+        context.constraints = self.constraints
 //        for type in withContentsOf
 //            {
 //            newContext.environment[Name(type.tag!)] = type.type
 //            }
-        return(try closure(newContext))
+        return(try closure(context))
         }
         
     public func extended(with type: Type,boundTo label: Label) -> TypeContext
         {
-        let context = self.push()
+        let context = TypeContext(scope: self.scope)
+        let newSubstitution = Substitution(self.substitution)
+        context.substitution = newSubstitution
+        context.substitution.typeContext = context
+        context.environment = self.environment
+        context.constraints = self.constraints
 //        context.environment[Name(label)] = type
         return(context)
         }
@@ -647,6 +688,7 @@ public class TypeContext
     public func unify() -> Substitution
         {
         let newSubstitution = Substitution(self.substitution)
+        newSubstitution.typeContext = self
         for constraint in self.constraints
             {
             do

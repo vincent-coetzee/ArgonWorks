@@ -42,34 +42,22 @@ public class StandardMethodInstance: MethodInstance
     public var genericParameters = Types()
     public required init?(coder: NSCoder)
         {
-//        print("START DECODE METHOD INSTANCE")
+        self.block = coder.decodeObject(forKey: "block") as? MethodInstanceBlock
         self._method = coder.decodeObject(forKey: "method") as? Method
         self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! Types
         super.init(coder: coder)
-//        print("END DECODE METHOD INSTANCE \(self.label)")
         }
 
     public override func encode(with coder:NSCoder)
         {
-//        print("ENCODE METHOD INSTANCE \(self.label)")
-        super.encode(with: coder)
+        coder.encode(self.block,forKey: "block")
         coder.encode(self.method,forKey: "method")
         coder.encode(self.buffer,forKey: "buffer")
         coder.encode(self.genericParameters,forKey: "genericParameters")
+        super.encode(with: coder)
         }
-        
-//    public var systemMethod: ArgonWorks.Method
-//        {
-//        if self._method.isNotNil
-//            {
-//            return(self._method!)
-//            }
-//        let method = SystemMethod(label: self.label)
-//        method.addInstance(self)
-//        self._method = method
-//        return(method)
-//        }
+
         
     public override var method: ArgonWorks.Method!
         {
@@ -184,6 +172,23 @@ public class StandardMethodInstance: MethodInstance
         buffer.append("RET",.none,.none,.none)
         }
         
+    public override func addDeclaration(_ location: Location)
+        {
+        super.addDeclaration(location)
+        self.block.addDeclaration(location)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
+        let newReturnType = self.returnType.freshTypeVariable(inContext: context)
+        let newInstance = Self(label: self.label)
+        newInstance.parameters = newParameters
+        newInstance.returnType = newReturnType
+        newInstance.block = self.block.freshTypeVariable(inContext: context) as! MethodInstanceBlock
+        return(newInstance)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = StandardMethodInstance(label: self.label)
@@ -214,6 +219,11 @@ public class StandardMethodInstance: MethodInstance
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
+        }
+        
+    public override func typeCheck() throws
+        {
+        try self.block.typeCheck()
         }
         
     public override func visit(visitor: Visitor) throws

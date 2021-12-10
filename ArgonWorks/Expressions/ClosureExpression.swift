@@ -67,6 +67,7 @@ public class ClosureExpression: Expression
         {
         let expression = ClosureExpression(closure: substitution.substitute(self.closure!))
         expression.type = substitution.substitute(self.type!)
+        expression.issues = self.issues
         return(expression as! Self)
         }
         

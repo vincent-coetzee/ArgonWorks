@@ -100,6 +100,21 @@ public enum Parent:Storable
             }
         }
         
+    public var parent: Parent
+        {
+        switch(self)
+            {
+            case .none:
+                fatalError()
+            case .node(let node):
+                return(node.parent)
+            case .expression(let expression):
+                return(expression.parent)
+            case .block(let block):
+                return(block.parent)
+            }
+        }
+        
     public var fullName: Name
         {
         switch(self)

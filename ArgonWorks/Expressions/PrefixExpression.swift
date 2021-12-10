@@ -10,12 +10,12 @@ import Foundation
 public class PrefixExpression: OperatorExpression
     {
     private let rhs: Expression
-    private var methodInstance: MethodInstance?
     
-    init(operation: Operator,rhs: Expression)
+    init(operatorLabel:Label,operators: MethodInstances,rhs: Expression)
         {
         self.rhs = rhs
-        super.init(operation: operation)
+        super.init(operatorLabel: operatorLabel,operators: operators)
+        self.rhs.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -34,7 +34,7 @@ public class PrefixExpression: OperatorExpression
         
     public override func display(indent: String)
         {
-        print("\(indent)PREFIX EXPRESSION: \(self.operation.label)")
+        print("\(indent)PREFIX EXPRESSION: \(self.operatorLabel)")
         print("\(indent)RHS:")
         self.rhs.display(indent: indent + "\t")
         }
@@ -53,33 +53,35 @@ public class PrefixExpression: OperatorExpression
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.rhs.initializeType(inContext: context)
-        self.type = self.operation.returnType.freshTypeVariable(inContext: context)
+        self.type = self.operators.first!.returnType.freshTypeVariable(inContext: context)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = PrefixExpression(operation: self.operation,rhs: substitution.substitute(self.rhs))
+        let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
+        expression.selectedMethodInstance = self.selectedMethodInstance?.substitute(from: substitution)
+        expression.issues = self.issues
         return(expression as! Self)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.rhs.initializeTypeConstraints(inContext: context)
-        let methodMatcher = MethodInstanceMatcher(method: self.operation, argumentExpressions: [self.rhs], reportErrors: true)
+        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.rhs], reportErrors: true)
         methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
         methodMatcher.appendReturnType(self.type!)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            self.methodInstance = specificInstance
+            self.selectedMethodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
             methodMatcher.appendTypeConstraints(to: context)
             }
         else
             {
             print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
-            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operation.label)' ) can not be resolved. Try making it more specific.")
+            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operatorLabel)' ) can not be resolved. Try making it more specific.")
             }
         }
     }

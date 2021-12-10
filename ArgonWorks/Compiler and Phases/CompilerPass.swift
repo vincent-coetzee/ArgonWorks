@@ -13,6 +13,7 @@ public protocol CompilerPass
     var compiler: Compiler { get }
     func dispatchError(at: Location,message: String)
     func cancelCompletion()
+    func processModule(_ module: Module?) -> Module?
     }
     
 extension CompilerPass

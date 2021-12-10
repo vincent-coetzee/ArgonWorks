@@ -65,7 +65,9 @@ public class ReturnBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        ReturnBlock(expression: substitution.substitute(self.value)) as! Self
+        let block = ReturnBlock(expression: substitution.substitute(self.value))
+        block.type = substitution.substitute(self.type!)
+        return(block as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws

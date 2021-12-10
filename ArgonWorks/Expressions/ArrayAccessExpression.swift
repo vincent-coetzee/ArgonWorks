@@ -36,7 +36,7 @@ public class ArrayAccessExpression: Expression
         super.encode(with: coder)
         coder.encode(self.isLValue,forKey: "isLValue")
         coder.encode(self.array,forKey: "array")
-        coder.encode(self.index,forKey: "indexx")
+        coder.encode(self.index,forKey: "index")
         }
         
     init(array:Expression,index:Expression)
@@ -64,10 +64,18 @@ public class ArrayAccessExpression: Expression
         self.index.display(indent: indent + "\t\t")
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = ArrayAccessExpression(array: self.array.freshTypeVariable(inContext: context),index: self.index.freshTypeVariable(inContext: context))
+        expression.type = self.type!.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = ArrayAccessExpression(array: substitution.substitute(self.array),index: substitution.substitute(self.index))
         expression.type = substitution.substitute(self.type!)
+        expression.issues = self.issues
         return(expression as! Self)
         }
         
@@ -76,16 +84,25 @@ public class ArrayAccessExpression: Expression
         try self.array.initializeTypeConstraints(inContext: context)
         try self.index.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
-        let arrayClass = (context.arrayType as! TypeClass).theClass
-        let arrayType = TypeClass(class: arrayClass,generics: [self.type!])
+//        let arrayClass = (context.arrayType as! TypeClass).theClass
+//        let variable = context.freshTypeVariable()
+//        let arrayType = TypeClass(class: arrayClass,generics:[variable])
 //        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
+//        context.append(TypeConstraint(left: self.type,right: variable,origin: .expression(self)))
         }
 
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.array.initializeType(inContext: context)
         try self.index.initializeType(inContext: context)
-        self.type = context.freshTypeVariable()
+        if let arrayType = self.array.type,arrayType.isArray
+            {
+            self.type = arrayType.arrayElementType
+            }
+        else
+            {
+            self.type  = context.freshTypeVariable()
+            }
         }
         
     public override func becomeLValue()

@@ -15,13 +15,15 @@ public class TypeInstanciationTerm: Expression
     required init?(coder: NSCoder)
         {
         self.arguments = coder.decodeArguments(forKey: "arguments")
+        self.initializer = coder.decodeObject(forKey: "initializer") as? Initializer
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.arguments,forKey: "arguments")
+        coder.encodeArguments(self.arguments,forKey: "arguments")
+        coder.encode(self.initializer,forKey: "initializer")
         }
 
     public init(type: Type,arguments: Arguments)
@@ -32,10 +34,6 @@ public class TypeInstanciationTerm: Expression
         for argument in arguments
             {
             argument.value.setParent(self)
-            }
-        if self.type!.isClass && !self.type!.classValue.initializers.isEmpty
-            {
-            self.initializer = self.type!.classValue.mostSpecificInitializer(forArguments: self.arguments)
             }
         }
         
@@ -58,7 +56,10 @@ public class TypeInstanciationTerm: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        TypeInstanciationTerm(type: substitution.substitute(self.type!),arguments: self.arguments.map{substitution.substitute($0)}) as! Self
+        let term = TypeInstanciationTerm(type: substitution.substitute(self.type!),arguments: self.arguments.map{substitution.substitute($0)})
+        term.type = substitution.substitute(self.type!)
+        term.issues = self.issues
+        return(term as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -74,17 +75,17 @@ public class TypeInstanciationTerm: Expression
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
         {
         try self.arguments.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        if self.type!.isClass && !self.type!.classValue.initializers.isEmpty
+            {
+            self.initializer = self.type!.classValue.mostSpecificInitializer(forArguments: self.arguments,inContext: context)
+            }
         if self.initializer.isNotNil
             {
             for (argument,parameter) in zip(self.arguments,self.initializer!.parameters)
                 {
                 context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
                 }
-            }
-        if let className = self.initializer?.declaringClass?.fullName,let aType = self.enclosingScope.lookup(name: className) as? Type
-            {
-            context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
-            context.append(TypeConstraint(left: self.type,right: TypeConstructor(label: className.displayString,generics: self.initializer!.parameters.map{$0.type!}),origin: .expression(self)))
+            context.append(TypeConstraint(left: self.type,right: self.initializer?.declaringType,origin: .expression(self)))
             }
         }
         

@@ -83,10 +83,8 @@ public class PseudoVariableExpression: Expression
         {
         if self.variable == .vSelf || self.variable == .vSELF || self.variable == .vSuper
             {
-            if let aClass = (self.enclosingScope.initializerScope as! Initializer).declaringClass
-                {
-                self.type = aClass.type
-                }
+            let aType = (self.enclosingScope.initializerScope as! Initializer).declaringType
+            self.type = aType
             }
         }
         

@@ -14,18 +14,6 @@ public var classesAreLocked = false
 
 public class Class:ContainerSymbol
     {
-    public override var type: Type!
-        {
-        get
-            {
-            fatalError()
-            }
-        set
-            {
-            fatalError()
-            }
-        }
-        
     public var genericSourceClass: Class
         {
         return(self)
@@ -89,7 +77,7 @@ public class Class:ContainerSymbol
         
     public func allSuperclasses(inClass aClass: Class) -> Array<(Int,Class)>
         {
-        let index = aClass.superclasses.firstIndex(of: self.type)!
+        let index = aClass.superclasses.firstIndex(of: self.type!)!
         var array = [(aClass.superclasses.count - index - 1,self)]
         for superclass in self.superclasses
             {
@@ -249,7 +237,7 @@ public class Class:ContainerSymbol
             {
             self._metaclass = Metaclass(label: "\(self.label) class",class: self)
             self._metaclass?.setParent(self.parent)
-            self._metaclass?.superclasses = self.superclasses.map{($0 as! TypeClass).theClass.metaclass!.type}
+            self._metaclass?.superclasses = self.superclasses.map{($0 as! TypeClass).theClass.metaclass!.type!}
             }
         return(self._metaclass!)
         }
@@ -521,6 +509,7 @@ public class Class:ContainerSymbol
         self.magicNumber = label.polynomialRollingHash
         self.mangledCode = label
         super.init(label: label)
+        self.type = self.createType()
         self.addDeclaration(.zero)
         self.layoutSlots.parent = self
         if classesAreLocked && self.label == "Void"
@@ -531,7 +520,7 @@ public class Class:ContainerSymbol
         
     public required init?(coder: NSCoder)
         {
-//        print("START DECODE \(Swift.type(of: self))")
+        print("START DECODE \(Swift.type(of: self))")
         self.subclasses = coder.decodeObject(forKey: "subclasses") as! Types
         self.superclasses = coder.decodeObject(forKey: "superclasses") as! Types
         self.layoutSlots = coder.decodeObject(forKey: "layoutSlots") as! SlotList
@@ -542,12 +531,13 @@ public class Class:ContainerSymbol
         self._metaclass = coder.decodeObject(forKey: "_metaclass") as? Metaclass
         self.mangledCode = coder.decodeObject(forKey: "mangledCode") as! String
         super.init(coder: coder)
-//        print("END DECODE SYMBOL \(self.label)")
+        self.type = self.createType()
+        print("END DECODE SYMBOL \(self.label)")
         }
 
     public override func encode(with coder:NSCoder)
         {
-//        print("ENCODE CLASS \(self.label)")
+        print("ENCODE CLASS \(self.label)")
         coder.encode(self.subclasses,forKey: "subclasses")
         coder.encode(self.superclasses,forKey: "superclasses")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
@@ -577,25 +567,41 @@ public class Class:ContainerSymbol
     public override func deepCopy() -> Self
         {
         fatalError()
-        let newClass = super.deepCopy()
-        newClass.type = TypeClass(class: newClass,generics: [])
-        newClass.subclasses = Array(self.subclasses)
-        newClass.superclasses = Array(self.superclasses)
-        newClass.layoutSlots = SlotList(self.layoutSlots)
-        newClass.magicNumber = self.magicNumber
-        newClass.slotClassType = self.slotClassType
-        newClass.isMemoryPreallocated = false
-//        newClass.header = self.header
-        newClass.hasBytes = self.hasBytes
-        newClass._metaclass = self._metaclass
-        newClass.mangledCode = self.mangledCode
-//        newClass.offsetOfClass = self.offsetOfClass
-        newClass.source = self.source
-        newClass.addresses = self.addresses
-        newClass.locations = self.locations
-        return(newClass)
+//        let newClass = super.deepCopy()
+//        newClass.type = TypeClass(class: newClass,generics: [])
+//        newClass.subclasses = Array(self.subclasses)
+//        newClass.superclasses = Array(self.superclasses)
+//        newClass.layoutSlots = SlotList(self.layoutSlots)
+//        newClass.magicNumber = self.magicNumber
+//        newClass.slotClassType = self.slotClassType
+//        newClass.isMemoryPreallocated = false
+////        newClass.header = self.header
+//        newClass.hasBytes = self.hasBytes
+//        newClass._metaclass = self._metaclass
+//        newClass.mangledCode = self.mangledCode
+////        newClass.offsetOfClass = self.offsetOfClass
+//        newClass.source = self.source
+//        newClass.addresses = self.addresses
+//        newClass.locations = self.locations
+//        return(newClass)
         }
         
+    internal func createType() -> Type
+        {
+        TypeClass(class: self,generics: [])
+        }
+        
+    public func initializer(_ primitiveIndex: Int,_ args:[Type])
+        {
+        let initializer = Initializer(label: Argon.nextName("1INIT"))
+        let parameters = args.map{Parameter(label: Argon.nextName("1PARM"),relabel: nil,type: $0,isVisible: false,isVariadic: false)}
+        self.initializers.append(initializer)
+        initializer.setParent(self)
+        initializer.declaringType = self.type!
+        initializer.parameters = parameters
+        initializer.block.addBlock(PrimitiveBlock(primitiveIndex: primitiveIndex))
+        }
+
     public func addInitializer(_ initializer: Initializer)
         {
         self.initializers.append(initializer)
@@ -604,17 +610,40 @@ public class Class:ContainerSymbol
         
     public func addSubclass(_ aClass: Class)
         {
-        if !self.subclasses.contains(aClass.type)
+        if !self.subclasses.contains(aClass.type!)
             {
-            self.subclasses.append(aClass.type)
+            self.subclasses.append(aClass.type!)
             }
-        if !aClass.superclasses.contains(self.type)
+        if !aClass.superclasses.contains(self.type!)
             {
-            aClass.superclasses.append(self.type)
+            aClass.superclasses.append(self.type!)
             }
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)CLASS \(self.label)")
+        for initter in self.initializers
+            {
+            initter.display(indent: indent + "\t")
+            }
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        self
+        }
+        
+    public override func typeCheck() throws
+        {
+        for initializer in self.initializers
+            {
+            try initializer.typeCheck()
+            }
+        }
+        
+   public override func initializeType(inContext context: TypeContext) throws
         {
         for slot in self.localSlots
             {
@@ -646,9 +675,14 @@ public class Class:ContainerSymbol
         self.subclasses.map{($0 as! TypeClass).theClass}
         }
         
+    public var genericTypes: Types
+        {
+        []
+        }
+        
     internal var classType: Type
         {
-        TypeClass(class: self,generics: [])
+        self.type!
         }
         
     public func addSuperclass(_ type: Type)
@@ -667,13 +701,13 @@ public class Class:ContainerSymbol
         {
         let aClass = (type as! TypeClass).theClass
         self.superclasses.removeAll(where: { type == $0})
-        if aClass.subclasses.contains(self.type)
+        if aClass.subclasses.contains(self.type!)
             {
             aClass.subclasses.removeAll(where: { self == $0})
             }
         }
         
-    public func mostSpecificInitializer(forArguments arguments: Arguments) -> Initializer?
+    public func mostSpecificInitializer(forArguments arguments: Arguments,inContext context: TypeContext) -> Initializer?
         {
         let arity = arguments.count
         let types = arguments.map{$0.value.type!}
@@ -690,7 +724,7 @@ public class Class:ContainerSymbol
         {
         let aClass = (type as! TypeClass).theClass
         self.subclasses.removeAll(where: { type == $0})
-        if aClass.superclasses.contains(self.type)
+        if aClass.superclasses.contains(self.type!)
             {
             aClass.superclasses.removeAll(where: { self == $0})
             }
@@ -949,6 +983,18 @@ public class Class:ContainerSymbol
         return(super.lookup(label: label))
         }
         
+    public func localLookup(label: String) -> Symbol?
+        {
+        for slot in self.layoutSlots
+            {
+            if slot.label == label
+                {
+                return(slot)
+                }
+            }
+        return(nil)
+        }
+        
     public func instanciate(withType: Type) -> Type
         {
         fatalError("A non parametric class should not be instanciated")
@@ -1132,7 +1178,7 @@ public class Class:ContainerSymbol
     @discardableResult
     public func slot(_ slotLabel:Label,_ theClass:Class) -> Class
         {
-        let slot = theClass.slotClassType.init(labeled:slotLabel,ofType:theClass.type)
+        let slot = theClass.slotClassType.init(labeled:slotLabel,ofType:theClass.type!)
         self.addSymbol(slot)
         return(self)
         }

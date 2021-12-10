@@ -199,7 +199,7 @@ public class Method:Symbol
         return(copy)
         }
         
-    public func instance(_ types:Type...,returnType:Type = VoidClass.voidClass.type) -> Method
+    public func instance(_ types:Type...,returnType:Type = VoidClass.voidClass.type!) -> Method
         {
         let instance = MethodInstance(label: self.label)
         var parameters = Parameters()
@@ -323,32 +323,6 @@ public class Method:Symbol
             instance.display(indent: indent + "\t")
             }
         }
-        
-    public func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
-        {
-        let random = Int.random(in: 0..<1000000)
-        
-        let parameters = [type1.parameter(random),type2.parameter(random)]
-        let returnType = type3.value(random,argonModule)
-        let instance = PrimitiveMethodInstance(label: self.label)
-        instance.parameters = parameters
-        instance.returnType = returnType
-        self.addInstance(instance)
-        return(self)
-        }
-        
-    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> Method
-        {
-        let random = Int.random(in: 0..<1000000)
-        
-        let parameters = [type1.parameter(random)]
-        let returnType = type3.value(random,argonModule)
-        let instance = PrimitiveMethodInstance(label: self.label)
-        instance.parameters = parameters
-        instance.returnType = returnType
-        self.addInstance(instance)
-        return(self)
-        }
     }
 
 extension Array
@@ -397,13 +371,11 @@ public enum ArgumentType
 
 public class PrimitiveMethod: Symbol
     {
-    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> Method
+    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> MethodInstance
         {
         let instance = PrimitiveMethodInstance(label: label)
         instance.parameters = [Parameter(label: arg1, relabel: nil, type: arg1Type, isVisible: true, isVariadic: false)]
         instance.returnType = ret
-        let method = Method(label: label)
-        method.addInstance(instance)
-        return(method)
+        return(instance)
         }
     }

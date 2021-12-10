@@ -59,11 +59,6 @@ public class TypeVariable: Type
         "TypeVariable(\(self.label)=\(self.id))"
         }
         
-    public override var inferredType: Type
-        {
-        self.boundType.isNil ? Type() : self.boundType!.inferredType
-        }
-        
     internal var id: Int
     internal var boundType: Type?
     
@@ -81,12 +76,14 @@ public class TypeVariable: Type
         
     required init?(coder: NSCoder)
         {
-        fatalError()
+        self.id = coder.decodeInteger(forKey:"id")
+        super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
-        fatalError()
+        coder.encode(self.id,forKey:"id")
+        super.encode(with: coder)
         }
         
     public override func deepCopy() -> Self
@@ -105,11 +102,12 @@ public class TypeVariable: Type
         return(type.contains(self))
         }
         
-    public override func freshTypeVariable(inContext context:TypeContext) -> Type
+    public override func freshTypeVariable(inContext context:TypeContext) -> Self
         {
-        let variable = context.freshTypeVariable(forTypeVariable: self)
+//        let variable = context.freshTypeVariable(forTypeVariable: self)
+        let variable = context.freshTypeVariable()
         self.boundType = variable
-        return(variable)
+        return(variable as! Self)
         }
     }
     

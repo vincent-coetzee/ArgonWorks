@@ -9,10 +9,10 @@ import Foundation
 
 public class SystemClass:Class
     {
-    public override class func classForKeyedUnarchiver() -> AnyClass
-        {
-        return(self.self)
-        }
+//    public override class func classForKeyedUnarchiver() -> AnyClass
+//        {
+//        return(self.self)
+//        }
         
     public override var isSystemSymbol: Bool
         {
@@ -31,57 +31,35 @@ public class SystemClass:Class
         
     private let _typeCode:TypeCode
     
-    init(label:Label,typeCode:TypeCode = .class)
+    required init(label: Label)
         {
-        self._typeCode = typeCode
+        self._typeCode = .class
         super.init(label: label)
         }
+    
+    internal override func createType() -> Type
+        {
+        TypeClass(systemClass: self,generics: [])
+        }
         
-//    ///
-//    ///
-//    /// This method returns an instance of a surrogate class during archiving to make
-//    /// sure that system classes are not archived but rather markers for them. When an
-//    /// archive in unarchived, the markers are replaced with the real system classes. This
-//    /// allows for multiple archives to be loaded into the same environment and have them
-//    /// all use the same common system classes rather than carrying around copies of
-//    /// their own system classes. The companion method on SystemClassSurrogate
-//    /// is awakeAfterUserCoder: which looks up the correct system classes and
-//    /// substitutes them for the markers.
-//    ///
-//    ///
-//    public override func replacementObject(for coder: NSCoder) -> Any?
-//        {
-//        return(SystemClassSurrogate(systemClassIndex: self.index))
-//        }
+    public required init?(coder: NSCoder)
+        {
+        self._typeCode = .class
+        super.init(coder: coder)
+        }
     ///
     ///
     /// Don't mess with the names of this method or the next one because they are here solely
     /// for the use of the ArgonModule.
     ///
     ///
-    init(label:Label,superclasses: Types,typeCode:TypeCode = .none)
+    init(label:Label,superclasses: Types)
         {
-        self._typeCode = typeCode
+        self._typeCode = .class
         super.init(label:label)
-        self.index = UUID()
         for aClass in superclasses
             {
             self.addSuperclass(aClass)
             }
         }
-    
-    public required init?(coder: NSCoder)
-        {
-//        print("START DECODE SYSTEM CLASS")
-        self._typeCode = .class
-        super.init(coder: coder)
-//        print("END DECODE SYSTEM CLASS \(self.label)")
-        }
-        
-     public required init(label: Label)
-        {
-        self._typeCode = .class
-        super.init(label: label)
-        self.index = UUID()
-        }
-}
+    }

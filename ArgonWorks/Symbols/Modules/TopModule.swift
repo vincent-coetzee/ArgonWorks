@@ -66,18 +66,18 @@ public class TopModule: SystemModule
     init(compiler: Compiler)
         {
         super.init(label: "Root")
-        self.index = UUID(index: 0)
         self.addSymbol(ArgonModule(compiler: compiler))
+        self.setIndex(UUID.systemUUID(0))
         }
         
     init(_ array:Array<Module>)
         {
         super.init(label: "Root")
+        self.setIndex(UUID.systemUUID(0))
         for element in array
             {
             self.symbols.append(element)
             }
-        self.index = UUID(index: 0)
         }
         
     required init?(coder: NSCoder)

@@ -499,7 +499,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                         {
                         let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
-                        ImportArchiver.isSwappingSystemSymbols = true
+                        ImportArchiver.isSwappingSystemTypes = true
                         let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
                         try data.write(to: theUrl)
 //                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
@@ -507,7 +507,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = aCompiler.topModule
+//                        ImportUnarchiver.topModule = aCompiler.topModule
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")

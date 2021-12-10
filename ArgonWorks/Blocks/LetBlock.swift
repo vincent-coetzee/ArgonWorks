@@ -26,6 +26,10 @@ public class LetBlock: Block
         super.init()
         self.lhs.parent = .block(self)
         self.rhs.parent = .block(self)
+        if self.lhs.isEmpty || self.rhs.isEmpty
+            {
+            print("halt")
+            }
         }
         
     public required init?(coder: NSCoder)
@@ -57,6 +61,10 @@ public class LetBlock: Block
         print("\(indent)\(Swift.type(of: self))")
         self.lhs.display(indent: indent + "\t")
         self.rhs.display(indent: indent + "\t")
+        if self.lhs.isEmpty || self.rhs.isEmpty
+            {
+            print("halt")
+            }
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -64,6 +72,14 @@ public class LetBlock: Block
         try self.lhs.initializeType(inContext: context)
         try self.rhs.initializeType(inContext: context)
         self.type = context.voidType
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+//        let block = LetBlock(location: self.location,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
+//        block.type = self.type!.freshTypeVariable(inContext: context)
+//        return(block as! Self)
+        return(self as! Self)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self

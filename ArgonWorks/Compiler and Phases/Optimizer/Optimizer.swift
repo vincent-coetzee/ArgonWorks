@@ -11,19 +11,14 @@ public class Optimizer: CompilerPass
     {
     public let compiler: Compiler
     public var wasCancelled = false
+    public var processedModule: Module?
     
-    @discardableResult
-    public static func optimize(_ node:ParseNode,in compiler:Compiler) -> Bool
-        {
-        Optimizer(compiler: compiler).optimize(node)
-        }
-        
     public var virtualMachine: VirtualMachine
         {
         fatalError("Virtal Machine access needed")
         }
         
-    public init(compiler: Compiler)
+    public init(_ compiler: Compiler)
         {
         self.compiler = compiler
         }
@@ -33,8 +28,16 @@ public class Optimizer: CompilerPass
         self.wasCancelled = true
         }
         
-    private func optimize(_ node:ParseNode) -> Bool
+    public func processModule(_ module: Module?) -> Module?
         {
-        return(!self.wasCancelled)
+        guard let module = module else
+            {
+            return(nil)
+            }
+        guard let newModule = module.moduleWithOptimization(using: self),!self.wasCancelled else
+            {
+            return(nil)
+            }
+        return(newModule)
         }
     }

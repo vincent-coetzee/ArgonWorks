@@ -36,6 +36,10 @@ public class TypeApplication: Type
         self.returnType = returnType
         super.init()
         }
+    
+    public override func typeCheck() throws
+        {
+        }
         
     required init?(coder: NSCoder)
         {

@@ -63,7 +63,7 @@ public enum TupleElement
         let kind = coder.decodeInteger(forKey: "kind")
         if kind == 1
             {
-            self = .literal(Literal(coder: coder))
+            self = .literal(Literal(coder: coder,forKey: "literal"))
             }
         else if kind == 2
             {
@@ -141,7 +141,7 @@ public enum TupleElement
             {
             case .literal(let value):
                 coder.encode(1,forKey: "kind")
-                value.encode(with: coder)
+                value.encode(with: coder,forKey: "literal")
             case .slot(let slot):
                 coder.encode(2,forKey: "kind")
                 coder.encode(slot,forKey: "slot")
@@ -157,6 +157,7 @@ public enum TupleElement
             }
         }
         
+    @discardableResult
     public func initializeType(inContext context: TypeContext) throws -> Type
         {
         switch(self)
@@ -246,78 +247,13 @@ public enum TupleElement
     }
 
     
-public class TupleElementPair
+public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     {
-    public var displayString: String
+    public var isEmpty: Bool
         {
-        self.lhs.displayString + ":" + self.rhs.displayString
+        self.elements.count == 0
         }
         
-    internal let lhs: TupleElement
-    internal let rhs: TupleElement
-    internal var lhsType: Type?
-    internal var rhsType: Type?
-    internal var type:Type?
-    
-    init(lhs: TupleElement,rhs: TupleElement)
-        {
-        self.lhs = lhs
-        self.rhs = rhs
-        }
-        
-    public func display(indent: String)
-        {
-        print("\(indent)TUPLE ELEMENT LHS:")
-        self.lhs.display(indent: indent + "\t")
-        print("\(indent)TUPLE ELEMENT RHS:")
-        self.rhs.display(indent: indent + "\t")
-        }
-        
-    public func setParent(_ parent: Parent)
-        {
-        lhs.setParent(parent)
-        rhs.setParent(parent)
-        }
-        
-    public func initializeType(inContext context: TypeContext) throws
-        {
-        self.lhsType = try self.lhs.initializeType(inContext: context)
-        self.rhsType = try self.rhs.initializeType(inContext: context)
-        let label = "\(self.lhsType!.displayString)x\(self.rhsType!.displayString)"
-        self.type = TypeConstructor(label: label,generics: [self.lhsType!,self.rhsType!])
-        }
-        
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
-        {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .symbol(Symbol(label:""))))
-        }
-        
-    public func visit(visitor: Visitor) throws
-        {
-        try self.lhs.visit(visitor: visitor)
-        try self.rhs.visit(visitor: visitor)
-        }
-        
-    public func substitute(from substitution: TypeContext.Substitution) -> TupleElementPair
-        {
-        TupleElementPair(lhs: self.lhs.substitute(from: substitution),rhs: self.rhs.substitute(from: substitution))
-        }
-    }
-    
-public typealias TupleElementPairs = Array<TupleElementPair>
-
-extension TupleElementPairs
-    {
-    public var displayString: String
-        {
-        self.map{$0.displayString}.joined(separator: " ")
-        }
-    }
-    
-public class Tuple: Collection,VisitorReceiver
-    {
     public var displayString: String
         {
         let strings = self.elements.map{$0.displayString}.joined(separator: ",")
@@ -344,37 +280,44 @@ public class Tuple: Collection,VisitorReceiver
             }
         }
     
-    init()
+    override init()
         {
+        super.init()
         }
         
     init(_ elements: TupleElement...)
         {
         self.elements = elements
+        super.init()
         }
         
     init(_ types: Type...)
         {
         self.elements = types.map{TupleElement.type($0)}
+        super.init()
         }
         
-    required init?(coder: NSCoder)
+    public required init?(coder: NSCoder)
         {
         let count = coder.decodeInteger(forKey: "count")
+        self.parent = coder.decodeParent(forKey: "parent")!
         for _ in 0..<count
             {
             self.elements.append(TupleElement(coder: coder))
             }
+        super.init()
         }
         
     init(_ slot: LocalSlot)
         {
         self.elements.append(.slot(slot))
+        super.init()
         }
         
     init(_ expression: Expression)
         {
         self.elements.append(.expression(expression))
+        super.init()
         }
         
     convenience init(elements: Array<TupleElement>)
@@ -388,20 +331,15 @@ public class Tuple: Collection,VisitorReceiver
         self.init()
         self.elements = expressions.map{TupleElement.expression($0)}
         }
-        
-//    required init(label: Label)
-//        {
-//        super.init(label: label)
-//        }
-        
+
     public func encode(with coder:NSCoder)
         {
         coder.encode(self.elements.count,forKey: "count")
+        coder.encodeParent(self.parent,forKey: "parent")
         for element in self.elements
             {
             element.encode(with: coder)
             }
-//        super.encode(with: coder)
         }
         
     internal func append(_ slot: Slot)
@@ -429,9 +367,9 @@ public class Tuple: Collection,VisitorReceiver
         return(after + 1)
         }
         
-    func paired(with: Tuple) -> TupleElementPairs
+    internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        zip(self.elements,with.elements).map{TupleElementPair(lhs: $0.0,rhs: $0.1)}
+        Tuple(elements: self.elements.map{substitution.substitute($0)}) as! Self
         }
         
     public func initializeType(inContext context: TypeContext) throws

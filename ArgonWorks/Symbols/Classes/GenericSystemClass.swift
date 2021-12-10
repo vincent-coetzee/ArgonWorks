@@ -18,4 +18,9 @@ public class GenericSystemClass:GenericClass
         {
         return(true)
         }
+        
+    internal override func createType() -> Type
+        {
+        TypeClass(systemClass: self,generics: self.types)
+        }
     }

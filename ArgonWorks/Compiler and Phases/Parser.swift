@@ -31,6 +31,19 @@ public enum Context: Equatable
             }
         }
         
+    public var enclosingErrorScope: ErrorScope
+        {
+        switch(self)
+            {
+            case .none:
+                fatalError()
+            case .block(let block):
+                return(block)
+            case .node(let node):
+                return(node)
+            }
+        }
+        
     public var label: Label
         {
         switch(self)
@@ -112,6 +125,11 @@ public enum Context: Equatable
         
 public class Parser: CompilerPass
     {
+    private var enclosingErrorScope: ErrorScope
+        {
+        self.currentContext.enclosingErrorScope
+        }
+        
     private var enclosingScope: Scope
         {
         self.currentContext.enclosingScope
@@ -123,7 +141,6 @@ public class Parser: CompilerPass
     private var namingContext: NamingContext
     private var contextStack = Stack<Context>()
     private var currentContext:Context!
-    private var node:ParseNode?
     private var source: String?
     public var wasCancelled = false
     public var currentTag = 0
@@ -255,7 +272,7 @@ public class Parser: CompilerPass
         return(nil)
         }
         
-    internal func parse() -> Module?
+    public func processModule(_ module: Module?) -> Module?
         {
         do
             {
@@ -280,10 +297,10 @@ public class Parser: CompilerPass
                 }
             if self.token.isKeyword
                 {
-                let parseNode = try self.parseModule()
-                parseNode.privacyScope = modifier
+                let module = try self.parseModule()
+                module.privacyScope = modifier
                 self.reportingContext.status("Parsing complete: \(self.warningCount) warnings, \(self.errorCount) errors.")
-                return(parseNode)
+                return(module)
                 }
             }
         catch
@@ -294,17 +311,17 @@ public class Parser: CompilerPass
         }
         
     @discardableResult
-    public func parseSource(_ source:String) -> ParseNode?
+    public func parseSource(_ source:String) -> Module?
         {
         self.initParser(source: source)
-        return(self.parse())
+        return(self.processModule(nil))
         }
         
     @discardableResult
-    public func parseTokens(_ tokens: Tokens) -> ParseNode?
+    public func parseTokens(_ tokens: Tokens) -> Module?
         {
         self.initParser(tokens: tokens)
-        return(self.parse())
+        return(self.processModule(nil))
         }
         
     private func chompKeyword() throws
@@ -346,14 +363,14 @@ public class Parser: CompilerPass
         }
         
     @discardableResult
-    private func parsePrivacyModifier(_ closure: (PrivacyScope?) throws -> ParseNode?) throws -> ParseNode?
+    private func parsePrivacyModifier(_ closure: (PrivacyScope?) throws -> Symbol?) throws -> Symbol?
         {
         let modifier = self.token.isKeyword ? PrivacyScope(rawValue: self.token.keyword.rawValue) : nil
         if self.token.isPrivacyModifier
             {
             try self.chompKeyword()
             }
-        var value = try closure(modifier)
+        let value = try closure(modifier)
         value?.privacyScope = modifier
         return(value)
         }
@@ -392,7 +409,7 @@ public class Parser: CompilerPass
 
     private func parseMainMethod() throws
         {
-        let method = try self.parseMethod()
+        let method = try self.parseMethodInstance()
         method.isMainMethod = true
         }
         
@@ -403,7 +420,6 @@ public class Parser: CompilerPass
         let module = MainModule(label: label)
         self.addSymbol(module)
         try self.parseModule(into: module)
-        self.node = module
         return(module)
         }
     
@@ -415,7 +431,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             return(self.lastToken)
             }
-        self.enclosingScope.appendIssue(at: self.token.location,message: "Path expected for a library module but \(self.token) was found.")
+        self.enclosingErrorScope.appendIssue(at: self.token.location,message: "Path expected for a library module but \(self.token) was found.")
         return(.path("",Location.zero))
         }
     ///
@@ -479,7 +495,7 @@ public class Parser: CompilerPass
                     module?.appendIssue(at: location,message: "A module named '\(name.string)' was found, but it was used as a library module and it is a module")
                     }
                 }
-            module?.appendIssue(at: location,message:"A module named '\(name.string)' already exists, its contents may be overwritten.")
+            module?.appendIssue(at: location,message:"A module named '\(name.string)' already exists, its contents may be overwritten.",isWarning: true)
             }
         if isNew
             {
@@ -498,7 +514,6 @@ public class Parser: CompilerPass
             module?.addReference(location)
             }
         try self.parseModule(into: module!)
-        self.node = module
         return(module!)
         }
         
@@ -552,7 +567,7 @@ public class Parser: CompilerPass
                         case .PRIMITIVE:
                             try self.parsePrimitiveMethod()
                         case .METHOD:
-                            try self.parseMethod()
+                            try self.parseMethodInstance()
                         case .CONSTANT:
                             try self.parseConstant()
                         case .SCOPED:
@@ -640,8 +655,9 @@ public class Parser: CompilerPass
         {
         var isPrimitive = false
         let location = self.token.location
+        let operatorKindToken = self.token
         try self.nextToken()
-        var primitiveIndex:Argon.Integer = 0
+//        var primitiveIndex:Argon.Integer = 0
         var issues = CompilerIssues()
         if self.token.isPrimitive
             {
@@ -654,10 +670,10 @@ public class Parser: CompilerPass
                     self.cancelCompletion()
                     issues.appendIssue(at: location, "A PRIMITIVE index was expected after the PRIMITIVE keyword.")
                     }
-                else
-                    {
-                    primitiveIndex = self.token.integerLiteral
-                    }
+//                else
+//                    {
+//                    primitiveIndex = self.token.integerLiteral
+//                    }
                 try self.nextToken()
                 }
             }
@@ -680,7 +696,7 @@ public class Parser: CompilerPass
                 }
             }
         let localScope = TemporaryLocalScope(label:  "")
-        var isGenericMethod = false
+//        var isGenericMethod = false
         self.pushContext(localScope)
         try self.nextToken()
         var types = Types()
@@ -688,7 +704,7 @@ public class Parser: CompilerPass
             {
             types = try self.parseMethodGenericParameters()
             localScope.addTemporaries(types)
-            isGenericMethod = true
+//            isGenericMethod = true
             }
         let parameters = try self.parseParameters([])
         if kind == .prefix || kind == .postfix
@@ -714,51 +730,42 @@ public class Parser: CompilerPass
             }
         try self.nextToken()
         let returnType = try self.parseType(&issues)
-        var instance: MethodInstance
-        if isPrimitive
+        var instance = MethodInstance(label: operation.name)
+        if operatorKindToken.isPrefix
             {
-            instance = PrimitiveMethodInstance(label: operation.name,parameters: parameters,returnType: returnType)
-            (instance as! PrimitiveMethodInstance).primitiveIndex = primitiveIndex
-            }
-        else
-            {
-            instance = StandardMethodInstance(label: operation.name,parameters: parameters,returnType: returnType)
-            (instance as! StandardMethodInstance).block.addParameters(parameters)
-            (instance as! StandardMethodInstance).mergeTemporaryScope(localScope)
-            (instance as! StandardMethodInstance).isGenericMethod = isGenericMethod
-            }
-        var method: Operator
-        if let existingOperator = self.currentContext.lookup(label: operation.name) as? Operator
-            {
-            existingOperator.addInstance(instance)
-            method = existingOperator
-            }
-        else
-            {
-            if kind == .prefix
+            if isPrimitive
                 {
-                method = PrefixOperator(operation)
-                }
-            else if kind == .postfix
-                {
-                method = PostfixOperator(operation)
+                instance = PrimitivePrefixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
                 }
             else
                 {
-                method = InfixOperator(operation)
+                instance = PrefixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
                 }
-            method.addDeclaration(location)
-            method.addInstance(instance)
-            if self.currentContext.lookup(label: operation.name).isNotNil
+            }
+        else if operatorKindToken.isPostfix
+            {
+            if isPrimitive
                 {
-                self.cancelCompletion()
-                issues.appendIssue(at: location,message: "Duplicate symbol \(operation.name) in this module.")
+                instance = PrimitivePostfixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
                 }
             else
                 {
-                self.enclosingScope.addSymbol(method)
+                instance = PostfixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
                 }
             }
+        else if operatorKindToken.isInfix
+            {
+            if isPrimitive
+                {
+                instance = PrimitiveInfixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
+                }
+            else
+                {
+                instance = InfixOperatorInstance(label: operation.name,parameters: parameters,returnType: returnType)
+                }
+            }
+        instance.addDeclaration(location)
+        self.enclosingScope.addSymbol(instance)
         if !isPrimitive
             {
             try self.parseBraces
@@ -768,11 +775,16 @@ public class Parser: CompilerPass
                 self.popContext()
                 }
             }
-        if method.hasInstanceWithSameSignature(as: instance)
+        if let instances = self.enclosingScope.lookupMethodInstances(name: Name(instance.label))
             {
-            issues.appendIssue(at: location,"There is already an operator with this signature defined.")
+            for methodInstance in instances
+                {
+                if methodInstance.typeSignature == instance.typeSignature
+                    {
+                    instance.appendIssue(at: location,message: "There is already a operator instance with this signature defined.",isWarning: true)
+                    }
+                }
             }
-        method.appendIssues(issues)
         }
     ///
     ///
@@ -826,25 +838,18 @@ public class Parser: CompilerPass
         instance.primitiveIndex = index
         instance.isGenericMethod = isGenericMethod
         instance.addDeclaration(location)
-        var method: Method?
-        if existingMethod.isNotNil
+        if let instances = self.enclosingScope.lookupMethodInstances(name: Name(instance.label))
             {
-            if existingMethod!.hasInstanceWithSameSignature(as: instance)
+            for methodInstance in instances
                 {
-                issues.appendIssue(at: location,"There is already a method instance with this signature defined.",isWarning: true)
+                if methodInstance.typeSignature == instance.typeSignature
+                    {
+                    instance.appendIssue(at: location,message: "There is already a primitive instance with this signature defined.",isWarning: true)
+                    }
                 }
-            existingMethod?.addInstance(instance)
-            method = existingMethod
             }
-        else
-            {
-            method = Method(label: name)
-            method!.isGenericMethod = isGenericMethod
-            method!.addDeclaration(location)
-            self.addSymbol(method!)
-            method!.addInstance(instance)
-            }
-        method!.appendIssues(issues)
+        self.enclosingScope.addSymbol(instance)
+        instance.appendIssues(issues)
         }
         
     private func parseImport() throws
@@ -896,15 +901,17 @@ public class Parser: CompilerPass
             }
         }
         
-    private func parseInitializer(in aClass:Class) throws
+    private func parseInitializer(in type:Type) throws
         {
         let location = self.token.location
         try self.nextToken()
         let parameters = try self.parseParameters()
-        let initializer = Initializer(label: aClass.label)
+        let initializer = Initializer(label: type.label)
+        initializer.type = type
         initializer.parameters = parameters
+        let aClass = (type as! TypeClass).theClass
         aClass.addInitializer(initializer)
-        initializer.declaringClass = aClass
+        initializer.declaringType = type
         initializer.addDeclaration(location)
         self.pushContext(initializer)
         try parseBraces
@@ -1248,63 +1255,63 @@ public class Parser: CompilerPass
         return(typeParameters)
         }
         
-    private func parseClassTypes(with parameters: Types,issues:inout CompilerIssues) throws -> Types
-        {
-        let location = self.token.location
-        let typeParameters = try self.parseBrockets
-            {
-            () throws -> Types in
-            var types = Types()
-            repeat
-                {
-                try self.parseComma()
-                let name = try self.parseName()
-                let typeToken = self.token
-                if let parm = self.parameter(in: parameters, atName: name)
-                    {
-                    self.tokenRenderer.setKind(.class, ofToken: typeToken)
-                    types.append(parm)
-                    }
-                else if self.currentContext.lookup(name: name).isNil
-                    {
-                    issues.appendIssue(at: location,message: "'\(name)' can not be used as a type here unless it is used in the subclass as well.")
-                    }
-                else if let type = self.currentContext.lookup(name: name)
-                    {
-                    if let enumeration = type as? Enumeration
-                        {
-                        self.tokenRenderer.setKind(.enumeration, ofToken: typeToken)
-                        types.append(enumeration.type!)
-                        }
-                    else if let aClass = type as? Class,!aClass.isGenericType
-                        {
-                        self.tokenRenderer.setKind(.class, ofToken: typeToken)
-                        types.append(aClass.type)
-                        }
-                    else if let alias = type as? TypeAlias
-                        {
-                        self.tokenRenderer.setKind(.type, ofToken: typeToken)
-                        types.append(alias.type!)
-                        }
-                    else if let method = type as? Method
-                        {
-                        fatalError("\(method)")
-                        }
-                    else
-                        {
-                        self.dispatchError(at: location,message: "The type '\(name.displayString)' is not a valid type in this context.")
-                        }
-                    }
-                else
-                    {
-                    self.dispatchError(at: location,message: "The type '\(name.displayString)' can not be resolved.")
-                    }
-                }
-            while self.token.isComma
-            return(types)
-            }
-        return(typeParameters)
-        }
+//    private func parseClassTypes(with parameters: Types,issues:inout CompilerIssues) throws -> Types
+//        {
+//        let location = self.token.location
+//        let typeParameters = try self.parseBrockets
+//            {
+//            () throws -> Types in
+//            var types = Types()
+//            repeat
+//                {
+//                try self.parseComma()
+//                let name = try self.parseName()
+//                let typeToken = self.token
+//                if let parm = self.parameter(in: parameters, atName: name)
+//                    {
+//                    self.tokenRenderer.setKind(.class, ofToken: typeToken)
+//                    types.append(parm)
+//                    }
+//                else if self.currentContext.lookup(name: name).isNil
+//                    {
+//                    issues.appendIssue(at: location,message: "'\(name)' can not be used as a type here unless it is used in the subclass as well.")
+//                    }
+//                else if let type = self.currentContext.lookup(name: name)
+//                    {
+//                    if let enumeration = type as? Enumeration
+//                        {
+//                        self.tokenRenderer.setKind(.enumeration, ofToken: typeToken)
+//                        types.append(enumeration.type!)
+//                        }
+//                    else if let aClass = type as? Class,!aClass.isGenericType
+//                        {
+//                        self.tokenRenderer.setKind(.class, ofToken: typeToken)
+//                        types.append(aClass.type!)
+//                        }
+//                    else if let alias = type as? TypeAlias
+//                        {
+//                        self.tokenRenderer.setKind(.type, ofToken: typeToken)
+//                        types.append(alias.type!)
+//                        }
+//                    else if let method = type as? Method
+//                        {
+//                        fatalError("\(method)")
+//                        }
+//                    else
+//                        {
+//                        self.dispatchError(at: location,message: "The type '\(name.displayString)' is not a valid type in this context.")
+//                        }
+//                    }
+//                else
+//                    {
+//                    self.dispatchError(at: location,message: "The type '\(name.displayString)' can not be resolved.")
+//                    }
+//                }
+//            while self.token.isComma
+//            return(types)
+//            }
+//        return(typeParameters)
+//        }
         
     private func parameter(in parms: Types,atName name: Name) -> Type?
         {
@@ -1327,33 +1334,38 @@ public class Parser: CompilerPass
         self.tokenRenderer.setKind(.classSlot,ofToken: self.token)
         let label = try self.parseLabel()
         var typeParameters = Types()
-        let existingClass = self.currentContext.lookup(label: label) as? Class
+        var typeClass = self.enclosingScope.lookup(label: label) as? TypeClass
         var issues = CompilerIssues()
         if self.token.isLeftBrocket
             {
             typeParameters = try self.parseGenericTypes(&issues)
             }
         var aClass:Class
-        if existingClass.isNotNil
+        if typeClass.isNotNil
             {
-            aClass = existingClass!
-            }
-        else if typeParameters.isEmpty
-            {
-            aClass = Class(label: label)
+            aClass = typeClass!.theClass
             }
         else
             {
-            aClass = GenericClass(label: label,types: typeParameters)
+            if typeParameters.isEmpty
+                {
+                aClass = Class(label: label)
+                typeClass = TypeClass(class: aClass,generics: [])
+                }
+            else
+                {
+                aClass = GenericClass(label: label,types: typeParameters)
+                typeClass = TypeClass(class: aClass,generics: typeParameters)
+                }
             }
         for variable in typeParameters.flatMap({$0.typeVariables})
             {
             aClass.addSymbol(variable)
             }
         aClass.addDeclaration(location)
-        let typeClass = TypeClass(class: aClass,generics: typeParameters)
-        self.addSymbol(typeClass)
-        self.pushContext(aClass)
+        aClass.type = typeClass
+        self.addSymbol(typeClass!)
+        self.pushContext(typeClass!)
         for parameter in typeParameters
             {
             self.addSymbol(parameter)
@@ -1378,7 +1390,7 @@ public class Parser: CompilerPass
                 {
                 if self.token.isInit
                     {
-                    try self.parseInitializer(in: aClass)
+                    try self.parseInitializer(in: typeClass!)
                     }
                 else if self.token.isCocoon
                     {
@@ -1400,7 +1412,8 @@ public class Parser: CompilerPass
                     else
                         {
                         let innerClass = try self.parseClass()
-                        aClass.addSymbol(innerClass)
+                        let innerType = TypeClass(class: innerClass,generics: innerClass.genericTypes)
+                        aClass.addSymbol(innerType)
                         }
                     }
                 }
@@ -1408,7 +1421,6 @@ public class Parser: CompilerPass
 //        print(aClass.containedClassParameters)
         self.popContext()
         print("PARSED CLASS: \(aClass.displayString)")
-        self.node = aClass
         return(aClass)
         }
         
@@ -1494,7 +1506,7 @@ public class Parser: CompilerPass
         {
         if !self.token.isLeftPar
             {
-            self.enclosingScope.appendIssue(at: self.token.location,message: "'(' was expected but \(self.token) was found.")
+            self.enclosingErrorScope.appendIssue(at: self.token.location,message: "'(' was expected but \(self.token) was found.")
             }
         else
             {
@@ -1503,7 +1515,7 @@ public class Parser: CompilerPass
         let value = try closure()
         if !self.token.isRightPar
             {
-            self.enclosingScope.appendIssue(at: self.token.location,message: "')' was expected but \(self.token) was found.")
+            self.enclosingErrorScope.appendIssue(at: self.token.location,message: "')' was expected but \(self.token) was found.")
             }
         else
             {
@@ -1524,7 +1536,7 @@ public class Parser: CompilerPass
         {
         if !self.token.isGluon
             {
-            self.enclosingScope.appendIssue(at: self.token.location,message: "'::' was expected but '\(self.token)' was found.")
+            self.enclosingErrorScope.appendIssue(at: self.token.location,message: "'::' was expected but '\(self.token)' was found.")
             }
         else
             {
@@ -1578,17 +1590,12 @@ public class Parser: CompilerPass
         guard var type = self.currentContext.lookup(name: name) as? Type else
             {
             let typeVariable = TypeContext.freshTypeVariable()
-            typeVariable.label = name.displayString
+            typeVariable.setLabel(name.displayString)
             compilerIssues.appendIssue(at: location,message: "The identifier \(name) could not be resolved, a type with that label could not be found.")
             return(typeVariable)
             }
         type.addReference(location)
-        if type.isEnumeration
-            {
-            self.tokenRenderer.setKind(.enumeration,ofToken: identifierToken)
-            return(type)
-            }
-        else if type.isTypeAlias
+        if type.isTypeAlias
             {
             self.tokenRenderer.setKind(.typeAlias,ofToken: identifierToken)
             return(type)
@@ -1599,13 +1606,27 @@ public class Parser: CompilerPass
             return(type)
             }
         let parameters = try self.parseTypeArguments(&compilerIssues)
+        ///
+        ///
+        /// Need to modify this code to handle generic enumerations as well. In it's
+        /// current form it only handles generic classes.
+        ///
+        ///
+        if type.isEnumeration
+            {
+            self.tokenRenderer.setKind(.enumeration,ofToken: identifierToken)
+            return(type)
+            }
         if type.isClass
             {
             self.tokenRenderer.setKind(.class,ofToken: identifierToken)
-            if type.isSystemClass
-                {
-                self.tokenRenderer.setKind(.systemClass,ofToken: identifierToken)
-                }
+            }
+        if type.isSystemClass
+            {
+            self.tokenRenderer.setKind(.systemClass,ofToken: identifierToken)
+            }
+        if type.isClass
+            {
             if !type.isGenericClass && !parameters.isEmpty
                 {
                 compilerIssues.appendIssue(at: location, message: "Class '\(name)' is not a generic class but there are class parameters defined for it.")
@@ -1613,7 +1634,9 @@ public class Parser: CompilerPass
                 }
             else if type.isGenericClass && !parameters.isEmpty
                 {
-                type = TypeClass(class: type.rawClass,generics: parameters)
+                let newType = TypeClass(class: type.rawClass,generics: parameters)
+                newType.setParent(type.parent)
+                type = newType
                 }
             type.addReference(location)
             return(type)
@@ -1705,7 +1728,7 @@ public class Parser: CompilerPass
         else
             {
             self.cancelCompletion()
-            self.enclosingScope.appendIssue(at: location,message:"The label '\(label)' is not valid in the current context, it can not be resolved.")
+            self.enclosingErrorScope.appendIssue(at: location,message:"The label '\(label)' is not valid in the current context, it can not be resolved.")
             }
         }
         
@@ -1732,7 +1755,7 @@ public class Parser: CompilerPass
             issues.appendIssue(at: location, message: "'->' was expected in a method reference type but '\(self.token)' was found.")
             }
         try self.nextToken()
-        let type = TypeConstructor(label: "",generics: types + [try self.parseType(&issues)])
+        let type = TypeFunction(label: "",types: types, returnType: try self.parseType(&issues))
         type.appendIssues(issues)
         return(type)
         }
@@ -1766,7 +1789,7 @@ public class Parser: CompilerPass
             }
         else
             {
-            self.enclosingScope.appendIssue(at: self.token.location,message: "'<' was expected but \(self.token) was found.")
+            self.enclosingErrorScope.appendIssue(at: self.token.location,message: "'<' was expected but \(self.token) was found.")
             }
         let value = try closure()
         if self.token.isRightBrocket
@@ -1775,7 +1798,7 @@ public class Parser: CompilerPass
             }
         else
             {
-            self.enclosingScope.appendIssue(at: self.token.location,message:"'>' was expected but \(self.token) was found.")
+            self.enclosingErrorScope.appendIssue(at: self.token.location,message:"'>' was expected but \(self.token) was found.")
             }
         return(value)
         }
@@ -1811,7 +1834,7 @@ public class Parser: CompilerPass
                 self.tokenRenderer.setKind(.genericClassParameter,ofToken: self.token)
                 let label = try self.parseLabel()
                 let typeVariable = TypeContext.freshTypeVariable()
-                typeVariable.label = label
+                typeVariable.setLabel(label)
                 parameters.append(typeVariable)
                 }
             while self.token.isComma
@@ -1820,97 +1843,62 @@ public class Parser: CompilerPass
         }
         
     @discardableResult
-    private func parseMethod() throws -> ArgonWorks.Method
+    private func parseMethodInstance() throws -> MethodInstance
         {
         try self.nextToken()
         let location = self.token.location
         self.tokenRenderer.setKind(.method,ofToken: self.token)
         let name = try self.parseLabel()
-        let existingMethod = self.currentContext.lookup(label: name) as? Method
-        let localScope = TemporaryLocalScope(label:  "")
+        let instance = StandardMethodInstance(label: name)
         var isGenericMethod = false
-        self.pushContext(localScope)
+        self.pushContext(instance)
         var types: Types = []
         var issues = CompilerIssues()
         if self.token.isLeftBrocket
             {
             types = try self.parseMethodGenericParameters()
-            localScope.addTemporaries(types)
+            instance.addTemporaries(types)
             isGenericMethod = true
             }
-        let list = try self.parseParameters()
-        var returnType: Type = self.compiler.argonModule.void
+        instance.parameters = try self.parseParameters()
+        instance.returnType = self.compiler.argonModule.void
         if self.token.isRightArrow
             {
             try self.nextToken()
-            returnType = try self.parseType(&issues)
+            instance.returnType = try self.parseType(&issues)
             }
-        if existingMethod.isNotNil
-            {
-            existingMethod!.addReference(location)
-            if list.count != existingMethod!.proxyParameters.count
-                {
-                self.cancelCompletion()
-                issues.appendIssue(at: location, "The multimethod '\(existingMethod!.label)' is defined,but this parameter set is different from the existing one.")
-                }
-            if returnType != existingMethod!.returnType
-                {
-                self.cancelCompletion()
-                issues.appendIssue(at: location,"The multimethod '\(existingMethod!.label)' declared in line \(String(describing: existingMethod!.declaration?.line)) is defined with a return type of '\(existingMethod!.returnType.label)' different from this return type.")
-                }
-            for (yours,mine) in zip(list,existingMethod!.proxyParameters)
-                {
-                if yours.tag != mine.tag
-                    {
-                    issues.appendIssue(at: location,"The multimethod '\(existingMethod!.label)' has tag '\(mine.tag ?? "")' in the position of '\(yours.tag ?? "")', tags must match on multimethod instances.")
-                    }
-                if yours.isHidden != mine.isHidden
-                    {
-                    issues.appendIssue(at: location,"The multimethod '\(existingMethod!.label)' has tag '\(mine.tag ?? "")' which differs in visibility from the tag '\(yours.tag ?? "")'.")
-                    }
-                }
-            }
-        self.popContext()
-        let instance = StandardMethodInstance(label: name,parameters: list,returnType: returnType)
         if isGenericMethod
             {
             instance.isGenericMethod = true
             instance.genericParameters = types
             }
-        instance.mergeTemporaryScope(localScope)
         instance.addDeclaration(location)
-        var method: Method
-        if existingMethod.isNotNil
+        instance.appendIssues(issues)
+        instance.block.addParameters(instance.parameters)
+        self.popContext()
+        if let instances = self.enclosingScope.lookupMethodInstances(name: Name(instance.label))
             {
-            existingMethod!.addInstance(instance)
-            method = existingMethod!
+            for methodInstance in instances
+                {
+                if methodInstance.typeSignature == instance.typeSignature
+                    {
+                    instance.appendIssue(at: location,message: "There is already a method instance with this signature defined.",isWarning: true)
+                    }
+                }
             }
-        else
-            {
-            method = Method(label: name)
-            method.isGenericMethod = isGenericMethod
-            method.addDeclaration(location)
-            self.addSymbol(method)
-            method.addInstance(instance)
-            }
-        method.appendIssues(issues)
-        instance.block.addParameters(list)
+        self.enclosingScope.addSymbol(instance)
         try self.parseBraces
             {
             self.pushContext(instance.block)
             try self.parseBlock(into: instance.block)
             self.popContext()
             }
-        if returnType != self.compiler.argonModule.void && !instance.block.hasInlineReturnBlock
+        if instance.returnType != self.compiler.argonModule.void && !instance.block.hasInlineReturnBlock
             {
             self.cancelCompletion()
-            method.appendIssue(at: location,message: "This method has a return value but there is no RETURN statement in the body of the method.")
+            instance.appendIssue(at: location,message: "This method has a return value but there is no RETURN statement in the body of the method.")
             }
-        if method.hasInstanceWithSameSignature(as: instance)
-            {
-            method.appendIssue(at: location,message: "There is already a method instance with this signature defined.",isWarning: true)
-            }
-        return(method)
+        return(instance)
         }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1929,39 +1917,43 @@ public class Parser: CompilerPass
     private func parseOperatorExpression() throws -> Expression
         {
         let location = self.token.location
-        var prefixOperator: Operator?
+        var prefixOperators = PrefixOperatorInstances()
         var issues = CompilerIssues()
+        var prefixLabel:Label = ""
         if self.token.isOperator
             {
-            if let operations = self.enclosingScope.lookupN(label: self.token.operator.name),let selectedOperator = operations.filter({$0 is PrefixOperator}).first as? PrefixOperator
+            prefixLabel = self.token.operator.name
+            if let operations = self.enclosingScope.lookupPrefixOperatorInstances(label: prefixLabel)
                 {
-                prefixOperator = selectedOperator
+                prefixOperators = operations
                 }
             else
                 {
                 self.cancelCompletion()
-                issues.append(CompilerIssue(location: location,message: "Prefix operator '\(self.token.operator.name)' found but that operator can not be resolved."))
+                issues.append(CompilerIssue(location: location,message: "Prefix operator '\(prefixLabel)' found but that operator can not be resolved."))
                 }
             try self.nextToken()
             }
         var expression = try self.parseParenthesisExpression()
         expression.appendIssues(issues)
-        expression = prefixOperator.isNil ? expression : PrefixExpression(operation: prefixOperator!,rhs: expression)
-        var postfixOperator: Operator?
+        expression = prefixOperators.isEmpty ? expression : PrefixExpression(operatorLabel: prefixLabel,operators: prefixOperators,rhs: expression)
+        var postfixOperators = PostfixOperatorInstances()
+        var postfixLabel:Label = ""
         if self.token.isOperator
             {
-            if let operations = self.enclosingScope.lookupN(label: self.token.operator.name),let selectedOperator = operations.filter({$0 is PostfixOperator}).first as? PostfixOperator
+            postfixLabel = self.token.operator.name
+            if let operations = self.enclosingScope.lookupPostfixOperatorInstances(label: postfixLabel)
                 {
-                postfixOperator = selectedOperator
+                postfixOperators = operations
                 }
             else
                 {
                 self.cancelCompletion()
-                issues.append(CompilerIssue(location: location,message: "Postfix operator '\(self.token.operator.name)' found but that operator can not be resolved."))
+                issues.append(CompilerIssue(location: location,message: "Postfix operator '\(postfixLabel)' found but that operator can not be resolved."))
                 }
             try self.nextToken()
             }
-        expression = postfixOperator.isNil ? expression : PostfixExpression(operation: postfixOperator!,lhs: expression)
+        expression = postfixOperators.isEmpty ? expression : PostfixExpression(operatorLabel: postfixLabel,operators: postfixOperators,lhs: expression)
         expression.addDeclaration(location)
         return(expression)
         }
@@ -2095,8 +2087,8 @@ public class Parser: CompilerPass
         expression.addDeclaration(location)
         if self.token.isPlusPlus || self.token.isMinusMinus
             {
-            let symbol = self.token.operator
-            if let operation = self.enclosingScope.lookup(label: symbol.name) as? Operator
+            let operatorLabel = self.token.operator.name
+            if let operations = self.enclosingScope.lookupPostfixOperatorInstances(label: operatorLabel)
                 {
                 try self.nextToken()
                 if !(expression is SlotExpression)
@@ -2108,12 +2100,12 @@ public class Parser: CompilerPass
                 else
                     {
                     let slotExpression = expression as! SlotExpression
-                    return(PostfixExpression(operation: operation,lhs: slotExpression))
+                    return(PostfixExpression(operatorLabel: operatorLabel,operators: operations,lhs: slotExpression))
                     }
                 }
             else
                 {
-                expression.appendIssue(at: location, message: "Operator '\(symbol.name)' could not be resolved.")
+                expression.appendIssue(at: location, message: "Operator '\(operatorLabel)' could not be resolved.")
                 }
             }
         return(expression)
@@ -2139,11 +2131,12 @@ public class Parser: CompilerPass
         let location = self.token.location
         var lhs = try self.parseComparisonExpression()
         lhs.addDeclaration(location)
-        while self.token.isOperator,let operators = self.enclosingScope.lookupN(label: self.token.operator.name),let selectedOperator = operators.filter({$0 is InfixOperator}).first as? InfixOperator
+        while self.token.isOperator,let operators = self.enclosingScope.lookupInfixOperatorInstances(label: self.token.operator.name)
             {
+            let infixLabel = self.token.operator.name
             try self.nextToken()
             let rhs = try self.parseComparisonExpression()
-            lhs = InfixExpression(operation: selectedOperator,lhs: lhs,rhs: rhs)
+            lhs = InfixExpression(operatorLabel: infixLabel,operators: operators,lhs: lhs,rhs: rhs)
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -2320,12 +2313,12 @@ public class Parser: CompilerPass
             try self.nextToken()
             let result = try self.parseParentheses
                 {
-                () -> RoleExpression in
+                () -> CastExpression in
                 let expression = try self.parseExpression()
                 try self.parseComma()
                 var issues = CompilerIssues()
                 let type = try self.parseType(&issues)
-                return(RoleExpression(expression: expression,type: type).appendIssues(issues)) as! RoleExpression
+                return(CastExpression(expression: expression,type: type).appendIssues(issues)) as! CastExpression
                 }
             return(result)
             }
@@ -2333,6 +2326,24 @@ public class Parser: CompilerPass
             {
 //            return(try self.parseGeneratorSet())
             return(try self.parseArrayLiteral())
+            }
+        else if self.token.isCast
+            {
+            let location = self.token.location
+            try self.nextToken()
+            var expression = Expression()
+            var targetType:Type = Type()
+            var issues = CompilerIssues()
+            try self.parseParentheses
+                {
+                expression = try self.parseExpression()
+                try self.parseComma()
+                targetType = try self.parseType(&issues)
+                }
+            let cast = CastExpression(expression: expression,type: targetType)
+            cast.addDeclaration(location)
+            cast.appendIssues(issues)
+            return(cast)
             }
         else if self.token.isIntegerLiteral
             {
@@ -2514,36 +2525,75 @@ public class Parser: CompilerPass
             }
         if self.token.isLeftPar
             {
-            if let methods = self.enclosingScope.lookupMethods(name: name)
+            if name.last == "class"
                 {
-                let method = methods.first!
+                let expression = try self.parseParentheses
+                    {
+                    try self.parseExpression()
+                    }
+                return(ClassExpression(expression: expression))
+                }
+            if let methods = self.enclosingScope.lookupMethodInstances(name: name)
+                {
                 self.tokenRenderer.setKind(.methodInvocation,ofToken: nameToken)
                 let arguments = try parseParentheses
                     {
                     try self.parseArguments()
                     }
-
-                let expression = MethodInvocationExpression(method: method, arguments: arguments)
-                method.validateArguments(arguments,for: expression,at: location)
+                let expression = MethodInvocationExpression(methodInstances: methods, arguments: arguments)
                 expression.addDeclaration(location)
+                let count = arguments.count
+                let instancesWithArity = methods.filter{$0.parameters.count == count}
+                if instancesWithArity.isEmpty
+                    {
+                    expression.appendIssue(at: location, message: "\(count) arguments were found, but there is no instance of method '\(methods.first!.label)' that has '\(count)' parameters.")
+                    return(expression)
+                    }
+                for instance in instancesWithArity
+                    {
+                    if instance.parametersMatchArguments(arguments,for: expression,at: location)
+                        {
+                        return(expression)
+                        }
+                    }
+                expression.appendIssue(at: location, message: "There are no instances of method '\(methods.first!.label)' with parameters that match these arguments.")
                 return(expression)
                 }
             else if let types = self.enclosingScope.lookupTypes(name: name)
                 {
+                self.tokenRenderer.setKind(.type,ofToken: nameToken)
                 let type = types.first!
                 if type.isClass
                     {
+                    self.tokenRenderer.setKind(.class,ofToken: nameToken)
+                    if type.isSystemClass
+                        {
+                        self.tokenRenderer.setKind(.systemClass,ofToken: nameToken)
+                        }
                     var issues = CompilerIssues()
                     let someTypes = try self.parseTypeArguments(&issues)
-                    let newType = TypeClass(class: (type as! TypeClass).theClass,generics: someTypes)
                     if self.token.isLeftPar
                         {
+                        var newType:Type
+                        if type.isGenericClass
+                            {
+                            newType = TypeClass(class: (type as! TypeClass).theClass,generics: someTypes)
+                            }
+                        else
+                            {
+                            if !someTypes.isEmpty
+                                {
+                                self.enclosingErrorScope.appendIssue(at: location, message: "Found generic types but none were expected.")
+                                }
+                            newType = type
+                            }
                         return(try self.parseInstanciationTerm(ofType: newType))
                         }
                     return(LiteralExpression(Literal.class((type as! TypeClass).theClass)))
                     }
                 else if type.isEnumeration
                     {
+                    self.tokenRenderer.setKind(.enumeration,ofToken: nameToken)
                     var issues = CompilerIssues()
                     let someTypes = try self.parseTypeArguments(&issues)
                     let newType = TypeEnumeration(enumeration: (type as! TypeEnumeration).enumeration,generics: someTypes)
@@ -2567,6 +2617,16 @@ public class Parser: CompilerPass
                     try self.parseArguments()
                     }
                 let expression = FunctionInvocationExpression(function: functions.first!, arguments: arguments)
+                expression.addDeclaration(location)
+                return(expression)
+                }
+            else if let slot = self.enclosingScope.lookup(name: name) as? Slot
+                {
+                let arguments = try parseParentheses
+                    {
+                    try self.parseArguments()
+                    }
+                let expression = SlotInvocationExpression(slot: slot,arguments: arguments)
                 expression.addDeclaration(location)
                 return(expression)
                 }
@@ -2663,7 +2723,7 @@ public class Parser: CompilerPass
                         {
                         try self.parseArguments()
                         }
-                    if slot.type!.isLambda
+                    if slot.type!.isFunction
                         {
                         let expression = ClosureExpression(slot: slot,arguments: arguments)
                         expression.addDeclaration(location)
@@ -2747,14 +2807,14 @@ public class Parser: CompilerPass
         return(ClosureExpression(closure:closure).appendIssues(issues))
         }
         
-    private func parseInvocationTerm(method: Method) throws -> Expression
+    private func parseInvocationTerm(methodInstances: MethodInstances) throws -> Expression
         {
         let location = self.token.location
         let args = try self.parseParentheses
             {
             try self.parseArguments()
             }
-        let expression = MethodInvocationExpression(method: method,arguments: args)
+        let expression = MethodInvocationExpression(methodInstances: methodInstances,arguments: args)
         expression.addDeclaration(location)
         return(expression)
         }
@@ -2827,6 +2887,10 @@ public class Parser: CompilerPass
                 {
                 try self.parseForBlock(into: block)
                 }
+            else if self.token.isPrimitive
+                {
+                try self.parsePrimitiveBlock(into: block)
+                }
             else if self.token.isSelect
                 {
                 try self.parseSelectBlock(into: block)
@@ -2873,7 +2937,7 @@ public class Parser: CompilerPass
                 }
             else
                 {
-                self.enclosingScope.appendIssue(at: self.token.location,message: "A statement was expected but \(self.token) was found.")
+                self.enclosingErrorScope.appendIssue(at: self.token.location,message: "A statement was expected but \(self.token) was found.")
                 try self.nextToken()
                 }
             }
@@ -2889,6 +2953,28 @@ public class Parser: CompilerPass
 //            }
 //        block.addBlock(PrimitiveBlock(primitiveName: name))
 //        }
+        
+    private func parsePrimitiveBlock(into block: Block) throws
+        {
+        let location = self.token.location
+        try self.nextToken()
+        let index = try self.parseParentheses
+            {
+            () -> Int in
+            var index = -1
+            if !self.token.isIntegerLiteral
+                {
+                self.enclosingErrorScope.appendIssue(at: location, message: "Integer literal primitive index expected.")
+                }
+            else
+                {
+                index = Int(self.token.integerLiteral)
+                }
+            try self.nextToken()
+            return(index)
+            }
+        block.addBlock(PrimitiveBlock(primitiveIndex: index))
+        }
         
     private func parseSelectBlock(into block: Block) throws
         {
@@ -3275,6 +3361,7 @@ public class Parser: CompilerPass
             try self.nextToken()
             let value = try self.parseExpression()
             expression = AssignmentExpression(expression,value)
+            expression.addDeclaration(self.token.location)
             }
         return(expression)
         }
@@ -3342,7 +3429,7 @@ public class Parser: CompilerPass
                 }
             else
                 {
-                self.enclosingScope.appendIssue(at: location,message:"Symbol expected but \(self.token) was found instead.")
+                self.enclosingErrorScope.appendIssue(at: location,message:"Symbol expected but \(self.token) was found instead.")
                 }
             }
         }

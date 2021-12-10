@@ -117,7 +117,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.tokenizer.update(self.editorView.string)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
                 let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
-                self.currentItem.appendItem(SymbolItem(symbol: node as! Symbol))
+                self.currentItem.appendItem(SymbolItem(symbol: node!))
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
                 }
@@ -343,8 +343,8 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
 //                UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
                 let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
-                self.currentItem.appendItem(SymbolItem(symbol: node as! Symbol))
-                let named = (node as! Symbol).allNamedInvokables
+                self.currentItem.appendItem(SymbolItem(symbol: node!))
+                let named = node!.allNamedInvokables
                 for item in named
                     {
                     self.currentItem.appendItem(InvokableItem(invokable: item))
@@ -428,7 +428,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                         {
                         let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
-                        ImportArchiver.isSwappingSystemSymbols = true
+                        ImportArchiver.isSwappingSystemTypes = true
                         let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
                         try data.write(to: theUrl)
 //                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
@@ -436,7 +436,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
 //                        try! data.write(to: theUrl)
                         let newData = try Data(contentsOf: theUrl)
-                        ImportUnarchiver.topModule = aCompiler.topModule
+//                        ImportUnarchiver.topModule = aCompiler.topModule
                         let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
 //                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
 //                        let result = importer.decodeObject(forKey: "root")
@@ -467,7 +467,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.resetReporting()
         if let node = Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer).compile()
             {
-            let named = (node as! Symbol).allNamedInvokables
+            let named = node.allNamedInvokables
             for item in named
                 {
                 self.currentItem.appendItem(InvokableItem(invokable: item))

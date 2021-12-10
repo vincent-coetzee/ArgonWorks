@@ -46,6 +46,10 @@ public class PrimitiveMethodInstance: MethodInstance
         buffer.append("PRIM",.literal(.integer(self.primitiveIndex)),.none,.none)
         }
         
+    public override func typeCheck() throws
+        {
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PrimitiveMethodInstance(label: self.label)

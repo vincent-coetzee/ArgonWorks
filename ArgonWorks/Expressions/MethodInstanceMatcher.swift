@@ -9,7 +9,7 @@ import Foundation
 
 public class MethodInstanceMatcher
     {
-    private let method: Method
+    private let methodInstances: MethodInstances
     private let argumentTypes: Types
     private let argumentExpressions: Expressions
     private var origin: TypeConstraint.Origin!
@@ -22,9 +22,9 @@ public class MethodInstanceMatcher
     private var constraints = TypeConstraints()
     private var returnType: Type!
     
-    init(method: Method,argumentExpressions:Expressions,reportErrors:Bool)
+    init(methodInstances: MethodInstances,argumentExpressions:Expressions,reportErrors:Bool)
         {
-        self.method = method
+        self.methodInstances = methodInstances
         self.argumentExpressions = argumentExpressions
         self.argumentTypes = argumentExpressions.map{$0.type!}
         self.reportErrors = reportErrors
@@ -84,7 +84,7 @@ public class MethodInstanceMatcher
         print("OK: ARGUMENTS TYPES: \(self.argumentTypes)")
         let arity = self.argumentTypes.count
         print("OK: ARITY IS \(arity)")
-        let instances = method.instancesWithArity(arity)
+        let instances = methodInstances.filter{$0.parameters.count == arity}
         if instances.isEmpty
             {
             print("FAIL: Could not find any instances with arity \(arity)")
@@ -94,6 +94,10 @@ public class MethodInstanceMatcher
         print("OK: INFERRING TYPES FOR \(instances.count) INSTANCES")
         var readyInstances = MethodInstances()
         var mostSpecificInstance:MethodInstance?
+        if readyInstances.isEmpty && instances.isEmpty
+            {
+            fatalError("You need to handle this case.")
+            }
         for instance in instances
             {
             print("OK: TESTING INSTANCE \(instance.displayString)")

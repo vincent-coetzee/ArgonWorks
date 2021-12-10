@@ -13,7 +13,8 @@ public class BooleanExpression: BinaryExpression
         {
         let expression = BooleanExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
-        expression.methodInstance = self.methodInstance
+        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.issues = self.issues
         return(expression as! Self)
         }
         

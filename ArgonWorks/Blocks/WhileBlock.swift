@@ -20,7 +20,7 @@ public class WhileBlock: Block,StackFrame,Scope
         
     public required init?(coder: NSCoder)
         {
-        self.condition = Expression()
+        self.condition = coder.decodeObject(forKey: "condition") as! Expression
         super.init(coder: coder)
         }
         
@@ -28,6 +28,12 @@ public class WhileBlock: Block,StackFrame,Scope
         {
         self.condition = Expression()
         super.init()
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.condition,forKey: "condition")
+        super.encode(with: coder)
         }
         
     public override func display(indent: String)

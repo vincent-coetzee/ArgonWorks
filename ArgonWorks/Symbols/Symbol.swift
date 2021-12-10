@@ -8,7 +8,7 @@
 import Foundation
 import AppKit
 
-public class Symbol:Node,ParseNode,VisitorReceiver
+public class Symbol:Node,VisitorReceiver,ErrorScope
     {
     public var allNamedInvokables: Array<NamedInvokable>
         {
@@ -87,7 +87,7 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         
     public var isSystemClass: Bool
         {
-        return(false)
+        false
         }
         
     public var isEnumeration: Bool
@@ -144,6 +144,12 @@ public class Symbol:Node,ParseNode,VisitorReceiver
     public var isSystemModule: Bool
         {
         return(false)
+        }
+        
+        
+    public var isSystemType: Bool
+        {
+        false
         }
         
     public var isSystemContainer: Bool
@@ -259,6 +265,11 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         super.init(label: label)
         }
         
+    public override init(label: Label,index: UUID)
+        {
+        super.init(label: label,index: index)
+        }
+        
     public required init?(coder: NSCoder)
         {
 //        #if DEBUG
@@ -266,6 +277,7 @@ public class Symbol:Node,ParseNode,VisitorReceiver
 //        #endif
         self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
+        self.type = coder.decodeObject(forKey: "theType") as? Type
         super.init(coder: coder)
 //        #if DEBUG
 //        print("END DECODE SYMBOL \(self.label)")
@@ -277,9 +289,10 @@ public class Symbol:Node,ParseNode,VisitorReceiver
 //        #if DEBUG
 //        print("ENCODE SYMBOL \(self.label)")
 //        #endif
-        super.encode(with: coder)
         coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
         coder.encode(self.source,forKey: "source")
+        coder.encode(self.type,forKey: "theType")
+        super.encode(with: coder)
         }
         
 //    public override func awakeAfter(using coder: NSCoder) -> Any?
@@ -311,6 +324,15 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         
     public func analyzeSemantics(using: SemanticAnalyzer)
         {
+        }
+        
+    public func typeCheck() throws
+        {
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        self
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -350,10 +372,16 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         {
         if let exporter = archiver as? ImportArchiver
             {
-            if exporter.isSwappingSystemSymbols && self.isSystemSymbol
+            if exporter.isSwappingSystemTypes && self.isSystemType
                 {
-                exporter.noteSwappedSystemSymbol(self)
-                return(SystemSymbolPlaceholder(original: self))
+                if self is SystemClass
+                    {
+                    print("Error substituting class, should be type")
+                    }
+                exporter.noteSwappedSystemType(self)
+                let holder = SystemSymbolPlaceholder(original: self)
+                print("SUBSTITUTING \(self.fullName.displayString)")
+                return(holder)
                 }
             if exporter.isSwappingImportedSymbols && self.isImported
                 {
@@ -369,7 +397,6 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         {
         let copy = Self.init(label: self.label)
         copy.setParent(self.parent)
-        copy.index = self.index
         copy.isLoaded = self.isLoaded
         copy.isImported = self.isImported
         copy.source = self.source
@@ -383,6 +410,7 @@ public class Symbol:Node,ParseNode,VisitorReceiver
         {
         let copy = Self.init(label: self.label)
         copy.type = substitution.substitute(self.type!)
+        copy.issues = self.issues
         return(copy)
         }
         
