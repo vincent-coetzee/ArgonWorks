@@ -37,6 +37,10 @@ extension NSCoder
             self.encode(9,forKey: forKey + "kind")
             self.encodeOperand(base,forKey: forKey + "base")
             self.encode(offset,forKey: forKey + "offset")
+        case .dataPointer:
+            self.encode(10,forKey: forKey + "kind")
+        case .staticPointer:
+            self.encode(11,forKey: forKey + "kind")
             }
         }
         
@@ -63,6 +67,10 @@ extension NSCoder
                 return(.stackPointer)
             case 9:
                 return(.indirect(self.decodeOperand(forKey: forKey + "base"),self.decodeInteger(forKey: "offset")))
+            case 10:
+                return(.dataPointer)
+            case 11:
+                return(.staticPointer)
             default:
                 fatalError("This should not happen")
             }
@@ -84,9 +92,9 @@ extension NSCoder
             case .enumeration(let string):
                 self.encode(4,forKey: key + "kind")
                 self.encode(string,forKey: key + "enumeration")
-            case .method(let string):
-                self.encode(5,forKey: key + "kind")
-                self.encode(string,forKey: key + "method")
+//            case .method(let string):
+//                self.encode(5,forKey: key + "kind")
+//                self.encode(string,forKey: key + "method")
             case .enumerationCase(let string):
                 self.encode(6,forKey: key + "kind")
                 self.encode(string,forKey: key + "enumerationCase")
@@ -129,8 +137,8 @@ extension NSCoder
                 return(.module(self.decodeObject(forKey: key + "module") as! Module))
             case 4:
                 return(.enumeration(self.decodeObject(forKey: key + "enumeration") as! Enumeration))
-            case 5:
-                return(.method(self.decodeObject(forKey: key + "method") as! Method))
+//            case 5:
+//                return(.method(self.decodeObject(forKey: key + "method") as! Method))
             case 6:
                 return(.enumerationCase(self.decodeObject(forKey: key + "enumerationCase") as! EnumerationCase))
             case 7:

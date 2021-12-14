@@ -91,11 +91,4 @@ public class ReturnBlock: Block
         try self.value.emitCode(into: buffer,using: generator)
         buffer.append(nil,"MOV",self.value.place,.none,.returnRegister)
         }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)RETURN BLOCK")
-        self.value.dump(depth: depth+1)
-        }
     }

@@ -23,9 +23,7 @@ public class Constant:Slot
         {
         return("IconConstant")
         }
-        
-    public var place: T3AInstruction.Operand = .none
-    
+
     private let value: Expression
     
     init(label:Label,type:Type,value:Expression)

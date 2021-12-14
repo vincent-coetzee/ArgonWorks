@@ -10,6 +10,16 @@ import Collections
 
 public class ContainerSymbol:Symbol
     {
+    public override var methodInstances:MethodInstances
+        {
+        var someInstances = self.symbols.compactMap{$0 as? MethodInstance}
+        for symbol in self.symbols
+            {
+            someInstances.append(contentsOf: symbol.methodInstances)
+            }
+        return(someInstances)
+        }
+        
     public override var allIssues: CompilerIssues
         {
         get
@@ -24,23 +34,6 @@ public class ContainerSymbol:Symbol
         set
             {
             }
-        }
-        
-    public override var allNamedInvokables: Array<NamedInvokable>
-        {
-        var buffer = Array<NamedInvokable>()
-        for symbol in self.symbols
-            {
-            if symbol is Invocable
-                {
-                buffer.append(NamedInvokable(fullName: symbol.fullName, invokable: symbol as! Invocable))
-                }
-            else
-                {
-                buffer.append(contentsOf: symbol.allNamedInvokables)
-                }
-            }
-        return(buffer)
         }
         
     public override var allImportedSymbols: Symbols
@@ -196,18 +189,6 @@ public class ContainerSymbol:Symbol
         try visitor.accept(self)
         }
         
-    public override func deepCopy() -> Self
-        {
-        let container = super.deepCopy()
-        var newSymbols = Symbols()
-        for symbol in self.symbols
-            {
-            newSymbols.append(symbol.deepCopy())
-            }
-        container.symbols = newSymbols
-        return(container)
-        }
-        
     public override func emitCode(using generator: CodeGenerator) throws
         {
         for symbol in self.symbols
@@ -230,6 +211,14 @@ public class ContainerSymbol:Symbol
             self.addSymbol(symbol)
             }
         return(self)
+        }
+        
+    public override func allocateAddresses(using allocator:AddressAllocator) throws
+        {
+        for symbol in self.symbols
+            {
+            try symbol.allocateAddresses(using: allocator)
+            }
         }
         
     public override func printContents(_ offset: String = "")

@@ -23,8 +23,8 @@ public class VirtualSlot:Slot
         let newSlot = VirtualSlot(label: self.label,type:self.type)
         newSlot.setOffset(self.offset)
         newSlot.setParent(self.parent)
-        newSlot.getter = self.getter
-        newSlot.setter = self.setter
+//        newSlot.getter = self.getter
+//        newSlot.setter = self.setter
         return(newSlot)
         }
         
@@ -43,8 +43,8 @@ public class VirtualSlot:Slot
         return(MemoryLayout<Word>.size * 2)
         }
         
-    private var getter:InnerFunctionPointer?
-    private var setter:InnerFunctionPointer?
+//    private var getter:InnerFunctionPointer?
+//    private var setter:InnerFunctionPointer?
     
     public override func initializeType(inContext context: TypeContext) throws
         {

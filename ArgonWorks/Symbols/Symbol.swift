@@ -10,7 +10,7 @@ import AppKit
 
 public class Symbol:Node,VisitorReceiver,ErrorScope
     {
-    public var allNamedInvokables: Array<NamedInvokable>
+    public var methodInstances:MethodInstances
         {
         []
         }
@@ -232,25 +232,16 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         10
         }
         
-    public var memoryAddress: Word
-        {
-        get
-            {
-            return(self.addresses.memoryAddress!.memoryAddress)
-            }
-        }
-        
     public var allIssues: CompilerIssues
         {
         return(self.issues)
         }
         
-    internal var frame: StackFrame?
+    internal var frame: BlockContext?
     internal var isMemoryLayoutDone: Bool = false
     internal var isSlotLayoutDone: Bool = false
     internal var locations: SourceLocations = SourceLocations()
     public var privacyScope:PrivacyScope? = nil
-    internal var addresses = Addresses()
     internal var source: String?
     private var _selectionColor: NSColor?
     public private(set) var isLoaded = false
@@ -259,6 +250,8 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
     public var compiler: Compiler!
     public var issues = CompilerIssues()
     public var type: Type?
+    public var place: T3AInstruction.Operand = .none
+    public var memoryAddress: Address = 0
     
     public required init(label: Label)
         {
@@ -309,7 +302,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         {
         }
         
-   public func allocateAddresses(using: AddressAllocator)
+   public func allocateAddresses(using: AddressAllocator) throws
         {
         }
         
@@ -393,17 +386,15 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(self)
         }
         
-    public func deepCopy() -> Self
+    public func assign(from: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        let copy = Self.init(label: self.label)
-        copy.setParent(self.parent)
-        copy.isLoaded = self.isLoaded
-        copy.isImported = self.isImported
-        copy.source = self.source
-        copy.loader = self.loader
-        copy.compiler = self.compiler
-        copy.issues = self.issues
-        return(copy)
+        fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
+        }
+        
+    
+    public func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
         }
         
     public func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -538,7 +529,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
             }
         else if type == .method
             {
-            return(allKids.filter{$0 is Method || $0 is MethodInstance || $0 is Module || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+            return(allKids.filter{$0 is MethodInstance || $0 is Module || $0 is SymbolGroup}.sorted{$0.label < $1.label})
             }
         else
             {
@@ -570,7 +561,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(nil)
         }
         
-    public func layoutInMemory()
+    public func layoutInMemory(withAddressAllocator: AddressAllocator)
         {
         self.isMemoryLayoutDone = true
         }

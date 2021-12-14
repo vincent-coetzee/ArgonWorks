@@ -50,10 +50,10 @@ public class MainModule: Module
         
     public override func addSymbol(_ symbol: Symbol)
         {
-        if symbol is Method && (symbol as! Method).isMainMethod
-            {
-            self.mainMethod = symbol as? Method
-            }
+//        if symbol is Method && (symbol as! Method).isMainMethod
+//            {
+//            self.mainMethod = symbol as? Method
+//            }
         super.addSymbol(symbol)
         }
         

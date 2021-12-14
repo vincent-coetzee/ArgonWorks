@@ -29,6 +29,16 @@ public class T3AInstruction: NSObject,NSCoding
         case character(Argon.Character)
         case byte(Argon.Byte)
         case array([LiteralValue])
+        
+        public static func integer(_ integer:Int) -> Self
+            {
+            .integer(Argon.Integer(integer))
+            }
+            
+        init(integer: Int)
+            {
+            self = .integer(Argon.Integer(integer))
+            }
         }
 
     public enum RelocatableValue
@@ -47,8 +57,8 @@ public class T3AInstruction: NSObject,NSCoding
                     return(slot.label)
                 case .function(let slot):
                     return(slot.invocationLabel)
-                case .method(let slot):
-                    return(slot.label)
+//                case .method(let slot):
+//                    return(slot.label)
                 case .module(let slot):
                     return(slot.fullName.displayString)
                 case .class(let slot):
@@ -78,8 +88,8 @@ public class T3AInstruction: NSObject,NSCoding
                     return(symbol)
                 case .function(let symbol):
                     return(symbol)
-                case .method(let symbol):
-                    return(symbol)
+//                case .method(let symbol):
+//                    return(symbol)
                 case .methodInstance(let symbol):
                     return(symbol)
                 case .module(let symbol):
@@ -102,7 +112,7 @@ public class T3AInstruction: NSObject,NSCoding
         case `super`
         case slot(Slot)
         case function(Function)
-        case method(Method)
+//        case method(Method)
         case module(Module)
         case `class`(Class)
         case enumeration(Enumeration)
@@ -180,6 +190,10 @@ public class T3AInstruction: NSObject,NSCoding
                     return("FRAME")
                 case .stackPointer:
                     return("STACK")
+                case .dataPointer:
+                    return("DATA")
+                case .staticPointer:
+                    return("STATIC")
                 case .indirect(let base,let offset):
                     let string = offset == 0 ? "" : (offset > 0 ? "+\(offset)" : "\(offset)")
                     return("[\(base.displayString)\(string)]")
@@ -191,6 +205,8 @@ public class T3AInstruction: NSObject,NSCoding
         case returnRegister
         case framePointer
         case stackPointer
+        case dataPointer
+        case staticPointer
         case temporary(Int)
         case label(T3ALabel)
         case relocatable(RelocatableValue)

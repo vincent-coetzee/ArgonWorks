@@ -65,9 +65,9 @@ public enum Parent:Storable
             }
         }
         
-    public var enclosingStackFrame: StackFrame
+    public var enclosingBlockContext: BlockContext
         {
-        self.enclosingScope.enclosingStackFrame
+        self.enclosingScope.enclosingBlockContext
         }
         
     public var block: Block?

@@ -57,16 +57,4 @@ public class ClassExpression: Expression
         try self.expression.initializeTypeConstraints(inContext: context)
         try self.type!.initializeTypeConstraints(inContext: context)
         }
-        
-    public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
-        {
-        }
-
-    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        }
-
-    public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
-        {
-        }
     }

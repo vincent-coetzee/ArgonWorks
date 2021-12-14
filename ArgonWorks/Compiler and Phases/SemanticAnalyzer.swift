@@ -12,12 +12,7 @@ public class SemanticAnalyzer: CompilerPass
     public let compiler:Compiler
     public var wasCancelled = false
     public let typeContext: TypeContext
-    
-    public var virtualMachine: VirtualMachine
-        {
-        fatalError("Virtual Machine needed")
-        }
-        
+
     init(_ compiler: Compiler)
         {
         self.compiler = compiler

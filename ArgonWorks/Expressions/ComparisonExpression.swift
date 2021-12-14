@@ -9,6 +9,11 @@ import Foundation
 
 public class ComparisonExpression: BinaryExpression
     {
+    public override var diagnosticString: String
+        {
+        "\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)"
+        }
+        
     public override func display(indent: String)
         {
         print("\(indent)COMPARISON EXPRESSION: \(self.operation)")
@@ -66,9 +71,81 @@ public class ComparisonExpression: BinaryExpression
             }
         }
         
-    public override func defineLocalSymbols(inContext: TypeContext)
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        self.lhs.defineLocalSymbols(inContext:inContext)
-        self.rhs.defineLocalSymbols(inContext:inContext)
+        guard let methodInstance = self.selectedMethodInstance else
+            {
+            print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
+            return
+            }
+        try self.lhs.emitRValue(into: instance, using: generator)
+        try self.rhs.emitRValue(into: instance, using: generator)
+        let temporary = instance.nextTemporary()
+        switch(self.operation.rawValue,methodInstance.returnType.label)
+            {
+            case ("<","Integer"):
+                instance.append("ILT64",self.lhs.place,self.rhs.place,temporary)
+            case ("<","Float"):
+                instance.append("FLT64",self.lhs.place,self.rhs.place,temporary)
+            case ("<","UInteger"):
+                instance.append("ILT64",self.lhs.place,self.rhs.place,temporary)
+            case ("<","String"):
+                instance.append("SLT",self.lhs.place,self.rhs.place,temporary)
+            case ("<","Byte"):
+                instance.append("ILT8",self.lhs.place,self.rhs.place,temporary)
+            case ("<","Character"):
+                instance.append("ILT16",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","Integer"):
+                instance.append("ILTE64",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","Float"):
+                instance.append("FLTE64",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","UInteger"):
+                instance.append("ILTE64",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","String"):
+                instance.append("SLTE",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","Byte"):
+                instance.append("ILTE8",self.lhs.place,self.rhs.place,temporary)
+            case ("<=","Character"):
+                instance.append("ILTE16",self.lhs.place,self.rhs.place,temporary)
+            case ("==","Integer"):
+                instance.append("IEQ64",self.lhs.place,self.rhs.place,temporary)
+            case ("==","Float"):
+                instance.append("FEQ64",self.lhs.place,self.rhs.place,temporary)
+            case ("==","UInteger"):
+                instance.append("IEQ64",self.lhs.place,self.rhs.place,temporary)
+            case ("==","String"):
+                instance.append("SEQ",self.lhs.place,self.rhs.place,temporary)
+            case ("==","Byte"):
+                instance.append("IEQ8",self.lhs.place,self.rhs.place,temporary)
+            case ("==","Character"):
+                instance.append("IEQ16",self.lhs.place,self.rhs.place,temporary)
+            case (">=","Integer"):
+                instance.append("IGTE64",self.lhs.place,self.rhs.place,temporary)
+            case (">=","Float"):
+                instance.append("FGTE64",self.lhs.place,self.rhs.place,temporary)
+            case (">=","UInteger"):
+                instance.append("IGTE64",self.lhs.place,self.rhs.place,temporary)
+            case (">=","String"):
+                instance.append("SGTE",self.lhs.place,self.rhs.place,temporary)
+            case (">=","Byte"):
+                instance.append("IGTE8",self.lhs.place,self.rhs.place,temporary)
+            case (">=","Character"):
+                instance.append("IGTE16",self.lhs.place,self.rhs.place,temporary)
+            case (">","Integer"):
+                instance.append("IGT64",self.lhs.place,self.rhs.place,temporary)
+            case (">","Float"):
+                instance.append("FGT64",self.lhs.place,self.rhs.place,temporary)
+            case (">","UInteger"):
+                instance.append("IGT64",self.lhs.place,self.rhs.place,temporary)
+            case (">","String"):
+                instance.append("SGT",self.lhs.place,self.rhs.place,temporary)
+            case (">","Byte"):
+                instance.append("IGT8",self.lhs.place,self.rhs.place,temporary)
+            case (">","Character"):
+                instance.append("IGT16",self.lhs.place,self.rhs.place,temporary)
+            default:
+                fatalError("This should not happen.")
+            }
+        self._place = temporary
         }
     }

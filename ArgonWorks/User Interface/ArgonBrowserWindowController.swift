@@ -493,7 +493,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
             if let theUrl = panel.url
                 {
                 let aCompiler = Compiler(source: self.sourceEditor.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
-                if let module = aCompiler.compile() as? Module
+                if let module = aCompiler.compile()
                     {
                     do
                         {

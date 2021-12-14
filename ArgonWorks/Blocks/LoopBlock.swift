@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class LoopBlock: Block,StackFrame,Scope
+public class LoopBlock: Block,BlockContext,Scope
     {
     public var startExpressions: Array<Expression>!
         {
@@ -166,25 +166,6 @@ public class LoopBlock: Block,StackFrame,Scope
         for block in self.blocks
             {
             block.analyzeSemantics(using: analyzer)
-            }
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)LOOP")
-        for expression in self.startExpressions
-            {
-            expression.dump(depth: depth+1)
-            }
-        self.endExpression.dump(depth: depth+1)
-        for expression in self.updateExpressions
-            {
-            expression.dump(depth: depth+1)
-            }
-        for block in self.blocks
-            {
-            block.dump(depth: depth + 1)
             }
         }
         

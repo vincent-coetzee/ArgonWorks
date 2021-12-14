@@ -131,6 +131,7 @@ public class MethodInstanceMatcher
                 let substitution = newContext.unify()
                 print("OK: UNIFIED TYPES")
                 let newInstance = substitution.substitute(freshInstance)
+                newInstance.originalMethodInstance = instance
                 let types = self.argumentTypes.map{substitution.substitute($0)}
                 print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
                 print("OK: ARGUMENTS ARE \(types)")

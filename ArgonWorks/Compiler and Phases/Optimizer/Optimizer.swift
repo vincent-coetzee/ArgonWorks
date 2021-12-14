@@ -13,11 +13,6 @@ public class Optimizer: CompilerPass
     public var wasCancelled = false
     public var processedModule: Module?
     
-    public var virtualMachine: VirtualMachine
-        {
-        fatalError("Virtal Machine access needed")
-        }
-        
     public init(_ compiler: Compiler)
         {
         self.compiler = compiler

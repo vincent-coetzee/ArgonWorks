@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FFI
 
 public class Type: Symbol,Displayable,UserDisplayable
     {
@@ -50,6 +51,26 @@ public class Type: Symbol,Displayable,UserDisplayable
     public static func ==(lhs: Type,rhs: Type) -> Bool
         {
         lhs === rhs
+        }
+        
+    public var magicNumber: Int
+        {
+        fatalError()
+        }
+        
+    public var sizeInBytes: Int
+        {
+        0
+        }
+        
+    public var ffiType: ffi_type
+        {
+        fatalError()
+        }
+        
+    public var isVoidType: Bool
+        {
+        false
         }
         
     public var userString: String

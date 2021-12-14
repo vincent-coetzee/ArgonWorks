@@ -9,12 +9,12 @@ import Foundation
 
 public class Initializer:Function,Scope
     {
-    public var enclosingStackFrame: StackFrame
+    public var enclosingBlockContext: BlockContext
         {
         self
         }
         
-    public var isStackFrameScope: Bool
+    public var isBlockContextScope: Bool
         {
         false
         }

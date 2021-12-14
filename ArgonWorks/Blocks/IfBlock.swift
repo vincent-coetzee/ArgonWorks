@@ -43,17 +43,6 @@ public class IfBlock: Block
         super.init()
         }
         
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)IF")
-        condition.dump(depth: depth+1)
-        for block in self.blocks
-            {
-            block.dump(depth: depth + 1)
-            }
-        }
-        
     public override func display(indent: String)
         {
         print("\(indent)IF \(Swift.type(of: self))")

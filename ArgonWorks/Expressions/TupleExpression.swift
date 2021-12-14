@@ -17,7 +17,7 @@ public class TupleExpression: Expression
 
     private var expressions = Expressions()
     public var isArrayDestructure: Bool = false
-    private var tuple: Tuple
+    internal var tuple: Tuple
     
     public override init()
         {
@@ -55,14 +55,6 @@ public class TupleExpression: Expression
             try expression.visit(visitor: visitor)
             }
         try visitor.accept(self)
-        }
-        
-     public override func becomeLValue()
-        {
-        for expression in self.expressions
-            {
-            expression.becomeLValue()
-            }
         }
         
     public override func initializeType(inContext context: TypeContext) throws

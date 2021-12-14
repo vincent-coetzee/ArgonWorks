@@ -97,11 +97,4 @@ public class PseudoVariableExpression: Expression
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         }
-        
-    public override func emitAddress(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        let temporary = instance.nextTemporary()
-        instance.append("LOAD",.indirect(.framePointer,16),.none,temporary)
-        self._place = temporary
-        }
     }

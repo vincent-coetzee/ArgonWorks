@@ -83,11 +83,11 @@ public class ClosureExpression: Expression
         try self.closure!.initializeTypeConstraints(inContext: context)
         }
         
-    public override func allocateAddresses(using allocator:AddressAllocator)
+    public override func allocateAddresses(using allocator:AddressAllocator) throws
         {
-        self.closure?.allocateAddresses(using: allocator)
-        self.closureSlot?.allocateAddresses(using: allocator)
-        self.arguments.allocateAddresses(using: allocator)
+        try self.closure?.allocateAddresses(using: allocator)
+        try self.closureSlot?.allocateAddresses(using: allocator)
+        try self.arguments.allocateAddresses(using: allocator)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

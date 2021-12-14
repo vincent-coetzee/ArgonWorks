@@ -10,12 +10,12 @@ import AppKit
     
 public class Module:ContainerSymbol,Scope
     {
-    public var enclosingStackFrame: StackFrame
+    public var enclosingBlockContext: BlockContext
         {
         fatalError()
         }
         
-    public var isStackFrameScope: Bool
+    public var isBlockContextScope: Bool
         {
         false
         }
@@ -84,10 +84,17 @@ public class Module:ContainerSymbol,Scope
         
     private var imports: Array<Importer> = []
     
+    ///
+    ///
+    /// Create a module class for this module which is a shadow
+    /// type that holds the "class" of this module. It will act
+    /// in place of the module when types are needed.
+    ///
+    ///
     public required init(label: Label)
         {
         super.init(label: label)
-        self.type = nil
+        self.type = TypeModule(module: self)
         }
         
     public required init?(coder: NSCoder)
@@ -140,18 +147,6 @@ public class Module:ContainerSymbol,Scope
             {
             try symbol.initializeTypeConstraints(inContext: context)
             }
-        }
-        
-    public var methodInstances:MethodInstances
-        {
-        return(self.methods.flatMap{$0.instances})
-        }
-        
-    public var methods:Methods
-        {
-        var methods = Array(self.symbols.compactMap{$0 as? Method})
-        methods += self.symbols.compactMap{($0 as? Module)?.methods}.flatMap{$0}
-        return(methods)
         }
 
     public override var iconName: String
@@ -286,13 +281,12 @@ public class Module:ContainerSymbol,Scope
         return(nil)
         }
         
-    public func moduleWithAllocatedAddresses(using: AddressAllocator) -> Module
+    public func moduleWithAllocatedAddresses(using: AddressAllocator) throws -> Module
         {
-        for aClass in self.classes
+        for symbol in self.symbols
             {
-            aClass.allocateAddresses(using: using)
+            try symbol.allocateAddresses(using: using)
             }
-        self.layoutInMemory()
         return(self)
         }
 
@@ -336,6 +330,11 @@ public class Module:ContainerSymbol,Scope
     public func moduleWithSemanticsAnalyzed(using analyzer:SemanticAnalyzer) -> Module?
         {
         return(nil)
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        let allMethods = self.symbols.filter{$0 is MethodInstance}
         }
     }
 

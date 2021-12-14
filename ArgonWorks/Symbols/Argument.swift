@@ -23,9 +23,9 @@ public struct Argument:Displayable
         self.value = value
         }
         
-    public func allocateAddresses(using: AddressAllocator)
+    public func allocateAddresses(using: AddressAllocator) throws
         {
-        self.value.allocateAddresses(using: using)
+        try self.value.allocateAddresses(using: using)
         }
         
     public func analyzeSemantics(using: SemanticAnalyzer)
@@ -39,6 +39,7 @@ public struct Argument:Displayable
         try visitor.accept(self)
         }
         
+    @discardableResult
     public func initializeType(inContext context: TypeContext) throws -> Argument
         {
         try self.value.initializeType(inContext: context)
@@ -74,11 +75,11 @@ extension Arguments
         return(self.map{$0.value.type!})
         }
         
-    public func allocateAddresses(using: AddressAllocator)
+    public func allocateAddresses(using: AddressAllocator) throws
         {
         for argument in self
             {
-            argument.allocateAddresses(using: using)
+            try argument.allocateAddresses(using: using)
             }
         }
         

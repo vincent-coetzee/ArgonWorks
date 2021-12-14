@@ -9,17 +9,20 @@ import Foundation
 
 public class AddressAllocator: CompilerPass
     {
-    public var virtualMachine: VirtualMachine
-        {
-        fatalError("Virtual Machine needed")
-        }
-        
     public let compiler: Compiler
     public var wasCancelled = false
+    public let stackSegment: StackSegment
+    public let dataSegment: DataSegment
+    public let staticSegment: StaticSegment
+    public let managedSegment: ManagedSegment
     
     init(_ compiler: Compiler)
         {
         self.compiler = compiler
+        self.stackSegment = StackSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
+        self.dataSegment = DataSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
+        self.staticSegment = StaticSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
+        self.managedSegment = ManagedSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
         }
         
     public func cancelCompletion()
@@ -29,15 +32,27 @@ public class AddressAllocator: CompilerPass
         
     public func processModule(_ module: Module?) -> Module?
         {
-        guard let module = module else
+        do
             {
-            return(nil)
+            guard let module = module else
+                {
+                return(nil)
+                }
+            let newModule = try module.moduleWithAllocatedAddresses(using: self)
+            guard !self.wasCancelled else
+                {
+                return(nil)
+                }
+            return(newModule)
             }
-        let newModule = module.moduleWithAllocatedAddresses(using: self)
-        guard !self.wasCancelled else
+        catch let error as CompilerIssue
             {
-            return(nil)
+            module?.appendIssue(error)
             }
-        return(newModule)
+        catch let error
+            {
+            module?.appendIssue(at: module!.declaration!, message: "Unexpected error: \(error).")
+            }
+        return(nil)
         }
     }

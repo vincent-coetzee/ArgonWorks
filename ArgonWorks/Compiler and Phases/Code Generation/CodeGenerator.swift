@@ -15,11 +15,6 @@ public class CodeGenerator: CompilerPass
     public var wasCancelled = false
     public var isLValue = false
     
-    public var virtualMachine: VirtualMachine
-        {
-        fatalError("Virtual Machine needed")
-        }
-
     public init(_ compiler: Compiler)
         {
         self.compiler = compiler

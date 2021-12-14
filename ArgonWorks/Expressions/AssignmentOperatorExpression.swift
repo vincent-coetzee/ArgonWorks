@@ -43,7 +43,6 @@ public class AssignmentOperatorExpression: Expression
         {
         self.rhs = rhs
         self.lhs = lhs
-        self.lhs.becomeLValue()
         self.operationName = operation.name
         super.init()
         }

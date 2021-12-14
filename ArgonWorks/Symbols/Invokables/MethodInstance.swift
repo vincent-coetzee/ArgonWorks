@@ -50,14 +50,14 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
-    public var isStackFrameScope: Bool
+    public var isBlockContextScope: Bool
         {
         false
         }
         
     public override var declaration: Location?
         {
-        self.method.declaration
+        self.locations.declaration
         }
         
     public var isSlotScope: Bool
@@ -137,17 +137,22 @@ public class MethodInstance: Function
     public var isGenericMethod = false
     public var isMainMethod: Bool = false
     public var conditionalTypes: Types = []
-    public weak var method: Method!
+    internal var originalMethodInstance: MethodInstance?
+    public var codeBuffer:T3ABuffer
     
     public required init?(coder: NSCoder)
         {
         self.isGenericMethod = coder.decodeBool(forKey: "isGeneric")
         self.conditionalTypes = coder.decodeObject(forKey: "conditionalTypes") as! Types
+        self.originalMethodInstance = coder.decodeObject(forKey: "originalMethodInstance") as? MethodInstance
+        self.isMainMethod = coder.decodeBool(forKey: "isMainMethod")
+        self.codeBuffer = coder.decodeObject(forKey: "codeBuffer") as! T3ABuffer
         super.init(coder: coder)
         }
     
     public required init(label: Label)
         {
+        self.codeBuffer = T3ABuffer()
         super.init(label: label)
         }
     
@@ -155,6 +160,9 @@ public class MethodInstance: Function
         {
         coder.encode(self.isGenericMethod,forKey: "isGeneric")
         coder.encode(self.conditionalTypes,forKey: "conditionalTypes")
+        coder.encode(self.originalMethodInstance,forKey: "orginalMethodInstance")
+        coder.encode(self.isMainMethod,forKey: "isMainMethod")
+        coder.encode(self.codeBuffer,forKey: "codeBuffer")
         super.encode(with: coder)
         }
         
@@ -164,6 +172,14 @@ public class MethodInstance: Function
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
+        }
+        
+    public var methodSignature: MethodSignature
+        {
+        let signature = MethodSignature(label: self.label,methodInstance: self)
+        signature.parameters = self.parameters
+        signature.returnType = self.returnType
+        return(signature)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -193,8 +209,15 @@ public class MethodInstance: Function
         return(!failed)
         }
         
-    public func emitCode(forArguments: Expressions,into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(using generator: CodeGenerator) throws
         {
+        self.codeBuffer = T3ABuffer()
+        try self.emitCode(into: self.codeBuffer,using: generator)
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
         }
         
     public override func initializeType(inContext context: TypeContext) throws

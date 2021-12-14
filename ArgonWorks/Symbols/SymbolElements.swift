@@ -223,7 +223,7 @@ public class MethodElement: SymbolElement
         let symbols = symbol.allChildren
         var kids = Symbols()
         kids += symbols.filter{$0 is Module || $0 is SymbolGroup}
-        kids += symbols.filter{$0 is Method || $0 is MethodInstance || $0 is Function}
+        kids += symbols.filter{$0 is MethodInstance || $0 is Function}
         return(kids.map{MethodElement(symbol: $0)}.sorted{$0.label<$1.label})
         }
     }

@@ -29,7 +29,8 @@ public class MethodInvocationExpression: Expression
     required init?(coder: NSCoder)
         {
         self.methodInstances = coder.decodeObject(forKey: "methodInstances") as! MethodInstances
-        self.arguments = []
+        self.arguments = coder.decodeArguments(forKey: "arguments")
+        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
         super.init(coder: coder)
         }
         
@@ -37,6 +38,8 @@ public class MethodInvocationExpression: Expression
         {
         super.encode(with: coder)
         coder.encode(self.methodInstances,forKey: "methodInstances")
+        coder.encodeArguments(self.arguments,forKey: "arguments")
+        coder.encode(self.methodInstance,forKey: "methodInstance")
         }
         
     public override func initializeType(inContext context: TypeContext) throws
@@ -68,6 +71,10 @@ public class MethodInvocationExpression: Expression
             {
             print("\(indent)\tSELECTED METHOD INSTANCE: \(instance.displayString)")
             }
+        else
+            {
+            print("\(indent)\tNO SELECTED METHOD INSTANCE")
+            }
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext) throws
@@ -81,6 +88,7 @@ public class MethodInvocationExpression: Expression
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
             self.methodInstance = specificInstance
+            assert(self.methodInstance.isNotNil,"Original method instance is nil and should not be.")
             print("FOUND MOST SPECIFIC INSTANCE FOR \(self.methodInstances.first!.label) = \(specificInstance.displayString)")
             }
         else
@@ -115,34 +123,18 @@ public class MethodInvocationExpression: Expression
         return(types)
         }
         
-    public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
         {
-//        guard let location = self.declaration else
-//            {
-//            print("ERROR: can not locate expression")
-//            return
-//            }
-//        instance.append(lineNumber: location.line)
-//        if self.methodInstance.isNil
-//            {
-//            generator.cancelCompletion()
-//            generator.dispatchError(at: location, message: "Can not find a matching instance for this method, it can not be dispatched.")
-//            instance.append(comment: "UNABLE TO MATCH METHOD \(self.method.label) WITH TYPES \(self.arguments.map{$0.value.type!.displayString})")
-//            return
-//            }
-//        var count:Argon.Integer = 0
-//        for argument in self.arguments.reversed()
-//            {
-//            try argument.value.emitCode(into: instance, using: generator)
-//            if argument.value.place.isNone
-//                {
-//                print("ERROR")
-//                }
-//            instance.append(nil,"PUSH",argument.value.place,.none,.none)
-//            count += 1
-//            }
-//        instance.append(nil,"CALL",.relocatable(.methodInstance(methodInstance!)),.none,.none)
-//        instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
-//        self._place = .returnRegister
+        guard let instance = self.methodInstance else
+            {
+            fatalError("Can not emit code for nil method instance")
+            }
+        for argument in self.arguments.reversed()
+            {
+            try argument.value.emitRValue(into: buffer, using: generator)
+            buffer.append("PUSH",argument.value.place,.none,.none)
+            }
+        buffer.append("CALL",.relocatable(.methodInstance(instance)),.none,.none)
+        buffer.append("ADD",.stackPointer,.literal(.integer(self.arguments.count * Argon.kArgumentSizeInBytes)),.none)
         }
     }

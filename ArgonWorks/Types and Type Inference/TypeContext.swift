@@ -288,6 +288,14 @@ public class TypeContext
             
         public func unifySubtypes(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeModule,let right = rhs as? TypeModule
+                {
+                if left.module == right.module
+                    {
+                    return
+                    }
+                throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.module.fullName.displayString) \(right.module.fullName.displayString)"))
+                }
             if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
                 {
                 if !left.typeClass.theClass.isSubclass(of: right.typeClass.theClass)
@@ -369,7 +377,8 @@ public class TypeContext
                     }
                 if self.occursIn(left.id,rhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
+                    return
+//                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
                     }
                 self.typeVariables[left.id] = rhs
                 return
@@ -383,7 +392,8 @@ public class TypeContext
                     }
                 if self.occursIn(right.id,lhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(right.displayString) \(lhs.displayString)"))
+                    return
+//                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(right.displayString) \(lhs.displayString)"))
                     }
                 self.typeVariables[right.id] = lhs
                 return
@@ -392,6 +402,14 @@ public class TypeContext
             
         public func unify(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeModule,let right = rhs as? TypeModule
+                {
+                if left.module == right.module
+                    {
+                    return
+                    }
+                throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.module.fullName.displayString) \(right.module.fullName.displayString)"))
+                }
             if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
                 {
                 try self.unify(left.typeClass,right.typeClass)
@@ -469,10 +487,11 @@ public class TypeContext
                     }
                 if self.occursIn(left.id,rhs)
                     {
-                    print("INFINITELY RECURSIVE TYPES")
-                    print("LHS: \(lhs.displayString)")
-                    print("RHS: \(rhs.displayString)")
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
+                    return
+//                    print("INFINITELY RECURSIVE TYPES")
+//                    print("LHS: \(lhs.displayString)")
+//                    print("RHS: \(rhs.displayString)")
+//                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(left.displayString) \(rhs.displayString)"))
                     }
                 self.typeVariables[left.id] = rhs
                 return
@@ -486,7 +505,8 @@ public class TypeContext
                     }
                 if self.occursIn(right.id,lhs)
                     {
-                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(lhs.displayString) \(right.displayString)"))
+                    return
+//                    throw(CompilerIssue(location: .zero,message: "Infinitely recursive type \(lhs.displayString) \(right.displayString)"))
                     }
                 self.typeVariables[right.id] = lhs
                 return
@@ -587,12 +607,7 @@ public class TypeContext
         {
         self.scope.topModule.argonModule.class
         }
-        
-    public var methodType: Type
-        {
-        self.scope.topModule.argonModule.method
-        }
-        
+
     public var functionType: Type
         {
         self.scope.topModule.argonModule.function

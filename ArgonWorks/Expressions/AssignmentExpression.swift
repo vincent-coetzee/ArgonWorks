@@ -35,12 +35,6 @@ public class AssignmentExpression: Expression
         self.rhs.setParent(self)
         }
         
-    public override func defineLocalSymbols(inContext: TypeContext)
-        {
-        self.lhs.defineLocalSymbols(inContext:inContext)
-        self.rhs.defineLocalSymbols(inContext:inContext)
-        }
-        
     public override func visit(visitor: Visitor) throws
         {
         try self.lhs.visit(visitor: visitor)
@@ -95,5 +89,15 @@ public class AssignmentExpression: Expression
         {
         self.lhs.analyzeSemantics(using: analyzer)
         self.rhs.analyzeSemantics(using: analyzer)
+        }
+        
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        try self.lhs.assign(from: self.rhs,into: instance,using: generator)
+        self._place = self.lhs.place
         }
     }

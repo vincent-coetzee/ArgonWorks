@@ -78,6 +78,20 @@ public class SlotAccessExpression: Expression
         return(expression as! Self)
         }
         
+    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        guard let slot = self.slot else
+            {
+            fatalError("Slot is nil, can not assign into nil slot.")
+            }
+        try expression.emitRValue(into: buffer,using: using)
+        try self.receiver.emitLValue(into: buffer,using: using)
+        let temporary = buffer.nextTemporary()
+        buffer.append("ADD",self.receiver.place,.literal(.integer(slot.offset)),temporary)
+        buffer.append("STIP",expression.place,.none,temporary)
+        self._place = temporary
+        }
+        
     public override func initializeType(inContext context: TypeContext) throws
         {
         try self.receiver.initializeType(inContext: context)
@@ -122,44 +136,12 @@ public class SlotAccessExpression: Expression
             }
         }
         
-    public override func becomeLValue()
-        {
-        self.isLValue = true
-        }
-        
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type?.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
-        {
-        }
-        
-    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        print("halt")
-//        if let slot = self.receiver.lookupSlot(selector: (self.slotExpression as! SlotSelectorExpression).selector)
-//            {
-//            let temp = instance.nextTemporary()
-//            try self.receiver.emitCode(into: instance,using: generator)
-//            instance.append(nil,"MOV",self.receiver.place,.none,temp)
-//            instance.append(nil,"IADD",temp,.integer(slot.offset),temp)
-//            self._place = temp
-//            }
-        }
-        
-    public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        try value.emitCode(into: instance, using: using)
-        try self.receiver.emitAddress(into: instance,using: using)
-        let aSlot = self.slot!
-        let aClass = aSlot.parent.node as! Class
-        let actualSlot = aClass.layoutSlot(atLabel: aSlot.label)!
-        instance.append("STORE",value.place,.none,.indirect(self.receiver.place,actualSlot.offset))
-        }
-        
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         }
     }

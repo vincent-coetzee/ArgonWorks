@@ -83,12 +83,10 @@ public class ArrayAccessExpression: Expression
         {
         try self.array.initializeTypeConstraints(inContext: context)
         try self.index.initializeTypeConstraints(inContext: context)
+        let arrayClass = (context.arrayType as! TypeClass).theClass
+        let arrayType = TypeClass(class: arrayClass,generics: [self.type!])
+        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
         context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
-//        let arrayClass = (context.arrayType as! TypeClass).theClass
-//        let variable = context.freshTypeVariable()
-//        let arrayType = TypeClass(class: arrayClass,generics:[variable])
-//        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
-//        context.append(TypeConstraint(left: self.type,right: variable,origin: .expression(self)))
         }
 
     public override func initializeType(inContext context: TypeContext) throws
@@ -105,9 +103,32 @@ public class ArrayAccessExpression: Expression
             }
         }
         
-    public override func becomeLValue()
+    public override func emitLValue(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        self.isLValue = true
+        try self.array.emitLValue(into: buffer,using: using)
+        try self.index.emitRValue(into: buffer,using: using)
+        let temporary = buffer.nextTemporary()
+        buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
+        buffer.append("ADD",temporary,self.array.place,temporary)
+        self._place = temporary
+        }
+        
+    public override func emitRValue(into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        try self.array.emitLValue(into: buffer,using: using)
+        try self.index.emitRValue(into: buffer,using: using)
+        let temporary = buffer.nextTemporary()
+        buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
+        buffer.append("ADD",temporary,self.array.place,temporary)
+        buffer.append("LFP", temporary,.none, temporary)
+        self._place = temporary
+        }
+        
+    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        try expression.emitRValue(into: buffer,using: using)
+        try self.emitLValue(into: buffer,using: using)
+        buffer.append("STIP",expression.place,.none,self.place)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -125,27 +146,5 @@ public class ArrayAccessExpression: Expression
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type!.lookup(label: label))
-        }
-        
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
-        {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        let temp = instance.nextTemporary()
-        try self.array.emitCode(into: instance,using: generator)
-        instance.append(nil,"MOV",self.array.place,.none,temp)
-        let offset = instance.nextTemporary()
-        try self.index.emitCode(into: instance,using: generator)
-        instance.append(nil,"MOV",self.index.place,.none,offset)
-        instance.append(nil,"MUL",offset,.literal(.integer(8)),offset)
-        instance.append(nil,"IADD",offset,temp,temp)
-        self._place = temp
-        }
-        
-    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-//        fatalError("This should have been implemented")
         }
     }

@@ -9,11 +9,6 @@ import Foundation
 
 public class AssociatedValueInductionExpression: Expression
     {
-    public override var assignedSlots: Slots
-        {
-        return(self.slots)
-        }
-        
     public override var enumerationCase: EnumerationCase
         {
         return(self.expression.enumerationCase)

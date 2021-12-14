@@ -87,15 +87,13 @@ public class TypeEnumeration: TypeConstructor
         fatalError()
         }
         
-    public override func deepCopy() -> Self
-        {
-        let anEnum = TypeEnumeration(label: self.label,enumeration: self.enumeration)
-        anEnum.setParent(self)
-        return(anEnum as! Self)
-        }
-        
     public override func lookup(label: Label) -> Symbol?
         {
         self.enumeration.lookup(label: label)
+        }
+        
+    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
+        {
+        self.enumeration.layoutInMemory(withAddressAllocator: withAddressAllocator)
         }
     }

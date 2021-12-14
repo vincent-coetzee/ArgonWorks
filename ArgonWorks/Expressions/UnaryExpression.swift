@@ -11,7 +11,7 @@ public class UnaryExpression: Expression
     {
     public override var displayString: String
         {
-        return("\(String(describing: self.operation))\(String(describing: self.rhs.displayString))")
+        return("\(String(describing: self.operationName))\(String(describing: self.rhs.displayString))")
         }
         
     private let operationName: String
@@ -90,13 +90,5 @@ public class UnaryExpression: Expression
         let temp = instance.nextTemporary()
         instance.append(nil,opcode,rhs.place,.none,temp)
         self._place = temp
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)UNARY EXPRESSION()")
-        print("\(padding)\t\(String(describing: self.operation))")
-        self.rhs.dump(depth: depth + 1)
         }
     }

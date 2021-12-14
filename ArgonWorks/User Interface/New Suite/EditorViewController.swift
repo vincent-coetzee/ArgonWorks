@@ -344,11 +344,6 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
                 let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
                 self.currentItem.appendItem(SymbolItem(symbol: node!))
-                let named = node!.allNamedInvokables
-                for item in named
-                    {
-                    self.currentItem.appendItem(InvokableItem(invokable: item))
-                    }
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
                 }
@@ -422,7 +417,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             if let theUrl = panel.url
                 {
                 let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
-                if let module = aCompiler.compile() as? Module
+                if let module = aCompiler.compile()
                     {
                     do
                         {
@@ -463,17 +458,9 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         
     @IBAction func onCompileFile(_ sender: Any?)
         {
-        let source = self.editorView.string
         self.resetReporting()
-        if let node = Compiler(source: source,reportingContext: self,tokenRenderer: self.tokenizer).compile()
-            {
-            let named = node.allNamedInvokables
-            for item in named
-                {
-                self.currentItem.appendItem(InvokableItem(invokable: item))
-                }
-            self.outliner.reloadData()
-            }
+        let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
+        _ = aCompiler.compile()
         }
     }
 

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class VirtualReadBlock: Block,Scope,StackFrame
+public class VirtualReadBlock: Block,Scope,BlockContext
     {
     internal var slot: Slot!
     

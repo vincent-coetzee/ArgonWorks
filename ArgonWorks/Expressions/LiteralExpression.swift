@@ -25,10 +25,14 @@ public indirect enum Literal:Hashable,Displayable
     case module(Module)
     case enumeration(Enumeration)
     case enumerationCase(EnumerationCase)
-    case method(Method)
     case constant(Constant)
     case function(Function)
     
+    init(integer: Int)
+        {
+        self = .integer(Argon.Integer(integer))
+        }
+        
     init(type: Type)
         {
         self = type.literal
@@ -67,8 +71,8 @@ public indirect enum Literal:Hashable,Displayable
                 self = .enumeration(coder.decodeObject(forKey: forKey + "enumeration") as! Enumeration)
             case 11:
                 self = .enumerationCase(coder.decodeObject(forKey: forKey + "enumerationCase") as! EnumerationCase)
-            case 12:
-                self = .method(coder.decodeObject(forKey: forKey + "method") as! Method)
+//            case 12:
+//                self = .method(coder.decodeObject(forKey: forKey + "method") as! Method)
             case 13:
                 self = .constant(coder.decodeObject(forKey: forKey + "constant") as! Constant)
             case 14:
@@ -104,8 +108,8 @@ public indirect enum Literal:Hashable,Displayable
                 return("\(enumeration.label)")
             case .enumerationCase(let aCase):
                 return("\(aCase.label)")
-            case .method(let method):
-                return("\(method.label)")
+//            case .method(let method):
+//                return("\(method.label)")
             case .function(let function):
                 return("\(function.label)")
             case .constant(let constant):
@@ -152,9 +156,9 @@ public indirect enum Literal:Hashable,Displayable
             case .enumeration(let enumeration):
                 coder.encode(10,forKey:forKey + "kind")
                 coder.encode(enumeration,forKey:forKey + "enumeration")
-            case .method(let method):
-                coder.encode(12,forKey:forKey + "kind")
-                coder.encode(method,forKey:forKey + "method")
+//            case .method(let method):
+//                coder.encode(12,forKey:forKey + "kind")
+//                coder.encode(method,forKey:forKey + "method")
             case .constant(let constant):
                 coder.encode(13,forKey:forKey + "kind")
                 coder.encode(constant,forKey:forKey + "constant")
@@ -204,8 +208,6 @@ public indirect enum Literal:Hashable,Displayable
                 return(TypeFunction(label: function.label,types: function.parameters.map{$0.type!},returnType: function.returnType))
             case .constant(let constant):
                 return(constant.type)
-            default:
-                fatalError()
             }
         }
         
@@ -241,8 +243,8 @@ public indirect enum Literal:Hashable,Displayable
                 return(.enumeration(substitution.substitute(enumeration) as! Enumeration))
             case .enumerationCase(let aCase):
                 return(.enumerationCase(substitution.substitute(aCase) as! EnumerationCase))
-            case .method(let instance):
-                return(.method(substitution.substitute(instance) as! Method))
+//            case .method(let instance):
+//                return(.method(substitution.substitute(instance) as! Method))
             case .function(let function):
                 return(.function(substitution.substitute(function) as! Function))
             case .constant(let constant):
@@ -291,16 +293,16 @@ public class LiteralExpression: Expression
             }
         }
         
-    public var isMethodLiteral: Bool
-        {
-        switch(self.literal)
-            {
-            case .method:
-                return(true)
-            default:
-                return(false)
-            }
-        }
+//    public var isMethodLiteral: Bool
+//        {
+//        switch(self.literal)
+//            {
+//            case .method:
+//                return(true)
+//            default:
+//                return(false)
+//            }
+//        }
         
     public var isSymbolLiteral: Bool
         {
@@ -334,17 +336,17 @@ public class LiteralExpression: Expression
                 fatalError("Should not have been called")
             }
         }
-        
-    public var methodLiteral: Method
-        {
-        switch(self.literal)
-            {
-            case .method(let symbol):
-                return(symbol)
-            default:
-                fatalError("Should not have been called")
-            }
-        }
+//
+//    public var methodLiteral: Method
+//        {
+//        switch(self.literal)
+//            {
+//            case .method(let symbol):
+//                return(symbol)
+//            default:
+//                fatalError("Should not have been called")
+//            }
+//        }
         
     public var classLiteral: Class
         {
@@ -480,8 +482,8 @@ public class LiteralExpression: Expression
                 context.append(TypeConstraint(left: self.type,right: enumeration.type,origin: .expression(self)))
             case .enumerationCase(let aCase):
                 context.append(TypeConstraint(left: self.type,right: aCase.type,origin: .expression(self)))
-            case .method(let method):
-                context.append(TypeConstraint(left: self.type,right: method.type,origin: .expression(self)))
+//            case .method(let method):
+//                context.append(TypeConstraint(left: self.type,right: method.type,origin: .expression(self)))
             case .function(let function):
                 context.append(TypeConstraint(left: self.type,right: function.type,origin: .expression(self)))
             case .constant(let constant):
@@ -527,8 +529,8 @@ public class LiteralExpression: Expression
                 self.type = enumeration.type!
             case .enumerationCase(let aCase):
                 self.type = aCase.type
-            case .method(let method):
-                self.type = method.type
+//            case .method(let method):
+//                self.type = method.type
             case .function(let function):
                 self.type = function.type
             case .constant(let constant):
@@ -539,13 +541,6 @@ public class LiteralExpression: Expression
     public override func display(indent: String)
         {
         print("\(indent)LITERAL \(self.literal) \(self.type!.displayString)")
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)LITERAL EXPRESSION()")
-        print("\(padding)\t \(self.literal)")
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -637,8 +632,8 @@ public class LiteralExpression: Expression
                  instance.append(nil,"LOAD",.relocatable(.enumeration(enumeration)),.none,temp)
             case .enumerationCase(let enumerationCase):
                  instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
-            case .method(let method):
-                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
+//            case .method(let method):
+//                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
                  instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
             case .function(let constant):

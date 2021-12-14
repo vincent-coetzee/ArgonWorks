@@ -29,13 +29,13 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         false
         }
     
-    public var enclosingStackFrame: StackFrame
+    public var enclosingBlockContext: BlockContext
         {
-        if self is StackFrame
+        if self is BlockContext
             {
-            return(self as! StackFrame)
+            return(self as! BlockContext)
             }
-        return(self.parent.enclosingStackFrame)
+        return(self.parent.enclosingBlockContext)
         }
     
     public var enclosingScope: Scope
@@ -201,7 +201,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
             }
         else if symbol is Slot
             {
-            self.addSlot(symbol as! Slot)
+            self.addLocalSlot(symbol as! LocalSlot)
             }
         else
             {
@@ -221,10 +221,10 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         self
         }
         
-    public func addSlot(_ localSlot: Slot)
+    public func addLocalSlot(_ localSlot: LocalSlot)
         {
         self.localSymbols.append(localSlot)
-        localSlot.frame = (self as! StackFrame)
+        localSlot.frame = (self as! BlockContext)
         localSlot.offset = self.nextLocalSlotOffset
         self.nextLocalSlotOffset -= 8
         }
@@ -232,7 +232,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
     public func addParameterSlot(_ parameter: Parameter)
         {
         self.localSymbols.append(parameter)
-        parameter.frame = (self as! StackFrame)
+        parameter.frame = (self as! BlockContext)
         parameter.offset = self.nextParameterOffset
         self.nextLocalSlotOffset += 8
         }

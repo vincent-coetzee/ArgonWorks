@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ForBlock: Block,StackFrame,Scope
+public class ForBlock: Block,BlockContext,Scope
     {
     private var inductionSlot:LocalSlot
     private var elements: Expression

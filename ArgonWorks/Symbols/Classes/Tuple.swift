@@ -244,6 +244,23 @@ public enum TupleElement
                 break
             }
         }
+        
+    func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+        {
+        switch(self)
+            {
+            case .slot(let slot):
+                try slot.assign(from: from,into: into,using: using)
+            case .literal:
+                fatalError("Can not assign into a literal.")
+            case .expression(let expression):
+                try expression.assign(from: from,into: into,using: using)
+            case .tuple(let tuple):
+                try tuple.assign(from: from,into: into,using: using)
+            case .type:
+                fatalError("Can not assign into a type.")
+            }
+        }
     }
 
     
@@ -365,6 +382,28 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     public func index(after: Int) -> Int
         {
         return(after + 1)
+        }
+        
+    public func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+        {
+        guard from is TupleExpression else
+            {
+            fatalError("A tuple can only be assigned to from a TupleExpression.")
+            }
+        let rhs = from as! TupleExpression
+        let tuple = rhs.tuple
+        guard tuple.elements.count == self.elements.count else
+            {
+            fatalError("Tuple arities do not match.")
+            }
+        for (left,right) in zip(self.elements,tuple.elements)
+            {
+            guard case let TupleElement.expression(expression) = right else
+                {
+                fatalError("Tuple element can only be assigned from an expression.")
+                }
+            try left.assign(from: expression, into: into, using: using)
+            }
         }
         
     internal func substitute(from substitution: TypeContext.Substitution) -> Self

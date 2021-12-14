@@ -31,7 +31,6 @@ public class Parameter:Slot,Displayable
         
     public let isVisible:Bool
     public let isVariadic: Bool
-    public var place: T3AInstruction.Operand = .none
     public let relabel: Label?
     
     init(label:Label,relabel:Label? = nil,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
@@ -84,11 +83,6 @@ public class Parameter:Slot,Displayable
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type!), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        return(Parameter(label: self.label, relabel: self.relabel, type: self.type!.deepCopy(), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
         }
         
     public func flatten() -> Parameter

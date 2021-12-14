@@ -29,11 +29,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(self.parent.enclosingScope)
         }
         
-    public var assignedSlots: Slots
-        {
-        []
-        }
-        
     public var enumerationCaseHasAssociatedTypes: Bool
         {
         return(false)
@@ -164,11 +159,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         self.locations.append(.reference(location))
         }
         
-    public func allocateAddresses(using allocator:AddressAllocator)
-        {
-        }
-        
-    public func becomeLValue()
+    public func allocateAddresses(using allocator:AddressAllocator) throws
         {
         }
         
@@ -208,25 +199,26 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(self)
         }
 
+    public func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+        {
+        fatalError()
+        }
+        
+    public func emitLValue(into: T3ABuffer,using: CodeGenerator) throws
+        {
+        fatalError()
+        }
+        
+    public func emitRValue(into: T3ABuffer,using: CodeGenerator) throws
+        {
+        fatalError()
+        }
+        
     public func visit(visitor: Visitor) throws
         {
         }
         
     public func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-//        fatalError("This should have been implemented")
-        }
-        
-    public func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        }
-        
-    public func emitAddress(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        fatalError()
-        }
-        
-    public func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
         {
 //        fatalError("This should have been implemented")
         }
@@ -256,38 +248,9 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return("")
         }
         
-    public func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)EXPRESSION()")
-        }
-        
     public func lookupSlot(selector: String) -> Slot?
         {
         return(nil)
-        }
-        
-    public func operation(_ symbol:Token.Symbol,_ rhs:Expression) -> Expression
-        {
-        let expression = BinaryExpression(self,symbol,rhs)
-        self.setParent(expression)
-        rhs.setParent(expression)
-        return(expression)
-        }
-        
-    public func unary(_ symbol:Token.Symbol) -> Expression
-        {
-        let expression = UnaryExpression(symbol, self)
-        self.setParent(expression)
-        return(expression)
-        }
-        
-    public func index(_ index:Expression) -> Expression
-        {
-        let expression = ArrayAccessExpression(array:self,index:index)
-        self.setParent(expression)
-        index.setParent(expression)
-        return(expression)
         }
         
     public func typeCheck(inContext: TypeContext) throws -> Self
@@ -307,10 +270,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     public func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         return(self)
-        }
-        
-    public func defineLocalSymbols(inContext: TypeContext)
-        {
         }
     }
     

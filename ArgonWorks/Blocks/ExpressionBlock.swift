@@ -54,15 +54,14 @@ public class ExpressionBlock: Block
         print("\(indent)EXPRESSION BLOCK \(Swift.type(of: self))")
         print("\(indent)EXPRESSION:")
         self.expression.display(indent: indent + "\t")
-        for block in self.blocks
-            {
-            block.display(indent: indent + "\t")
-            }
         }
         
-    internal override func substitute(from: TypeContext.Substitution) -> Self
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        ExpressionBlock(from.substitute(self.expression)) as! Self
+        let block = ExpressionBlock(substitution.substitute(self.expression))
+        block.type = substitution.substitute(self.type!)
+        block.issues = self.issues
+        return(block as! Self)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -75,13 +74,6 @@ public class ExpressionBlock: Block
         {
         try self.expression.emitCode(into: into,using: using)
         self.place = self.expression.place
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)EXPRESSION BLOCK")
-        self.expression.dump(depth: depth+1)
         }
         
     public override func visit(visitor: Visitor) throws

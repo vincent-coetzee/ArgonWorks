@@ -7,7 +7,7 @@
 
 import AppKit
 
-public class Invocable: Symbol,StackFrame
+public class Invocable: Symbol,BlockContext
     {
     public var arity: Int
         {
@@ -34,8 +34,9 @@ public class Invocable: Symbol,StackFrame
     internal var cName: String
     internal var parameters: Parameters
     public var returnType: Type!
-    private var nextLocalSlotOffset = 0
-    private var nextParameterOffset = 16
+    private var nextLocalSlotOffset = StackSegment.kFirstTemporaryOffset
+    private var nextParameterOffset = StackSegment.kFirstArgumentOffset
+    internal var localCount = 0
     
     public required init?(coder: NSCoder)
         {
@@ -88,12 +89,14 @@ public class Invocable: Symbol,StackFrame
             }
         }
         
-    public func addSlot(_ localSlot:Slot)
+    public func addLocalSlot(_ localSlot:LocalSlot)
         {
         self.localSymbols.append(localSlot)
         localSlot.frame = self
         localSlot.offset = self.nextLocalSlotOffset
         self.nextLocalSlotOffset -= 8
+        localSlot.wasAddedToBlockContext = true
+        self.localCount += 1
         }
         
     public func addParameterSlot(_ parameter:Parameter)
@@ -111,7 +114,7 @@ public class Invocable: Symbol,StackFrame
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let copy = self.deepCopy()
+        let copy = Self.init(label: label)
         copy.parameters = self.parameters.map{substitution.substitute($0)}
         copy.returnType = substitution.substitute(self.returnType!)
         copy.cName = self.cName

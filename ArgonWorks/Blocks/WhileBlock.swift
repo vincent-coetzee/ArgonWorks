@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class WhileBlock: Block,StackFrame,Scope
+public class WhileBlock: Block,BlockContext,Scope
     {
     private let condition:Expression
     

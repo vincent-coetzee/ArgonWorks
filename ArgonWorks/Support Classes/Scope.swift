@@ -21,13 +21,14 @@ public protocol Scope
     var isInitializerScope: Bool { get }
     var isSlotScope: Bool { get }
     var enclosingScope: Scope { get }
-    var enclosingStackFrame: StackFrame { get }
+    var enclosingBlockContext: BlockContext { get }
     var parent: Parent { get }
     func addSymbol(_ symbol: Symbol)
     func lookup(label: Label) -> Symbol?
     func lookup(name: Name) -> Symbol?
     func lookupN(label: Label) -> Symbols?
     func lookupN(name: Name) -> Symbols?
+    func appendIssue(at: Location,message: String)
     }
 
 extension Scope
@@ -67,16 +68,6 @@ extension Scope
         if let items = self.lookupN(label: label)
             {
             let methods = items.compactMap{$0 as? PostfixOperatorInstance}
-            return(methods.isEmpty ? nil : methods)
-            }
-        return(nil)
-        }
-        
-    public func lookupMethods(name: Name) -> Array<Method>?
-        {
-        if let items = self.lookupN(name: name)
-            {
-            let methods = items.filter{$0 is Method}.map{$0 as! Method}
             return(methods.isEmpty ? nil : methods)
             }
         return(nil)

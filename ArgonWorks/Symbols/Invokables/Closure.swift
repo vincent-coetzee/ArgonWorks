@@ -9,7 +9,7 @@ import Foundation
 
 public class Closure:Invocable,Scope
     {
-    public var enclosingStackFrame: StackFrame
+    public var enclosingBlockContext: BlockContext
         {
         self
         }
@@ -124,9 +124,9 @@ public class Closure:Invocable,Scope
             }
         }
         
-    public override func allocateAddresses(using allocator:AddressAllocator)
+    public override func allocateAddresses(using allocator:AddressAllocator) throws
         {
-        super.allocateAddresses(using: allocator)
+        try super.allocateAddresses(using: allocator)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

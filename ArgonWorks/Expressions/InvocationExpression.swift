@@ -60,17 +60,6 @@ public class InvocationExpression: Expression
         analyzer.dispatchError(at: self.location, message: "The invocation '\(self.name)' can not be resolved, it can not be dispatched.")
         }
         
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)INVOCATION EXPRESSION()")
-        print("\(padding)\t \(self.name)")
-        for argument in self.arguments
-            {
-            argument.value.dump(depth: depth + 1)
-            }
-        }
-        
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         using.cancelCompletion()

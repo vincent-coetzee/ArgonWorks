@@ -132,7 +132,7 @@ public class Enumeration:Symbol
         return(nil)
         }
         
-    public override func layoutInMemory()
+    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
         {
 //        guard !self.isMemoryLayoutDone else
 //            {

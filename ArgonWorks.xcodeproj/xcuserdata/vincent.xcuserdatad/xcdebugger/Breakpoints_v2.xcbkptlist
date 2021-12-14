@@ -30,8 +30,8 @@
             filePath = "ArgonWorks/Symbols/ContainerSymbol.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "96"
-            endingLineNumber = "96"
+            startingLineNumber = "89"
+            endingLineNumber = "89"
             landmarkName = "ContainerSymbol"
             landmarkType = "3">
          </BreakpointContent>
@@ -151,22 +151,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F9452294-82F1-46D5-8D17-E4F5DF2F92D9"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Expressions/SlotAccessExpression.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "141"
-            endingLineNumber = "141"
-            landmarkName = "emitAddressCode(into:using:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "F57139D7-DC9D-401F-9038-35B703321FD9"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -190,8 +174,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1433"
-            endingLineNumber = "1433"
+            startingLineNumber = "1432"
+            endingLineNumber = "1432"
             landmarkName = "parseSuperclassReferences(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -206,8 +190,8 @@
             filePath = "ArgonWorks/Symbols/Modules/Module.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "203"
-            endingLineNumber = "203"
+            startingLineNumber = "198"
+            endingLineNumber = "198"
             landmarkName = "lookup(label:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -286,8 +270,8 @@
             filePath = "ArgonWorks/Symbols/Symbol.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "300"
-            endingLineNumber = "300"
+            startingLineNumber = "293"
+            endingLineNumber = "293"
             landmarkName = "Symbol"
             landmarkType = "3">
          </BreakpointContent>
@@ -318,8 +302,8 @@
             filePath = "ArgonWorks/Expressions/AssignmentExpression.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "96"
-            endingLineNumber = "96"
+            startingLineNumber = "90"
+            endingLineNumber = "90"
             landmarkName = "analyzeSemantics(using:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -366,8 +350,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1646"
-            endingLineNumber = "1646"
+            startingLineNumber = "1645"
+            endingLineNumber = "1645"
             landmarkName = "parseType(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -382,25 +366,9 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1731"
-            endingLineNumber = "1731"
+            startingLineNumber = "1730"
+            endingLineNumber = "1730"
             landmarkName = "parseMacroInvocation()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "C2A71D2A-7AA4-4E4C-A6B9-A1B1079D7331"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Expressions/Expression.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "148"
-            endingLineNumber = "148"
-            landmarkName = "initializeType(inContext:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -414,8 +382,8 @@
             filePath = "ArgonWorks/Expressions/AssignmentOperatorExpression.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "60"
-            endingLineNumber = "60"
+            startingLineNumber = "59"
+            endingLineNumber = "59"
             landmarkName = "initializeTypeConstraints(inContext:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -430,8 +398,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "416"
-            endingLineNumber = "416"
+            startingLineNumber = "434"
+            endingLineNumber = "434"
             landmarkName = "unify(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -542,8 +510,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "404"
-            endingLineNumber = "404"
+            startingLineNumber = "422"
+            endingLineNumber = "422"
             landmarkName = "unify(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -574,8 +542,8 @@
             filePath = "ArgonWorks/Expressions/MethodInstanceMatcher.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "135"
-            endingLineNumber = "135"
+            startingLineNumber = "136"
+            endingLineNumber = "136"
             landmarkName = "foundSpecificInstance()"
             landmarkType = "7">
          </BreakpointContent>
@@ -590,8 +558,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeClass.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "170"
-            endingLineNumber = "170"
+            startingLineNumber = "167"
+            endingLineNumber = "167"
             landmarkName = "init(label:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -606,8 +574,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2669"
-            endingLineNumber = "2669"
+            startingLineNumber = "2656"
+            endingLineNumber = "2656"
             landmarkName = "parseIdentifierTerm()"
             landmarkType = "7">
          </BreakpointContent>
@@ -638,8 +606,8 @@
             filePath = "ArgonWorks/Symbols/Slots/Slot.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "181"
-            endingLineNumber = "181"
+            startingLineNumber = "172"
+            endingLineNumber = "172"
             landmarkName = "initializeType(inContext:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -654,25 +622,9 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2799"
-            endingLineNumber = "2799"
+            startingLineNumber = "2778"
+            endingLineNumber = "2778"
             landmarkName = "parseClosureTerm()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "971B3700-DDB2-467F-8052-43684CD7CC17"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "475"
-            endingLineNumber = "475"
-            landmarkName = "unify(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -686,8 +638,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1637"
-            endingLineNumber = "1637"
+            startingLineNumber = "1636"
+            endingLineNumber = "1636"
             landmarkName = "parseType(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -702,8 +654,8 @@
             filePath = "ArgonWorks/Symbols/Slots/Slot.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "179"
-            endingLineNumber = "179"
+            startingLineNumber = "170"
+            endingLineNumber = "170"
             landmarkName = "initializeType(inContext:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -718,8 +670,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1889"
-            endingLineNumber = "1889"
+            startingLineNumber = "1888"
+            endingLineNumber = "1888"
             landmarkName = "parseMethodInstance()"
             landmarkType = "7">
          </BreakpointContent>
@@ -734,8 +686,8 @@
             filePath = "ArgonWorks/Symbols/Classes/Tuple.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "399"
-            endingLineNumber = "399"
+            startingLineNumber = "438"
+            endingLineNumber = "438"
             landmarkName = "display(indent:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -862,8 +814,8 @@
             filePath = "ArgonWorks/Symbols/Symbol.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "384"
-            endingLineNumber = "384"
+            startingLineNumber = "377"
+            endingLineNumber = "377"
             landmarkName = "replacementObject(for:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -894,8 +846,8 @@
             filePath = "ArgonWorks/Symbols/Symbol.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "379"
-            endingLineNumber = "379"
+            startingLineNumber = "372"
+            endingLineNumber = "372"
             landmarkName = "replacementObject(for:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -910,8 +862,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1848"
-            endingLineNumber = "1848"
+            startingLineNumber = "1847"
+            endingLineNumber = "1847"
             landmarkName = "parseMethodInstance()"
             landmarkType = "7">
          </BreakpointContent>
@@ -926,41 +878,9 @@
             filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1811"
-            endingLineNumber = "1811"
+            startingLineNumber = "1810"
+            endingLineNumber = "1810"
             landmarkName = "parseParameters(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "5D1B592C-8766-4221-8929-5D34981187C2"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2580"
-            endingLineNumber = "2580"
-            landmarkName = "parseIdentifierTerm()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "6A555F29-4E1F-487D-AAA2-30786F4A1824"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2588"
-            endingLineNumber = "2588"
-            landmarkName = "parseIdentifierTerm()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -974,8 +894,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "328"
-            endingLineNumber = "328"
+            startingLineNumber = "336"
+            endingLineNumber = "336"
             landmarkName = "unifySubtypes(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -990,41 +910,9 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "428"
-            endingLineNumber = "428"
+            startingLineNumber = "446"
+            endingLineNumber = "446"
             landmarkName = "unify(_:_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "73150C5C-7FAD-4047-8953-E16F07E3C70E"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "489"
-            endingLineNumber = "489"
-            landmarkName = "unify(_:_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "08734637-3E06-40F5-B6C2-DFE89F7F0D93"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "372"
-            endingLineNumber = "372"
-            landmarkName = "unifySubtypes(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -1038,8 +926,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeContext.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "386"
-            endingLineNumber = "386"
+            startingLineNumber = "396"
+            endingLineNumber = "396"
             landmarkName = "unifySubtypes(_:_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1047,15 +935,15 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "09DF2119-9578-42B0-A310-A3B66AB20D3B"
-            shouldBeEnabled = "No"
+            uuid = "77923D02-ACA2-411B-B27E-14F369B27A74"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ArgonWorks/Compiler and Phases/Compiler.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "100"
-            endingLineNumber = "100"
+            startingLineNumber = "102"
+            endingLineNumber = "102"
             landmarkName = "compile(parseOnly:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1063,15 +951,47 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "16D50C0F-BA2C-49DA-B4E2-06A8FC196C77"
+            uuid = "695D8A7E-330E-40DC-8371-5C2AAF3EF877"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Expressions/BinaryExpression.swift"
+            filePath = "ArgonWorks/Expressions/PrefixExpression.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "171"
-            endingLineNumber = "171"
+            startingLineNumber = "84"
+            endingLineNumber = "84"
+            landmarkName = "initializeTypeConstraints(inContext:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1B08FA25-C60F-45D0-BAF7-7E809E4C5533"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "2365"
+            endingLineNumber = "2365"
+            landmarkName = "parsePrimary()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F05E7349-808F-4B9A-9CC5-1A6FC4C8ABA6"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ArgonWorks/Expressions/MethodInvocationExpression.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "64"
+            endingLineNumber = "64"
             landmarkName = "display(indent:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1079,32 +999,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "AB7BA391-B799-4AB7-8E2F-EE15239B82DC"
-            shouldBeEnabled = "No"
+            uuid = "851C845A-18F7-4C8F-9F60-5E53CE85D219"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
+            filePath = "ArgonWorks/User Interface/AppDelegate.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2351"
-            endingLineNumber = "2351"
-            landmarkName = "parsePrimary()"
+            startingLineNumber = "76"
+            endingLineNumber = "76"
+            landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "B8072471-1B2A-465B-BCFB-C79B4587B43F"
-            shouldBeEnabled = "No"
+            uuid = "EE842070-3487-4B3A-85FB-106AB748FABF"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Compiler and Phases/Parser.swift"
+            filePath = "ArgonWorks/User Interface/New Suite/EditorViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2356"
-            endingLineNumber = "2356"
-            landmarkName = "parsePrimary()"
+            startingLineNumber = "461"
+            endingLineNumber = "461"
+            landmarkName = "onCompileFile(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

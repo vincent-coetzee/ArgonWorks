@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ClosureBlock: Block,StackFrame
+public class ClosureBlock: Block,BlockContext
     {
     public var parameters = Parameters()
 //    public var returnType:Type = VoidClass.voidClass.type

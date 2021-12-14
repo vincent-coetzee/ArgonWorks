@@ -338,7 +338,7 @@ public class InvokableItem: FileItem
         
     public override var displayString: String
         {
-        self.invokable.fullName.displayString
+        ""
         }
         
     public override var childCount: Int
@@ -356,14 +356,7 @@ public class InvokableItem: FileItem
         self.kids[atIndex]
         }
         
-    public let invokable: NamedInvokable
     private var kids: FileItems = []
-    
-    init(invokable: NamedInvokable)
-        {
-        self.invokable = invokable
-        self.kids = invokable.instructions.map{InstructionItem(instruction: $0)}
-        }
     }
 
 public class InstructionItem: FileItem

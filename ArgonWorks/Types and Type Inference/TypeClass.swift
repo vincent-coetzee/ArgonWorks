@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FFI
 
 public class TypeClass: TypeConstructor
     {
@@ -92,22 +93,31 @@ public class TypeClass: TypeConstructor
         {
         true
         }
+        
+    public override var isVoidType: Bool
+        {
+        self.theClass.isVoidType
+        }
+        
+    public override var ffiType: ffi_type
+        {
+        self.theClass.ffiType
+        }
                 
     public override var rawClass: Class
         {
         self.theClass
         }
         
-//    public override var type: Type?
-//        {
-//        get
-//            {
-//            return(self)
-//            }
-//        set
-//            {
-//            }
-//        }
+    public override var magicNumber: Int
+        {
+        self.theClass.magicNumber
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        self.theClass.sizeInBytes
+        }
         
     internal let theClass: Class
     
@@ -119,14 +129,12 @@ public class TypeClass: TypeConstructor
             }
         self.theClass = aClass
         super.init(label: aClass.label,generics: [])
-        self.theClass.setParent(self)
         }
         
     init(systemClass aClass: Class)
         {
         self.theClass = aClass
         super.init(label: aClass.label,generics: [])
-        self.theClass.setParent(self)
         }
         
     init(class aClass: Class,generics: Types)
@@ -137,14 +145,12 @@ public class TypeClass: TypeConstructor
             }
         self.theClass = aClass
         super.init(label: aClass.label,generics: generics)
-        self.theClass.setParent(self)
         }
         
     init(systemClass aClass: Class,generics: Types)
         {
         self.theClass = aClass
         super.init(label: aClass.label,generics: generics)
-        self.theClass.setParent(self)
         }
         
     public override func setParent(_ parent:Parent)
@@ -156,20 +162,10 @@ public class TypeClass: TypeConstructor
         super.setParent(parent)
         }
         
-    public override func setParent(_ symbol:Symbol)
-        {
-        if symbol is TypeClass
-            {
-            fatalError()
-            }
-        super.setParent(symbol)
-        }
-        
     required init(label: Label)
         {
         self.theClass = Class(label: "")
         super.init(label: label)
-        self.theClass.setParent(self)
         }
         
     required init?(coder: NSCoder)
@@ -214,5 +210,10 @@ public class TypeClass: TypeConstructor
     public override func typeCheck() throws
         {
         try self.theClass.typeCheck()
+        }
+        
+    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
+        {
+        self.theClass.layoutInMemory(withAddressAllocator: withAddressAllocator)
         }
     }

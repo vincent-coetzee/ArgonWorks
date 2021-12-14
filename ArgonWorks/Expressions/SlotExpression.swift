@@ -72,9 +72,9 @@ public class SlotExpression: Expression
         {
         }
         
-    public override func becomeLValue()
+    public override func emitLValue(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        self.isLValue = true
+        try self.slot.emitLValue(into: buffer,using: using)
         }
         
     public override func lookup(label: Label) -> Symbol?
@@ -89,23 +89,6 @@ public class SlotExpression: Expression
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
             }
-        }
-
-    public override func emitAssign(value: Expression,into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        try value.emitCode(into: instance, using: using)
-        instance.append("MOV",value.place,.none,.relocatable(.slot(self.slot)))
-        }
-        
-    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        let temp = instance.nextTemporary()
-        instance.append(nil,"ADDR",.relocatable(.slot(self.slot)),.none,temp)
-        self._place = temp
         }
 
     public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws

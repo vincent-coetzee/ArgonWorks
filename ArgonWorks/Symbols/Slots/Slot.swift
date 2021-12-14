@@ -124,19 +124,6 @@ public class Slot:Symbol
         coder.encode(self.isClassSlot,forKey: "isClassSlot")
         super.encode(with: coder)
         }
-        
-    public override func deepCopy() -> Self
-        {
-        let newSlot = super.deepCopy()
-        newSlot.type = self.type
-        newSlot.addresses = self.addresses
-        newSlot.locations = self.locations
-        newSlot.source = self.source
-        newSlot.offset = self.offset
-        newSlot.initialValue = self.initialValue
-        newSlot.isClassSlot = self.isClassSlot
-        return(newSlot)
-        }
     
     public override func lookup(label: Label) -> Symbol?
         {
@@ -148,13 +135,17 @@ public class Slot:Symbol
         self.offset = integer
         }
         
-    public func printFormattedSlotContents(base:WordPointer)
+    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        let offsetValue = self.offset
-        let offsetString = String(format: "%08X",offsetValue)
-        let name = self.label.aligned(.left,in:25)
-        let word = base.word(atByteOffset: offsetValue)
-        print("\(offsetString) \(name) WRD \(word.bitString) \(word)")
+        try self.emitLValue(into: buffer, using: using)
+        try expression.emitRValue(into: buffer,using: using)
+        buffer.append("STIP",expression.place,.none,self.place)
+        }
+        
+    
+    public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -212,25 +203,25 @@ public class Slot:Symbol
             }
         else
             {
-            fatalError("This should not happen.")
+            self.enclosingScope.appendIssue(at: self.declaration!, message: "Slot \(self.label) has an invalid type.")
             }
         }
         
-    public func layoutSymbol(in vm: VirtualMachine)
-        {
-//        guard !self.isMemoryLayoutDone else
-//            {
-//            return
-//            }
-//        let pointer = InnerSlotPointer.allocate(in: vm)
-//        self.addresses.append(.absolute(pointer.address))
-//        assert( self.topModule.argonModule.slot.sizeInBytes == 88)
-//        pointer.setSlotValue(vm.managedSegment.allocateString(self.label),atKey:"name")
-////        pointer.setSlotValue(self._type?.memoryAddress ?? 0,atKey:"slotClass")
-//        pointer.setSlotValue(self.offset,atKey:"offset")
-////        pointer.setSlotValue(self._type?.typeCode.rawValue ?? 0,atKey:"typeCode")
-//        self.isMemoryLayoutDone = true
-        }
+//    public func layoutSymbol(in vm: VirtualMachine)
+//        {
+////        guard !self.isMemoryLayoutDone else
+////            {
+////            return
+////            }
+////        let pointer = InnerSlotPointer.allocate(in: vm)
+////        self.addresses.append(.absolute(pointer.address))
+////        assert( self.topModule.argonModule.slot.sizeInBytes == 88)
+////        pointer.setSlotValue(vm.managedSegment.allocateString(self.label),atKey:"name")
+//////        pointer.setSlotValue(self._type?.memoryAddress ?? 0,atKey:"slotClass")
+////        pointer.setSlotValue(self.offset,atKey:"offset")
+//////        pointer.setSlotValue(self._type?.typeCode.rawValue ?? 0,atKey:"typeCode")
+////        self.isMemoryLayoutDone = true
+//        }
     }
 
 public typealias Slots = Array<Slot>

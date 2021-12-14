@@ -69,5 +69,10 @@ public class InfixExpression: OperatorExpression
         expression.issues = self.issues
         return(expression as! Self)
         }
+        
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError()
+        }
     }
 

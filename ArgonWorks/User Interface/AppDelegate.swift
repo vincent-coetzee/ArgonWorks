@@ -60,6 +60,20 @@ class AppDelegate: NSObject, NSApplicationDelegate
             {
             print(error)
             }
+        let pointer = Word(pointer: 0)
+        print(pointer.bitString)
+        Header.test()
+        Word.testWord()
+        print("Size of Int is \(MemoryLayout<Int>.size)")
+        StackSegment.testStackSegment()
+        let arrayType = compiler.topModule.argonModule.lookup(label: "Array") as! Type
+        let arrayClass = (arrayType as! TypeClass).theClass
+        arrayClass.layoutObjectSlots(withArgonModule: compiler.argonModule)
+        arrayClass.printLayout()
+        let stringType = compiler.topModule.argonModule.lookup(label: "String") as! Type
+        let stringClass = (stringType as! TypeClass).theClass
+        stringClass.layoutObjectSlots(withArgonModule: compiler.argonModule)
+        stringClass.printLayout()
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

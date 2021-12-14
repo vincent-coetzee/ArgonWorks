@@ -79,7 +79,7 @@ public class LetBlock: Block
 //        let block = LetBlock(location: self.location,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
 //        block.type = self.type!.freshTypeVariable(inContext: context)
 //        return(block as! Self)
-        return(self as! Self)
+        return(self)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -117,6 +117,16 @@ public class LetBlock: Block
         
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-//        try self.expression.emitCode(into: buffer,using: generator)
+        for (left,right) in zip(self.lhs.elements,self.rhs.elements)
+            {
+            if case let TupleElement.expression(expression) = right
+                {
+                try left.assign(from: expression,into: buffer,using: generator)
+                }
+            else
+                {
+                fatalError("Can not assign to a tuple from anything other than an expression.")
+                }
+            }
         }
     }

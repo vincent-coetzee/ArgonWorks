@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class MethodInstanceBlock: Block,StackFrame,Scope
+public class MethodInstanceBlock: Block,BlockContext,Scope
     {
     public override var isMethodInstanceScope: Bool
         {

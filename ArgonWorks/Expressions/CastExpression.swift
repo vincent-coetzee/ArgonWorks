@@ -76,15 +76,12 @@ public class CastExpression: Expression
         {
         }
 
-    public override func emitAddressCode(into instance: T3ABuffer,using: CodeGenerator) throws
-        {
-        }
-
     public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
         {
         try self.expression.emitCode(into: instance,using: generator)
         let temp = instance.nextTemporary()
-        instance.append("ROLE",self.expression._place,.relocatable(.type(self.type!)),temp)
+        let typeClass = self.type as! TypeClass
+        instance.append("CAST",self.expression.place,.relocatable(.class(typeClass.theClass)),temp)
         self._place = temp
         }
     }

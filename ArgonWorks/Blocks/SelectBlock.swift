@@ -90,17 +90,6 @@ public class SelectBlock: Block
         self.type = context.voidType
         }
         
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)SELECT")
-        value.dump(depth: depth+1)
-        for block in self.whenBlocks
-            {
-            block.dump(depth: depth + 1)
-            }
-        }
-        
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
 //        let aClass = self.value.type

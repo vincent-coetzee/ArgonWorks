@@ -28,7 +28,7 @@ public class HierarchySymbolWrapper
                 case .constant:
                     return(symbol is Constant || symbol is Module || symbol is SymbolGroup)
                 case .method:
-                    return(symbol is Method || symbol is Function || symbol is Module || symbol is SymbolGroup)
+                    return(symbol is Function || symbol is Module || symbol is SymbolGroup)
                 case .type:
                     return(symbol is TypeAlias || symbol is Module || symbol is SymbolGroup)
                 }

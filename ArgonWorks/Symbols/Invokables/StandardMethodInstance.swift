@@ -33,18 +33,15 @@ public class StandardMethodInstance: MethodInstance
         
     public override var instructions: Array<T3AInstruction>
         {
-        self.buffer.instructions
+        self.codeBuffer.instructions
         }
 
     internal var block: MethodInstanceBlock! = nil
-    private var _method:Method?
-    public let buffer:T3ABuffer
     public var genericParameters = Types()
+    
     public required init?(coder: NSCoder)
         {
         self.block = coder.decodeObject(forKey: "block") as? MethodInstanceBlock
-        self._method = coder.decodeObject(forKey: "method") as? Method
-        self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
         self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! Types
         super.init(coder: coder)
         }
@@ -52,35 +49,12 @@ public class StandardMethodInstance: MethodInstance
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.block,forKey: "block")
-        coder.encode(self.method,forKey: "method")
-        coder.encode(self.buffer,forKey: "buffer")
         coder.encode(self.genericParameters,forKey: "genericParameters")
         super.encode(with: coder)
-        }
-
-        
-    public override var method: ArgonWorks.Method!
-        {
-        get
-            {
-            if self._method.isNotNil
-                {
-                return(self._method!)
-                }
-            let method = Method(label: self.label)
-            method.addInstance(self)
-            self._method = method
-            return(method)
-            }
-        set
-            {
-            self._method = newValue
-            }
         }
         
     required init(label:Label)
         {
-        self.buffer = T3ABuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -88,7 +62,6 @@ public class StandardMethodInstance: MethodInstance
         
     public init(_ label:Label)
         {
-        self.buffer = T3ABuffer()
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
         self.block.setParent(self)
@@ -122,53 +95,17 @@ public class StandardMethodInstance: MethodInstance
             self.block.addSymbol(symbol)
             }
         }
-    
-    public override func deepCopy() -> Self
-        {
-        let instance = super.deepCopy()
-        instance.block = self.block.deepCopy()
-        instance.parameters = self.parameters.map{$0.deepCopy()}
-        instance.returnType = self.returnType.deepCopy()
-        return(instance)
-        }
         
     public func hasSameReturnType(_ clazz: Class) -> Bool
         {
         return(self.returnType == clazz.type)
         }
-        
-    public func layoutSymbol(in vm: VirtualMachine)
+
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-//        guard !self.isMemoryLayoutDone else
-//            {
-//            return
-//            }
-//        let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
-//        for instruction in self.buffer.instructions
-//            {
-//            pointer.append(instruction)
-//            }
-//        self.addresses.append(Address.absolute(pointer.address))
-//        self.isMemoryLayoutDone = true
-        }
-        
-    public override func emitCode(using generator: CodeGenerator) throws
-        {
-//        var stackOffset = MemoryLayout<Word>.size
-//        for parameter in self.parameters
-//            {
-//            parameter.addresses.append(.stack(.BP,stackOffset))
-//            stackOffset += MemoryLayout<Word>.size
-//            }
-//        stackOffset = 0
-//        for slot in self.localSymbols
-//            {
-//            slot.addresses.append(.stack(.BP,stackOffset))
-//            stackOffset -= MemoryLayout<Word>.size
-//            }
-        self.buffer.appendEntry(temporaryCount: self.localSymbols.count)
-        try block.emitCode(into: self.buffer,using: generator)
-        self.buffer.appendExit()
+        buffer.appendEntry(temporaryCount: self.localCount)
+        try block.emitCode(into: buffer,using: generator)
+        buffer.appendExit()
         buffer.append("RET",.none,.none,.none)
         }
         
@@ -185,7 +122,7 @@ public class StandardMethodInstance: MethodInstance
         let newInstance = Self(label: self.label)
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
-        newInstance.block = self.block.freshTypeVariable(inContext: context) as! MethodInstanceBlock
+        newInstance.block = (self.block.freshTypeVariable(inContext: context) as! MethodInstanceBlock)
         return(newInstance)
         }
         

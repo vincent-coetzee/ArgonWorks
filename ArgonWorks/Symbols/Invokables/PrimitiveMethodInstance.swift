@@ -9,6 +9,14 @@ import Foundation
 
 public class PrimitiveMethodInstance: MethodInstance
     {
+    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> MethodInstance
+        {
+        let instance = PrimitiveMethodInstance(label: label)
+        instance.parameters = [Parameter(label: arg1, relabel: nil, type: arg1Type, isVisible: true, isVariadic: false)]
+        instance.returnType = ret
+        return(instance)
+        }
+
     public override var instructions: Array<T3AInstruction>
         {
         [T3AInstruction(nil, "PRIM", .literal(.integer(self.primitiveIndex)), .none, .none)]
@@ -21,11 +29,6 @@ public class PrimitiveMethodInstance: MethodInstance
         self.init(label: label)
         self.parameters = parameters
         self.returnType = returnType
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        PrimitiveMethodInstance(label: self.label,parameters: self.parameters.map{$0.deepCopy()},returnType: self.returnType.deepCopy()) as! Self
         }
         
     public override func initializeType(inContext context: TypeContext) throws

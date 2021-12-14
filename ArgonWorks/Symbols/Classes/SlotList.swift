@@ -30,12 +30,7 @@ public class SlotList:NSObject,NSCoding,Collection,StorableObject
         
     public init(_ slotList: SlotList)
         {
-        self.parent = slotList.parent
-        self.slots = []
-        for slot in slotList.slots
-            {
-            self.slots.append(slot.deepCopy())
-            }
+        fatalError()
         }
         
     public override init()

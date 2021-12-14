@@ -86,13 +86,6 @@ public class TypeVariable: Type
         super.encode(with: coder)
         }
         
-    public override func deepCopy() -> Self
-        {
-        let variable = TypeVariable(index: self.id)
-        variable.boundType = self.boundType
-        return(variable as! Self)
-        }
-        
     public func occurs(in type: Type) -> Bool
         {
         if self.boundType.isNil
