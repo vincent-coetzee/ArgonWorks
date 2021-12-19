@@ -182,6 +182,16 @@ public class MethodInstance: Function
         return(signature)
         }
         
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        allocator.allocateAddress(for: self)
+        self.wasAddressAllocationDone = true
+        }
+        
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
@@ -190,6 +200,46 @@ public class MethodInstance: Function
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         return(newInstance)
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        }
+        
+    public override func install(inContext context: ExecutionContext)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let segment = context.segment(for: self)
+        let methodInstanceType = ArgonModule.shared.lookup(label: "MethodInstance") as! Type
+        let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType)
+        instancePointer.flipCount = 0
+        instancePointer.hasBytes = false
+        instancePointer.objectType = .methodInstance
+        instancePointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        let parameterType = ArgonModule.shared.parameter
+        if let parmArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.parameters.count,elements: Array<Address>()))
+            {
+            for parm in self.parameters
+                {
+                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofClass: parameterType, sizeOfExtraBytesInBytes: 0),type: parameterType)
+                parmPointer.setStringAddress(segment.allocateString(parm.label),atSlot: "tag")
+                parmPointer.setBoolean(parm.isVisible,atSlot: "tagIsShown")
+                parmPointer.setBoolean(parm.isVariadic,atSlot: "isVariadic")
+                parm.type?.install(inContext: context)
+                parmPointer.setAddress(parm.type?.memoryAddress ?? 0,atSlot: "type")
+                parmPointer.setStringAddress(parm.relabel.isNil ? 0 : segment.allocateString(parm.relabel!),atSlot: "retag")
+                parmArray.append(parmPointer.address)
+                }
+            }
+        let instructionCount = self.codeBuffer.count + 20
+        if let instructionArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: instructionCount, elements: Array<Address>()))
+            {
+            instancePointer.setArrayPointer(instructionArray,atSlot: "instructions")
+            }
         }
         
     public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool
@@ -220,17 +270,9 @@ public class MethodInstance: Function
         fatalError("This should have been overriden in a subclass.")
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.parameters.forEach{try $0.initializeType(inContext: context)}
-        try self.returnType.initializeType(inContext: context)
         self.type = self.returnType
-        }
-        
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
-        {
-        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        try self.returnType.initializeTypeConstraints(inContext: context)
         }
         
     public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool

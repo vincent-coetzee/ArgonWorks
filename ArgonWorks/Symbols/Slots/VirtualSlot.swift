@@ -46,18 +46,18 @@ public class VirtualSlot:Slot
 //    private var getter:InnerFunctionPointer?
 //    private var setter:InnerFunctionPointer?
     
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try super.initializeType(inContext: context)
-        try self.readBlock?.initializeType(inContext: context)
-        try self.writeBlock?.initializeType(inContext: context)
+        super.initializeType(inContext: context)
+        self.readBlock?.initializeType(inContext: context)
+        self.writeBlock?.initializeType(inContext: context)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try super.initializeTypeConstraints(inContext: context)
-        try self.readBlock?.initializeTypeConstraints(inContext: context)
-        try self.writeBlock?.initializeTypeConstraints(inContext: context)
+        super.initializeTypeConstraints(inContext: context)
+        self.readBlock?.initializeTypeConstraints(inContext: context)
+        self.writeBlock?.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.type,right: self.readBlock!.type,origin: .symbol(self)))
         if self.writeBlock.isNotNil
             {

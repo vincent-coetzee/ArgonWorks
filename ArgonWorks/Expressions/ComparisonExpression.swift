@@ -31,25 +31,33 @@ public class ComparisonExpression: BinaryExpression
             }
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = ComparisonExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
-        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.selectedMethodInstance = substitution.substitute(self.selectedMethodInstance)
         expression.issues = self.issues
         return(expression as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try super.initializeType(inContext: context)
+        super.initializeType(inContext: context)
         self.type = context.booleanType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
         if !self.methodInstances.isEmpty
             {
             let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
@@ -78,8 +86,8 @@ public class ComparisonExpression: BinaryExpression
             print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
             return
             }
-        try self.lhs.emitRValue(into: instance, using: generator)
-        try self.rhs.emitRValue(into: instance, using: generator)
+        try self.lhs.emitValueCode(into: instance, using: generator)
+        try self.rhs.emitValueCode(into: instance, using: generator)
         let temporary = instance.nextTemporary()
         switch(self.operation.rawValue,methodInstance.returnType.label)
             {
@@ -143,6 +151,18 @@ public class ComparisonExpression: BinaryExpression
                 instance.append("IGT8",self.lhs.place,self.rhs.place,temporary)
             case (">","Character"):
                 instance.append("IGT16",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","Integer"):
+                instance.append("INE64",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","Float"):
+                instance.append("FNE64",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","UInteger"):
+                instance.append("INE64",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","String"):
+                instance.append("SNE",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","Byte"):
+                instance.append("INE8",self.lhs.place,self.rhs.place,temporary)
+            case ("!=","Character"):
+                instance.append("INE16",self.lhs.place,self.rhs.place,temporary)
             default:
                 fatalError("This should not happen.")
             }

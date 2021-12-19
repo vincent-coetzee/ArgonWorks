@@ -37,6 +37,13 @@ public class StandardMethodInstance: MethodInstance
         }
 
     internal var block: MethodInstanceBlock! = nil
+        {
+        didSet
+            {
+            self.block?.setParent(self)
+            }
+        }
+        
     public var genericParameters = Types()
     
     public required init?(coder: NSCoder)
@@ -122,7 +129,10 @@ public class StandardMethodInstance: MethodInstance
         let newInstance = Self(label: self.label)
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
-        newInstance.block = (self.block.freshTypeVariable(inContext: context) as! MethodInstanceBlock)
+        newInstance.block = (self.block.freshTypeVariable(inContext: context))
+        newInstance.block._methodInstance = newInstance
+        newInstance.block.setParent(newInstance)
+        newInstance.type = self.type?.freshTypeVariable(inContext: context)
         return(newInstance)
         }
         
@@ -136,19 +146,19 @@ public class StandardMethodInstance: MethodInstance
         return(instance as! Self)
         }
 
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.parameters.forEach{try $0.initializeType(inContext: context)}
-        try self.returnType.initializeType(inContext: context)
-        try self.block.initializeType(inContext: context)
+        self.parameters.forEach{$0.initializeType(inContext: context)}
+        self.returnType.initializeType(inContext: context)
+        self.block.initializeType(inContext: context)
         self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context))
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        try self.returnType.initializeTypeConstraints(inContext: context)
-        try self.block.initializeTypeConstraints(inContext: context)
+        self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
+        self.returnType.initializeTypeConstraints(inContext: context)
+        self.block.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.returnType,right: self.block.type,origin: .symbol(self)))
         let parameterTypes = self.parameters.map{$0.type!}
         context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type!),origin: .symbol(self)))
@@ -181,5 +191,6 @@ public class StandardMethodInstance: MethodInstance
             }
         print("\(indent)\tRETURN TYPE \(self.returnType.displayString)")
         self.block.display(indent: indent + "\t")
+        self.codeBuffer.display(indent: indent + "\t\t")
         }
     }

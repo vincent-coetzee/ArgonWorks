@@ -25,11 +25,11 @@ extension CompilerPass
         
     public var argonModule: ArgonModule
         {
-        self.compiler.argonModule
+        TopModule.shared.argonModule
         }
         
     public func dispatchError(at: Location,message: String)
         {
-        self.compiler.reportingContext.dispatchError(at: at,message: message)
+//        self.compiler.reportingContext.dispatchError(at: at,message: message)
         }
     }

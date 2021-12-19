@@ -34,6 +34,28 @@ public class TypeEnumeration: TypeConstructor
         self.enumeration
         }
         
+    public override var memoryAddress: Address
+        {
+        get
+            {
+            self.enumeration.memoryAddress
+            }
+        set
+            {
+            self.enumeration.memoryAddress = newValue
+            }
+        }
+        
+    public override var instanceSizeInBytes: Int
+        {
+        self.enumeration.instanceSizeInBytes
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        fatalError()
+        }
+        
 //    public override var type: Type?
 //        {
 //        get
@@ -82,18 +104,23 @@ public class TypeEnumeration: TypeConstructor
         super.encode(with: coder)
         }
         
-    public override func typeCheck() throws
-        {
-        fatalError()
-        }
-        
     public override func lookup(label: Label) -> Symbol?
         {
         self.enumeration.lookup(label: label)
         }
         
-    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
+    public override func layoutObjectSlots(using: AddressAllocator)
         {
-        self.enumeration.layoutInMemory(withAddressAllocator: withAddressAllocator)
+        self.enumeration.layoutObjectSlots(using: using)
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        try self.enumeration.allocateAddresses(using: allocator)
+        }
+        
+    public override func layoutInMemory(using: AddressAllocator)
+        {
+        self.enumeration.layoutInMemory(using: using)
         }
     }

@@ -62,10 +62,10 @@ public class Function:Invocable,Displayable
             argumentPointers[index] = UnsafeMutableRawPointer(pointer)
             index += 1
             }
-        if let address = self.library.findSymbol(self.cName)
-            {
-//            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
-            }
+//        if let address = self.library.findSymbol(self.cName)
+//            {
+////            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
+//            }
         return(0)
         }
     }

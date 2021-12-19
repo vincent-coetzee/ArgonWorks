@@ -72,29 +72,29 @@ public class IfBlock: Block
             {
             ifBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
-        ifBlock.type = self.type!.freshTypeVariable(inContext: context)
+        ifBlock.type = self.type?.freshTypeVariable(inContext: context)
         return(ifBlock as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.condition.initializeType(inContext: context)
+        self.condition.initializeType(inContext: context)
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
-        try self.elseBlock?.initializeType(inContext: context)
+        self.elseBlock?.initializeType(inContext: context)
         self.type = context.voidType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.condition.initializeTypeConstraints(inContext: context)
+        self.condition.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
-        try self.elseBlock?.initializeTypeConstraints(inContext: context)
+        self.elseBlock?.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
         }
         

@@ -28,7 +28,7 @@ extension NSCoder
             self.encodeRelocatableValue(relocatable,forKey: forKey + "relocatable")
         case .literal(let literal):
             self.encode(6,forKey: forKey + "kind")
-            self.encodeLiteralValue(literal,forKey: forKey + "literal")
+            self.encodeLiteral(literal,forKey: forKey + "literal")
         case .framePointer:
             self.encode(7,forKey: forKey + "kind")
         case .stackPointer:
@@ -41,6 +41,8 @@ extension NSCoder
             self.encode(10,forKey: forKey + "kind")
         case .staticPointer:
             self.encode(11,forKey: forKey + "kind")
+        case .managedPointer:
+            self.encode(12,forKey: forKey + "kind")
             }
         }
         
@@ -60,7 +62,7 @@ extension NSCoder
             case 5:
                 return(.relocatable(self.decodeRelocatableValue(forKey: forKey + "relocatable")))
             case 6:
-                return(.literal(self.decodeLiteralValue(forKey: forKey + "literal")))
+                return(.literal(self.decodeLiteral(forKey: forKey + "literal")))
             case 7:
                 return(.framePointer)
             case 8:
@@ -71,6 +73,8 @@ extension NSCoder
                 return(.dataPointer)
             case 11:
                 return(.staticPointer)
+            case 12:
+                return(.managedPointer)
             default:
                 fatalError("This should not happen")
             }
@@ -121,6 +125,19 @@ extension NSCoder
             case .type(let type):
                 self.encode(15,forKey: key + "kind")
                 self.encode(type,forKey: key + "type")
+            case .closure(let buffer):
+                self.encode(16,forKey: key + "kind")
+                self.encode(buffer,forKey: key + "buffer")
+            case .context(let instance,let ip):
+                self.encode(17,forKey: key + "kind")
+                self.encode(instance,forKey: key + "instance")
+                self.encode(ip,forKey: key + "ip")
+            case .string(let string):
+                self.encode(18,forKey: key + "kind")
+                self.encode(string,forKey: key + "string")
+            case .address(let address):
+                self.encode(19,forKey: key + "kind")
+                self.encode(Int(address),forKey: key + "address")
             }
         }
         
@@ -159,81 +176,107 @@ extension NSCoder
                 return(.methodInstance(self.decodeObject(forKey: key + "methodInstance") as! MethodInstance))
             case 15:
                 return(.type(self.decodeObject(forKey: key + "type") as! Type))
+            case 16:
+                return(.closure(self.decodeObject(forKey: key + "buffer") as! T3ABuffer))
+            case 17:
+                return(.context(self.decodeObject(forKey: key + "instance") as! MethodInstance,self.decodeInteger(forKey: key + "ip")))
+            case 18:
+                return(.string(self.decodeObject(forKey: key + "string") as! StaticString))
+            case 19:
+                return(.address(Address(self.decodeInteger(forKey: key + "address"))))
             default:
                 fatalError("This should not happen")
             }
         }
         
-    public func encodeLiteralValue(_ literal: T3AInstruction.LiteralValue,forKey key: String)
+    public func encodeLiteral(_ literal: Literal,forKey: String)
         {
         switch(literal)
             {
             case .nil:
-                self.encode(0,forKey: key + "kind")
-            case .string(let string):
-                self.encode(1,forKey: key + "kind")
-                self.encode(string,forKey: key + "string")
-            case .symbol(let string):
-                self.encode(2,forKey: key + "kind")
-                self.encode(string,forKey: key + "symbol")
+                self.encode(1,forKey:forKey + "kind")
             case .integer(let integer):
-                self.encode(3,forKey: key + "kind")
-                self.encode(integer,forKey: key + "integer")
+                self.encode(2,forKey:forKey + "kind")
+                self.encode(integer,forKey:forKey + "integer")
             case .float(let float):
-                self.encode(4,forKey: key + "kind")
-                self.encode(float,forKey: key + "float")
+                self.encode(3,forKey:forKey + "kind")
+                self.encode(float,forKey:forKey + "float")
+            case .string(let string):
+                self.encode(4,forKey:forKey + "kind")
+                self.encode(string,forKey:forKey + "string")
             case .boolean(let boolean):
-                self.encode(5,forKey: key + "kind")
-                self.encode(boolean == .trueValue,forKey: key + "boolean")
-            case .character(let character):
-                self.encode(6,forKey: key + "kind")
-                self.encode(Int32(character),forKey: key + "character")
-            case .byte(let byte):
-                self.encode(7,forKey: key + "kind")
-                self.encode(Int32(byte),forKey: key + "byte")
+                self.encode(5,forKey:forKey + "kind")
+                self.encode(boolean,forKey:forKey + "boolean")
+            case .symbol(let symbol):
+                self.encode(6,forKey:forKey + "kind")
+                self.encode(symbol,forKey:forKey + "symbol")
             case .array(let array):
-                self.encode(8,forKey: key + "kind")
-                self.encode(array.count,forKey: key + "count")
-                var index = 0
-                for item in array
-                    {
-                    self.encodeLiteralValue(item,forKey: "\(key)literal\(index)")
-                    index += 1
-                    }
+                self.encode(7,forKey:forKey + "kind")
+                self.encode(array,forKey: "array")
+            case .class(let aClass):
+                self.encode(8,forKey:forKey + "kind")
+                self.encode(aClass,forKey:forKey + "class")
+            case .module(let module):
+                self.encode(9,forKey:forKey + "kind")
+                self.encode(module,forKey:forKey + "module")
+            case .enumeration(let enumeration):
+                self.encode(10,forKey:forKey + "kind")
+                self.encode(enumeration,forKey:forKey + "enumeration")
+//            case .method(let method):
+//                self.encode(12,forKey:forKey + "kind")
+//                self.encode(method,forKey:forKey + "method")
+            case .constant(let constant):
+                self.encode(13,forKey:forKey + "kind")
+                self.encode(constant,forKey:forKey + "constant")
+            case .enumerationCase(let aCase):
+                self.encode(11,forKey:forKey + "kind")
+                self.encode(aCase,forKey:forKey + "enumerationCase")
+            case .function(let aCase):
+                self.encode(14,forKey:forKey + "kind")
+                self.encode(aCase,forKey:forKey + "function")
+            case .address(let address):
+                self.encode(15,forKey:forKey + "kind")
+                self.encode(Int(address),forKey:forKey + "address")
             }
         }
         
-    public func decodeLiteralValue(forKey key: String) -> T3AInstruction.LiteralValue
+    public func decodeLiteral(forKey: String) -> Literal
         {
-        let kind = self.decodeInteger(forKey: key + "kind")
+        let kind = self.decodeInteger(forKey: forKey + "kind")
         switch(kind)
             {
-            case 0:
-                return(.nil)
             case 1:
-                return(.string(self.decodeObject(forKey: key + "string") as! String))
+                return(.nil)
             case 2:
-                return(.symbol(self.decodeObject(forKey: key + "symbol") as! String))
+                return(.integer(Argon.Integer(self.decodeInteger(forKey: forKey + "integer"))))
             case 3:
-                return(.integer(Argon.Integer(self.decodeInteger(forKey: key + "integer"))))
+                return(.float(Argon.Float(self.decodeDouble(forKey:forKey +  "float"))))
             case 4:
-                return(.float(self.decodeDouble(forKey: key + "float")))
+                return(.string(self.decodeObject(forKey: forKey + "string") as! StaticString))
             case 5:
-                return(.boolean(self.decodeBool(forKey: key + "boolean") ? .trueValue : .falseValue))
+                return(.boolean(self.decodeBool(forKey: forKey + "boolean") ? .trueValue : .falseValue))
             case 6:
-                return(.character(Argon.Character(self.decodeInt32(forKey: key + "character"))))
+                return(.symbol(self.decodeObject(forKey: forKey + "symbol") as! StaticSymbol))
             case 7:
-                return(.byte(Argon.Byte(self.decodeInt32(forKey: key + "byte"))))
+                return(.array(self.decodeObject(forKey: "array") as! StaticArray))
             case 8:
-                let count = self.decodeInteger(forKey: key + "count")
-                var array = Array<T3AInstruction.LiteralValue>()
-                for index in 0..<count
-                    {
-                    array.append(self.decodeLiteralValue(forKey: "\(key)literal\(index)"))
-                    }
-                return(.array(array))
+                return(.class(self.decodeObject(forKey: forKey + "class") as! Class))
+            case 9:
+                return(.module(self.decodeObject(forKey: forKey + "module") as! Module))
+            case 10:
+                return(.enumeration(self.decodeObject(forKey: forKey + "enumeration") as! Enumeration))
+            case 11:
+                return(.enumerationCase(self.decodeObject(forKey: forKey + "enumerationCase") as! EnumerationCase))
+//            case 12:
+//                return(.method(self.decodeObject(forKey: forKey + "method") as! Method)
+            case 13:
+                return(.constant(self.decodeObject(forKey: forKey + "constant") as! Constant))
+            case 14:
+                return(.function(self.decodeObject(forKey: forKey + "function") as! Function))
+            case 15:
+                return(.address(Address(self.decodeInteger(forKey: forKey + "address"))))
             default:
-                fatalError("This should not happen")
+                fatalError()
             }
         }
         

@@ -28,7 +28,14 @@ public class BinaryExpression: Expression
     internal let rhs: Expression
     internal let lhs: Expression
     internal var methodInstances: MethodInstances = []
+    
     internal var selectedMethodInstance: MethodInstance?
+        {
+        didSet
+            {
+            self.selectedMethodInstance?.setParent(self)
+            }
+        }
     
     init(_ lhs:Expression,_ operation:Token.Symbol,_ rhs:Expression)
         {
@@ -70,22 +77,22 @@ public class BinaryExpression: Expression
         super.encode(with: coder)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = context.freshTypeVariable()
-        try context.extended(withContentsOf: [])
+        context.extended(withContentsOf: [])
             {
             newContext in
             newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
             newContext.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
             newContext.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
-            try self.lhs.initializeTypeConstraints(inContext: newContext)
-            try self.rhs.initializeTypeConstraints(inContext: newContext)
+            self.lhs.initializeTypeConstraints(inContext: newContext)
+            self.rhs.initializeTypeConstraints(inContext: newContext)
             let substitution = newContext.unify()
-            let leftType = substitution.substitute(self.lhs.type!)
-            let rightType = substitution.substitute(self.rhs.type!)
+            let leftType = substitution.substitute(self.lhs.type)!
+            let rightType = substitution.substitute(self.rhs.type)!
             self.type = leftType
             self.selectedMethodInstance = MethodInstance(label: self.operation.rawValue)
             self.selectedMethodInstance!.parameters = [Parameter(label: "left", relabel: nil, type: leftType, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rightType, isVisible: false, isVariadic: false)]
@@ -96,8 +103,8 @@ public class BinaryExpression: Expression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = BinaryExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type!.freshTypeVariable(inContext: context)
-        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         
@@ -105,7 +112,7 @@ public class BinaryExpression: Expression
         {
         let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
-        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.selectedMethodInstance = substitution.substitute(self.selectedMethodInstance)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -127,6 +134,11 @@ public class BinaryExpression: Expression
             }
         }
         
+    public override func emitValueCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        try self.emitCode(into: instance,using: generator)
+        }
+        
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         guard let methodInstance = self.selectedMethodInstance else
@@ -134,8 +146,8 @@ public class BinaryExpression: Expression
             print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
             return
             }
-        try self.lhs.emitRValue(into: instance, using: generator)
-        try self.rhs.emitRValue(into: instance, using: generator)
+        try self.lhs.emitValueCode(into: instance, using: generator)
+        try self.rhs.emitValueCode(into: instance, using: generator)
         let temporary = instance.nextTemporary()
         switch(self.operation.rawValue,methodInstance.returnType.label)
             {

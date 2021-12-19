@@ -26,7 +26,7 @@ public class ObjectFile: NSObject,NSCoding
             }
         }
         
-    public static func read(atPath: String,topModule: TopModule) throws -> ObjectFile
+    public static func read(atPath: String,topModule: TopModule) throws -> ObjectFile?
         {
         if let url = URL(string: atPath)
             {

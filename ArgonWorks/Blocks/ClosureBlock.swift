@@ -9,6 +9,11 @@ import Foundation
 
 public class ClosureBlock: Block,BlockContext
     {
+    public override var hasInlineReturnBlock: Bool
+        {
+        return(false)
+        }
+        
     public var parameters = Parameters()
 //    public var returnType:Type = VoidClass.voidClass.type
     public var buffer: T3ABuffer = T3ABuffer()

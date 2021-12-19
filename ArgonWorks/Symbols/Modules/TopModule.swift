@@ -16,11 +16,17 @@ import Foundation
 ///
 public class TopModule: SystemModule
     {
+    public static var shared = TopModule(instanceNumber: 0)
+    
     public override var typeCode:TypeCode
         {
         .topModule
         }
         
+    public var argonModule: ArgonModule
+        {
+        return(self.lookup(label: "Argon") as! ArgonModule)
+        }
     ///
     ///
     /// We ARE the primary context, so just return ourselves
@@ -31,11 +37,11 @@ public class TopModule: SystemModule
         return(self)
         }
         
-    public var moduleRoot: Module
-        {
-        let modules = self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
-        return(ModuleHolder(TopModule(modules)))
-        }
+//    public var moduleRoot: Module
+//        {
+//        let modules = self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
+//        return(ModuleHolder(TopModule(modules)))
+//        }
 
     public var allModules: Symbols
         {
@@ -52,33 +58,28 @@ public class TopModule: SystemModule
         {
         return(Name(rooted:true))
         }
-    
-    public var argonModule: ArgonModule
-        {
-        return(self.lookup(label: "Argon") as! ArgonModule)
-        }
         
     public var userModules: Array<Module>
         {
         return(self.symbols.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
         }
-    
-    init(compiler: Compiler)
-        {
-        super.init(label: "Root")
-        self.addSymbol(ArgonModule(compiler: compiler))
-        self.setIndex(UUID.systemUUID(0))
-        }
         
-    init(_ array:Array<Module>)
+    init(instanceNumber: Int)
         {
         super.init(label: "Root")
+        self.addSymbol(ArgonModule(instanceNumber: instanceNumber))
         self.setIndex(UUID.systemUUID(0))
-        for element in array
-            {
-            self.symbols.append(element)
-            }
         }
+//
+//    init(_ array:Array<Module>)
+//        {
+//        super.init(label: "Root")
+//        self.setIndex(UUID.systemUUID(0))
+//        for element in array
+//            {
+//            self.symbols.append(element)
+//            }
+//        }
         
     required init?(coder: NSCoder)
         {

@@ -18,6 +18,8 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
     public private(set) var index: UUID
     public private(set) var label: String
     public private(set) var parent: Parent = .none
+    public private(set) var container: Container?
+    
     private var locations = NodeLocations()
     
     public var declarationLocation: Location
@@ -38,12 +40,6 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         self.label = label
         }
         
-    public init(label: Label,index: UUID)
-        {
-        self.label = label
-        self.index = index
-        }
-        
     required public init?(coder: NSCoder)
         {
         self.index = coder.decodeObject(forKey: "index") as! UUID
@@ -60,6 +56,18 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
         coder.encodeNodeLocations(self.locations,forKey: "locations")
         }
 
+    public func copy() -> Self
+        {
+        let copy = Self(label: self.label)
+        copy.index = index
+        return(copy)
+        }
+        
+    public func setContainer(_ container: Container?)
+        {
+        self.container = container
+        }
+        
     public func setLabel(_ label: Label)
         {
         self.label = label
@@ -103,13 +111,6 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
     public func setParent(_ aParent: Parent)
         {
         self.parent = aParent
-        switch(parent)
-            {
-            case .none:
-                print("halt")
-            default:
-                break
-            }
         }
         
     public func setParent(_ context: Context)

@@ -497,7 +497,7 @@ class ArgonBrowserWindowController: NSWindowController,NSWindowDelegate,NSToolba
                     {
                     do
                         {
-                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
+                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
                         ImportArchiver.isSwappingSystemTypes = true
                         let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)

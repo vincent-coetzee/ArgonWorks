@@ -56,25 +56,25 @@ public class TypeInstanciationTerm: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let term = TypeInstanciationTerm(type: substitution.substitute(self.type!),arguments: self.arguments.map{substitution.substitute($0)})
+        let term = TypeInstanciationTerm(type: substitution.substitute(self.type)!,arguments: self.arguments.map{substitution.substitute($0)})
         term.type = substitution.substitute(self.type!)
         term.issues = self.issues
         return(term as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         if self.initializer.isNotNil
             {
-            try self.initializer!.initializeType(inContext: context)
-            try self.initializer!.parameters.forEach{try $0.initializeType(inContext: context)}
+            self.initializer!.initializeType(inContext: context)
+            self.initializer!.parameters.forEach{$0.initializeType(inContext: context)}
             }
-        self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
+        self.arguments = self.arguments.map{$0.initializeType(inContext: context)}
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.arguments.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        self.arguments.forEach{$0.initializeTypeConstraints(inContext: context)}
         if self.type!.isClass && !self.type!.classValue.initializers.isEmpty
             {
             self.initializer = self.type!.classValue.mostSpecificInitializer(forArguments: self.arguments,inContext: context)
@@ -116,37 +116,38 @@ public class TypeInstanciationTerm: Expression
         return(self.type?.lookup(label: label))
         }
         
+    public override func emitValueCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        try self.emitCode(into: instance,using: generator)
+        }
+        
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-//        guard let location = self.declaration else
-//            {
-//            print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
-//            return
-//            }
-//        var count:Argon.Integer = 1
-//        instance.append(lineNumber: location.line)
-//        for argument in self.arguments.reversed()
-//            {
-//            try argument.value.emitCode(into: instance,using: generator)
-//            instance.append(nil,"PUSH",argument.value.place,.none,.none)
-//            count += 1
-//            }
-//        instance.append(nil,"PUSH",.relocatable(.type(self.type)),.none,.none)
-//        instance.append(nil,"CALL",.relocatable(.function(Function(label: "MAKE"))),.none,.none)
-//        instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
-//        if self._type.isClass && !self._type.classValue.initializers.isEmpty
-//            {
-//            let temp = instance.nextTemporary()
-//            instance.append("MOV",.returnRegister,.none,temp)
-//            instance.append("PUSH",.returnRegister,.none,.none)
-//            let initializer = self._type.classValue.initializers.first!
-//            instance.append("CALL",.relocatable(.function(initializer)),.none,.none)
-//            instance.append("ADD",.stackPointer,.literal(.integer(8)),.stackPointer)
-//            self._place = temp
-//            }
-//        else
-//            {
-//            self._place = .returnRegister
-//            }
+        guard let location = self.declaration else
+            {
+            print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
+            return
+            }
+        var count:Argon.Integer = 1
+        instance.append(lineNumber: location.line)
+        instance.append(nil,"MAKE",.relocatable(.type(self.type!)),.none,.none)
+        if let initializer = self.initializer
+            {
+            let temp = instance.nextTemporary()
+            for argument in self.arguments.reversed()
+                {
+                try argument.value.emitCode(into: instance,using: generator)
+                instance.append(nil,"PUSH",argument.value.place,.none,.none)
+                count += 1
+                }
+            instance.append("PUSH",.returnRegister,.none,.none)
+            instance.append("CALL",.relocatable(.function(initializer)),.none,.none)
+            instance.append("ADD",.stackPointer,.literal(.integer(8 * count)),.stackPointer)
+            self._place = temp
+            }
+        else
+            {
+            self._place = .returnRegister
+            }
         }
     }

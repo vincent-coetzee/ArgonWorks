@@ -57,9 +57,9 @@ public class TupleExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.tuple.initializeType(inContext: context)
+        self.tuple.initializeType(inContext: context)
         self.type = self.tuple.type!
         }
         

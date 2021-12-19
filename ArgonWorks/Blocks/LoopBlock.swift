@@ -79,21 +79,35 @@ public class LoopBlock: Block,BlockContext,Scope
         try super.visit(visitor: visitor)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let starts = self.startExpressions.map{$0.freshTypeVariable(inContext: context)}
+        let updates = self.updateExpressions.map{$0.freshTypeVariable(inContext: context)}
+        let end = self.endExpression.freshTypeVariable(inContext: context)
+        let block = LoopBlock(start: starts, end: end, update: updates)
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for expression in self.startExpressions
             {
-            try expression.initializeTypeConstraints(inContext: context)
+            expression.initializeTypeConstraints(inContext: context)
             }
         for expression in self.updateExpressions
             {
-            try expression.initializeTypeConstraints(inContext: context)
+            expression.initializeTypeConstraints(inContext: context)
             }
-        try self.endExpression.initializeTypeConstraints(inContext: context)
+        self.endExpression.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         }
         
@@ -134,21 +148,21 @@ public class LoopBlock: Block,BlockContext,Scope
         return(loop as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         for expression in self.startExpressions
             {
-            try expression.initializeType(inContext: context)
+            expression.initializeType(inContext: context)
             }
        for expression in self.updateExpressions
             {
-            try expression.initializeType(inContext: context)
+            expression.initializeType(inContext: context)
             }
-        try endExpression.initializeType(inContext: context)
+        self.endExpression.initializeType(inContext: context)
         self.type = context.voidType
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         }
         

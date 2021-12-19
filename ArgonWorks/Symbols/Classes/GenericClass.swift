@@ -162,7 +162,7 @@ public class GenericClass:Class
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = super.substitute(from: substitution)
-        copy.types = self.types.map{substitution.substitute($0)}
+        copy.types = self.types.map{substitution.substitute($0)!}
         return(copy)
         }
         

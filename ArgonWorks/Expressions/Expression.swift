@@ -9,6 +9,16 @@ import Foundation
 
 public class Expression: NSObject,NSCoding,VisitorReceiver
     {
+    public var enclosingMethodInstanceScope: Scope
+        {
+        var aScope = self.enclosingScope
+        while !aScope.isMethodInstanceScope
+            {
+            aScope = aScope.enclosingScope
+            }
+        return(aScope)
+        }
+        
     public var declarationLine: Int
         {
         if let location = self.declaration
@@ -118,6 +128,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     public private(set) var parent: Parent = .none
     internal var type: Type? = nil
     public var issues = CompilerIssues()
+    public private(set) var container: Container?
     
     public override init()
         {
@@ -138,13 +149,13 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         coder.encode(self.type,forKey: "type")
         }
         
-    public func initializeType(inContext context: TypeContext) throws
+    public func initializeType(inContext context: TypeContext)
         {
         print("WARNING: initializeType not implemented in \(Swift.type(of: self))")
         self.type = context.voidType
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
         print("WARNING: initializeTypeConstraints not implemented in \(Swift.type(of: self))")
         }
@@ -199,17 +210,30 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(self)
         }
 
-    public func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+    public func assign(from expression: Expression,into: T3ABuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
         
-    public func emitLValue(into: T3ABuffer,using: CodeGenerator) throws
+    ///
+    ///
+    /// Emitting an LValue for an expression, emit the code to generate a
+    /// pointer to the item in question. It will leave a pointer in the
+    /// "place" of the expression.
+    ///
+    ///
+    public func emitPointerCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
-        
-    public func emitRValue(into: T3ABuffer,using: CodeGenerator) throws
+    ///
+    ///
+    /// Emitting an RValue for an expression, emits the code to generate a
+    /// value of the expression rather than a point to the item. RValues always
+    /// occur on the RHS which is why they are called RValues.
+    ///
+    ///
+    public func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
@@ -253,23 +277,15 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(nil)
         }
         
-    public func typeCheck(inContext: TypeContext) throws -> Self
-        {
-        var expression = Expression()
-        try inContext.extended(withContentsOf: [])
-            {
-            newContext in
-            try self.initializeTypeConstraints(inContext: newContext)
-            let substitution = inContext.unify()
-            expression = substitution.substitute(self) as! Self
-            }
-        try expression.initializeTypeConstraints(inContext: inContext)
-        return(expression as! Self)
-        }
-        
     public func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         return(self)
+        }
+        
+    public func printParentChain()
+        {
+        print("\(self)")
+        self.parent.printParentChain()
         }
     }
     

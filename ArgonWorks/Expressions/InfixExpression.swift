@@ -47,18 +47,41 @@ public class InfixExpression: OperatorExpression
         super.encode(with: coder)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
-        if !operators.isEmpty
+        let expression = InfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.type = self.operators.first!.returnType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        print("INFIX EXPRESSION")
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
+        let newArguments = [self.lhs,self.rhs]
+        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: newArguments, reportErrors: true)
+        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+        methodMatcher.appendReturnType(self.type!)
+        if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            self.type = operators.first!.returnType
+            self.methodInstance = specificInstance
+            assert(self.methodInstance.isNotNil,"Original method instance is nil and should not be.")
+            print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operators.first!.label) = \(specificInstance.displayString)")
             }
         else
             {
-            self.appendIssue(at: self.declaration!, message: "The operator '\(self.operatorLabel)' of the correct type can not be resolved.")
-            self.type = context.voidType
+            print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(self.operators.first!.label)")
+            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operators.first!.label)' ) can not be resolved. Try making it more specific.")
             }
         }
         
@@ -72,7 +95,7 @@ public class InfixExpression: OperatorExpression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        fatalError()
+        
         }
     }
 

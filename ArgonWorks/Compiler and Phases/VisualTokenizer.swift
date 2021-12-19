@@ -23,14 +23,16 @@ public class VisualTokenizer: SemanticTokenRenderer
     private let lineNumberView: LineNumberTextView
     private var tokenColors = Dictionary<TokenColor,NSColor>()
     public var reportingContext: Reporter
-    private let systemClassNames: Array<String>
+    public var systemClassNames: Array<String>
     private let font: NSFont
     
     init(lineNumberView: LineNumberTextView,reporter: Reporter)
         {
+        let topModule = TopModule(instanceNumber: 0)
+        let argonModule = topModule.argonModule
+        self.systemClassNames = argonModule.classes.map{$0.label}
         self.lineNumberView = lineNumberView
         self.reportingContext = reporter
-        self.systemClassNames = Compiler.systemClassNames
         self.font = NSFont(name: "Menlo",size: 12)!
         self.initColors()
         NotificationCenter.default.addObserver(self, selector: #selector(VisualTokenizer.sourceChangedNotification(_:)), name: NSText.didChangeNotification, object: self.lineNumberView)
@@ -68,12 +70,12 @@ public class VisualTokenizer: SemanticTokenRenderer
         print("Time to generate and process tokens = \(time)")
         let time2 = Timer().time
             {
-            let compiler = Compiler(tokens: someTokens,reportingContext: self.reportingContext,tokenRenderer: self)
-            compiler.compile(parseOnly: true)
-            DispatchQueue.main.async
-                {
-                self.reportingContext.pushIssues(compiler.allIssues)
-                }
+//            let compiler = Compiler(tokens: someTokens,reportingContext: self.reportingContext,tokenRenderer: self)
+//            compiler.compile(parseOnly: true)
+//            DispatchQueue.main.async
+//                {
+//                self.reportingContext.pushIssues(compiler.allIssues)
+//                }
             }
         print("Time to create Compiler and parse = \(time2)")
         }

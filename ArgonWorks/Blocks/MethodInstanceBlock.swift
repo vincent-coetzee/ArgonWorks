@@ -14,7 +14,7 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
         true
         }
         
-    private var _methodInstance: MethodInstance
+    internal var _methodInstance: MethodInstance
     
     public override var methodInstance: MethodInstance
         {
@@ -94,11 +94,11 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
         print("END OF METHOD INSTANCE BLOCK----------------------------------------------------------------------------------")
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         let returnBlocks = self.returnBlocks.filter{$0.enclosingScope.isMethodInstanceScope}
         for block in returnBlocks
@@ -107,11 +107,11 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
             }
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = self.methodInstance.returnType.freshTypeVariable(inContext: context)
         }

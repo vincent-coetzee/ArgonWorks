@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Parameter:Slot,Displayable
+public class Parameter:LocalSlot,Displayable
     {
     public override var displayString: String
         {
@@ -38,7 +38,7 @@ public class Parameter:Slot,Displayable
         self.isVisible = isVisible
         self.isVariadic = isVariadic
         self.relabel = relabel
-        super.init(label: label,type: type)
+        super.init(label: label,type: type,value: nil)
         }
     
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
@@ -82,7 +82,7 @@ public class Parameter:Slot,Displayable
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type!), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
+        return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type!)!, isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
         }
         
     public func flatten() -> Parameter

@@ -11,13 +11,11 @@ public class ClosureExpression: Expression
     {
     public var closure: Closure?
     public var closureSlot: Slot?
-    public var arguments: Arguments
     
     public init(closure:Closure)
         {
         self.closure = closure
         self.closureSlot = nil
-        self.arguments = []
         super.init()
         self.closure!.setParent(self)
         }
@@ -26,7 +24,6 @@ public class ClosureExpression: Expression
         {
         self.closure = nil
         self.closureSlot = slot
-        self.arguments = arguments
         super.init()
         }
         
@@ -34,7 +31,6 @@ public class ClosureExpression: Expression
         {
         self.closure = coder.decodeObject(forKey: "closure") as? Closure
         self.closureSlot = coder.decodeObject(forKey: "closureSlot") as? Slot
-        self.arguments = coder.decodeArguments(forKey: "arguments")
         super.init(coder: coder)
         }
         
@@ -42,7 +38,6 @@ public class ClosureExpression: Expression
         {
         coder.encode(self.closure,forKey: "closure")
         coder.encode(self.closureSlot,forKey: "closureSlot")
-        coder.encodeArguments(self.arguments,forKey: "arguments")
         super.encode(with: coder)
         }
 
@@ -50,11 +45,22 @@ public class ClosureExpression: Expression
         {
         try self.closure?.visit(visitor: visitor)
         try self.closureSlot?.visit(visitor: visitor)
-        for argument in self.arguments
-            {
-            try argument.visit(visitor: visitor)
-            }
         try visitor.accept(self)
+        }
+        
+    public override func emitPointerCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        guard let closure = self.closure else
+            {
+            fatalError("Closure in closure expression is nil.")
+            }
+        try closure.emitCode(into: buffer,using: generator)
+        self._place = .relocatable(.closure(closure.buffer))
+        }
+        
+    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+        {
+        try self.emitPointerCode(into: into,using: using)
         }
         
    public override func display(indent: String)
@@ -71,30 +77,28 @@ public class ClosureExpression: Expression
         return(expression as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.closure!.initializeType(inContext: context)
+        self.closure!.initializeType(inContext: context)
         let label = self.closure!.parameters.map{$0.type!.displayString}.joined(separator: "x") + "->" + self.closure!.returnType.displayString
         self.type = TypeFunction(label: label, types: self.closure!.parameters.map{$0.type!}, returnType: self.closure!.returnType)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.closure!.initializeTypeConstraints(inContext: context)
+        self.closure!.initializeTypeConstraints(inContext: context)
         }
         
     public override func allocateAddresses(using allocator:AddressAllocator) throws
         {
         try self.closure?.allocateAddresses(using: allocator)
         try self.closureSlot?.allocateAddresses(using: allocator)
-        try self.arguments.allocateAddresses(using: allocator)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         self.closure?.analyzeSemantics(using: analyzer)
         self.closureSlot?.analyzeSemantics(using: analyzer)
-        self.arguments.analyzeSemantics(using: analyzer)
         }
         
     public override func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws

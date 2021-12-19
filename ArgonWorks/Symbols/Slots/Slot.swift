@@ -10,6 +10,20 @@ import AppKit
 
 public class Slot:Symbol
     {
+    public enum SlotType:Int
+        {
+        case module
+        case instance
+        case `class`
+        case header
+        case magicNumber
+        }
+        
+    public var isSytemSymbol: Bool
+        {
+        false
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         fatalError()
@@ -85,6 +99,7 @@ public class Slot:Symbol
     public var offset = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
+    public var slotType: SlotType = .instance
     
 
     init(label:Label,type:Type? = nil)
@@ -105,8 +120,8 @@ public class Slot:Symbol
         self.offset = coder.decodeInteger(forKey: "offset")
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
+        self.slotType = SlotType(rawValue: coder.decodeInteger(forKey: "slotType"))!
         super.init(coder: coder)
-        self.type = coder.decodeObject(forKey: "_type") as? Type
 //        print("END DECODE SLOT \(self.label)")
         }
 
@@ -118,10 +133,10 @@ public class Slot:Symbol
         
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(self.type,forKey: "_type")
         coder.encode(self.offset,forKey: "offset")
         coder.encode(self.initialValue,forKey:"initialValue")
         coder.encode(self.isClassSlot,forKey: "isClassSlot")
+        coder.encode(self.slotType.rawValue,forKey: "slotType")
         super.encode(with: coder)
         }
     
@@ -135,14 +150,48 @@ public class Slot:Symbol
         self.offset = integer
         }
         
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        self.wasAddressAllocationDone = true
+        allocator.allocateAddress(for: self)
+        try self.type?.allocateAddresses(using: allocator)
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let segment = allocator.segment(for: self)
+        let slotType = ArgonModule.shared.slot
+        let slotPointer = ClassBasedPointer(address: self.memoryAddress,type: slotType)
+        slotPointer.setClass(slotType)
+        slotPointer.setAddress(self.type?.memoryAddress,atSlot: "type")
+        slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
+        slotPointer.setInteger(self.offset,atSlot: "offset")
+        slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        slotPointer.setAddress(self.parent.memoryAddress,atSlot: "container")
+        self.type?.layoutInMemory(using: allocator)
+        }
+        
     public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
         {
         try self.emitLValue(into: buffer, using: using)
-        try expression.emitRValue(into: buffer,using: using)
+        try expression.emitValueCode(into: buffer,using: using)
         buffer.append("STIP",expression.place,.none,self.place)
         }
         
-    
+    public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
+        }
+        
     public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been overriden in a subclass.")
@@ -159,16 +208,12 @@ public class Slot:Symbol
             return(self)
             }
         let slot = Self.init(label: label)
-        slot.type = self.type!.freshTypeVariable(inContext: context)
+        slot.type = self.type?.freshTypeVariable(inContext: context)
         return(slot)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        if self.label == "newArray"
-            {
-            print("halt")
-            }
         if self.type.isNil
             {
             if let slotType = context.lookupBinding(atLabel: self.label)
@@ -206,22 +251,6 @@ public class Slot:Symbol
             self.enclosingScope.appendIssue(at: self.declaration!, message: "Slot \(self.label) has an invalid type.")
             }
         }
-        
-//    public func layoutSymbol(in vm: VirtualMachine)
-//        {
-////        guard !self.isMemoryLayoutDone else
-////            {
-////            return
-////            }
-////        let pointer = InnerSlotPointer.allocate(in: vm)
-////        self.addresses.append(.absolute(pointer.address))
-////        assert( self.topModule.argonModule.slot.sizeInBytes == 88)
-////        pointer.setSlotValue(vm.managedSegment.allocateString(self.label),atKey:"name")
-//////        pointer.setSlotValue(self._type?.memoryAddress ?? 0,atKey:"slotClass")
-////        pointer.setSlotValue(self.offset,atKey:"offset")
-//////        pointer.setSlotValue(self._type?.typeCode.rawValue ?? 0,atKey:"typeCode")
-////        self.isMemoryLayoutDone = true
-//        }
     }
 
 public typealias Slots = Array<Slot>

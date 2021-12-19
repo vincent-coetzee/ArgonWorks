@@ -59,27 +59,14 @@ public class MethodInstanceMatcher
         
     public func findMostSpecificMethodInstance() -> MethodInstance?
         {
-        do
+        guard self.foundSpecificInstance() else
             {
-            guard try self.foundSpecificInstance() else
-                {
-                return(nil)
-                }
-            return(self.methodInstance)
-            }
-        catch let error as CompilerIssue
-            {
-            self.append(error)
             return(nil)
             }
-        catch let error
-            {
-            self.append(CompilerIssue(location: self.location,message: "Unexpected error: \(error)"))
-            return(nil)
-            }
+        return(self.methodInstance)
         }
         
-    private func foundSpecificInstance() throws -> Bool
+    private func foundSpecificInstance() -> Bool
         {
         print("OK: ARGUMENTS TYPES: \(self.argumentTypes)")
         let arity = self.argumentTypes.count
@@ -101,58 +88,59 @@ public class MethodInstanceMatcher
         for instance in instances
             {
             print("OK: TESTING INSTANCE \(instance.displayString)")
-            try self.typeContext.extended(withContentsOf: [])
+            self.typeContext.extended(withContentsOf: [])
                 {
                 newContext in
-                let freshInstance = instance.freshTypeVariable(inContext: newContext)
-                try freshInstance.initializeType(inContext: newContext)
-                try freshInstance.initializeTypeConstraints(inContext: newContext)
-                print("OK: GENERATED INSTANCE \(freshInstance.displayString)")
+                instance.initializeType(inContext: newContext)
+                instance.initializeTypeConstraints(inContext: newContext)
+                print("OK: GENERATED INSTANCE \(instance.displayString)")
                 var offset = 0
-                for (argument,parameter) in zip(self.argumentTypes,freshInstance.parameters)
+                for (argument,parameter) in zip(self.argumentTypes,instance.parameters)
                     {
                     newContext.append(TypeConstraint(left: argument,right: parameter.type,origin: self.origin))
-                    if parameter.type == freshInstance.returnType
+                    if parameter.type == instance.returnType
                         {
-                        newContext.append(TypeConstraint(left: argument,right: freshInstance.returnType,origin: self.origin))
+                        newContext.append(TypeConstraint(left: argument,right: instance.returnType,origin: self.origin))
                         }
                     for index in 0..<max(offset - 1,0)
                         {
-                        if parameter.type == freshInstance.parameters[index].type
+                        if parameter.type == instance.parameters[index].type
                             {
                             newContext.append(TypeConstraint(left: argument,right: self.argumentTypes[index],origin: self.origin))
                             }
                         }
                     offset += 1
                     }
-                newContext.append(TypeConstraint(left: freshInstance.returnType,right: self.returnType,origin: self.origin))
+                newContext.append(TypeConstraint(left: instance.returnType,right: self.returnType,origin: self.origin))
                 newContext.append(contentsOf: self.constraints)
                 print("OK: USING \(self.constraints.count) CONSTRAINTS")
                 let substitution = newContext.unify()
                 print("OK: UNIFIED TYPES")
-                let newInstance = substitution.substitute(freshInstance)
-                newInstance.originalMethodInstance = instance
-                let types = self.argumentTypes.map{substitution.substitute($0)}
-                print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
-                print("OK: ARGUMENTS ARE \(types)")
-                if !newInstance.hasVariableTypes
+                if let newInstance = substitution.substitute(instance)
                     {
-                    print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
-                    if newInstance.parameterTypesAreSupertypes(ofTypes: types)
+                    newInstance.originalMethodInstance = instance
+                    let types = self.argumentTypes.map{substitution.substitute($0)!}
+                    print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
+                    print("OK: ARGUMENTS ARE \(types)")
+                    if !newInstance.hasVariableTypes
                         {
-                        print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
-                        readyInstances.append(newInstance)
-                        mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
-                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
+                        print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
+                        if newInstance.parameterTypesAreSupertypes(ofTypes: types)
+                            {
+                            print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
+                            readyInstances.append(newInstance)
+                            mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
+                            print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
+                            }
+                        else
+                            {
+                            print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
+                            }
                         }
                     else
                         {
-                        print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
+                        print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
                         }
-                    }
-                else
-                    {
-                    print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
                     }
                 }
             }

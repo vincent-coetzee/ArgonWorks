@@ -89,8 +89,4 @@ public class TypeConstructor: Type
             }
         return(false)
         }
-        
-    public override func typeCheck() throws
-        {
-        }
     }

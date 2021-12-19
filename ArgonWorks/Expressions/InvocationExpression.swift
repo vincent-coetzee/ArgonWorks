@@ -45,13 +45,9 @@ public class InvocationExpression: Expression
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.appendIssue(at: self.declaration!, message: "Method '\(self.name.displayString)' is not defined.")
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

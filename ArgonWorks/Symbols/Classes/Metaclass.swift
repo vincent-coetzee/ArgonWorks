@@ -19,7 +19,7 @@ public class Metaclass: Class
         return(true)
         }
         
-    private let theClass: Class?
+    private var theClass: Class!
     
     public override var metaclass: Metaclass?
         {
@@ -46,7 +46,7 @@ public class Metaclass: Class
         
     public required init(label: Label)
         {
-        self.theClass = VoidClass.voidClass
         super.init(label: label)
+        self.theClass = (ArgonModule.shared.lookup(label: "Void") as! Type).classValue
         }
     }

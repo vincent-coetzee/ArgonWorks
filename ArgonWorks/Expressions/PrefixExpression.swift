@@ -39,6 +39,14 @@ public class PrefixExpression: OperatorExpression
         self.rhs.display(indent: indent + "\t")
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.rhs.analyzeSemantics(using: analyzer)
@@ -50,9 +58,9 @@ public class PrefixExpression: OperatorExpression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.rhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = self.operators.first!.returnType.freshTypeVariable(inContext: context)
         }
         
@@ -60,21 +68,21 @@ public class PrefixExpression: OperatorExpression
         {
         let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type!)
-        expression.selectedMethodInstance = self.selectedMethodInstance?.substitute(from: substitution)
+        expression.methodInstance = self.methodInstance?.substitute(from: substitution)
         expression.issues = self.issues
         return(expression as! Self)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
         let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.rhs], reportErrors: true)
         methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
         methodMatcher.appendReturnType(self.type!)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            self.selectedMethodInstance = specificInstance
+            self.methodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
             methodMatcher.appendTypeConstraints(to: context)
             }

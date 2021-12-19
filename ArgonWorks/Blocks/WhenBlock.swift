@@ -46,22 +46,33 @@ public class WhenBlock: Block
         try super.visit(visitor: visitor)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.condition.initializeType(inContext: context)
+        let block = WhenBlock(condition: self.condition.freshTypeVariable(inContext: context))
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.condition.initializeType(inContext: context)
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = context.voidType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.condition.initializeTypeConstraints(inContext: context)
+        self.condition.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         }
         

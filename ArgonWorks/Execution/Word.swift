@@ -91,6 +91,11 @@ extension Word
         self = tag | base
         }
         
+    public init(integer: Int)
+        {
+        self = UInt64(bitPattern: integer) & ~(Header.kTagBits << Header.kTagShift)
+        }
+        
     public init(integer: Argon.Integer)
         {
         self = UInt64(bitPattern: integer) & ~(Header.kTagBits << Header.kTagShift)
@@ -122,15 +127,15 @@ extension Word
         self = base | Argon.kFloatTag
         }
         
-    public init(pointer: Int)
+    public init(object: Word)
         {
-        let base = UInt64(bitPattern: Int64(pointer)) & ~(Header.kTagBits << Header.kTagShift)
-        self = base | (Argon.Tag.pointer.rawValue << Header.kTagShift)
+        let base = UInt64(bitPattern: Int64(object)) & ~(Header.kTagBits << Header.kTagShift)
+        self = base | (Argon.Tag.object.rawValue << Header.kTagShift)
         }
         
-    public var pointerValue: Int
+    public var objectValue: Int
         {
-        Int(bitPattern: UInt(self & ~Argon.kPointerTag))
+        Int(bitPattern: UInt(self & ~Argon.kObjectTag))
         }
         
     public var integerValue: Argon.Integer
@@ -146,6 +151,16 @@ extension Word
     public var booleanValue: Bool
         {
         self & ~Argon.kBooleanTag == 1
+        }
+        
+    public var byteValue: Argon.Byte
+        {
+        Argon.Byte(self & 255)
+        }
+        
+    public var characterValue: Character
+        {
+        Character(Unicode.Scalar(Int(self & 65535))!)
         }
         
     public func bitString(length:Int) -> String
@@ -179,9 +194,9 @@ extension Word
         
     public static func testWord()
         {
-        let pointer = Word(pointer: 1)
-        assert(pointer == Argon.kPointerTag + 1,"A pointer of 1 should be \((Argon.kPointerTag + 1).bitString) but is \(pointer.bitString)")
-        assert(pointer.pointerValue == 1,"Pointer value should be 1 but is \(pointer.pointerValue)")
+        let pointer = Word(object: 1)
+        assert(pointer == Argon.kObjectTag + 1,"A pointer of 1 should be \((Argon.kObjectTag + 1).bitString) but is \(pointer.bitString)")
+        assert(pointer.objectValue == 1,"Pointer value should be 1 but is \(pointer.objectValue)")
         let float = Word(float: 2931.492781)
         print(float.bitString)
 //        assert(float.floatValue == 1,"Float value should be 2931.492781 but is \(float.floatValue)")
@@ -192,26 +207,47 @@ public typealias Words = Array<Word>
 
 public typealias HWord = Int32
 
-public typealias WordPointer = UnsafeMutablePointer<Word>
+public typealias Address = Word
 
-extension WordPointer
+extension Address
     {
-    public init(bitPattern: Word)
-        {
-        self.init(bitPattern: UInt(bitPattern))!
-        }
-        
-    public subscript(_ index: Word) -> Word
+    public var tag: Argon.Tag
         {
         get
             {
-            return(self[Int(index)])
+            let mask = Header.kTagBits << Header.kTagShift
+            return(Argon.Tag(rawValue: (self & mask) >> Header.kTagShift)!)
             }
         set
             {
-            self[Int(index)] = newValue
+            let value = (newValue.rawValue & Header.kTagBits) << Header.kTagShift
+            self = (self & ~(Header.kTagBits << Header.kTagShift)) | value
             }
         }
+        
+    public var segment: Argon.Segment
+        {
+        get
+            {
+            return(Argon.Segment(rawValue: (self & Argon.kSegmentExtendedMask) >> Header.kTagShift)!)
+            }
+        set
+            {
+            let value = (newValue.rawValue & Argon.kSegmentMask) << Argon.kSegmentShift
+            self = (self & ~Argon.kSegmentExtendedMask) | value
+            }
+        }
+        
+    public var cleanAddress: Address
+        {
+        return(self & ~(Header.kTagBits << Header.kTagShift))
+        }
+        
+    public var objectAddress: Address
+        {
+        (self & ~Argon.kObjectTag) | Argon.kObjectTag
+        }
     }
-    
-public typealias Address = Word
+
+public typealias Addresses = Array<Address>
+

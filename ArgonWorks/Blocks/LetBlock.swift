@@ -26,10 +26,8 @@ public class LetBlock: Block
         super.init()
         self.lhs.parent = .block(self)
         self.rhs.parent = .block(self)
-        if self.lhs.isEmpty || self.rhs.isEmpty
-            {
-            print("halt")
-            }
+        assert(!self.lhs.isEmpty)
+        assert(!self.rhs.isEmpty)
         }
         
     public required init?(coder: NSCoder)
@@ -61,25 +59,22 @@ public class LetBlock: Block
         print("\(indent)\(Swift.type(of: self))")
         self.lhs.display(indent: indent + "\t")
         self.rhs.display(indent: indent + "\t")
-        if self.lhs.isEmpty || self.rhs.isEmpty
-            {
-            print("halt")
-            }
+        assert(!self.lhs.isEmpty)
+        assert(!self.rhs.isEmpty)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = context.voidType
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-//        let block = LetBlock(location: self.location,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
-//        block.type = self.type!.freshTypeVariable(inContext: context)
-//        return(block as! Self)
-        return(self)
+        let block = LetBlock(location: self.location,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -89,10 +84,10 @@ public class LetBlock: Block
         return(block as! Self)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
         for (left,right) in zip(self.lhs.elements,self.rhs.elements)
             {
             context.append(TypeConstraint(left: left.type,right: right.type,origin: .block(self)))

@@ -80,14 +80,12 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         
     public var hasInlineReturnBlock: Bool
         {
-        var aBlock = self.lastBlock
-        while aBlock.isNotNil
+        for block in self.blocks
             {
-            if aBlock!.isReturnBlock
+            if block.hasInlineReturnBlock
                 {
                 return(true)
                 }
-            aBlock = aBlock!.previousBlock
             }
         return(false)
         }
@@ -117,15 +115,12 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
     internal var blocks = Blocks()
     internal var localSymbols = Symbols()
     internal var source: String?
-    public let index:UUID
+    public private(set) var index:UUID
     public private(set) var parent: Parent = .none
-    private weak var firstBlock: Block?
-    private weak var lastBlock: Block?
-    private weak var nextBlock: Block?
-    private weak var previousBlock: Block?
     public var issues: CompilerIssues = []
     private var nextLocalSlotOffset = 0
     private var nextParameterOffset = 16
+    public private(set) var container: Container?
     
     public var methodInstance: MethodInstance
         {
@@ -156,15 +151,14 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
     public required init?(coder: NSCoder)
         {
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
-        self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Array<Slot>
+        self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Symbols
         self.index = coder.decodeObject(forKey: "index") as! UUID
         self.parent = coder.decodeParent(forKey: "parent")!
-        self.previousBlock = coder.decodeObject(forKey: "previousBlock") as? Block
-        self.nextBlock = coder.decodeObject(forKey: "nextBlock") as? Block
-        self.lastBlock = coder.decodeObject(forKey: "lastBlock") as? Block
-        self.firstBlock = coder.decodeObject(forKey: "firstBlock") as? Block
         self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
         self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
+        self.type = coder.decodeObject(forKey: "type") as? Type
+        self.issues = coder.decodeCompilerIssues(forKey: "issues")
+        self.source = coder.decodeObject(forKey: "source") as? String
         }
     
         
@@ -175,12 +169,11 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.index,forKey: "index")
         coder.encodeParent(self.parent,forKey: "parent")
-        coder.encode(self.previousBlock,forKey: "previousBlock")
-        coder.encode(self.firstBlock,forKey: "firstBlock")
-        coder.encode(self.lastBlock,forKey: "lastBlock")
-        coder.encode(self.nextBlock,forKey: "nextBlock")
         coder.encode(self.nextLocalSlotOffset,forKey: "nextLocalSlotOffset")
         coder.encode(self.nextParameterOffset,forKey: "nextParameterOffset")
+        coder.encode(self.type,forKey: "type")
+        coder.encodeCompilerIssues(self.issues,forKey: "issues")
+        coder.encode(self.source,forKey: "source")
         }
         
     public func appendIssue(at: Location, message: String)
@@ -209,16 +202,16 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
             }
         }
         
-    public func freshTypeVariable(inContext context: TypeContext) -> Block
+    public func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-//        let newBlock = Self()
-//        for block in self.blocks
-//            {
-//            newBlock.addBlock(block.freshTypeVariable(inContext: context))
-//            }
-//        newBlock.type = self.type!.freshTypeVariable(inContext: context)
-//        return(newBlock)
-        self
+        let newBlock = Self.init()
+        newBlock.index = self.index
+        for block in self.blocks
+            {
+            newBlock.addBlock(block.freshTypeVariable(inContext: context))
+            }
+        newBlock.type = self.type?.freshTypeVariable(inContext: context)
+        return(newBlock)
         }
         
     public func addLocalSlot(_ localSlot: LocalSlot)
@@ -229,6 +222,11 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         self.nextLocalSlotOffset -= 8
         }
     
+    public func setIndex(_ index: UUID)
+        {
+        self.index = index
+        }
+        
     public func addParameterSlot(_ parameter: Parameter)
         {
         self.localSymbols.append(parameter)
@@ -314,13 +312,18 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
             }
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
         }
         
     internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let newBlock = Self.init()
+        newBlock.index = self.index
         for block in self.blocks
             {
             newBlock.addBlock(substitution.substitute(block))
@@ -340,18 +343,15 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
             }
         }
         
+    public func printParentChain()
+        {
+        self.parent.printParentChain()
+        }
+        
     public func addBlock(_ block:Block)
         {
-        let last = self.lastBlock
-        self.lastBlock?.nextBlock = block
         self.blocks.append(block)
         block.setParent(self)
-        if self.firstBlock.isNil
-            {
-            self.firstBlock = block
-            }
-        self.lastBlock = block
-        block.previousBlock = last
         }
         
     public func setParent(_ block:Block)
@@ -407,11 +407,11 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
         self.locations.append(.reference(location))
         }
         
-    public func initializeType(inContext context: TypeContext) throws
+    public func initializeType(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = context.voidType
         }

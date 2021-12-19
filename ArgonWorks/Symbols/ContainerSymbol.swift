@@ -163,20 +163,20 @@ public class ContainerSymbol:Symbol
         fatalError()
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         for symbol in self.symbols
             {
-            try symbol.initializeType(inContext: context)
+            symbol.initializeType(inContext: context)
             }
         self.type = context.voidType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for symbol in self.symbols
             {
-            try symbol.initializeTypeConstraints(inContext: context)
+            symbol.initializeTypeConstraints(inContext: context)
             }
         }
 
@@ -201,7 +201,7 @@ public class ContainerSymbol:Symbol
         {
         self.symbols.append(symbol)
         symbol.setParent(self)
-        print("ADDED \(symbol.fullName.displayString) TO \(self.fullName.displayString)")
+        symbol.setContainer(.symbol(self))
         }
         
     public func addSymbols(_ symbols:Array<Symbol>) -> ContainerSymbol
@@ -218,6 +218,15 @@ public class ContainerSymbol:Symbol
         for symbol in self.symbols
             {
             try symbol.allocateAddresses(using: allocator)
+            }
+        }
+        
+        
+    public override func install(inContext: ExecutionContext)
+        {
+        for symbol in self.symbols
+            {
+            symbol.install(inContext: inContext)
             }
         }
         

@@ -30,7 +30,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         }
         
     public var instructions = Array<T3AInstruction>()
-    private var currentOffset = 0
+    internal var currentOffset = 0
     public var pendingLabel: T3ALabel?
     
     public override init()
@@ -124,6 +124,14 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         if opcode != "LINE" && opcode != "CMT"
             {
             self.pendingLabel = nil
+            }
+        }
+        
+    public func display(indent: String)
+        {
+        for instruction in self.instructions
+            {
+            print("\(indent)\(instruction.displayString)")
             }
         }
         

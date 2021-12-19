@@ -9,6 +9,8 @@ import Foundation
 
 public class T3AInstruction: NSObject,NSCoding
     {
+    public static let sizeInBytes: Int = 6 * Argon.kWordSizeInBytesInt
+    
     private static var nextTemp = 1
     
     public static func nextTemporary() -> Operand
@@ -16,29 +18,6 @@ public class T3AInstruction: NSObject,NSCoding
         let index = Self.nextTemp
         T3AInstruction.nextTemp += 1
         return(.temporary(index))
-        }
-        
-    public enum LiteralValue
-        {
-        case `nil`
-        case string(String)
-        case symbol(String)
-        case integer(Argon.Integer)
-        case float(Argon.Float)
-        case boolean(Argon.Boolean)
-        case character(Argon.Character)
-        case byte(Argon.Byte)
-        case array([LiteralValue])
-        
-        public static func integer(_ integer:Int) -> Self
-            {
-            .integer(Argon.Integer(integer))
-            }
-            
-        init(integer: Int)
-            {
-            self = .integer(Argon.Integer(integer))
-            }
         }
 
     public enum RelocatableValue
@@ -75,8 +54,17 @@ public class T3AInstruction: NSObject,NSCoding
                     return("\(slot)")
                 case .methodInstance(let slot):
                     return(slot.invocationLabel)
+                case .string(let string):
+                    return(string.string)
+                case .context(let method,let ip):
+                    return("\(method.invocationLabel):\(ip)")
                 case .type(let slot):
                     return("Type(\(slot.label))")
+                case .closure(let buffer):
+                    let count = buffer.count
+                    return("Closure(\(count) instructions)")
+                case .address(let address):
+                    return("\(String(format:"%010X",address))")
                 }
             }
             
@@ -121,7 +109,11 @@ public class T3AInstruction: NSObject,NSCoding
         case segmentDS
         case relocatableIndex(Int)
         case methodInstance(MethodInstance)
+        case closure(T3ABuffer)
+        case context(MethodInstance,Int)
+        case string(StaticString)
         case type(Type)
+        case address(Address)
         }
 
     public indirect enum Operand
@@ -188,6 +180,8 @@ public class T3AInstruction: NSObject,NSCoding
                     return("\(literal)")
                 case .framePointer:
                     return("FRAME")
+                case .managedPointer:
+                    return("MANAGED")
                 case .stackPointer:
                     return("STACK")
                 case .dataPointer:
@@ -207,10 +201,11 @@ public class T3AInstruction: NSObject,NSCoding
         case stackPointer
         case dataPointer
         case staticPointer
+        case managedPointer
         case temporary(Int)
         case label(T3ALabel)
         case relocatable(RelocatableValue)
-        case literal(LiteralValue)
+        case literal(Literal)
         
         public func isInteger(_ integer:Int) -> Bool
             {
@@ -299,7 +294,7 @@ public class T3AInstruction: NSObject,NSCoding
     init(comment: String)
         {
         self.opcode = "COMMENT"
-        self.operand1 = .literal(.string(comment))
+        self.operand1 = .literal(.string(StaticString(string: comment)))
         }
         
     init(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: Operand,_ operand2: Operand,_ result: Operand)

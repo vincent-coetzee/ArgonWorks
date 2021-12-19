@@ -58,28 +58,28 @@ public enum TupleElement
     case tuple(Tuple)
     case expression(Expression)
     
-    init(coder: NSCoder)
+    init(coder: NSCoder,forKey: String)
         {
-        let kind = coder.decodeInteger(forKey: "kind")
+        let kind = coder.decodeInteger(forKey: forKey + "kind")
         if kind == 1
             {
-            self = .literal(Literal(coder: coder,forKey: "literal"))
+            self = .literal(coder.decodeLiteral(forKey: forKey + "literal"))
             }
         else if kind == 2
             {
-            self = .slot(coder.decodeObject(forKey: "slot") as! LocalSlot)
+            self = .slot(coder.decodeObject(forKey: forKey + "slot") as! LocalSlot)
             }
         else if kind == 3
             {
-            self = .tuple(coder.decodeObject(forKey: "tuple") as! Tuple)
+            self = .tuple(coder.decodeObject(forKey: forKey + "tuple") as! Tuple)
             }
         else if kind == 4
             {
-            self = .expression(coder.decodeObject(forKey: "expression") as! Expression)
+            self = .expression(coder.decodeObject(forKey: forKey + "expression") as! Expression)
             }
         else if kind == 5
             {
-            self = .type(coder.decodeObject(forKey: "type") as! Type)
+            self = .type(coder.decodeObject(forKey: forKey + "type") as! Type)
             }
         else
             {
@@ -100,7 +100,24 @@ public enum TupleElement
             case .tuple(let tuple):
                 return(.tuple(substitution.substitute(tuple)))
             case .type(let type):
-                return(.type(substitution.substitute(type)))
+                return(.type(substitution.substitute(type)!))
+            }
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> TupleElement
+        {
+        switch(self)
+            {
+            case .slot(let slot):
+                return(.slot(slot.freshTypeVariable(inContext: context) as! LocalSlot))
+            case .literal:
+                return(self)
+            case .expression(let expression):
+                return(.expression(expression.freshTypeVariable(inContext: context)))
+            case .tuple(let tuple):
+                return(.tuple(tuple.freshTypeVariable(inContext: context)))
+            case .type(let type):
+                return(.type(type.freshTypeVariable(inContext: context)))
             }
         }
         
@@ -119,46 +136,46 @@ public enum TupleElement
             }
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
         switch(self)
             {
             case .slot(let slot):
-                try slot.initializeTypeConstraints(inContext: context)
+                slot.initializeTypeConstraints(inContext: context)
             case .tuple(let tuple):
-                try tuple.initializeTypeConstraints(inContext: context)
+                tuple.initializeTypeConstraints(inContext: context)
             case .expression(let expression):
-                try expression.initializeTypeConstraints(inContext: context)
+                expression.initializeTypeConstraints(inContext: context)
             default:
                 break
             }
         }
         
         
-    func encode(with coder: NSCoder)
+    func encode(with coder: NSCoder,forKey: String)
         {
         switch(self)
             {
             case .literal(let value):
-                coder.encode(1,forKey: "kind")
-                value.encode(with: coder,forKey: "literal")
+                coder.encode(1,forKey: forKey + "kind")
+                coder.encodeLiteral(value,forKey: forKey + "literal")
             case .slot(let slot):
-                coder.encode(2,forKey: "kind")
-                coder.encode(slot,forKey: "slot")
+                coder.encode(2,forKey: forKey + "kind")
+                coder.encode(slot,forKey: forKey + "slot")
             case .tuple(let tuple):
-                coder.encode(3,forKey: "kind")
-                coder.encode(tuple,forKey: "tuple")
+                coder.encode(3,forKey: forKey + "kind")
+                coder.encode(tuple,forKey: forKey + "tuple")
             case .expression(let expression):
-                coder.encode(4,forKey: "kind")
-                coder.encode(expression,forKey: "expression")
+                coder.encode(4,forKey: forKey + "kind")
+                coder.encode(expression,forKey: forKey + "expression")
             case .type(let type):
-                coder.encode(5,forKey: "kind")
-                coder.encode(type,forKey: "type")
+                coder.encode(5,forKey: forKey + "kind")
+                coder.encode(type,forKey: forKey + "type")
             }
         }
         
     @discardableResult
-    public func initializeType(inContext context: TypeContext) throws -> Type
+    public func initializeType(inContext context: TypeContext) -> Type
         {
         switch(self)
             {
@@ -167,10 +184,10 @@ public enum TupleElement
             case .slot(let slot):
                 return(self.slotType(slot: slot,inContext: context))
             case .tuple(let tuple):
-                try tuple.initializeType(inContext: context)
+                tuple.initializeType(inContext: context)
                 return(tuple.type!)
             case .expression(let expression):
-                try expression.initializeType(inContext: context)
+                expression.initializeType(inContext: context)
                 return(expression.type!)
             case .type(let type):
                 return(type)
@@ -318,9 +335,10 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         {
         let count = coder.decodeInteger(forKey: "count")
         self.parent = coder.decodeParent(forKey: "parent")!
-        for _ in 0..<count
+        self.elements = []
+        for index in 0..<count
             {
-            self.elements.append(TupleElement(coder: coder))
+            self.elements.append(TupleElement(coder: coder,forKey: "element\(index)"))
             }
         super.init()
         }
@@ -353,9 +371,11 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         {
         coder.encode(self.elements.count,forKey: "count")
         coder.encodeParent(self.parent,forKey: "parent")
+        var index = 0
         for element in self.elements
             {
-            element.encode(with: coder)
+            element.encode(with: coder,forKey: "element\(index)")
+            index += 1
             }
         }
         
@@ -406,22 +426,27 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
             }
         }
         
+    public func freshTypeVariable(inContext context: TypeContext) -> Tuple
+        {
+        Tuple(elements: self.elements.map{$0.freshTypeVariable(inContext: context)})
+        }
+        
     internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         Tuple(elements: self.elements.map{substitution.substitute($0)}) as! Self
         }
         
-    public func initializeType(inContext context: TypeContext) throws
+    public func initializeType(inContext context: TypeContext)
         {
-        try self.elements.forEach{try $0.initializeType(inContext: context)}
+        self.elements.forEach{$0.initializeType(inContext: context)}
         let types = self.elements.map{$0.type!}
         let label = types.map{$0.displayString}.joined(separator: "x")
         self.type = TypeConstructor(label: label,generics: types)
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.elements.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        self.elements.forEach{$0.initializeTypeConstraints(inContext: context)}
         }
         
     public func visit(visitor: Visitor) throws

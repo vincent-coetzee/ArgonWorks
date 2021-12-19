@@ -47,22 +47,33 @@ public class WhileBlock: Block,BlockContext,Scope
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.condition.initializeTypeConstraints(inContext: context)
+        let block = WhileBlock(condition: self.condition.freshTypeVariable(inContext: context))
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.condition.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.condition.initializeType(inContext: context)
+        self.condition.initializeType(inContext: context)
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = context.voidType
         }

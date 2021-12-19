@@ -9,6 +9,11 @@ import Foundation
 
 public class VirtualReadBlock: Block,Scope,BlockContext
     {
+    public override var hasInlineReturnBlock: Bool
+        {
+        return(false)
+        }
+        
     internal var slot: Slot!
     
     required init?(coder: NSCoder)
@@ -41,21 +46,33 @@ public class VirtualReadBlock: Block,Scope,BlockContext
         return(block as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.slot.initializeType(inContext: context)
+        let block = VirtualReadBlock()
+        block.slot = self.slot.freshTypeVariable(inContext: context)
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.slot.initializeType(inContext: context)
         self.type = self.slot.type
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         let returnBlocks = self.returnBlocks.filter{$0.enclosingScope.isSlotScope}
         if returnBlocks.isEmpty
@@ -93,15 +110,28 @@ public class VirtualWriteBlock: VirtualReadBlock
         super.encode(with: coder)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.slot.initializeType(inContext: context)
+        self.slot.initializeType(inContext: context)
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
-        try self.newValueSlot.initializeType(inContext: context)
+        self.newValueSlot.initializeType(inContext: context)
         self.type = self.slot.type
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let block = VirtualWriteBlock()
+        block.slot = self.slot.freshTypeVariable(inContext: context)
+        block.newValueSlot = self.newValueSlot.freshTypeVariable(inContext: context)
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
         }
 
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -119,14 +149,14 @@ public class VirtualWriteBlock: VirtualReadBlock
         return(block as! Self)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.slot.initializeTypeConstraints(inContext: context)
+        self.slot.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
-        try self.newValueSlot.initializeTypeConstraints(inContext: context)
+        self.newValueSlot.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.type,right: self.slot.type,origin: .block(self)))
         }
     }

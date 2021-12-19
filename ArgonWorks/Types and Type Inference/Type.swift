@@ -58,11 +58,6 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
-    public var sizeInBytes: Int
-        {
-        0
-        }
-        
     public var ffiType: ffi_type
         {
         fatalError()
@@ -91,6 +86,11 @@ public class Type: Symbol,Displayable,UserDisplayable
     public var hasVariableTypes: Bool
         {
         false
+        }
+        
+    public var instanceSizeInBytes: Int
+        {
+        fatalError()
         }
         
     public var rawClass: Class
@@ -143,6 +143,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
+    public override var sizeInBytes: Int
+        {
+        fatalError()
+        }
+        
     public override var displayString: String
         {
         "Type()"
@@ -166,17 +171,6 @@ public class Type: Symbol,Displayable,UserDisplayable
     public var enumerationValue: Enumeration
         {
         fatalError()
-        }
-        
-    public override var type: Type?
-        {
-        get
-            {
-            self
-            }
-        set
-            {
-            }
         }
         
     required init(label: Label)
@@ -226,10 +220,6 @@ public class Type: Symbol,Displayable,UserDisplayable
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         substitution.substitute(self) as! Self
-        }
-        
-    public override func typeCheck() throws
-        {
         }
         
     public override func freshTypeVariable(inContext: TypeContext) -> Self

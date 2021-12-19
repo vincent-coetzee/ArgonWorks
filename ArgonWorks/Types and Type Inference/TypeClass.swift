@@ -39,6 +39,11 @@ public class TypeClass: TypeConstructor
         self.generics[0]
         }
         
+    public override var sizeInBytes: Int
+        {
+        self.theClass.sizeInBytes
+        }
+        
     public override var isArray: Bool
         {
         self.theClass.fullName == Name("\\\\Argon\\Array")
@@ -47,6 +52,11 @@ public class TypeClass: TypeConstructor
     public override var isSystemType: Bool
         {
         self.theClass.isSystemClass
+        }
+        
+    public override var instanceSizeInBytes: Int
+        {
+        self.theClass.instanceSizeInBytes
         }
         
     public override var isSystemClass: Bool
@@ -114,9 +124,16 @@ public class TypeClass: TypeConstructor
         self.theClass.magicNumber
         }
         
-    public override var sizeInBytes: Int
+    public override var memoryAddress: Address
         {
-        self.theClass.sizeInBytes
+        get
+            {
+            self.theClass.memoryAddress
+            }
+        set
+            {
+            self.theClass.memoryAddress = newValue
+            }
         }
         
     internal let theClass: Class
@@ -207,13 +224,18 @@ public class TypeClass: TypeConstructor
         self.theClass.initializer(primitiveIndex, args)
         }
         
-    public override func typeCheck() throws
+    public override func layoutObjectSlots(using: AddressAllocator)
         {
-        try self.theClass.typeCheck()
+        self.theClass.layoutObjectSlots(using: using)
         }
         
-    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
+    public override func layoutInMemory(using: AddressAllocator)
         {
-        self.theClass.layoutInMemory(withAddressAllocator: withAddressAllocator)
+        self.theClass.layoutInMemory(using: using)
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        try self.theClass.allocateAddresses(using: allocator)
         }
     }

@@ -48,22 +48,22 @@ public class SlotInvocationExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.slot.initializeType(inContext: context)
+        self.slot.initializeType(inContext: context)
         for argument in self.arguments
             {
-            try argument.initializeType(inContext: context)
+            argument.initializeType(inContext: context)
             }
         self.type = self.slot.type
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.slot.initializeTypeConstraints(inContext: context)
+        self.slot.initializeTypeConstraints(inContext: context)
         for argument in self.arguments
             {
-            try argument.initializeTypeConstraints(inContext: context)
+            argument.initializeTypeConstraints(inContext: context)
             }
         }
     }

@@ -18,17 +18,25 @@ public class BooleanExpression: BinaryExpression
         return(expression as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
+        let expression = BooleanExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = context.booleanType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: context.booleanType,origin: .expression(self)))
         context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
         }
@@ -40,8 +48,8 @@ public class BooleanExpression: BinaryExpression
             print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
             return
             }
-        try self.lhs.emitRValue(into: instance, using: generator)
-        try self.rhs.emitRValue(into: instance, using: generator)
+        try self.lhs.emitValueCode(into: instance, using: generator)
+        try self.rhs.emitValueCode(into: instance, using: generator)
         let temporary = instance.nextTemporary()
         switch(self.operation.rawValue,methodInstance.returnType.label)
             {

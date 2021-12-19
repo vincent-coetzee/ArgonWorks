@@ -45,9 +45,9 @@ public class UnaryExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.rhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = self.rhs.type
         }
         
@@ -61,6 +61,37 @@ public class UnaryExpression: Expression
         UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
         }
         
+    public override func emitValueCode(into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        try self.rhs.emitCode(into: instance, using: using)
+        var opcode = "NOP"
+        switch(self.operationName)
+            {
+            case "-":
+                if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger || self.type == ArgonModule.shared.byte || self.type == ArgonModule.shared.character
+                    {
+                    opcode = "INEG"
+                    }
+                else if self.type == ArgonModule.shared.float
+                    {
+                    opcode = "FNEG"
+                    }
+            case "~":
+                opcode = "IBITNOT"
+            case "!":
+                opcode = "NOT"
+            default:
+                fatalError("Unhandled unary operation.")
+            }
+        let temp = instance.nextTemporary()
+        instance.append(opcode,rhs.place,.none,temp)
+        self._place = temp
+        }
+        
     public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
         {
         if let location = self.declaration
@@ -72,7 +103,7 @@ public class UnaryExpression: Expression
         switch(self.operationName)
             {
             case "sub":
-                if self.type == self.topModule.argonModule.integer.type
+                if self.type == ArgonModule.shared.integer.type
                     {
                     opcode = "INEG"
                     }

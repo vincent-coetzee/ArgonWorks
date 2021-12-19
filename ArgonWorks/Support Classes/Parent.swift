@@ -145,6 +145,28 @@ public enum Parent:Storable
             }
         }
         
+    public var memoryAddress: Address
+        {
+        switch(self)
+            {
+            case .node(let node):
+                return(node.memoryAddress)
+            default:
+                fatalError("Memory address invoked on something that does not have a memory address")
+            }
+        }
+        
+   public var segmentType: Segment.SegmentType
+        {
+        switch(self)
+            {
+            case .node(let node):
+                return(node.segmentType)
+            default:
+                fatalError("Segment Type invoked on something that does not have a segment type")
+            }
+        }
+        
     public var topModule: TopModule
         {
         switch(self)
@@ -278,6 +300,24 @@ public enum Parent:Storable
                 return(expression.parent.primaryContext.setSymbol(symbol,atName: atName))
             case .block(let block):
                 return(block.parent.setSymbol(symbol,atName: atName))
+            }
+        }
+        
+    public func printParentChain()
+        {
+        switch(self)
+            {
+            case .none:
+                print("PARENT CHAIN ENDS WITH .none")
+            case .node(let node):
+                print("\(node)")
+                return(node.printParentChain())
+            case .expression(let expression):
+                print("\(expression)")
+                expression.printParentChain()
+            case .block(let block):
+                print("\(block)")
+                block.printParentChain()
             }
         }
     }

@@ -44,6 +44,8 @@ public class Invocable: Symbol,BlockContext
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
         self.returnType = coder.decodeObject(forKey: "returnType") as? Type
+        self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
+        self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
         super.init(coder: coder)
         }
         
@@ -61,6 +63,8 @@ public class Invocable: Symbol,BlockContext
         coder.encode(self.cName,forKey: "cName")
         coder.encode(self.parameters,forKey: "parameters")
         coder.encode(self.returnType,forKey: "returnType")
+        coder.encode(self.nextParameterOffset,forKey: "nextParameterOffset")
+        coder.encode(self.nextLocalSlotOffset,forKey: "nextLocalSlotOffset")
         super.encode(with: coder)
         }
         
@@ -107,7 +111,7 @@ public class Invocable: Symbol,BlockContext
         self.nextParameterOffset += 8
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         self.returnType = context.voidType
         }

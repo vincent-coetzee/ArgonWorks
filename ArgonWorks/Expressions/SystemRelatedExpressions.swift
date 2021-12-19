@@ -46,15 +46,15 @@ public class ClassExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.expression.initializeType(inContext: context)
-        self.type = self.enclosingScope.topModule.argonModule.class
+        self.expression.initializeType(inContext: context)
+        self.type = ArgonModule.shared.class
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.expression.initializeTypeConstraints(inContext: context)
-        try self.type!.initializeTypeConstraints(inContext: context)
+        self.expression.initializeTypeConstraints(inContext: context)
+        self.type!.initializeTypeConstraints(inContext: context)
         }
     }

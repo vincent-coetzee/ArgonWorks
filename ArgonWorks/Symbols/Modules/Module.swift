@@ -10,9 +10,38 @@ import AppKit
     
 public class Module:ContainerSymbol,Scope
     {
+    public override var segmentType: Segment.SegmentType
+        {
+        .managed
+        }
+        
+    public var parentModule: Module?
+        {
+        switch(self.parent)
+            {
+            case .node(let node):
+                return(node as! Module)
+            default:
+                return(nil)
+            }
+        }
+    
+    public var instanceSizeInBytes: Int
+        {
+        let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
+        let size = moduleType.instanceSizeInBytes
+        let slotsSize = self.symbols.filter{$0 is ModuleSlot}.count * Argon.kWordSizeInBytesInt
+        return(size + slotsSize)
+        }
+        
     public var enclosingBlockContext: BlockContext
         {
         fatalError()
+        }
+        
+    public var moduleSlots: Slots
+        {
+        self.symbols.compactMap{$0 as? ModuleSlot}.sorted{$0.label < $1.label}
         }
         
     public var isBlockContextScope: Bool
@@ -38,6 +67,13 @@ public class Module:ContainerSymbol,Scope
     public var isInitializerScope: Bool
         {
         false
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
+        let moduleClass = moduleType.classValue
+        return(moduleClass.instanceSizeInBytes + (self.moduleSlots.count * Argon.kWordSizeInBytesInt))
         }
         
     public override var enclosingScope: Scope
@@ -66,24 +102,15 @@ public class Module:ContainerSymbol,Scope
         {
         return(self.firstMainModule?.mainMethod)
         }
-        
-    public override var isLiteral: Bool
-        {
-        return(true)
-        }
-        
-    public override var asLiteralExpression: LiteralExpression?
-        {
-        return(LiteralExpression(.module(self)))
-        }
-        
+
     public override var isModule: Bool
         {
         return(true)
         }
         
     private var imports: Array<Importer> = []
-    
+    private var containerModule: Module!
+    private var wasModuleLayoutDone = false
     ///
     ///
     /// Create a module class for this module which is a shadow
@@ -111,6 +138,16 @@ public class Module:ContainerSymbol,Scope
         super.encode(with: coder)
         }
         
+    public func layoutObjectSlots(withArgonModule argonModule: ArgonModule)
+        {
+        var offset = 0
+        for slot in self.symbols.compactMap({$0 as? Slot}).sorted(by: {$0.label < $1.label})
+            {
+            slot.offset = offset
+            offset += Argon.kWordSizeInBytesInt
+            }
+        }
+
     public func emitCode(using generator: CodeGenerator) throws -> Module
         {
         for symbol in self.symbols
@@ -132,20 +169,20 @@ public class Module:ContainerSymbol,Scope
         return(classes)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         self.type = (self.enclosingScope.lookup(label: "Module") as! Type)
         for symbol in self.symbols
             {
-            try symbol.initializeType(inContext: context)
+            symbol.initializeType(inContext: context)
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for symbol in self.symbols
             {
-            try symbol.initializeTypeConstraints(inContext: context)
+            symbol.initializeTypeConstraints(inContext: context)
             }
         }
 
@@ -278,31 +315,39 @@ public class Module:ContainerSymbol,Scope
         
     public func moduleWithEmittedCode(using: CodeGenerator) -> Module?
         {
+        do
+            {
+            return(try self.emitCode(using: using))
+            }
+        catch let error as CompilerIssue
+            {
+            self.appendIssue(error)
+            }
+        catch let error
+            {
+            self.appendIssue(at: .zero,message: "Unexpected error: \(error)")
+            }
         return(nil)
         }
-        
-    public func moduleWithAllocatedAddresses(using: AddressAllocator) throws -> Module
-        {
-        for symbol in self.symbols
-            {
-            try symbol.allocateAddresses(using: using)
-            }
-        return(self)
-        }
 
-    public func typeCheckModule() throws -> Self
+    public func typeCheckModule() -> Module?
         {
             let typeContext = TypeContext(scope: self.enclosingScope)
-            let newModule = Self(label: self.label)
+            let tempModule = Self(label: self.label)
+            tempModule.setParent(self.parent)
             for symbol in self.symbols
                 {
-                try symbol.initializeType(inContext: typeContext)
-                try symbol.initializeTypeConstraints(inContext: typeContext)
+                let newSymbol = symbol.freshTypeVariable(inContext: typeContext)
+                newSymbol.setParent(tempModule)
+                newSymbol.initializeType(inContext: typeContext)
+                newSymbol.initializeTypeConstraints(inContext: typeContext)
+                tempModule.addSymbol(newSymbol)
                 }
             let substitution = typeContext.unify()
-            for symbol in self.symbols
+            let newModule = Self(label: self.label)
+            for symbol in tempModule.symbols
                 {
-                newModule.addSymbol(substitution.substitute(symbol))
+                newModule.addSymbol(substitution.substitute(symbol)!)
                 }
             for symbol in newModule.symbols
                 {
@@ -319,7 +364,13 @@ public class Module:ContainerSymbol,Scope
                     symbol.appendIssue(CompilerIssue(location: self.declarationLocation,message: "Unexpected error: \(error)"))
                     }
                 }
-            return(newModule)
+        newModule.display(indent: "")
+        newModule.wasSlotLayoutDone = self.wasSlotLayoutDone
+        newModule.wasMemoryLayoutDone = self.wasMemoryLayoutDone
+        newModule.wasAddressAllocationDone = self.wasAddressAllocationDone
+        newModule.memoryAddress = self.memoryAddress
+        newModule.setParent(self.parent)
+        return(newModule)
         }
         
     public func moduleWithOptimization(using: Optimizer) -> Module?
@@ -332,9 +383,123 @@ public class Module:ContainerSymbol,Scope
         return(nil)
         }
         
+    public override func layoutObjectSlots(using: AddressAllocator)
+        {
+        var offset = 0
+        for slot in self.moduleSlots
+            {
+            slot.offset = offset
+            offset += Argon.kWordSizeInBytesInt
+            }
+        for symbol in self.symbols
+            {
+            if symbol.label == "Collection"
+                {
+                print("halt")
+                }
+            symbol.layoutObjectSlots(using: using)
+            }
+        }
+        
     public override func allocateAddresses(using allocator: AddressAllocator) throws
         {
-        let allMethods = self.symbols.filter{$0 is MethodInstance}
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        allocator.allocateAddress(for: self)
+        self.wasAddressAllocationDone = true
+        for symbol in self.symbols
+            {
+            try symbol.allocateAddresses(using: allocator)
+            }
+        for aStatic in Argon.staticTable
+            {
+            try aStatic.allocateAddresses(using: allocator)
+            }
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        ///
+        /// Need to do some stuff to pump the module into memory
+        ///
+        let segment = allocator.segment(for: self)
+        let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
+        let modulePointer = ClassBasedPointer(address: self.memoryAddress,type: moduleType)
+        modulePointer.setClass(moduleType)
+        let addresses = self.symbols.map{$0.memoryAddress}
+        let symbolsSize = addresses.count + 100
+        let symbolArray = segment.allocateArray(size: symbolsSize,elements: addresses)
+        modulePointer.setAddress(symbolArray,atSlot: "symbols")
+        modulePointer.setBoolean(self is SystemModule,atSlot: "isSystemType")
+        modulePointer.setBoolean(self is TopModule,atSlot: "isTopModule")
+        modulePointer.setBoolean(self is ArgonModule,atSlot: "isArgonModule")
+        modulePointer.setInteger(self.instanceSizeInBytes,atSlot: "instanceSizeInBytes")
+        let moduleSlots = self.symbols.compactMap{$0 as? ModuleSlot}
+        moduleSlots.forEach{$0.layoutInMemory(using: allocator)}
+        modulePointer.setAddress(segment.allocateArray(size: moduleSlots.count,elements: moduleSlots.map{$0.memoryAddress}),atSlot: "slots")
+        ////
+        /// Now lay out each of the symsols in a module
+        ///
+        for symbol in self.symbols
+            {
+            symbol.layoutInMemory(using: allocator)
+            }
+        }
+        
+    @discardableResult
+    public func moduleWithAllocatedAddresses(using allocator: AddressAllocator) -> Module?
+        {
+        guard !self.wasModuleLayoutDone else
+            {
+            return(self)
+            }
+        self.wasModuleLayoutDone = true
+        ///
+        /// Ask the ArgonModule to allocate into the same allocator i.e.payload
+        /// in case it has not been laid out yet. If it has been done it won't
+        /// do it again as it's protected by a flag.
+        ///
+        do
+            {
+            self.layoutObjectSlots(using: allocator)
+            if self.label == "Argon"
+                {
+                print("halt")
+                }
+            try self.allocateAddresses(using: allocator)
+            self.layoutInMemory(using: allocator)
+            return(self)
+            }
+        catch let error as CompilerIssue
+            {
+            self.appendIssue(error)
+            }
+        catch let error
+            {
+            self.appendIssue(at: .zero, message: "Unexpected error: \(error)")
+            }
+        return(nil)
+        }
+        
+    public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        let temporary = buffer.nextTemporary()
+        buffer.append("MOV",.literal(.address(self.memoryAddress)),.none,temporary)
+        self.place = temporary
+        }
+        
+    public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        let temporary = buffer.nextTemporary()
+        buffer.append("MOV",.literal(.address(self.memoryAddress)),.none,temporary)
+        self.place = temporary
         }
     }
 

@@ -77,18 +77,60 @@ public struct Argon
         case character = 0b011      /// a two byte value 0 - 65535
         case boolean =   0b100      /// true or false
         case header =    0b101      /// marks an object header
-        case pointer =   0b111      /// a memory address which us followed
+        case object =    0b111      /// an object address which is followed
+        
+        public var displayString: String
+            {
+            switch(self)
+                {
+                case .integer:
+                    return("INTG")
+                case .float:
+                    return("FLOT")
+                case .byte:
+                    return("BYTE")
+                case .character:
+                    return("CHAR")
+                case .boolean:
+                    return("BOOL")
+                case .header:
+                    return("HEAD")
+                case .object:
+                    return("OBJT")
+                }
+            }
+        }
+    
+    public enum Segment:UInt64
+        {
+        case none =     0b000       /// This is a raw address and has no segment
+        case managed =  0b001       /// The segment where all runtime allocations take place, this is a garbage collected segment
+        case `static` = 0b010       /// Objects such as classes, slots and certain strings go in this segment
+        case data =     0b011       /// General data area
+        case stack =    0b101       /// This segment grows from the top down and is managed in blocks, the runtime activation frames are stored here
         }
         
+    ///
+    /// The top bit of an address is unused because the sign bit of integers goes there,
+    /// the next 3 bits contain the ag which indicates the type of value this word
+    /// contains, the next 3 bits store the segment this address belongs to ( if it is an address ).
+    ///
+    ///
+    
+    public static let kSegmentMask:Word = 0b111
+    public static let kSegmentExtendedMask:Word = Argon.kSegmentMask << Argon.kSegmentShift
+    public static let kSegmentShift: Word = 56
+    
     public static let kIntegerTag = Self.Tag.integer.rawValue << 60
     public static let kFloatTag = Self.Tag.float.rawValue << 60
     public static let kByteTag = Self.Tag.byte.rawValue << 60
     public static let kCharacterTag = Self.Tag.character.rawValue << 60
     public static let kBooleanTag = Self.Tag.boolean.rawValue << 60
     public static let kHeaderTag = Self.Tag.header.rawValue << 60
-    public static let kPointerTag = Self.Tag.pointer.rawValue << 60
+    public static let kObjectTag = Self.Tag.object.rawValue << 60
     
-    public static let kTagMask = Tag.pointer.rawValue << 60
+    public static let kTagMask:Word = 0b111 << 60
+    public static let kTagShift:Word = 60
     
     public static let kWordSizeInBytes = 8
     public static let kArgumentSizeInBytes = 8
@@ -147,6 +189,9 @@ public struct Argon
         case character = 45
         case byte = 46
         case boolean = 47
+        case instruction = 48
+        case opcode = 49
+        case operand = 50
         case custom = 100
         }
         
@@ -156,5 +201,19 @@ public struct Argon
         case falseValue = 0
         }
         
+    public static var staticTable = Array<StaticObject>()
+    
+    public static func addStatic<T>(_ staticObject: T) -> T where T:StaticObject
+        {
+        for element in self.staticTable
+            {
+            if element.hash == staticObject.hash
+                {
+                return(element as! T)
+                }
+            }
+        self.staticTable.append(staticObject)
+        return(staticObject)
+        }
     }
 

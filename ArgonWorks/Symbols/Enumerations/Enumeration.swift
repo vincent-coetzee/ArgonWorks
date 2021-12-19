@@ -9,6 +9,11 @@ import AppKit
 
 public class Enumeration:Symbol
     {
+    public var isSystemEnumeration: Bool
+        {
+        false
+        }
+        
     public override var isLiteral: Bool
         {
         return(true)
@@ -22,6 +27,13 @@ public class Enumeration:Symbol
     public override var isType: Bool
         {
         return(true)
+        }
+        
+    public var instanceSizeInBytes: Int
+        {
+        var size = Argon.kWordSizeInBytesInt
+        self.cases.forEach{size = max(size,$0.instanceSizeInBytes)}
+        return(size)
         }
         
     public override var canBecomeAType: Bool
@@ -87,6 +99,88 @@ public class Enumeration:Symbol
         return(ofType == .enumeration)
         }
         
+   public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        self.wasAddressAllocationDone = true
+        allocator.allocateAddress(for: self)
+        for aCase in self.cases
+            {
+            try aCase.allocateAddresses(using: allocator)
+            }
+        for type in self.genericTypes
+            {
+            try type.allocateAddresses(using: allocator)
+            }
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let segment = allocator.segment(for: self)
+        let enumType = ArgonModule.shared.enumeration
+        let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType)
+        enumPointer.setClass(enumType)
+        enumPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        if self.genericTypes.isEmpty
+            {
+            enumPointer.setAddress(0,atSlot: "typeParameters")
+            }
+        else
+            {
+            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.genericTypes.count))
+                {
+                for type in self.genericTypes
+                    {
+                    type.layoutInMemory(using: allocator)
+                    arrayPointer.append(type.memoryAddress)
+                    }
+                enumPointer.setAddress(arrayPointer.cleanAddress,atSlot: "typeParameters")
+                }
+            }
+        enumPointer.setAddress(self.parent.memoryAddress,atSlot: "container")
+        enumPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        enumPointer.setAddress(self.rawType?.memoryAddress,atSlot: "rawType")
+        if let casePointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.cases.count))
+            {
+            for aCase in self.cases
+                {
+                aCase.layoutInMemory(using: allocator)
+                casePointer.append(aCase.memoryAddress)
+                }
+            enumPointer.setArrayPointer(casePointer,atSlot: "cases")
+            }
+        enumPointer.setBoolean(self.isSystemEnumeration,atSlot: "isSystemType")
+        }
+        
+    public func setInstance(caseIndexTo symbol: Argon.Symbol,atSlot: String,inObject: Address)
+        {
+        if let someCase = self.caseAt(symbol: symbol)
+            {
+            let pointer = ObjectPointer(dirtyAddress: inObject)
+            }
+        fatalError("Enumeration \(self.label) does not have a case with symbol \(symbol)")
+        }
+        
+    public func caseAt(symbol: Argon.Symbol) -> EnumerationCase?
+        {
+        for someCase in self.cases
+            {
+            if someCase.symbol == symbol
+                {
+                return(someCase)
+                }
+            }
+        return(nil)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = super.substitute(from: substitution)
@@ -97,7 +191,7 @@ public class Enumeration:Symbol
             {
             copy.rawType = substitution.substitute(self.rawType!)
             }
-        copy.genericTypes = self.genericTypes.map{substitution.substitute($0)}
+        copy.genericTypes = self.genericTypes.map{substitution.substitute($0)!}
         return(copy)
         }
         
@@ -132,56 +226,25 @@ public class Enumeration:Symbol
         return(nil)
         }
         
-    public override func layoutInMemory(withAddressAllocator: AddressAllocator)
+    public func cases(_ cases:String...) -> Enumeration
         {
-//        guard !self.isMemoryLayoutDone else
-//            {
-//            return
-//            }
-//        let pointer = InnerEnumerationPointer.allocate(in: vm)
-//        pointer.setSlotValue(InnerStringPointer.allocateString(self.label, in: vm).address,atKey:"name")
-//        pointer.setSlotValue(rawType?.memoryAddress ?? 0,atKey:"valueType")
-//        let casesPointer = InnerArrayPointer.allocate(arraySize: self.cases.count, elementClass: vm.argonModule.enumerationCase,in: vm)
-//        pointer.casesPointer = casesPointer
-//        var rawValueIndex = 0
-//        for aCase in self.cases
-//            {
-//            let casePointer = InnerEnumerationCasePointer.allocate(in: vm)
-//            casesPointer.append(casePointer.address)
-//            casePointer.setSlotValue(InnerStringPointer.allocateString(aCase.symbol, in: vm).address,atKey:"symbol")
-//            casePointer.setSlotValue(pointer.address,atKey:"enumeration")
-//            casePointer.setSlotValue(aCase.caseSizeInBytes,atKey:"caseSizeInBytes")
-//            casePointer.setSlotValue(rawValueIndex,atKey:"index")
-//            if aCase.rawValue.isNil
-//                {
-//                casePointer.setSlotValue(0,atKey:"rawValue")
-//                }
-//            else
-//                {
-//                if aCase.rawValue!.isStringLiteral
-//                    {
-//                    casePointer.setSlotValue(InnerStringPointer.allocateString(aCase.rawValue!.stringLiteral, in: vm).address,atKey:"rawValue")
-//                    }
-//                else if aCase.rawValue!.isSymbolLiteral
-//                    {
-//                    casePointer.setSlotValue(InnerStringPointer.allocateString(aCase.rawValue!.symbolLiteral, in: vm).address,atKey:"rawValue")
-//                    }
-//                else if aCase.rawValue!.isIntegerLiteral
-//                    {
-//                    casePointer.setSlotValue(Word(bitPattern: aCase.rawValue!.integerLiteral),atKey:"rawValue")
-//                    }
-//                }
-//            if aCase.associatedTypes.count > 0
-//                {
-//                let arrayPointer = InnerArrayPointer.allocate(arraySize: aCase.associatedTypes.count, elementClass: vm.argonModule.class,in: vm)
-//                casePointer.associatedTypesPointer = arrayPointer
-//                for aType in aCase.associatedTypes
-//                    {
-//                    arrayPointer.append(aType.memoryAddress)
-//                    }
-//                }
-//            rawValueIndex += 1
-//            }
-//        print("LAID OUT ENUMERATION \(self.label) AT ADDRESS \(self.memoryAddress.addressString)")
+        var someCases = Array<EnumerationCase>()
+        var caseIndex = 0
+        for label in cases
+            {
+            let aCase = EnumerationCase(symbol: Argon.Symbol(label), types: [], enumeration: self)
+            aCase.caseIndex = caseIndex
+            caseIndex += 1
+            someCases.append(aCase)
+            }
+        self.cases = self.cases + someCases
+        return(self)
+        }
+        
+    public func `case`(_ symbol: String,_ types:Types) -> Enumeration
+        {
+        let someCase = EnumerationCase(symbol: Argon.Symbol(symbol), types: types, enumeration: self)
+        self.cases.append(someCase)
+        return(self)
         }
     }

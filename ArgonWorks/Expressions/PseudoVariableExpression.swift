@@ -79,7 +79,7 @@ public class PseudoVariableExpression: Expression
         PseudoVariableExpression(self.variable, nil) as! Self
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         if self.variable == .vSelf || self.variable == .vSELF || self.variable == .vSuper
             {

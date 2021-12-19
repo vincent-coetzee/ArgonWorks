@@ -17,6 +17,8 @@ import Foundation
 ///
 public class ArgonModule: SystemModule
     {
+    public static var shared: ArgonModule!
+    
     public override var typeCode:TypeCode
         {
         .argonModule
@@ -247,6 +249,16 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Module") as! Type)
         }
         
+    public var opcode: Type
+        {
+        return(self.lookup(label: "Opcode") as! Type)
+        }
+        
+    public var instruction: Type
+        {
+        return(self.lookup(label: "Instruction") as! Type)
+        }
+        
     public var closure: Type
         {
         return(self.lookup(label: "Closure") as! Type)
@@ -267,16 +279,24 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Enumeration") as! Type)
         }
         
-    public init()
+    public var literal: Type
         {
-        super.init(label: "")
+        return(self.lookup(label: "Literal") as! Type)
         }
         
-    public init(compiler: Compiler)
+    public var operand: Type
         {
+        return(self.lookup(label: "Operand") as! Type)
+        }
+        
+    private var systemClassInLoadingOrder = Classes()
+    private let instanceNumber: Int
+        
+    public init(instanceNumber: Int)
+        {
+        self.instanceNumber = instanceNumber
         UUID.resetSystemUUIDCounter()
         super.init(label: "Argon")
-        self.compiler = compiler
         self.initTypes()
         self.initBaseMethods()
         self.initSlots()
@@ -285,18 +305,27 @@ public class ArgonModule: SystemModule
     
     required init?(coder: NSCoder)
         {
+        self.instanceNumber = -1
         super.init(coder: coder)
         }
         
      public required init(label: Label)
         {
+        self.instanceNumber = -1
         super.init(label: label)
         }
 
     public func addSystemClass(_ aClass: Class)
         {
-        aClass.setIndex(UUID.systemUUID(self.compiler.instanceNumber))
+        aClass.setIndex(UUID.systemUUID(self.instanceNumber))
+        self.systemClassInLoadingOrder.append(aClass)
         self.addSymbol(aClass.type!)
+        }
+        
+    public func addSystemEnumeration(_ anEnum: Enumeration)
+        {
+        anEnum.setIndex(UUID.systemUUID(self.instanceNumber))
+        self.addSymbol(anEnum.type!)
         }
         
     public override func encode(with coder: NSCoder)
@@ -306,43 +335,44 @@ public class ArgonModule: SystemModule
         
     private func initTypes()
         {
-        self.addSystemClass(RootClass(label: "Object").mcode("o").setType(.object))
-        self.addSystemClass(SystemClass(label: "Magnitude").superclass(self.object).setType(.magnitude))
+        classesAreLocked = false
+        self.addSystemClass(RootClass().mcode("o").setType(.object))
+        self.addSystemClass(ValueClass(label: "Magnitude").superclass(self.object).setType(.magnitude))
+        self.addSystemClass(ValueClass(label: "Number").superclass(self.magnitude).setType(.number))
+        self.addSystemClass(PrimitiveClass(label: "Integer").superclass(self.number).setType(.integer))
+        self.addSystemClass(PrimitiveClass(label: "UInteger").superclass(self.number).mcode("u").setType(.uInteger))
+        self.addSystemClass(PrimitiveClass(label: "Boolean").superclass(self.object).setType(.boolean))
+        self.addSystemClass(SystemClass(label: "String").superclass(self.object).setType(.string))
+        self.addSystemClass(SystemClass(label: "Slot").superclass(self.object).mcode("l").setType(.slot))
+        self.addSystemClass(GenericSystemClass(label:"Iterable",superclasses: [self.object],types: [TypeContext.freshTypeVariable(named:"IELEMENT")]).mcode("d"))
+        self.addSystemClass(GenericSystemClass(label: "Collection",superclasses: [self.object,self.iterable],types: [TypeContext.freshTypeVariable(named:"ELEMENT")]).mcode("f").setType(.collection))
+        self.addSystemClass(ArrayClass(label:"Array",superclasses:[self.collection],types:[]).mcode("a").setType(.array))
+        self.addSystemClass(SystemClass(label: "Type").superclass(self.object).setType(.type))
+        self.addSystemClass(SystemClass(label: "Class").superclass(self.typeClass).mcode("c").setType(.class))
         self.addSystemClass(SystemClass(label: "Error").superclass(self.object).setType(.error))
         self.addSystemClass(SystemClass(label: "Block").superclass(self.object).setType(.block))
         self.addSystemClass(SystemClass(label: "Index").superclass(self.object).setType(.index))
-        self.addSystemClass(SystemClass(label: "Number").superclass(self.magnitude).setType(.number))
-        self.addSystemClass(SystemClass(label: "Integer").superclass(self.number).setType(.integer))
-        self.addSystemClass(SystemClass(label: "Float").superclass(self.number).mcode("f").setType(.float))
-        self.addSystemClass(VoidClass.voidClass.superclass(self.object).mcode("v").setType(.void))
-        self.addSystemClass(SystemClass(label: "UInteger").superclass(self.number).mcode("u").setType(.uInteger))
-        self.addSystemClass(SystemClass(label: "Character").superclass(self.magnitude).mcode("c").setType(.character))
-        self.addSystemClass(SystemClass(label: "Time").superclass(self.magnitude).mcode("t").setType(.time))
-        self.addSystemClass(SystemClass(label: "Date").superclass(self.magnitude).mcode("d").setType(.date))
-        self.addSystemClass(SystemClass(label: "DateTime").superclass(self.date).superclass(self.time).mcode("z").setType(.dateTime))
-        self.addSystemClass(SystemClass(label: "Address").superclass(self.uInteger).mcode("h").setType(.address))
-        self.addSystemClass(SystemClass(label: "Type").superclass(self.object).setType(.type))
-        self.addSystemClass(SystemClass(label: "String").superclass(self.object).setType(.string))
+        self.addSystemClass(PrimitiveClass(label: "Float").superclass(self.number).mcode("f").setType(.float))
+        self.addSystemClass(SystemClass(label: "Void").superclass(self.object).mcode("v").setType(.void))
+        self.addSystemClass(PrimitiveClass(label: "Character").superclass(self.magnitude).mcode("c").setType(.character))
+        self.addSystemClass(SystemValueClass(label: "Time").superclass(self.magnitude).mcode("t").setType(.time))
+        self.addSystemClass(SystemValueClass(label: "Date").superclass(self.magnitude).mcode("d").setType(.date))
+        self.addSystemClass(SystemValueClass(label: "DateTime").superclass(self.date).superclass(self.time).mcode("z").setType(.dateTime))
+        self.addSystemClass(SystemValueClass(label: "Address").superclass(self.uInteger).mcode("h").setType(.address))
         self.addSystemClass(SystemClass(label: "Symbol").superclass(self.string).mcode("x").setType(.symbol))
-        self.addSystemClass(SystemClass(label: "Byte").superclass(self.magnitude).mcode("b").setType(.byte))
-        self.addSystemClass(SystemClass(label: "Boolean").superclass(self.object).setType(.boolean))
-        self.addSystemClass(SystemClass(label: "Class").superclass(self.typeClass).mcode("c").setType(.class))
+        self.addSystemClass(PrimitiveClass(label: "Byte").superclass(self.magnitude).mcode("b").setType(.byte))
         self.addSystemClass(SystemClass(label: "Enumeration").superclass(self.typeClass).mcode("e").setType(.enumeration))
         self.addSystemClass(SystemClass(label: "EnumerationCase").superclass(self.object).mcode("q").setType(.enumerationCase))
         self.addSystemClass(SystemClass(label: "Tuple").superclass(self.typeClass).mcode("p").setType(.tuple))
         self.addSystemClass(SystemClass(label: "GenericClass").superclass(self.class).mcode("g").setType(.genericClass))
         self.addSystemClass(SystemClass(label: "Metaclass").superclass(self.class).mcode("m").setType(.metaclass))
         self.addSystemClass(SystemClass(label: "Module").superclass(self.typeClass).setType(.module))
-        self.addSystemClass(SystemClass(label: "Slot").superclass(self.object).mcode("l").setType(.slot))
         self.addSystemClass(SystemClass(label: "Parameter").superclass(self.slot).setType(.parameter))
-        self.addSystemClass(SystemClass(label: "VariadicParameter").superclass(self.parameter).setType(.variadicParameter))
         self.addSystemClass(SystemClass(label: "Nil").superclass(self.object).mcode("a").setType(.nil))
-        self.addSystemClass(GenericSystemClass(label:"Iterable",superclasses: [self.object],types: [TypeContext.freshTypeVariable(named:"IELEMENT")]).mcode("d"))
         self.addSystemClass(SystemClass(label: "Invokable").superclass(self.object).setType(.invokable))
         self.addSystemClass(SystemClass(label: "Function").superclass(self.invokable).mcode("f").setType(.function))
         self.addSystemClass(SystemClass(label: "MethodInstance").superclass(self.invokable).setType(.methodInstance))
-        self.addSystemClass(GenericSystemClass(label: "Collection",superclasses: [self.object,self.iterable],types: [TypeContext.freshTypeVariable(named:"ELEMENT")]).mcode("f").setType(.collection))
-        self.addSystemClass(ArrayClass(label:"Array",superclasses:[self.collection],types:[]).mcode("a").setType(.array))
+        self.addSystemClass(SystemClass(label: "Instruction").superclass(self.object).setType(.instruction))
         self.addSystemClass(SystemClass(label: "DictionaryBucket").superclass(self.object).setType(.dictionaryBucket))
         self.addSystemClass(GenericSystemClass(label: "Dictionary",superclasses:[self.collection],types: [TypeContext.freshTypeVariable(named:"KEY")]).mcode("j").setType(.dictionary))
         self.addSystemClass(GenericSystemClass(label: "List",superclasses:[self.collection],types:[]).mcode("n").setType(.list))
@@ -351,6 +381,10 @@ public class ArgonModule: SystemModule
         self.addSystemClass(GenericSystemClass(label: "Set",superclasses:[self.collection],types:[]).mcode("S").setType(.set))
         self.addSystemClass(ArrayClass(label: "Vector",superclasses:[self.collection],types:[TypeContext.freshTypeVariable(named:"INDEX")]).mcode("V").setType(.vector))
         self.addSystemClass(ClosureClass(label: "Closure",superclasses:[self.invokable]).mcode("C").setType(.closure))
+        self.addSystemEnumeration(SystemEnumeration(label: "Opcode").cases("#CALL","#CALLP","#STP","#LFP","#IADD","#FADD","#ISUB","#FSUB","#IMUL","#FMUL","#IDIV","#FDIV","#IMOD","#FMOD","#IPOW","#FPOW","#ILT","#ILTEQ","#IEQ","#INEQ","#IGT","#IGTEQ","#FLT","FLTEQ","#FEQ","#FNEQ","#FGT","#FGTEQ","#INEG","#FNEG","#IBITAND","#IBITOR","#IBITXOR","#NOT","#BITNOT","#IINC","#IDEC","#IINCW","#IDECW","#RET","#PUSH","#POP","#MOV"))
+        self.addSystemEnumeration(SystemEnumeration(label: "Literal").case("#integer",[self.integer]).case("float",[self.float]).case("boolean",[self.boolean]).case("byte",[self.byte]).case("character",[self.character]).case("string",[self.string]).case("address",[self.address]))
+        self.addSystemEnumeration(SystemEnumeration(label: "Operand").case("#literal",[self.literal]).case("#address",[self.address]))
+        self.addSystemEnumeration(SystemEnumeration(label: "SlotType").cases("#instanceSlot","#localSlot","#moduleSlot","#classSlot","#magicNumberSlot","#headerSlot","#virtualReadSlot","#virtualReadWriteSlot","#cocoonSlot"))
         classesAreLocked = true
         }
         
@@ -377,7 +411,7 @@ public class ArgonModule: SystemModule
         self.object.rawClass.slot("hash",self.integer)
         self.array.rawClass.hasBytes(true).slot("elements",self.array.of(self.class)).slot("elementClass",self.class)
         self.block.rawClass.slot("count",self.integer).slot("blockSize",self.integer).slot("nextBlock",self.address)
-        self.class.rawClass.slot("superclasses",self.array.of(self.class)).virtual("subclasses",self.array.of(self.class)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer)
+        self.class.rawClass.slot("superclasses",self.array.of(self.class)).slot("subclasses",self.array.of(self.class)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer)
         self.closure.rawClass.slot("codeSegment",self.address).slot("initialIP",self.address).slot("localCount",self.integer).slot("localSlots",self.array.of(self.slot)).slot("contextPointer",self.address).slot("parameters",self.array.of(self.parameter)).slot("returnType",self.typeClass)
         self.collection.rawClass.slot("count",self.integer).slot("size",self.integer).slot("elementType",self.typeClass)
         self.date.rawClass.virtual("day",self.integer).virtual("month",self.string).virtual("monthIndex",self.integer).virtual("year",self.integer)
@@ -385,18 +419,20 @@ public class ArgonModule: SystemModule
         self.dictionary.rawClass.slot("hashFunction",self.closure).slot("prime",self.integer)
         self.dictionaryBucket.rawClass.slot("key",self.object).slot("value",self.object).slot("next",self.dictionaryBucket)
         self.enumeration.rawClass.slot("rawType",self.typeClass).slot("cases",self.array.of(self.enumerationCase))
-        self.enumerationCase.rawClass.slot("symbol",self.symbol).slot("associatedTypes",self.array.of(self.typeClass)).slot("enumeration",self.enumeration).slot("rawType",self.integer).slot("caseSizeInBytes",self.integer).slot("index",self.integer)
+        self.enumerationCase.rawClass.slot("symbol",self.symbol).slot("associatedTypes",self.array.of(self.typeClass)).slot("enumeration",self.enumeration).slot("rawType",self.integer).slot("instanceSizeInBytes",self.integer).slot("index",self.integer)
         self.function.rawClass.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("libraryPath",self.string).slot("libraryHandle",self.address).slot("librarySymbol",self.address)
         self.list.rawClass.slot("elementSize",self.integer).slot("first",self.listNode).slot("last",self.listNode)
         self.listNode.rawClass.slot("element",self.object).slot("next",self.listNode).slot("previous",self.listNode)
-        self.methodInstance.rawClass.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot))
-        self.moduleClass.rawClass.virtual("isSystemModule",self.boolean).slot("elements",self.typeClass).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer)
+        self.methodInstance.rawClass.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("instructions",self.array.of(self.instruction))
+        self.moduleClass.rawClass.virtual("isSystemModule",self.boolean).slot("symbols",self.typeClass).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
+        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass)
         self.string.rawClass.slot("count",self.integer).virtual("bytes",self.address).hasBytes(true)
         self.time.rawClass.virtual("hour",self.integer).virtual("minute",self.integer).virtual("second",self.integer).virtual("millisecond",self.integer)
         self.tuple.rawClass.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.typeClass.rawClass.slot("name",self.string).slot("typeCode",self.integer)
+        self.typeClass.rawClass.slot("name",self.string).slot("typeCode",self.integer).slot("container",self.module).slot("typeParameters",self.array.of(self.typeClass)).slot("isSystemType",self.boolean)
         self.vector.rawClass.slot("startBlock",self.block).slot("blockCount",self.integer).hasBytes(true)
+        self.instruction.rawClass.slot("opcode",self.opcode).slot("offset",self.integer).slot("operand1",self.operand).slot("operand2",self.operand).slot("result",self.operand)
+        self.parameter.rawClass.slot("tag",self.string).slot("retag",self.string).slot("type",self.typeClass).slot("tagIsShown",self.boolean).slot("isVariadic",self.boolean)
         }
 
     private func initBaseMethods()

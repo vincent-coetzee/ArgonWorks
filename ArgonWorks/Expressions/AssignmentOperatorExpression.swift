@@ -54,15 +54,15 @@ public class AssignmentOperatorExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = self.lhs.type
         }
 

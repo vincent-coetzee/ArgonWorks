@@ -1,0 +1,7 @@
+
+module MachMemory [system] [extern_c] {
+    header "MachMemory.h"
+    export *
+}
+
+

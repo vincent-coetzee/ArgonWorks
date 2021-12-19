@@ -9,6 +9,11 @@ import Foundation
 
 public class GenericSystemClass:GenericClass
     {
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
     public override var isSystemSymbol: Bool
         {
         return(true)

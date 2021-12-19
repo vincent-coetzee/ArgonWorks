@@ -99,28 +99,28 @@ public class Closure:Invocable,Scope
             }
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         for symbol in self.localSymbols
             {
-            try symbol.initializeType(inContext: context)
+            symbol.initializeType(inContext: context)
             }
         for block in block.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for symbol in self.localSymbols
             {
-            try symbol.initializeTypeConstraints(inContext: context)
+            symbol.initializeTypeConstraints(inContext: context)
             }
         for block in self.block.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         }
         

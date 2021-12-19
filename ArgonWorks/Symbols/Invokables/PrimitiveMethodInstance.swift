@@ -31,15 +31,15 @@ public class PrimitiveMethodInstance: MethodInstance
         self.returnType = returnType
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        try self.returnType.initializeTypeConstraints(inContext: context)
+        self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
+        self.returnType.initializeTypeConstraints(inContext: context)
         let parameterTypes = self.parameters.map{$0.type!}
         context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
         }

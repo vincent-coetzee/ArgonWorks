@@ -16,7 +16,7 @@ public class SemanticAnalyzer: CompilerPass
     init(_ compiler: Compiler)
         {
         self.compiler = compiler
-        self.typeContext = TypeContext(scope: compiler.topModule.argonModule)
+        self.typeContext = TypeContext(scope: TopModule.shared.argonModule)
         }
         
     public func cancelCompletion()

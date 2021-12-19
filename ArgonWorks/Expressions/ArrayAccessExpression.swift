@@ -67,7 +67,7 @@ public class ArrayAccessExpression: Expression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = ArrayAccessExpression(array: self.array.freshTypeVariable(inContext: context),index: self.index.freshTypeVariable(inContext: context))
-        expression.type = self.type!.freshTypeVariable(inContext: context)
+        expression.type = self.type?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         
@@ -79,20 +79,20 @@ public class ArrayAccessExpression: Expression
         return(expression as! Self)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.array.initializeTypeConstraints(inContext: context)
-        try self.index.initializeTypeConstraints(inContext: context)
+        self.array.initializeTypeConstraints(inContext: context)
+        self.index.initializeTypeConstraints(inContext: context)
         let arrayClass = (context.arrayType as! TypeClass).theClass
         let arrayType = TypeClass(class: arrayClass,generics: [self.type!])
         context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
         context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
         }
 
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.array.initializeType(inContext: context)
-        try self.index.initializeType(inContext: context)
+        self.array.initializeType(inContext: context)
+        self.index.initializeType(inContext: context)
         if let arrayType = self.array.type,arrayType.isArray
             {
             self.type = arrayType.arrayElementType
@@ -103,20 +103,20 @@ public class ArrayAccessExpression: Expression
             }
         }
         
-    public override func emitLValue(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitPointerCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        try self.array.emitLValue(into: buffer,using: using)
-        try self.index.emitRValue(into: buffer,using: using)
+        try self.array.emitPointerCode(into: buffer,using: using)
+        try self.index.emitValueCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
         buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
         buffer.append("ADD",temporary,self.array.place,temporary)
         self._place = temporary
         }
         
-    public override func emitRValue(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        try self.array.emitLValue(into: buffer,using: using)
-        try self.index.emitRValue(into: buffer,using: using)
+        try self.array.emitPointerCode(into: buffer,using: using)
+        try self.index.emitValueCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
         buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
         buffer.append("ADD",temporary,self.array.place,temporary)
@@ -126,8 +126,8 @@ public class ArrayAccessExpression: Expression
         
     public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        try expression.emitRValue(into: buffer,using: using)
-        try self.emitLValue(into: buffer,using: using)
+        try expression.emitValueCode(into: buffer,using: using)
+        try self.emitPointerCode(into: buffer,using: using)
         buffer.append("STIP",expression.place,.none,self.place)
         }
         

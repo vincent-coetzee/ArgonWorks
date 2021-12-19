@@ -14,6 +14,7 @@ public var classesAreLocked = false
 
 public class Class:ContainerSymbol
     {
+        
     public var genericSourceClass: Class
         {
         return(self)
@@ -88,6 +89,11 @@ public class Class:ContainerSymbol
         let sorted = list.sorted{"\($0.1.depth).\($0.0)" >= "\($1.1.depth).\($1.0)"}
         let classes = sorted.map{$0.1}
         return(classes)
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        ArgonModule.shared.class.instanceSizeInBytes
         }
         
     public override var isType: Bool
@@ -198,7 +204,7 @@ public class Class:ContainerSymbol
         
 //    public var internalClass: Class
 //        {
-//        return(self.topModule.argonModule.class)
+//        return(ArgonModule.shared.class)
 //        }
         
     public var metaclass: Metaclass?
@@ -212,7 +218,7 @@ public class Class:ContainerSymbol
         return(self._metaclass!)
         }
         
-//    public static let number: Class = self.topModule.argonModule.lookup(label:"Number") as! Class
+//    public static let number: Class = ArgonModule.shared.lookup(label:"Number") as! Class
     
     public var ffiType: ffi_type
         {
@@ -341,11 +347,6 @@ public class Class:ContainerSymbol
         return(self.localSlots.sorted{$0.label < $1.label} + self.subclasses.sorted{$0.label<$1.label})
         }
         
-    public var sizeInBytes: Int
-        {
-        self.layoutSlots.count * MemoryLayout<Word>.size
-        }
-        
     public override var childName: (String,String)
         {
         return(("item","items"))
@@ -374,6 +375,11 @@ public class Class:ContainerSymbol
         leaderCell.textField?.stringValue = text
         }
         
+    public var instanceSizeInBytes: Int
+        {
+        return(self.layoutSlots.count * Argon.kWordSizeInBytesInt)
+        }
+        
     public var localSuperclasses: Types
         {
         return(self.superclasses)
@@ -400,20 +406,24 @@ public class Class:ContainerSymbol
         return(self.symbols.compactMap{$0 as? Slot}.sorted{$0.label < $1.label})
         }
         
-    public var localSystemSlots: Slots
-        {
-        var slots = Array<Slot>()
-        let header = Slot(label: "_\(self.label)Header", type: self.topModule.argonModule.integer.type)
-        slots.append(header)
-        header.setOffset(0)
-        let slot1 = Slot(label: "_\(self.label)MagicNumber", type: self.topModule.argonModule.integer.type)
-        slots.append(slot1)
-        slot1.setOffset(8)
-        let slot2 = Slot(label: "_\(self.label)Class", type: self.topModule.argonModule.class.type)
-        slots.append(slot2)
-        slot2.setOffset(16)
-        return(slots)
-        }
+//    public var localSystemSlots: Slots
+//        {
+//        var slots = Array<Slot>()
+//        let namePrefix = self.label.lowercasingFirstLetter
+//        let header = Slot(label: "_\(namePrefix)Header", type: ArgonModule.shared.integer.type)
+//        header.slotType = .header
+//        slots.append(header)
+//        header.setOffset(0)
+//        let slot1 = Slot(label: "_\(namePrefix)MagicNumber", type: ArgonModule.shared.integer.type)
+//        slot1.slotType = .magicNumber
+//        slots.append(slot1)
+//        slot1.setOffset(8)
+//        let slot2 = Slot(label: "_\(namePrefix)Class", type: ArgonModule.shared.class.type)
+//        slot2.slotType = .class
+//        slots.append(slot2)
+//        slot2.setOffset(16)
+//        return(slots)
+//        }
         
     public override var weight: Int
         {
@@ -462,9 +472,10 @@ public class Class:ContainerSymbol
         }
         
     internal var isForwardReferenced: Bool = false
-    private var subclasses = Types()
+    internal var localSystemSlots: Slots!
+    internal var subclasses = Types()
     internal var superclasses = Types()
-    private var layoutSlots = Slots()
+    internal var layoutSlots = Slots()
     internal var magicNumber:Int
     internal var isMemoryPreallocated = false
     internal var hasBytes = false
@@ -579,11 +590,11 @@ public class Class:ContainerSymbol
             }
         }
         
-   public override func initializeType(inContext context: TypeContext) throws
+   public override func initializeType(inContext context: TypeContext)
         {
         for slot in self.localSlots
             {
-            try slot.initializeType(inContext: context)
+            slot.initializeType(inContext: context)
             }
         }
         
@@ -773,87 +784,6 @@ public class Class:ContainerSymbol
         self.hasBytes = value
         return(self)
         }
-
-    ///
-    ///
-    /// Make an instance of this class in the specified segment and
-    /// return the address of this instance. This is not the same as
-    /// laying the class out in memory. Laying the class out in memory
-    /// lays out an instance of Class class in memory not an instance
-    /// of that class.
-//    ///
-//    ///
-//    public func makeInstance(in vm: VirtualMachine) -> Word
-//        {
-//        let instance = InnerInstancePointer.allocateInstance(ofClass: self,in: vm)
-//        return(instance.address)
-//        }
-    ///
-    ///
-    /// Layout this class instance in memory. In other words take the Swift Class
-    /// object instance and clone it into memory in the Argon RTTI format.
-    /// THIS DOES NOT MAKE AN INSTANCE OF THE CLASS FOR THAT USE makeInstance(in:)
-    /// THIS MERELY COPIES THIS CLASS INFORMATION INTO Argon RTTI format.
-    ///
-    ///
-    public override func layoutInMemory(withAddressAllocator allocator: AddressAllocator)
-        {
-//        guard self.memoryAddress.isInvalidAddress else
-//            {
-//            return
-//            }
-//        let type = allocator.compiler.topModule.argonModule.lookup(label: "Class") as! Type
-//        self.memoryAddress = allocator.managedSegment.allocateObject(ofType: type)
-//        var array = Addresses()
-//        for superclass in self.superclasses
-//            {
-//            superclass.layoutInMemory(withAddressAllocator: allocator)
-//            array.append(superclass.memoryAddress)
-//            }
-//        pointer.setName(self.label,in: vm)
-//        let slotsArray = InnerArrayPointer.allocate(arraySize: self.layoutSlots.count, elementClass: vm.argonModule.slot,in: vm)
-//        pointer.slots = slotsArray
-//        for slot in self.layoutSlots.slots.sorted(by: {$0.offset < $1.offset})
-//            {
-//            slot.layoutSymbol(in: vm)
-//            slotsArray.append(slot.memoryAddress)
-//            }
-//        pointer.extraSizeInBytes = 0
-//        pointer.instanceSizeInBytes = self.sizeInBytes
-//        pointer.setSlotValue(self.hasBytes,atKey: "hasBytes")
-//        pointer.setSlotValue(false,atKey: "isValue")
-//        let superclassArray = InnerArrayPointer.allocate(arraySize: self.superclasses.count,elementClass: vm.argonModule.class,in: vm)
-//        for aClass in self.superclasses
-//            {
-//            superclassArray.append(aClass.memoryAddress)
-//            }
-//        pointer.setSlotValue(superclassArray.address,atKey:"superclasses")
-//        pointer.magicNumber = self.magicNumber
-//        for superclass in self.superclasses
-//            {
-//            pointer.assignSystemSlots(from: superclass)
-//            }
-//        self.depth = self.hierarchicalDepth
-//        self.isMemoryLayoutDone = true
-//        Self.classesByAddress[self.memoryAddress] = self
-//        print("LAID OUT CLASS \(self.label) AT ADDRESS \(self.memoryAddress.addressString)")
-//        print("CLASS \(self.label) MAGIC NUMBER IS \(self.magicNumber)")
-        }
-        
-    public func preallocateMemory(size:Int)
-        {
-//        guard !self.isMemoryPreallocated else
-//            {
-//            return
-//            }
-//        self.isMemoryPreallocated = true
-//        let address = vm.managedSegment.allocateObject(sizeInBytes: size)
-//        self.addresses.append(.absolute(address))
-//        InnerInstancePointer(address: self.memoryAddress).setClass(self.topModule.argonModule.class)
-////        ObjectPointer(address: self.memoryAddress).setWord(self.topModule.argonModule.class.memoryAddress,atSlot:"_classPointer")
-//        let header = Header(WordPointer(address:self.memoryAddress)!.word(atByteOffset: 0))
-//        assert(header.sizeInWords == size / 8,"ALLOCATED SIZE DOES NOT EQUAL 512")
-        }
         
     private func layoutSlot(atOffset: Int) -> Slot?
         {
@@ -923,42 +853,94 @@ public class Class:ContainerSymbol
         return(nil)
         }
         
-    public override func allocateAddresses(using: AddressAllocator) throws
+    public override func layoutInMemory(using allocator: AddressAllocator)
         {
-        for symbol in self.symbols
-            {
-            try symbol.allocateAddresses(using: using)
-            }
-        self.layoutInMemory(withAddressAllocator: using)
-        self.layoutObjectSlots(withArgonModule: using.compiler.topModule.argonModule)
-        }
-        
-    public func layoutObjectSlots(withArgonModule argonModule: ArgonModule)
-        {
-//        print("LAYING OUT CLASS \(self.label)")
-        guard !self.isSlotLayoutDone else
+        guard !self.wasMemoryLayoutDone else
             {
             return
             }
-//        print("LAYING OUT CLASS \(self.label) DIRECTLY")
-        var offset:Int = 0
+        self.wasMemoryLayoutDone = true
+        let segment = allocator.segment(for: self)
+        let classType = allocator.argonModule.lookup(label: "Class") as! Type
+        let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: classType)
+        classPointer.setClass(classType)
+        if self.label == "Object"
+            {
+            print("halt")
+            }
+        classPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        for supertype in self.superclasses
+            {
+            supertype.layoutInMemory(using: allocator)
+            }
+        let supers = self.superclasses.map{$0.memoryAddress}
+        let superArray = segment.allocateArray(size: supers.count,elements: supers)
+        classPointer.setAddress(superArray,atSlot: "superclasses")
+        for subtype in self.subclasses
+            {
+            subtype.layoutInMemory(using: allocator)
+            }
+        let subs = self.subclasses.map{$0.memoryAddress}
+        let subSize = max(100,subs.count * 4)
+        let subAddress = segment.allocateArray(size: subSize,elements: subs)
+        classPointer.setAddress(subAddress,atSlot: "subclasses")
+        for slot in self.layoutSlots
+            {
+            slot.memoryAddress = segment.allocateObject(ofClass: (allocator.argonModule.lookup(label: "Slot") as! Type),sizeOfExtraBytesInBytes: 0)
+            slot.layoutInMemory(using: allocator)
+            }
+        let slotsArray = segment.allocateArray(size: self.layoutSlots.count,elements: self.layoutSlots.map{$0.memoryAddress})
+        classPointer.setAddress(slotsArray,atSlot: "slots")
+        classPointer.setBoolean(self.isSystemClass,atSlot: "isSystemType")
+        if self.label == "Object"
+            {
+            print("OBJECT CLASS ADDRESS IS \(String(format: "%12X",self.memoryAddress)) \(self.memoryAddress.bitString)")
+            MemoryPointer.dumpMemory(atAddress: self.memoryAddress,count: 100)
+            }
+        }
+        
+    internal func layoutBaseSlots(inClass: Class,slotPrefix: String,offset: inout Int,withArgonModule argonModule: ArgonModule)
+        {
+        var systemSlots = Slots()
+        let name1 = slotPrefix.isEmpty ? "header" : "Header"
+        var slot:Slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name1)",type: argonModule.integer)
+        slot.setOffset(offset)
+        slot.setParent(inClass)
+        inClass.layoutSlots.append(slot)
+        systemSlots.append(slot)
+        offset += Argon.kWordSizeInBytesInt
+        let name2 = slotPrefix.isEmpty ? "magicNumber" : "MagicNumber"
+        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name2)",type: argonModule.integer)
+        slot.setParent(inClass)
+        slot.setOffset(offset)
+        systemSlots.append(slot)
+        inClass.layoutSlots.append(slot)
+        offset += Argon.kWordSizeInBytesInt
+        let name3 = slotPrefix.isEmpty ? "class" : "Class"
+        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name3)",type: argonModule.integer)
+        slot.setParent(inClass)
+        slot.setOffset(offset)
+        systemSlots.append(slot)
+        inClass.layoutSlots.append(slot)
+        offset += Argon.kWordSizeInBytesInt
+        inClass.localSystemSlots = slotPrefix.isEmpty ? systemSlots : inClass.localSystemSlots
+        }
+        
+    public override func layoutObjectSlots(using allocator: AddressAllocator)
+        {
+        guard !self.wasSlotLayoutDone else
+            {
+            return
+            }
+        self.wasSlotLayoutDone = true
+        let argonModule = allocator.argonModule
+        var offset = 0
+        self.layoutBaseSlots(inClass: self,slotPrefix: "",offset: &offset,withArgonModule: argonModule)
         var visitedClasses = Set<Class>()
         visitedClasses.insert(self)
-        var slot:Slot = Slot(label: "_header",type: argonModule.integer)
-        slot.setOffset(offset)
-        self.layoutSlots.append(slot)
-        offset += slot.size
-        slot = Slot(label: "_magicNumber",type: argonModule.integer)
-        slot.setOffset(offset)
-        self.layoutSlots.append(slot)
-        offset += slot.size
-        slot = Slot(label: "_classPointer",type: argonModule.integer)
-        slot.setOffset(offset)
-        self.layoutSlots.append(slot)
-        offset += slot.size
-        for aClass in self.superclasses
+        for type in self.superclasses
             {
-            (aClass as! TypeClass).theClass.layoutObjectSlots(withArgonModule: argonModule,inClass: self,offset: &offset,visitedClasses: &visitedClasses)
+            type.classValue.layoutObjectSlots(withArgonModule: argonModule,inClass: self,offset: &offset,visitedClasses: &visitedClasses)
             }
         for slot in self.localSlots
             {
@@ -968,12 +950,15 @@ public class Class:ContainerSymbol
                 clonedSlot.setOffset(offset)
                 clonedSlot.setParent(self)
                 self.layoutSlots.append(clonedSlot)
-//                print("LAID OUT SLOT \(clonedSlot.label) OFSET \(clonedSlot.offset) IN CLASS \(self.label)")
                 offset += clonedSlot.size
                 }
             }
         self.layoutSlots = self.layoutSlots.sorted{$0.offset < $1.offset}
-        self.isSlotLayoutDone = true
+        print("LAID OUT OBJECT SLOTS FOR \(self.label)")
+        for slot in self.layoutSlots
+            {
+            print("\t\(slot.label)")
+            }
         }
         
     public func layoutObjectSlots(withArgonModule argonModule: ArgonModule,inClass: Class,offset: inout Int,visitedClasses: inout Set<Class>)
@@ -983,23 +968,10 @@ public class Class:ContainerSymbol
             return
             }
         visitedClasses.insert(self)
-//        print("LAYING OUT CLASS \(self.label) INDIRECTLY")
-//        inClass.offsetOfClass[self] = offset
-        var slot:Slot = Slot(label: "_\(self.label)Header",type: argonModule.integer)
-        slot.setOffset(offset)
-        inClass.layoutSlots.append(slot)
-        offset += slot.size
-        slot = Slot(label: "_\(self.label)MagicNumber",type: argonModule.integer)
-        slot.setOffset(offset)
-        inClass.layoutSlots.append(slot)
-        offset += slot.size
-        slot = Slot(label: "_\(self.label)ClassPointer",type: argonModule.integer)
-        slot.setOffset(offset)
-        inClass.layoutSlots.append(slot)
-        offset += slot.size
-        for aClass in self.superclasses
+        self.layoutBaseSlots(inClass: inClass,slotPrefix: self.label,offset: &offset,withArgonModule: argonModule)
+        for type in self.superclasses
             {
-            (aClass as! TypeClass).theClass.layoutObjectSlots(withArgonModule: argonModule,inClass: inClass,offset: &offset,visitedClasses: &visitedClasses)
+            type.classValue.layoutObjectSlots(withArgonModule: argonModule,inClass: inClass,offset: &offset,visitedClasses: &visitedClasses)
             }
         for slot in self.localSlots
             {
@@ -1011,6 +983,28 @@ public class Class:ContainerSymbol
                 inClass.layoutSlots.append(clonedSlot)
                 offset += clonedSlot.size
                 }
+            }
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        self.wasAddressAllocationDone = true
+        print("ABOUT TO ALLOCATE ADDRESS FOR CLASS \(self.label), SIZE IN BYTES IS \(self.sizeInBytes)")
+        allocator.allocateAddress(for: self)
+        print("AFTER ALLOCATE ADDRESS FOR CLASS, ADDRESS IS \(self.memoryAddress)")
+        let header = Header(atAddress: self.memoryAddress)
+        print("HEADER SIZE IN WORDS IS \(header.sizeInWords) SHOULD BE \(self.sizeInBytes / 8)")
+        for type in self.superclasses
+            {
+            try  type.allocateAddresses(using: allocator)
+            }
+        for type in self.subclasses
+            {
+            try type.allocateAddresses(using: allocator)
             }
         }
         

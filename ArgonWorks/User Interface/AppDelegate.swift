@@ -34,46 +34,31 @@ class AppDelegate: NSObject, NSApplicationDelegate
         assert(type1 == type2,"Type1 should == type2")
         let type3 = TypeVariable(index: 2001)
         assert(type1 != type3,"Type3 should not == type1")
-        let compiler = Compiler()
-        let items = compiler.argonModule.lookupN(label: "-")
+        let compiler = Compiler(source: "", reportingContext: NullReporter.shared, tokenRenderer: NullTokenRenderer.shared)
+        let items = ArgonModule.shared.lookupN(label: "-")
         print(items)
-        let type = compiler.argonModule.lookup(label: "Void") as! Type
+        let type = ArgonModule.shared.lookup(label: "Void") as! Type
         print(type.fullName.displayString)
-        let slot1 = Slot(label: "slot1",type: compiler.argonModule.integer)
-        let slot2 = Slot(label: "slot2",type: compiler.argonModule.string)
+        let slot1 = Slot(label: "slot1",type: ArgonModule.shared.integer)
+        let slot2 = Slot(label: "slot2",type: ArgonModule.shared.string)
         let tuple1 = Tuple(.slot(slot1),.slot(slot2))
-        do
-            {
-            let context = TypeContext(scope: compiler.argonModule)
-            try tuple1.initializeType(inContext: context)
-            print(tuple1.type.displayString)
-            let slot1Expression = SlotExpression(slot: slot1)
-            let slot2Expression = SlotExpression(slot: slot2)
-            let right1Expression = LiteralExpression(.integer(10))
-            let right2Expression = LiteralExpression(.string("hello"))
-            let assignmentExpression = AssignmentExpression(TupleExpression(slot1Expression,slot2Expression),TupleExpression(right1Expression,right2Expression))
-            try assignmentExpression.initializeType(inContext: context)
-            print(assignmentExpression.lhs.type!.displayString)
-            print(assignmentExpression.rhs.type!.displayString)
-            }
-        catch let error
-            {
-            print(error)
-            }
-        let pointer = Word(pointer: 0)
+        let context = TypeContext(scope: ArgonModule.shared)
+        tuple1.initializeType(inContext: context)
+        print(tuple1.type.displayString)
+        let slot1Expression = SlotExpression(slot: slot1)
+        let slot2Expression = SlotExpression(slot: slot2)
+        let right1Expression = LiteralExpression(.integer(10))
+        let right2Expression = LiteralExpression(.string(StaticString(string: "hello")))
+        let assignmentExpression = AssignmentExpression(TupleExpression(slot1Expression,slot2Expression),TupleExpression(right1Expression,right2Expression))
+        assignmentExpression.initializeType(inContext: context)
+        print(assignmentExpression.lhs.type!.displayString)
+        print(assignmentExpression.rhs.type!.displayString)
+        let pointer = Word(object: 0)
         print(pointer.bitString)
         Header.test()
         Word.testWord()
         print("Size of Int is \(MemoryLayout<Int>.size)")
         StackSegment.testStackSegment()
-        let arrayType = compiler.topModule.argonModule.lookup(label: "Array") as! Type
-        let arrayClass = (arrayType as! TypeClass).theClass
-        arrayClass.layoutObjectSlots(withArgonModule: compiler.argonModule)
-        arrayClass.printLayout()
-        let stringType = compiler.topModule.argonModule.lookup(label: "String") as! Type
-        let stringClass = (stringType as! TypeClass).theClass
-        stringClass.layoutObjectSlots(withArgonModule: compiler.argonModule)
-        stringClass.printLayout()
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

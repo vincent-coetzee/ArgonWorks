@@ -61,6 +61,11 @@ public class Header
         print(header.bitString)
         }
         
+    public var displayString: String
+        {
+        "SIZE: \(self.sizeInWords) TYPE: \(self.objectType) HASBYTES: \(self.hasBytes)"
+        }
+        
     public var sizeInWords:Int
         {
         get
@@ -71,6 +76,22 @@ public class Header
         set
             {
             let theValue = UInt64(newValue) > Self.kSizeBits ? Self.kSizeBits : UInt64(newValue)
+            let value = (theValue & Self.kSizeBits) << Self.kSizeShift
+            self.bytes = (self.bytes & ~(Self.kSizeBits << Self.kSizeShift)) | value
+            }
+        }
+        
+    public var sizeInBytes: Word
+        {
+        get
+            {
+            let mask = Self.kSizeBits << Self.kSizeShift
+            return(((self.bytes & mask) >> Self.kSizeShift) * Argon.kWordSizeInBytesWord)
+            }
+        set
+            {
+            var theValue = newValue / Argon.kWordSizeInBytesWord
+            theValue = theValue > Self.kSizeBits ? Self.kSizeBits : theValue
             let value = (theValue & Self.kSizeBits) << Self.kSizeShift
             self.bytes = (self.bytes & ~(Self.kSizeBits << Self.kSizeShift)) | value
             }
@@ -179,20 +200,21 @@ public class Header
         self.bytes.bitString
         }
         
-    private var bytes: Word
+    internal var bytes: Word
         {
         get
             {
-            pointer.isNil ? 0 : pointer!.pointee
+            pointer.pointee
             }
         set
             {
-            pointer?.pointee = newValue
+            pointer.pointee = newValue
             }
         }
         
-    private var address: Word = 0
-    private var pointer: UnsafeMutablePointer<Word>?
+    private let address: Word
+    private let pointer: UnsafeMutablePointer<Word>
+    private let wasAllocated: Bool
     
     public var stringRepresentation: String
         {
@@ -212,13 +234,23 @@ public class Header
         {
         self.address = 0
         self.pointer = UnsafeMutablePointer<Word>.allocate(capacity: 1)
-        self.pointer?.pointee = word
+        self.pointer.pointee = word
+        self.wasAllocated = true
         }
         
     public init(atAddress: Word)
         {
         self.address = atAddress
-        self.pointer = UnsafeMutablePointer<Word>(bitPattern: UInt(self.address))
+        self.pointer = UnsafeMutablePointer<Word>(bitPattern: UInt(atAddress.cleanAddress))!
+        self.wasAllocated = false
+        }
+        
+    deinit
+        {
+        if self.wasAllocated
+            {
+            self.pointer.deallocate()
+            }
         }
     }
 

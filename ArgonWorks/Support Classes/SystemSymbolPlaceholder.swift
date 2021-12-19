@@ -31,7 +31,7 @@ public class SystemSymbolPlaceholder: NSObject, NSCoding
         {
         if let importer = coder as? ImportUnarchiver
             {
-            if let object = importer.topModule.lookup(name: self.originalName)
+            if let object = TopModule.shared.lookup(name: self.originalName)
                 {
                 return(object)
                 }

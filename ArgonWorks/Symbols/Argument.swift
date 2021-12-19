@@ -40,15 +40,15 @@ public struct Argument:Displayable
         }
         
     @discardableResult
-    public func initializeType(inContext context: TypeContext) throws -> Argument
+    public func initializeType(inContext context: TypeContext) -> Argument
         {
-        try self.value.initializeType(inContext: context)
+        self.value.initializeType(inContext: context)
         return(self)
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.value.initializeTypeConstraints(inContext: context)
+        self.value.initializeTypeConstraints(inContext: context)
         }
     }
 

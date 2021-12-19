@@ -42,7 +42,7 @@ public class CastExpression: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = CastExpression(expression: substitution.substitute(self.expression),type: substitution.substitute(self.type!))
+        let expression = CastExpression(expression: substitution.substitute(self.expression),type: substitution.substitute(self.type)!)
         expression.type = substitution.substitute(self.type!)
         expression.issues = self.issues
         return(expression as! Self)
@@ -55,16 +55,16 @@ public class CastExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.expression.initializeType(inContext: context)
-        try self.type!.initializeType(inContext: context)
+        self.expression.initializeType(inContext: context)
+        self.type!.initializeType(inContext: context)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.expression.initializeTypeConstraints(inContext: context)
-        try self.type!.initializeTypeConstraints(inContext: context)
+        self.expression.initializeTypeConstraints(inContext: context)
+        self.type!.initializeTypeConstraints(inContext: context)
         context.append(SubTypeConstraint(subtype: self.expression.type,supertype: self.type,origin:.expression(self)))
         if !self.expression.type!.isSubtype(of: self.type!)
             {

@@ -154,26 +154,26 @@ public class Parser: CompilerPass
     private var errorCount = 0
     private let typeContext: TypeContext
     
-    init(compiler:Compiler,source: String)
+    init(_ compiler:Compiler)
         {
-        self.currentContext = .node(compiler.topModule)
+        self.currentContext = .node(TopModule.shared)
         self.tokenRenderer = compiler.tokenRenderer
         self.compiler = compiler
-        self.namingContext = compiler.topModule
-        self.reportingContext = compiler.reportingContext
-        self.typeContext = TypeContext(scope: compiler.topModule.argonModule)
-        self.initParser(source: source)
+        self.namingContext = TopModule.shared
+        self.reportingContext = NullReporter.shared
+        self.typeContext = TypeContext(scope: ArgonModule.shared)
+        self.initParser(source: compiler.source)
 
         }
         
     init(compiler:Compiler,tokens: Tokens)
         {
-        self.currentContext = .node(compiler.topModule)
+        self.currentContext = .node(TopModule.shared)
         self.tokenRenderer = compiler.tokenRenderer
         self.compiler = compiler
-        self.namingContext = compiler.topModule
-        self.reportingContext = compiler.reportingContext
-        self.typeContext = TypeContext(scope: compiler.topModule.argonModule)
+        self.namingContext = TopModule.shared
+        self.reportingContext = NullReporter.shared
+        self.typeContext = TypeContext(scope: ArgonModule.shared)
         self.initParser(tokens: tokens)
         }
         
@@ -253,17 +253,17 @@ public class Parser: CompilerPass
     private func initParser(tokens: Tokens)
         {
         self.source = nil
-        self.currentContext = .node(self.compiler.topModule)
+        self.currentContext = .node(TopModule.shared)
         self.tokenSource = TokenHolder(tokens: tokens)
-        self.reportingContext = self.compiler.reportingContext
+//        self.reportingContext = self.compiler.reportingContext
         }
     
     private func initParser(source: String)
         {
         self.source = source
-        self.currentContext = .node(self.compiler.topModule)
+        self.currentContext = .node(TopModule.shared)
         self.tokenSource = TokenStream(source: source,context: self.reportingContext,withComments: false)
-        self.reportingContext = self.compiler.reportingContext
+//        self.reportingContext = self.compiler.reportingContext
         }
         
     public func parseModifier() throws -> PrivacyScope?
@@ -630,7 +630,7 @@ public class Parser: CompilerPass
             try self.parseComma()
             elements = try self.parseExpression()
             }
-//        if !elements.type.isSubtype(of: self.compiler.topModule.argonModule.iterable.type)
+//        if !elements.type.isSubtype(of: TopModule.shared.shared.iterable.type)
 //            {
 //            self.cancelCompletion()
 //            issues.appendIssue(at: location,"To be used in a FOR loop, the source of the iteration must inherit from Iterable.")
@@ -827,7 +827,7 @@ public class Parser: CompilerPass
             isGenericMethod = true
             }
         let list = try self.parseParameters()
-        var returnType: Type = self.compiler.argonModule.void
+        var returnType: Type = ArgonModule.shared.void
         if self.token.isRightArrow
             {
             try self.nextToken()
@@ -868,7 +868,7 @@ public class Parser: CompilerPass
             else if self.token.isPathLiteral
                 {
                 path = Importer.processPath(self.token.pathLiteral)
-                moduleLabel = Importer.tryLoadingPath(path,topModule: self.compiler.topModule,reportingContext: self.reportingContext,location: location)
+                moduleLabel = Importer.tryLoadingPath(path,topModule: TopModule.shared,reportingContext: self.reportingContext,location: location)
                 }
             try self.nextToken()
             }
@@ -895,7 +895,7 @@ public class Parser: CompilerPass
             {
             let importLabel = label.isNotNil ? label! : moduleLabel!
             let anImport = Importer(label: importLabel,path: path)
-            anImport.loadImportPath(topModule: self.compiler.topModule)
+            anImport.loadImportPath(topModule: TopModule.shared)
             anImport.appendIssues(issues)
             self.enclosingScope.addSymbol(anImport)
             }
@@ -930,7 +930,7 @@ public class Parser: CompilerPass
         
     private func parseScopedSlot() throws -> ScopedSlot
         {
-        return(ScopedSlot(label:"Slot",type: self.compiler.argonModule.integer.type))
+        return(ScopedSlot(label:"Slot",type: ArgonModule.shared.integer.type))
         }
         
     private func parseHashString() throws -> String
@@ -953,7 +953,7 @@ public class Parser: CompilerPass
         let location = self.token.location
         let label = try self.parseLabel()
         let enumeration = Enumeration(label: label)
-        enumeration.rawType = self.compiler.argonModule.integer
+        enumeration.rawType = ArgonModule.shared.integer
         let type = TypeEnumeration(enumeration: enumeration, generics: [])
         self.addSymbol(type)
         self.pushContext(enumeration)
@@ -976,7 +976,7 @@ public class Parser: CompilerPass
         enumeration.appendIssues(issues)
         self.popContext()
         self.stopClip(into:enumeration)
-        let parms = [Parameter(label: "symbol", type: self.compiler.argonModule.symbol.type!, isVisible: false, isVariadic: false)]
+        let parms = [Parameter(label: "symbol", type: ArgonModule.shared.symbol.type!, isVisible: false, isVariadic: false)]
         let methodInstance = StandardMethodInstance(label: "_\(label)",parameters: parms,returnType: enumeration.type!)
         methodInstance.addDeclaration(location)
 //        let method = Method(label: "_\(label)")
@@ -994,11 +994,11 @@ public class Parser: CompilerPass
             }
         else if self.token.isStringLiteral
             {
-            literal = LiteralExpression(.string(self.token.stringLiteral))
+            literal = LiteralExpression(.string(Argon.addStatic(StaticString(string: self.token.stringLiteral))))
             }
         else if self.token.isHashStringLiteral
             {
-            literal = LiteralExpression(.symbol(self.token.hashStringLiteral))
+            literal = LiteralExpression(.symbol(Argon.addStatic(StaticSymbol(string: self.token.hashStringLiteral))))
             }
         else
             {
@@ -1103,7 +1103,7 @@ public class Parser: CompilerPass
             }
         var slot: Slot?
         let rawLabel = "_\(label)"
-        let aSlot = CocoonSlot(rawLabel: rawLabel,label: label,type: type ?? self.compiler.argonModule.void)
+        let aSlot = CocoonSlot(rawLabel: rawLabel,label: label,type: type ?? ArgonModule.shared.void)
         aSlot.addDeclaration(location)
         aSlot.writeBlock = writeBlock
         aSlot.readBlock = readBlock
@@ -1194,7 +1194,7 @@ public class Parser: CompilerPass
         var slot: Slot?
         if readBlock.isNotNil
             {
-            let aSlot = VirtualSlot(label: label,type: type ?? self.compiler.argonModule.void)
+            let aSlot = VirtualSlot(label: label,type: type ?? ArgonModule.shared.void)
             aSlot.addDeclaration(location)
             aSlot.writeBlock = writeBlock
             aSlot.readBlock = readBlock
@@ -1382,7 +1382,7 @@ public class Parser: CompilerPass
         aClass.appendIssues(issues)
         if aClass.isSuperclassListEmpty
             {
-            aClass.addSuperclass(self.compiler.argonModule.object)
+            aClass.addSuperclass(ArgonModule.shared.object)
             }
         try self.parseBraces
             {
@@ -1419,7 +1419,6 @@ public class Parser: CompilerPass
                 }
             }
         self.popContext()
-        aClass.layoutObjectSlots(withArgonModule: self.compiler.topModule.argonModule)
         return(aClass)
         }
         
@@ -1578,7 +1577,7 @@ public class Parser: CompilerPass
         try self.nextToken()
         if name == Name("\\\\Argon\\Array")
             {
-//            name.topModule = self.compiler.topModule
+//            name.topModule = TopModule.shared
             ///
             ///
             /// At this stage do nothing but at a later stage we need to add
@@ -1644,7 +1643,7 @@ public class Parser: CompilerPass
             {
             compilerIssues.appendIssue(at: location,"A type was expected but the identifier '\(name)' was found instead.")
             try self.nextToken()
-            return(self.compiler.argonModule.object)
+            return(ArgonModule.shared.object)
             }
         }
         
@@ -1860,7 +1859,7 @@ public class Parser: CompilerPass
             isGenericMethod = true
             }
         instance.parameters = try self.parseParameters()
-        instance.returnType = self.compiler.argonModule.void
+        instance.returnType = ArgonModule.shared.void
         if self.token.isRightArrow
             {
             try self.nextToken()
@@ -1892,7 +1891,7 @@ public class Parser: CompilerPass
             try self.parseBlock(into: instance.block)
             self.popContext()
             }
-        if instance.returnType != self.compiler.argonModule.void && !instance.block.hasInlineReturnBlock
+        if instance.returnType != ArgonModule.shared.void && !instance.block.hasInlineReturnBlock
             {
             self.cancelCompletion()
             instance.appendIssue(at: location,message: "This method has a return value but there is no RETURN statement in the body of the method.")
@@ -1935,7 +1934,7 @@ public class Parser: CompilerPass
     private func parseSlotExpression() throws -> Expression
         {
         let location = self.token.location
-        var lhs = try self.parseIncDecExpression()
+        var lhs = try self.parseInfixExpression()
         lhs.addDeclaration(location)
         while self.token.isRightArrow
             {
@@ -1948,6 +1947,10 @@ public class Parser: CompilerPass
             else
                 {
                 let selector = self.token.isIdentifier ? self.token.identifier : self.token.hashStringLiteral
+                if selector == "moduleSlot"
+                    {
+                    print("halt")
+                    }
                 if let symbol = lhs.lookup(label: selector)
                     {
                     if symbol.isLiteral
@@ -2025,63 +2028,63 @@ public class Parser: CompilerPass
         return(EnumerationInstanceExpression(lhs: expression,enumerationCase: aCase,associatedValues: values))
         }
         
-    private func parseIncDecExpression() throws -> Expression
-        {
-        let location = self.token.location
-        let expression = try self.parseBooleanExpression()
-        expression.addDeclaration(location)
-        if self.token.isPlusPlus || self.token.isMinusMinus
-            {
-            let operatorLabel = self.token.operator.name
-            if let operations = self.enclosingScope.lookupPostfixOperatorInstances(label: operatorLabel)
-                {
-                try self.nextToken()
-                if !(expression is SlotExpression)
-                    {
-                    self.cancelCompletion()
-                    expression.appendIssue(at: location, message: "Postfix increment or decrement operators can only be performed on slots.")
-                    return(expression)
-                    }
-                else
-                    {
-                    let slotExpression = expression as! SlotExpression
-                    return(PostfixExpression(operatorLabel: operatorLabel,operators: operations,lhs: slotExpression))
-                    }
-                }
-            else
-                {
-                expression.appendIssue(at: location, message: "Operator '\(operatorLabel)' could not be resolved.")
-                }
-            }
-        return(expression)
-        }
-        
-    private func parseBooleanExpression() throws -> Expression
-        {
-        let location = self.token.location
-        var lhs = try self.parseInfixExpression()
-        lhs.addDeclaration(location)
-        while self.token.isAnd || self.token.isOr
-            {
-            let symbol = token.symbol
-            try self.nextToken()
-            lhs = BooleanExpression(lhs,symbol,try self.parseInfixExpression())
-            lhs.addDeclaration(location)
-            }
-        return(lhs)
-        }
+//    private func parseIncDecExpression() throws -> Expression
+//        {
+//        let location = self.token.location
+//        let expression = try self.parseInfixExpression()
+//        expression.addDeclaration(location)
+//        if self.token.isPlusPlus || self.token.isMinusMinus
+//            {
+//            let operatorLabel = self.token.operator.name
+//            if let operations = self.enclosingScope.lookupPostfixOperatorInstances(label: operatorLabel)
+//                {
+//                try self.nextToken()
+//                if !(expression is SlotExpression)
+//                    {
+//                    self.cancelCompletion()
+//                    expression.appendIssue(at: location, message: "Postfix increment or decrement operators can only be performed on slots.")
+//                    return(expression)
+//                    }
+//                else
+//                    {
+//                    let slotExpression = expression as! SlotExpression
+//                    return(PostfixExpression(operatorLabel: operatorLabel,operators: operations,lhs: slotExpression))
+//                    }
+//                }
+//            else
+//                {
+//                expression.appendIssue(at: location, message: "Operator '\(operatorLabel)' could not be resolved.")
+//                }
+//            }
+//        return(expression)
+//        }
         
     private func parseInfixExpression() throws -> Expression
         {
         let location = self.token.location
-        var lhs = try self.parseComparisonExpression()
+        var lhs = try self.parseBooleanExpression()
         lhs.addDeclaration(location)
         while self.token.isOperator,let operators = self.enclosingScope.lookupInfixOperatorInstances(label: self.token.operator.name)
             {
             let infixLabel = self.token.operator.name
             try self.nextToken()
-            let rhs = try self.parseComparisonExpression()
+            let rhs = try self.parseBooleanExpression()
             lhs = InfixExpression(operatorLabel: infixLabel,operators: operators,lhs: lhs,rhs: rhs)
+            lhs.addDeclaration(location)
+            }
+        return(lhs)
+        }
+        
+    private func parseBooleanExpression() throws -> Expression
+        {
+        let location = self.token.location
+        var lhs = try self.parseComparisonExpression()
+        lhs.addDeclaration(location)
+        while self.token.isAnd || self.token.isOr
+            {
+            let symbol = token.symbol
+            try self.nextToken()
+            lhs = BooleanExpression(lhs,symbol,try self.parseComparisonExpression())
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -2284,7 +2287,7 @@ public class Parser: CompilerPass
             issues.append(CompilerIssue(location: location,message: "']' expected to terminate array literal."))
             }
         try self.nextToken()
-        return(LiteralExpression(.array(elements)).appendIssues(issues))
+        return(LiteralExpression(.array(Argon.addStatic(StaticArray(elements)))).appendIssues(issues))
         }
         
     private func parsePrimary() throws -> Expression
@@ -2339,12 +2342,12 @@ public class Parser: CompilerPass
         else if self.token.isStringLiteral
             {
             try self.nextToken()
-            return(LiteralExpression(.string(self.lastToken.stringLiteral)))
+            return(LiteralExpression(.string(Argon.addStatic(StaticString(string: self.lastToken.stringLiteral)))))
             }
         else if self.token.isHashStringLiteral
             {
             try self.nextToken()
-            return(LiteralExpression(.symbol(self.lastToken.hashStringLiteral)))
+            return(LiteralExpression(.symbol(Argon.addStatic(StaticSymbol(string: self.lastToken.hashStringLiteral)))))
             }
         else if self.token.isNilLiteral
             {
@@ -2402,7 +2405,7 @@ public class Parser: CompilerPass
                     else
                         {
                         expression.appendIssue(at: location,message: "A literal value was expected as part of the literal array.")
-                        return(LiteralExpression(.array(array)))
+                        return(LiteralExpression(.array(Argon.addStatic(StaticArray(array)))))
                         }
                     }
                 if self.token.isRightBracket
@@ -2413,7 +2416,7 @@ public class Parser: CompilerPass
                     {
                     expression.appendIssue(at: location,message: "']' expected after array literal.",isWarning: true)
                     }
-                return(LiteralExpression(.array(array)))
+                return(LiteralExpression(.array(Argon.addStatic(StaticArray(array)))))
                 }
             return(expression)
             }
@@ -2573,10 +2576,6 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
-        if name.last == "count"
-            {
-            print("halt")
-            }
         if self.token.isLeftPar
             {
             if name.last == "class"
@@ -2638,7 +2637,22 @@ public class Parser: CompilerPass
                         {
                         return(try self.parseInstanciationTerm(ofType: newType))
                         }
-                    return(LiteralExpression(Literal.class((type as! TypeClass).theClass)))
+                    if !someTypes.isEmpty
+                        {
+                        let aClass = type.classValue
+                        if aClass.isGenericClass
+                            {
+                            let newClass = aClass.instanciate(withTypes: someTypes, reportingContext: self.reportingContext)
+                            return(SymbolTerm(symbol: newClass))
+                            }
+                        else
+                            {
+                            let expression = Expression()
+                            expression.appendIssue(at: location, message: "Type parameters were added to this class reference but the class is not a generic class.")
+                            return(expression)
+                            }
+                        }
+                    return(SymbolTerm(symbol: (type as! TypeClass).theClass))
                     }
                 else if type.isEnumeration
                     {
@@ -2649,7 +2663,7 @@ public class Parser: CompilerPass
                         {
                         return(try self.parseInstanciationTerm(ofType: newType))
                         }
-                    return(LiteralExpression(Literal.enumeration((type as! TypeEnumeration).enumeration)))
+                    return(SymbolTerm(symbol: newType.enumerationValue))
                     }
                 else
                     {
@@ -2663,11 +2677,11 @@ public class Parser: CompilerPass
                 let type = types.first!
                 if type.isClass
                     {
-                    return(LiteralExpression(.class(type.classValue)))
+                    return(SymbolTerm(symbol: type.classValue))
                     }
                 else if type.isEnumeration
                     {
-                    return(LiteralExpression(.enumeration(type.enumerationValue)))
+                    return(SymbolTerm(symbol: type.enumerationValue))
                     }
                 else
                     {
@@ -2684,16 +2698,16 @@ public class Parser: CompilerPass
             ///
             if let symbol = aSymbol as? Module
                 {
-                let module = LiteralExpression(.module(symbol))
-                module.addDeclaration(location)
-                return(module)
+                let term = SymbolTerm(symbol: symbol)
+                term.addDeclaration(location)
+                return(term)
                 }
             ///
             /// Or a Constant ?
             ///
             else if let symbol = aSymbol as? Constant
                 {
-                return(LiteralExpression(.constant(symbol)))
+                return(SymbolTerm(symbol: symbol))
                 }
             ///
             /// Or a slot, Parameter or Closure containing Slot
@@ -2735,7 +2749,7 @@ public class Parser: CompilerPass
             ///
             else if let symbol = aSymbol as? Function
                 {
-                return(LiteralExpression(.function(symbol)))
+                return(SymbolTerm(symbol: symbol))
                 }
             }
         ///
@@ -3542,7 +3556,7 @@ public class Parser: CompilerPass
                     handler.appendIssue(at: location,message: "The name of an induction variable to contain the symbol this handler is receiving was expected but \(self.token) was found.")
                     }
                 name = self.token.isIdentifier ? self.token.identifier : "VariableName"
-                handler.addParameter(label: name,type: self.compiler.argonModule.symbol.type!)
+                handler.addParameter(label: name,type: ArgonModule.shared.symbol.type!)
                 try self.nextToken()
                 }
             try self.parseBlock(into: handler)

@@ -116,8 +116,10 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.editorView.textStorage?.setAttributedString(mutableString)
                 self.tokenizer.update(self.editorView.string)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
-                self.currentItem.appendItem(SymbolItem(symbol: node!))
+                if let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+                    {
+                    self.currentItem.appendItem(SymbolItem(symbol: node))
+                    }
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
                 }
@@ -421,7 +423,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                     {
                     do
                         {
-                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: aCompiler.topModule,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
+                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
                         ImportArchiver.isSwappingSystemTypes = true
                         let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)

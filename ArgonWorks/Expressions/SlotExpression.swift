@@ -62,17 +62,25 @@ public class SlotExpression: Expression
         print("\(indent)SLOT EXPRESSION: \(self.slot.label) \(self.slot.type.displayString)")
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.slot.initializeType(inContext: context)
+        self.slot.initializeType(inContext: context)
         self.type = self.slot.type
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func assign(from expression: Expression,into: T3ABuffer,using: CodeGenerator) throws
         {
+        try expression.emitValueCode(into: into,using: using)
+        try self.emitPointerCode(into: into,using: using)
+        into.append("SIP",expression.place,.none,self.place)
         }
         
-    public override func emitLValue(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        try self.slot.emitRValue(into: buffer,using: using)
+        }
+        
+    public override func emitPointerCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
         try self.slot.emitLValue(into: buffer,using: using)
         }

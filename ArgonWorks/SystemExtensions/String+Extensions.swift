@@ -92,4 +92,13 @@ extension String
         {
         return(self.components(separatedBy: "/"))
         }
+        
+    public var lowercasingFirstLetter: String
+        {
+        guard !self.isEmpty else
+            {
+            return(self)
+            }
+        return(self.prefix(1).lowercased() + self.dropFirst())
+        }
     }

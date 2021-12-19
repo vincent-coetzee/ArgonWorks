@@ -37,16 +37,16 @@ public class ExpressionBlock: Block
         super.encode(with: coder)
         }
         
-    public override func freshTypeVariable(inContext context: TypeContext) -> Block
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let newBlock = Self()
+        let newBlock = ExpressionBlock(self.expression.freshTypeVariable(inContext: context))
+        newBlock.setIndex(self.index)
         for block in self.blocks
             {
             newBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
-        newBlock.type = self.type!.freshTypeVariable(inContext: context)
-        newBlock.expression = self.expression.freshTypeVariable(inContext: context)
-        return(newBlock)
+        newBlock.type = self.type?.freshTypeVariable(inContext: context)
+        return(newBlock as! Self)
         }
         
     public override func display(indent: String)
@@ -82,14 +82,14 @@ public class ExpressionBlock: Block
         try super.visit(visitor: visitor)
         }
         
-    public override func initializeType(inContext: TypeContext) throws
+    public override func initializeType(inContext: TypeContext)
         {
-        try self.expression.initializeType(inContext: inContext)
+        self.expression.initializeType(inContext: inContext)
         self.type = self.expression.type
         }
         
-    public override func initializeTypeConstraints(inContext: TypeContext) throws
+    public override func initializeTypeConstraints(inContext: TypeContext)
         {
-        try self.expression.initializeTypeConstraints(inContext: inContext)
+        self.expression.initializeTypeConstraints(inContext: inContext)
         }
     }

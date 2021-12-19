@@ -11,7 +11,7 @@ public class ForBlock: Block,BlockContext,Scope
     {
     private var inductionSlot:LocalSlot
     private var elements: Expression
-
+    
     init(inductionSlot:LocalSlot,elements:Expression)
         {
         self.inductionSlot = inductionSlot
@@ -27,10 +27,9 @@ public class ForBlock: Block,BlockContext,Scope
         for block in self.blocks
             {
             let newBlock = block.freshTypeVariable(inContext: context)
-            newBlock.type = block.type!.freshTypeVariable(inContext: context)
             forBlock.addBlock(newBlock)
             }
-        forBlock.type = self.type!.freshTypeVariable(inContext: context)
+        forBlock.type = self.type?.freshTypeVariable(inContext: context)
         return(forBlock as! Self)
         }
         
@@ -47,25 +46,25 @@ public class ForBlock: Block,BlockContext,Scope
         return(forBlock as! Self)
         }
 
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.inductionSlot.initializeType(inContext: context)
-        try self.elements.initializeType(inContext: context)
+        self.inductionSlot.initializeType(inContext: context)
+        self.elements.initializeType(inContext: context)
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = context.voidType
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.elements.initializeTypeConstraints(inContext: context)
+        self.elements.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
-        let collectionClass = (self.enclosingScope.lookup(name: Name("\\\\Argon\\Collection")) as! TypeClass).theClass
+        let collectionClass = (self.enclosingScope.lookup(name: Name("\\\\Argon\\Iterable")) as! TypeClass).theClass
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: TypeClass(class: collectionClass, generics: [self.inductionSlot.type!]),origin: .block(self)))
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
         }

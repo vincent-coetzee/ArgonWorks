@@ -11,7 +11,7 @@ public class OperatorExpression: Expression
     {
     internal let operators: MethodInstances
     internal let operatorLabel: Label
-    internal var selectedMethodInstance: MethodInstance?
+    internal var methodInstance: MethodInstance?
     
     init(operatorLabel: Label,operators: MethodInstances)
         {
@@ -25,7 +25,7 @@ public class OperatorExpression: Expression
 //        print("START DECODE OPERATOR EXPRESSION")
         self.operators = coder.decodeObject(forKey: "operators") as! MethodInstances
         self.operatorLabel = coder.decodeObject(forKey: "operatorLabel") as! String
-        self.selectedMethodInstance = coder.decodeObject(forKey: "selectedMethodInstance") as? MethodInstance
+        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
         super.init(coder: coder)
 //        print("END DECODE OPERATOR EXPRESSION")
         }
@@ -34,7 +34,7 @@ public class OperatorExpression: Expression
         {
         coder.encode(self.operators,forKey: "operators")
         coder.encode(self.operatorLabel,forKey: "operatorLabel")
-        coder.encode(self.selectedMethodInstance,forKey: "selectedMethodInstance")
+        coder.encode(self.methodInstance,forKey: "methodInstance")
         super.encode(with: coder)
         }
     }

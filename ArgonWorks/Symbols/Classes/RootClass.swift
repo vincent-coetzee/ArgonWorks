@@ -9,6 +9,22 @@ import Foundation
 
 public class RootClass: SystemClass
     {
+    public init()
+        {
+        super.init(label: "Object")
+        }
+        
+    public required init(label: Label)
+        {
+        fatalError("FORBIDDEN")
+        }
+    
+    public required init?(coder: NSCoder)
+        {
+        super.init(coder: coder)
+        }
+        
+    
     public override var depth: Int
         {
         return(1)

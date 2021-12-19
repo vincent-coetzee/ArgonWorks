@@ -142,17 +142,21 @@ public class TypeContext
                 case .expression(let expression):
                     return(.expression(self.substitute(expression)))
                 case .type(let type):
-                    return(.type(self.substitute(type)))
+                    return(.type(self.substitute(type)!))
                 }
             }
             
         public func substitute(_ parameter: Parameter) -> Parameter
             {
-            Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type!), isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
+            Parameter(label: parameter.label, relabel: parameter.relabel, type: self.substitute(parameter.type!)!, isVisible: parameter.isVisible, isVariadic: parameter.isVariadic)
             }
             
-        public func substitute(_ type: Type) -> Type
+        public func substitute(_ type: Type?) -> Type?
             {
+            guard let type = type else
+                {
+                return(nil)
+                }
             if let typeVariable = type as? TypeVariable
                 {
                 if self.hasType(atIndex: typeVariable.id)
@@ -167,8 +171,7 @@ public class TypeContext
                 let aClass = typeClass.theClass
                 if aClass.isSystemClass && aClass.isGenericClass
                     {
-                    let aType = TypeClass(systemClass: aClass,generics: typeClass.generics.map{self.substitute($0)})
-                    aType.setParent(type.parent)
+                    let aType = TypeClass(systemClass: aClass,generics: typeClass.generics.map{self.substitute($0)!})
                     return(aType)
                     }
                 else if aClass.isSystemClass
@@ -177,24 +180,24 @@ public class TypeContext
                     }
                 else
                     {
-                    let aType = TypeClass(class: aClass,generics: typeClass.generics.map{self.substitute($0)})
+                    let aType = TypeClass(class: aClass,generics: typeClass.generics.map{self.substitute($0)!})
                     aType.setParent(type.parent)
                     return(aType)
                     }
                 }
             if let typeEnumeration = type as? TypeEnumeration
                 {
-                let anEnum = TypeEnumeration(enumeration: typeEnumeration.enumeration,generics: typeEnumeration.generics.map{self.substitute($0)})
+                let anEnum = TypeEnumeration(enumeration: typeEnumeration.enumeration,generics: typeEnumeration.generics.map{self.substitute($0)!})
                 anEnum.setParent(type)
                 return(anEnum)
                 }
             if let constructor = type as? TypeConstructor
                 {
-                return(TypeConstructor(label: constructor.label,generics: constructor.generics.map{self.substitute($0)}))
+                return(TypeConstructor(label: constructor.label,generics: constructor.generics.map{self.substitute($0)!}))
                 }
             if let function = type as? TypeFunction
                 {
-                return(TypeFunction(label: function.label,types: function.generics.map{self.substitute($0)},returnType: self.substitute(function.returnType)))
+                return(TypeFunction(label: function.label,types: function.generics.map{self.substitute($0)!},returnType: self.substitute(function.returnType)!))
                 }
             return(type)
             }
@@ -206,22 +209,29 @@ public class TypeContext
             
         public func substitute(_ tuple: Tuple) -> Tuple
             {
-            if tuple.isEmpty
-                {
-                print("halt")
-                }
+            assert(!tuple.isEmpty)
             let newTuple = Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
-            if newTuple.isEmpty
-                {
-                print("halt")
-                }
+            assert(!newTuple.isEmpty)
             return(newTuple)
             }
             
-        public func substitute(_ symbol: Symbol) -> Symbol
+        public func substitute(_ symbol: Symbol?) -> Symbol?
             {
+            guard let symbol = symbol else
+                {
+                return(nil)
+                }
             let newSymbol = symbol.substitute(from: self)
-            newSymbol.type = self.substitute(symbol.type!)
+            newSymbol.memoryAddress = symbol.memoryAddress
+            newSymbol.wasMemoryLayoutDone = symbol.wasMemoryLayoutDone
+            newSymbol.wasSlotLayoutDone = symbol.wasSlotLayoutDone
+            newSymbol.wasAddressAllocationDone = symbol.wasAddressAllocationDone
+            newSymbol.setParent(symbol.parent)
+            newSymbol.setContainer(symbol.container)
+            if let aType = symbol.type
+                {
+                newSymbol.type = self.substitute(aType)
+                }
             return(newSymbol)
             }
             
@@ -250,7 +260,7 @@ public class TypeContext
                 }
             for symbol in closure.localSymbols
                 {
-                newClosure.localSymbols.append(self.substitute(symbol))
+                newClosure.localSymbols.append(self.substitute(symbol)!)
                 }
             newClosure.type = self.substitute(closure.type!)
             return(newClosure)
@@ -261,8 +271,10 @@ public class TypeContext
             let newModule = container.substitute(from: self)
             for symbol in container.symbols
                 {
-                let newSymbol = self.substitute(symbol)
-                newModule.addSymbol(newSymbol)
+                if let newSymbol = self.substitute(symbol)
+                    {
+                    newModule.addSymbol(newSymbol)
+                    }
                 }
             newModule.type = self.substitute(container.type!)
             return(newModule)
@@ -273,12 +285,16 @@ public class TypeContext
             block.substitute(from: self)
             }
             
-        public func substitute(_ methodInstance: MethodInstance) -> MethodInstance
+        public func substitute(_ methodInstance: MethodInstance?) -> MethodInstance?
             {
-            let newReturnType = self.substitute(methodInstance.returnType)
-            let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type!), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
+            guard let methodInstance = methodInstance else
+                {
+                return(nil)
+                }
+            let newReturnType = self.substitute(methodInstance.returnType)!
+            let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type!)!, isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
             let newInstance = methodInstance.substitute(from: self)
-            newInstance.type = self.substitute(methodInstance.type!)
+            newInstance.type = self.substitute(methodInstance.type)
             newInstance.setParent(methodInstance.parent)
             newInstance.issues = methodInstance.issues
             newInstance.parameters = newParameters
@@ -295,6 +311,15 @@ public class TypeContext
                     return
                     }
                 throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.module.fullName.displayString) \(right.module.fullName.displayString)"))
+                }
+            if let left = lhs as? TypeMemberSlot,let right = rhs as? TypeMemberSlot
+                {
+                if left.slotLabel != right.slotLabel
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.base.displayString)->\(left.slotLabel) != \(right.base.displayString)->\(right.slotLabel)"))
+                    }
+                try self.unifySubtypes(left.base,right.base)
+                return
                 }
             if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
                 {
@@ -409,6 +434,15 @@ public class TypeContext
                     return
                     }
                 throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.module.fullName.displayString) \(right.module.fullName.displayString)"))
+                }
+            if let left = lhs as? TypeMemberSlot,let right = rhs as? TypeMemberSlot
+                {
+                if left.slotLabel != right.slotLabel
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.base.displayString)->\(left.slotLabel) != \(right.base.displayString)->\(right.slotLabel)"))
+                    }
+                try self.unify(left.base,right.base)
+                return
                 }
             if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
                 {
@@ -530,92 +564,92 @@ public class TypeContext
         
     public var objectClass: Class
         {
-        (self.scope.topModule.argonModule.object as! TypeClass).theClass
+        (ArgonModule.shared.object as! TypeClass).theClass
         }
         
     public var objectType: Type
         {
-        self.scope.topModule.argonModule.object
+        ArgonModule.shared.object
         }
         
     public var voidType: Type
         {
-        self.scope.topModule.argonModule.void
+        ArgonModule.shared.void
         }
         
     public var arrayType: Type
         {
-        self.scope.topModule.argonModule.array
+        ArgonModule.shared.array
         }
         
     public var integerType: Type
         {
-        self.scope.topModule.argonModule.integer
+        ArgonModule.shared.integer
         }
         
     public var uIntegerType: Type
         {
-        self.scope.topModule.argonModule.uInteger
+        ArgonModule.shared.uInteger
         }
         
     public var stringType: Type
         {
-        self.scope.topModule.argonModule.string
+        ArgonModule.shared.string
         }
         
     public var booleanType: Type
         {
-        self.scope.topModule.argonModule.boolean
+        ArgonModule.shared.boolean
         }
         
     public var byteType: Type
         {
-        self.scope.topModule.argonModule.byte
+        ArgonModule.shared.byte
         }
         
     public var characterType: Type
         {
-        self.scope.topModule.argonModule.character
+        ArgonModule.shared.character
         }
         
     public var floatType: Type
         {
-        self.scope.topModule.argonModule.float
+        ArgonModule.shared.float
         }
         
     public var symbolType: Type
         {
-        self.scope.topModule.argonModule.symbol
+        ArgonModule.shared.symbol
         }
         
     public var nilType: Type
         {
-        self.scope.topModule.argonModule.nilClass
+        ArgonModule.shared.nilClass
         }
         
     public var moduleType: Type
         {
-        self.scope.topModule.argonModule.module
+        ArgonModule.shared.module
         }
         
     public var iterableType: Type
         {
-        self.scope.topModule.argonModule.iterable
+        ArgonModule.shared.iterable
         }
         
     public var classType: Type
         {
-        self.scope.topModule.argonModule.class
+        ArgonModule.shared.class
         }
 
     public var functionType: Type
         {
-        self.scope.topModule.argonModule.function
+        ArgonModule.shared.function
         }
         
     public var enumerationCaseType: Type
         {
-        self.scope.topModule.argonModule.enumerationCase
+        ArgonModule.shared.enumerationCase
         }
         
     private let scope: Scope
@@ -673,7 +707,7 @@ public class TypeContext
         self.environment[label]
         }
         
-    public func extended<T>(withContentsOf: TaggedTypes,closure: (TypeContext) throws -> T) throws -> T
+    public func extended<T>(withContentsOf: TaggedTypes,closure: (TypeContext) -> T) -> T
         {
         let context = TypeContext(scope: self.scope)
         let newSubstitution = Substitution(self.substitution)
@@ -685,7 +719,7 @@ public class TypeContext
 //            {
 //            newContext.environment[Name(type.tag!)] = type.type
 //            }
-        return(try closure(context))
+        return(closure(context))
         }
         
     public func extended(with type: Type,boundTo label: Label) -> TypeContext

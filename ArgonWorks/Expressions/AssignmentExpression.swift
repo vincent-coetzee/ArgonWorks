@@ -53,7 +53,7 @@ public class AssignmentExpression: Expression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = AssignmentExpression(self.lhs.freshTypeVariable(inContext: context),self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type!.freshTypeVariable(inContext: context)
+        expression.type = self.type?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         
@@ -66,17 +66,17 @@ public class AssignmentExpression: Expression
         self.rhs.display(indent: indent + "\t")
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.lhs.initializeTypeConstraints(inContext: context)
-        try self.rhs.initializeTypeConstraints(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.lhs.initializeType(inContext: context)
-        try self.rhs.initializeType(inContext: context)
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = context.voidType
         }
 

@@ -106,19 +106,15 @@ public class Initializer:Function,Scope
         return(self.parent.lookup(label: label))
         }
         
-    public override func typeCheck() throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        }
-        
-    public override func initializeType(inContext context: TypeContext) throws
-        {
-        try self.parameters.forEach{try $0.initializeType(inContext: context)}
+        self.parameters.forEach{$0.initializeType(inContext: context)}
         self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.declaringType)
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.parameters.forEach{try $0.initializeTypeConstraints(inContext: context)}
+        self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         context.append(TypeConstraint(left: self.type,right: self.declaringType,origin: .symbol(self)))
         }
         

@@ -31,7 +31,7 @@ public class SignalBlock: Block
         
      public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        buffer.append(nil,"SIG",.literal(.symbol(self.symbol)),.none,.none)
+        buffer.append(nil,"SIG",.literal(.symbol(StaticSymbol(string: self.symbol))),.none,.none)
         }
 
     public override func display(indent: String)
@@ -40,11 +40,11 @@ public class SignalBlock: Block
         print("\(indent)SYMBOLS: \(self.symbol)")
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         self.type = context.voidType
         }

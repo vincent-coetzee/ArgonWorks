@@ -14,6 +14,11 @@ public class SystemClass:Class
 //        return(self.self)
 //        }
         
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
     public override var isSystemSymbol: Bool
         {
         return(true)

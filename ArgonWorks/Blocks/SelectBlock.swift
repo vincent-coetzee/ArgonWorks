@@ -68,25 +68,36 @@ public class SelectBlock: Block
         SelectBlock(value: substitution.substitute(self.value)) as! Self
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.value.initializeTypeConstraints(inContext: context)
-        for block in self.whenBlocks
+        let block = SelectBlock(value: self.value.freshTypeVariable(inContext: context))
+        for innerBlock in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
-            context.append(TypeConstraint(left: self.value.type,right: block.condition.type,origin: .block(self)))
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        try self.otherwiseBlock?.initializeTypeConstraints(inContext: context)
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.value.initializeType(inContext: context)
+        self.value.initializeTypeConstraints(inContext: context)
         for block in self.whenBlocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
+            context.append(TypeConstraint(left: self.value.type,right: block.condition.type,origin: .block(self)))
             }
-        try self.otherwiseBlock?.initializeType(inContext: context)
+        self.otherwiseBlock?.initializeTypeConstraints(inContext: context)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.value.initializeType(inContext: context)
+        for block in self.whenBlocks
+            {
+            block.initializeType(inContext: context)
+            }
+        self.otherwiseBlock?.initializeType(inContext: context)
         self.type = context.voidType
         }
         

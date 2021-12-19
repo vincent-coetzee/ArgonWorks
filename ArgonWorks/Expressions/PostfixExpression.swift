@@ -36,14 +36,22 @@ public class PostfixExpression: OperatorExpression
         {
         let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators, lhs: substitution.substitute(self.lhs))
         expression.type = substitution.substitute(self.type!)
-        expression.selectedMethodInstance = self.selectedMethodInstance
+        expression.methodInstance = substitution.substitute(self.methodInstance)
         expression.issues = self.issues
         return(expression as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        try self.lhs.initializeType(inContext: context)
+        let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: self.lhs.freshTypeVariable(inContext: context))
+        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.lhs.initializeType(inContext: context)
         self.type = self.lhs.type
         }
 
@@ -54,9 +62,9 @@ public class PostfixExpression: OperatorExpression
         self.lhs.display(indent: indent + "\t")
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.lhs.initializeTypeConstraints(inContext: context)
+        self.lhs.initializeTypeConstraints(inContext: context)
         context.append(SubTypeConstraint(subtype: self.lhs.type,supertype: context.integerType,origin:.expression(self)))
         let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.lhs], reportErrors: true)
         methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
@@ -64,7 +72,7 @@ public class PostfixExpression: OperatorExpression
         methodMatcher.appendReturnType(context.voidType)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
-            self.selectedMethodInstance = specificInstance
+            self.methodInstance = specificInstance
             print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
             methodMatcher.appendTypeConstraints(to: context)
             }

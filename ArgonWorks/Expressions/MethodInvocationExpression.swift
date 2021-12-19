@@ -24,6 +24,10 @@ public class MethodInvocationExpression: Expression
         self.methodInstances = methodInstances
         self.arguments = arguments
         super.init()
+        for argument in arguments
+            {
+            argument.value.setParent(self)
+            }
         }
         
     required init?(coder: NSCoder)
@@ -42,9 +46,8 @@ public class MethodInvocationExpression: Expression
         coder.encode(self.methodInstance,forKey: "methodInstance")
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        self.arguments = try self.arguments.map{try $0.initializeType(inContext: context)}
         self.type = self.methodInstances.first!.returnType
         }
         
@@ -77,11 +80,12 @@ public class MethodInvocationExpression: Expression
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         print("METHOD INVOCATION EXPRESSION")
-        try self.arguments.forEach{try $0.initializeTypeConstraints(inContext: context)}
-        let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: self.arguments.map{$0.value}, reportErrors: true)
+        let newArguments = self.arguments.map{$0.initializeType(inContext: context)}
+        newArguments.forEach{$0.initializeTypeConstraints(inContext: context)}
+        let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: newArguments.map{$0.value}, reportErrors: true)
         methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
         methodMatcher.appendReturnType(self.type!)
@@ -123,18 +127,25 @@ public class MethodInvocationExpression: Expression
         return(types)
         }
         
+    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+        {
+        try self.emitCode(into: into,using: using)
+        }
+        
     public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
         {
         guard let instance = self.methodInstance else
             {
-            fatalError("Can not emit code for nil method instance")
+            print("Can not emit code for nil method instance")
+            return
             }
         for argument in self.arguments.reversed()
             {
-            try argument.value.emitRValue(into: buffer, using: generator)
+            try argument.value.emitValueCode(into: buffer, using: generator)
             buffer.append("PUSH",argument.value.place,.none,.none)
             }
         buffer.append("CALL",.relocatable(.methodInstance(instance)),.none,.none)
-        buffer.append("ADD",.stackPointer,.literal(.integer(self.arguments.count * Argon.kArgumentSizeInBytes)),.none)
+        buffer.append("ADD",.stackPointer,.literal(.integer(Argon.Integer(self.arguments.count * Argon.kArgumentSizeInBytes))),.none)
+        self._place = .returnRegister
         }
     }

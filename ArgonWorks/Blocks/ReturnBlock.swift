@@ -70,20 +70,27 @@ public class ReturnBlock: Block
         return(block as! Self)
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.value.initializeType(inContext: context)
+        self.value.initializeType(inContext: context)
         assert(self.value.type.isNotNil)
         self.type = self.value.type
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        try self.value.initializeTypeConstraints(inContext: context)
+        self.value.initializeTypeConstraints(inContext: context)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let block = ReturnBlock(expression: self.value.freshTypeVariable(inContext: context))
+        block.type = self.type?.freshTypeVariable(inContext: context)
+        return(block as! Self)
         }
         
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws

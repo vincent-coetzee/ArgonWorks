@@ -40,6 +40,21 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(false)
         }
         
+    public var sizeInBytes: Int
+        {
+        0
+        }
+        
+    public var extraSizeInBytes: Int
+        {
+        0
+        }
+        
+    public var segmentType: Segment.SegmentType
+        {
+        .managed
+        }
+        
     public var isArgonModule: Bool
         {
         return(false)
@@ -197,6 +212,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         .black
         }
         
+    public var isPrimitiveType: Bool
+        {
+        false
+        }
+        
     public var childCount: Int
         {
         return(self.children.count)
@@ -238,8 +258,9 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         }
         
     internal var frame: BlockContext?
-    internal var isMemoryLayoutDone: Bool = false
-    internal var isSlotLayoutDone: Bool = false
+    internal var wasAddressAllocationDone = false
+    internal var wasMemoryLayoutDone = false
+    internal var wasSlotLayoutDone = false
     internal var locations: SourceLocations = SourceLocations()
     public var privacyScope:PrivacyScope? = nil
     internal var source: String?
@@ -258,11 +279,6 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         super.init(label: label)
         }
         
-    public override init(label: Label,index: UUID)
-        {
-        super.init(label: label,index: index)
-        }
-        
     public required init?(coder: NSCoder)
         {
 //        #if DEBUG
@@ -271,6 +287,8 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
         self.source = coder.decodeObject(forKey: "source") as? String
         self.type = coder.decodeObject(forKey: "theType") as? Type
+        self.memoryAddress = Address(coder.decodeInteger(forKey: "memoryAddress"))
+        self.issues = coder.decodeCompilerIssues(forKey: "issues")
         super.init(coder: coder)
 //        #if DEBUG
 //        print("END DECODE SYMBOL \(self.label)")
@@ -285,6 +303,8 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
         coder.encode(self.source,forKey: "source")
         coder.encode(self.type,forKey: "theType")
+        coder.encode(Int(self.memoryAddress),forKey: "memoryAddress")
+        coder.encodeCompilerIssues(self.issues,forKey: "issues")
         super.encode(with: coder)
         }
         
@@ -297,10 +317,6 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
 //            }
 //        return(self)
 //        }
-        
-    public func defineLocalSymbols(inContext: TypeContext)
-        {
-        }
         
    public func allocateAddresses(using: AddressAllocator) throws
         {
@@ -328,11 +344,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         self
         }
         
-    public func initializeTypeConstraints(inContext context: TypeContext) throws
+    public func initializeTypeConstraints(inContext context: TypeContext)
         {
         }
         
-    public func initializeType(inContext context: TypeContext) throws
+    public func initializeType(inContext context: TypeContext)
         {
         }
         
@@ -359,6 +375,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
     public func appendIssues(_ issues: CompilerIssues)
         {
         self.issues.append(contentsOf: issues)
+        }
+        
+    public func printParentChain()
+        {
+        self.parent.printParentChain()
         }
         
     public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
@@ -391,7 +412,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
         }
         
-    
+    public func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
+        }
+        
     public func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
@@ -561,9 +586,16 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(nil)
         }
         
-    public func layoutInMemory(withAddressAllocator: AddressAllocator)
+    public func layoutObjectSlots(using: AddressAllocator)
         {
-        self.isMemoryLayoutDone = true
+        }
+        
+    public func layoutInMemory(using: AddressAllocator)
+        {
+        }
+        
+    public func install(inContext: ExecutionContext)
+        {
         }
         
     public func addDeclaration(_ location:Location)

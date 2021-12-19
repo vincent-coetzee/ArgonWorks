@@ -7,22 +7,60 @@
 
 import Foundation
 
+public struct Payload: ExecutionContext
+    {
+    public let stackSegment: StackSegment
+    public let staticSegment: StaticSegment
+    public let managedSegment: ManagedSegment
+    public let codeSegment: CodeSegment
+
+    public var symbolTable: SymbolTable
+        {
+        self._symbolTable
+        }
+        
+    private var _symbolTable: SymbolTable!
+    
+    init()
+        {
+        self.stackSegment = try! StackSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
+        self.staticSegment = try! StaticSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
+        self.managedSegment = try! ManagedSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
+        self.codeSegment = try! CodeSegment(memorySize: .megabytes(50),argonModule: ArgonModule.shared)
+        self._symbolTable = SymbolTable(context: self)
+        }
+        
+    public func segment(for symbol: Symbol) -> Segment
+        {
+        switch(symbol.segmentType)
+            {
+            case .empty:
+                break
+            case .static:
+                return(self.staticSegment)
+            case .managed:
+                return(self.managedSegment)
+            case .stack:
+                return(self.stackSegment)
+            case .code:
+                return(self.codeSegment)
+            }
+        fatalError("Can not determine segment")
+        }
+    }
+    
 public class AddressAllocator: CompilerPass
     {
     public let compiler: Compiler
     public var wasCancelled = false
-    public let stackSegment: StackSegment
-    public let dataSegment: DataSegment
-    public let staticSegment: StaticSegment
-    public let managedSegment: ManagedSegment
+    public var payload: Payload
+    public let argonModule: ArgonModule
     
     init(_ compiler: Compiler)
         {
         self.compiler = compiler
-        self.stackSegment = StackSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
-        self.dataSegment = DataSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
-        self.staticSegment = StaticSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
-        self.managedSegment = ManagedSegment(memorySize: .megabytes(25),argonModule: compiler.argonModule)
+        self.payload = Payload()
+        self.argonModule = ArgonModule.shared
         }
         
     public func cancelCompletion()
@@ -32,27 +70,85 @@ public class AddressAllocator: CompilerPass
         
     public func processModule(_ module: Module?) -> Module?
         {
-        do
+        guard let module = module else
             {
-            guard let module = module else
-                {
-                return(nil)
-                }
-            let newModule = try module.moduleWithAllocatedAddresses(using: self)
-            guard !self.wasCancelled else
-                {
-                return(nil)
-                }
-            return(newModule)
+            return(nil)
             }
-        catch let error as CompilerIssue
+        ArgonModule.shared.moduleWithAllocatedAddresses(using: self)
+        let newModule = module.moduleWithAllocatedAddresses(using: self)
+        guard !self.wasCancelled else
             {
-            module?.appendIssue(error)
+            return(nil)
             }
-        catch let error
+        return(newModule)
+        }
+        
+    public func segment(for symbol: Symbol) -> Segment
+        {
+        switch(symbol.segmentType)
             {
-            module?.appendIssue(at: module!.declaration!, message: "Unexpected error: \(error).")
+            case .empty:
+                break
+            case .static:
+                return(self.payload.staticSegment)
+            case .managed:
+                return(self.payload.managedSegment)
+            case .stack:
+                return(self.payload.stackSegment)
+            case .code:
+                return(self.payload.codeSegment)
             }
-        return(nil)
+        fatalError("Can not determine segment")
+        }
+        
+    public func allocateAddress(for symbol: Symbol)
+        {
+        switch(symbol.segmentType)
+            {
+            case .empty:
+                break
+            case .static:
+                self.payload.staticSegment.allocateMemoryAddress(for: symbol)
+            case .managed:
+                self.payload.managedSegment.allocateMemoryAddress(for: symbol)
+            case .stack:
+                self.payload.stackSegment.allocateMemoryAddress(for: symbol)
+            case .code:
+                self.payload.codeSegment.allocateMemoryAddress(for: symbol)
+            }
+        }
+        
+    public func allocateAddress(for methodInstance: MethodInstance)
+        {
+        switch(methodInstance.segmentType)
+            {
+            case .empty:
+                break
+            case .static:
+                self.payload.staticSegment.allocateMemoryAddress(for: methodInstance)
+            case .managed:
+                self.payload.managedSegment.allocateMemoryAddress(for: methodInstance)
+            case .stack:
+                self.payload.stackSegment.allocateMemoryAddress(for: methodInstance)
+            case .code:
+                self.payload.codeSegment.allocateMemoryAddress(for: methodInstance)
+            }
+        }
+        
+    public func allocateAddress(for aStatic: StaticObject)
+        {
+        switch(aStatic.segmentType)
+            {
+            case .empty:
+                break
+            case .static:
+                self.payload.staticSegment.allocateMemoryAddress(for: aStatic)
+            case .managed:
+                self.payload.managedSegment.allocateMemoryAddress(for: aStatic)
+            case .stack:
+                self.payload.stackSegment.allocateMemoryAddress(for: aStatic)
+            case .code:
+                self.payload.codeSegment.allocateMemoryAddress(for: aStatic)
+            }
         }
     }

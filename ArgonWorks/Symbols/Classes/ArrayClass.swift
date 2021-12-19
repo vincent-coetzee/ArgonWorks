@@ -28,7 +28,7 @@ public class ArrayClass:GenericSystemClass
 //
 //    public override var internalClass: Class
 //        {
-//        return(self.topModule.argonModule.generic)
+//        return(ArgonModule.shared.generic)
 //        }
         
     public override var isArrayClass: Bool

@@ -84,31 +84,44 @@ public class SlotAccessExpression: Expression
             {
             fatalError("Slot is nil, can not assign into nil slot.")
             }
-        try expression.emitRValue(into: buffer,using: using)
-        try self.receiver.emitLValue(into: buffer,using: using)
+        try expression.emitValueCode(into: buffer,using: using)
+        try self.receiver.emitPointerCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
-        buffer.append("ADD",self.receiver.place,.literal(.integer(slot.offset)),temporary)
+        buffer.append("ADD",self.receiver.place,.literal(.integer(Argon.Integer(slot.offset))),temporary)
         buffer.append("STIP",expression.place,.none,temporary)
         self._place = temporary
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
-        try self.receiver.initializeType(inContext: context)
+        self.receiver.initializeType(inContext: context)
         self.type = context.freshTypeVariable()
         }
 
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
         {
-        try self.receiver.initializeTypeConstraints(inContext: context)
-        if self.receiver.type!.isClass
+        try self.receiver.emitPointerCode(into: into,using: using)
+        if let slot = self.slot
             {
-            let aClass = self.receiver.type!.classValue
-            if let aSlot = aClass.lookup(label: self.slotLabel) as? Slot
+            let temporary = into.nextTemporary()
+            into.append("IADD",.literal(.integer(Argon.Integer(slot.offset))),.none,temporary)
+            into.append("LFP",temporary,.none,temporary)
+            self._place = temporary
+            }
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.receiver.initializeTypeConstraints(inContext: context)
+        if let aType = self.receiver.type,!aType.isTypeVariable
+            {
+            if let aSlot = aType.lookup(label: self.slotLabel) as? Slot
                 {
                 self.slot = aSlot
                 self.type = aSlot.type!
                 context.append(TypeConstraint(left: self.type,right: aSlot.type!,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
+                context.append(TypeConstraint(left: self.slot!.type!,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
                 }
             else
                 {
@@ -118,8 +131,12 @@ public class SlotAccessExpression: Expression
             }
         else
             {
+            self.slot = Slot(label: self.slotLabel)
+            context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
+            context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
+            context.append(TypeConstraint(left: self.slot!.type!,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
             let substitution = context.unify()
-            let receiverType = substitution.substitute(self.receiver.type!)
+            let receiverType = substitution.substitute(self.receiver.type)!
             guard receiverType.isClass else
                 {
                 self.appendIssue(at: self.declaration!, message: "Unable to infer base type of slot parent in this expression.")

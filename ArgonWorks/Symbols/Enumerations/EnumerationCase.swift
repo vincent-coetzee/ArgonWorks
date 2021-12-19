@@ -35,6 +35,14 @@ public class EnumerationCase:Symbol
             }
         }
         
+    public var instanceSizeInBytes: Int
+        {
+        ///
+        /// 1 word for the instance + 1 word for every associated value
+        ///
+        Argon.kWordSizeInBytesInt + self.associatedTypes.count * Argon.kWordSizeInBytesInt
+        }
+        
     public override var iconName: String
         {
         return("IconSlot")
@@ -50,6 +58,7 @@ public class EnumerationCase:Symbol
     public var rawValue: LiteralExpression?
     public var caseSizeInBytes:Int = 0
     public weak var enumeration: Enumeration!
+    public var caseIndex = -1
     
     init(symbol: Argon.Symbol,types: Types,enumeration: Enumeration)
         {
@@ -65,6 +74,7 @@ public class EnumerationCase:Symbol
         self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
         self.symbol = coder.decodeObject(forKey: "symbol") as! Argon.Symbol
         self.rawValue = coder.decodeObject(forKey: "rawValue") as? LiteralExpression
+        self.caseIndex = coder.decodeInteger(forKey: "caseIndex")
         self.associatedTypes = coder.decodeObject(forKey: "associatedTypes") as! Types
         super.init(coder: coder)
         }
@@ -78,17 +88,61 @@ public class EnumerationCase:Symbol
         
     public override func encode(with coder:NSCoder)
         {
-        super.encode(with: coder)
         coder.encode(self.enumeration,forKey: "enumeration")
         coder.encode(self.symbol,forKey: "symbol")
         coder.encode(self.rawValue,forKey: "rawValue")
         coder.encode(self.associatedTypes,forKey: "associatedTypes")
+        coder.encode(self.caseIndex,forKey: "caseIndex")
+        super.encode(with: coder)
+        }
+        
+   public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        self.wasAddressAllocationDone = true
+        allocator.allocateAddress(for: self)
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let segment = allocator.segment(for: self)
+        let enumCaseType = ArgonModule.shared.enumerationCase
+        let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
+        enumCasePointer.setClass(enumCaseType)
+        let symbolPointer = allocator.payload.symbolTable.addSymbol(self.symbol)
+        enumCasePointer.setAddress(symbolPointer,atSlot: "symbol")
+        enumCasePointer.setInteger(self.caseIndex,atSlot: "index")
+        if self.associatedTypes.isEmpty
+            {
+            enumCasePointer.setAddress(0,atSlot: "associatedTypes")
+            }
+        else
+            {
+            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.associatedTypes.count))
+                {
+                for type in self.associatedTypes
+                    {
+                    type.layoutInMemory(using: allocator)
+                    arrayPointer.append(type.memoryAddress)
+                    }
+                enumCasePointer.setAddress(arrayPointer.cleanAddress,atSlot: "associatedTypes")
+                }
+            }
+        enumCasePointer.setAddress(self.enumeration.memoryAddress,atSlot: "enumeration")
         }
     
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = super.substitute(from: substitution)
-        copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)}
+        copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)!}
         copy.symbol = self.symbol
         copy.rawValue = self.rawValue.isNil ? nil : (substitution.substitute(self.rawValue!) as! LiteralExpression)
         return(copy)

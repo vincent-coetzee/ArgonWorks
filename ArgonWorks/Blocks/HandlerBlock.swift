@@ -21,7 +21,7 @@ public class HandlerBlock: ClosureBlock
         
     public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        let literal = T3AInstruction.LiteralValue.array(self.symbols.map{T3AInstruction.LiteralValue.symbol($0)})
+        let literal = Literal.array(Argon.addStatic(StaticArray(self.symbols.map{Literal.symbol(Argon.addStatic(StaticSymbol(string: $0)))})))
         let codeLabel = buffer.nextLabel()
         buffer.append(nil,"HAND",.literal(literal),.label(codeLabel),.none)
         let label = buffer.nextLabel()
@@ -44,19 +44,19 @@ public class HandlerBlock: ClosureBlock
             }
         }
         
-    public override func initializeTypeConstraints(inContext context: TypeContext) throws
+    public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeTypeConstraints(inContext: context)
+            block.initializeTypeConstraints(inContext: context)
             }
         }
         
-    public override func initializeType(inContext context: TypeContext) throws
+    public override func initializeType(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            try block.initializeType(inContext: context)
+            block.initializeType(inContext: context)
             }
         self.type = context.voidType
         }
