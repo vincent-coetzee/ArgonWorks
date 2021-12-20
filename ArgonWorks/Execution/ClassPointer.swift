@@ -23,11 +23,11 @@ public class ClassPointer: ObjectPointer
         {
         get
             {
-            StringPointer(dirtyAddress: self.wordPointer[11])
+            StringPointer(dirtyAddress: self.wordPointer[12])
             }
         set
             {
-            self.wordPointer[11] = newValue.dirtyAddress
+            self.wordPointer[12] = newValue.dirtyAddress
             }
         }
         
@@ -35,39 +35,15 @@ public class ClassPointer: ObjectPointer
         {
         get
             {
-            self.wordPointer[11].cleanAddress
+            self.wordPointer[12].cleanAddress
             }
         set
             {
-            self.wordPointer[11] = newValue.objectAddress
+            self.wordPointer[12] = newValue.objectAddress
             }
         }
         
     public var extraSizeInBytes: Int
-        {
-        set
-            {
-            self.wordPointer[13] = Word(newValue)
-            }
-        get
-            {
-            return(Int(self.wordPointer[13]))
-            }
-        }
-        
-    public var classHasBytes: Bool
-        {
-        set
-            {
-            self.setBoolean(newValue,atIndex: 14)
-            }
-        get
-            {
-            return(self.boolean(atIndex: 14))
-            }
-        }
-        
-    public var instanceSizeInBytes: Int
         {
         set
             {
@@ -79,7 +55,19 @@ public class ClassPointer: ObjectPointer
             }
         }
         
-    public var classMagicNumber: Int
+    public var classHasBytes: Bool
+        {
+        set
+            {
+            self.setBoolean(newValue,atIndex: 16)
+            }
+        get
+            {
+            return(self.boolean(atIndex: 16))
+            }
+        }
+        
+    public var instanceSizeInBytes: Int
         {
         set
             {
@@ -90,20 +78,20 @@ public class ClassPointer: ObjectPointer
             return(Int(self.wordPointer[17]))
             }
         }
+//
+//    public var classMagicNumber: Int
+//        {
+//        set
+//            {
+//            self.wordPointer[17] = Word(newValue)
+//            }
+//        get
+//            {
+//            return(Int(self.wordPointer[17]))
+//            }
+//        }
         
     public var slotsPointer: ArrayPointer?
-        {
-        set
-            {
-            self.wordPointer[18] = newValue.dirtyAddress.objectAddress
-            }
-        get
-            {
-            return(ArrayPointer(dirtyAddress: self.wordPointer[18]))
-            }
-        }
-        
-    public var superclassesPointer: ArrayPointer?
         {
         set
             {
@@ -115,15 +103,27 @@ public class ClassPointer: ObjectPointer
             }
         }
         
+    public var superclassesPointer: ArrayPointer?
+        {
+        set
+            {
+            self.wordPointer[22] = newValue.dirtyAddress.objectAddress
+            }
+        get
+            {
+            return(ArrayPointer(dirtyAddress: self.wordPointer[22]))
+            }
+        }
+        
     public var subclassesPointer: ArrayPointer?
         {
         set
             {
-            self.wordPointer[19] = newValue.dirtyAddress.objectAddress
+            self.wordPointer[21] = newValue.dirtyAddress.objectAddress
             }
         get
             {
-            return(ArrayPointer(dirtyAddress: self.wordPointer[19]))
+            return(ArrayPointer(dirtyAddress: self.wordPointer[21]))
             }
         }
     }

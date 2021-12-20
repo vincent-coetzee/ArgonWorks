@@ -50,6 +50,17 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        hasher.combine(self.returnType.argonHash)
+        self.parameters.forEach{hasher.combine($0.argonHash)}
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public var isBlockContextScope: Bool
         {
         false

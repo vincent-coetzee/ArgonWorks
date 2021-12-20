@@ -106,7 +106,7 @@ public class SlotExpression: Expression
             instance.append(lineNumber: location.line)
             }
         let temp = instance.nextTemporary()
-        instance.append(nil,"MOV",.relocatable(.slot(self.slot)),.none,temp)
+        instance.append(nil,"MOV",.relocatable(.frame(self.slot.offset)),.none,temp)
         self._place = temp
         }
     }

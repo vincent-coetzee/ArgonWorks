@@ -65,7 +65,7 @@ public class EnumerationInstanceExpression: Expression
             instance.append(lineNumber: location.line)
             }
         var count:Argon.Integer = 1
-        instance.append("PUSH",.relocatable(.enumerationCase(self.theCase)),.none,.none)
+        instance.append("PUSH",.relocatable(.address(self.theCase.memoryAddress)),.none,.none)
         if self.theCase.hasAssociatedTypes
             {
             let values = self.associatedValues!
@@ -76,7 +76,7 @@ public class EnumerationInstanceExpression: Expression
                 count += 1
                 }
             }
-        instance.append("CALL",.relocatable(.function(Function(label: "MAKEEC"))),.none,.none)
+//        instance.append("CALL",.relocatable(.address(function.memoryAddress)),.none,.none)
         instance.append("ADD",.stackPointer,.literal(.integer(count * 8)),.stackPointer)
         self._place = .returnRegister
         }

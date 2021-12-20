@@ -66,7 +66,7 @@ public class SlotPointer: ObjectPointer
         {
         set
             {
-            self.wordPointer[98] = Word(newValue)
+            self.wordPointer[9] = Word(newValue)
             }
         get
             {

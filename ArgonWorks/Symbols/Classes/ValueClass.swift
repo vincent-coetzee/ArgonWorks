@@ -29,6 +29,11 @@ public class ValueClass: Class
         return(false)
         }
         
+    public override var isValueClass: Bool
+        {
+        true
+        }
+        
     public override func layoutObjectSlots(using allocator: AddressAllocator)
         {
         guard !self.wasSlotLayoutDone else
@@ -44,6 +49,11 @@ public class SystemValueClass: SystemClass
     public override var segmentType: Segment.SegmentType
         {
         .managed
+        }
+        
+    public override var isValueClass: Bool
+        {
+        true
         }
         
     public override var isSystemSymbol: Bool

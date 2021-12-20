@@ -27,6 +27,10 @@ public class TypeClass: TypeConstructor
             {
             names = "<" + names + ">"
             }
+        else
+            {
+            names = "<none>"
+            }
         if self.theClass.isSystemClass
             {
             return("TypeClass(SystemClass(\(self.theClass.label))\(names))")
@@ -136,8 +140,27 @@ public class TypeClass: TypeConstructor
             }
         }
         
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        hasher.combine(self.theClass.argonHash)
+        for type in self.generics
+            {
+            hasher.combine(type.argonHash)
+            }
+        return(hasher.finalize())
+        }
+        
     internal let theClass: Class
     
+    ///
+    ///
+    /// Types own their classes since types are added to the symbol table
+    /// not classes, therefore it is legitimate to set the parent of a
+    /// class to be a type.
+    ///
+    /// 
     init(class aClass: Class)
         {
         if aClass is SystemClass
@@ -146,12 +169,14 @@ public class TypeClass: TypeConstructor
             }
         self.theClass = aClass
         super.init(label: aClass.label,generics: [])
+        self.theClass.setParent(self)
         }
         
     init(systemClass aClass: Class)
         {
         self.theClass = aClass
         super.init(label: aClass.label,generics: [])
+        self.theClass.setParent(self)
         }
         
     init(class aClass: Class,generics: Types)
@@ -162,12 +187,14 @@ public class TypeClass: TypeConstructor
             }
         self.theClass = aClass
         super.init(label: aClass.label,generics: generics)
+        self.theClass.setParent(self)
         }
         
     init(systemClass aClass: Class,generics: Types)
         {
         self.theClass = aClass
         super.init(label: aClass.label,generics: generics)
+        self.theClass.setParent(self)
         }
         
     public override func setParent(_ parent:Parent)

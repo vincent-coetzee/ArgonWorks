@@ -9,6 +9,16 @@ import AppKit
 
 public class TypeAlias:Symbol
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        hasher.combine(self.type!.argonHash)
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public override var isLiteral: Bool
         {
         return(true)

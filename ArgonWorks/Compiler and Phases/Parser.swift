@@ -968,9 +968,12 @@ public class Parser: CompilerPass
         try self.parseBraces
             {
             () throws -> Void in
+            var caseIndex = 0
             while !self.token.isRightBrace
                 {
-                try self.parseCase(into: enumeration)
+                let aCase = try self.parseCase(into: enumeration)
+                aCase.caseIndex = caseIndex
+                caseIndex += 1
                 }
             }
         enumeration.appendIssues(issues)
@@ -1009,7 +1012,7 @@ public class Parser: CompilerPass
         return(literal)
         }
         
-    private func parseCase(into enumeration: Enumeration) throws
+    private func parseCase(into enumeration: Enumeration) throws -> EnumerationCase
         {
         self.startClip()
         let location = self.token.location
@@ -1043,6 +1046,7 @@ public class Parser: CompilerPass
             }
         aCase.appendIssues(issues)
         self.stopClip(into: aCase)
+        return(aCase)
         }
         
     private func parseCocoonSlot() throws -> Slot

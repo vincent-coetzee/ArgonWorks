@@ -139,6 +139,10 @@ public struct Argon
     public static let kWordSizeInBytesInt = MemoryLayout<Word>.size
     public static let kWordSizeInBytesWord = Word(MemoryLayout<Word>.size)
     
+    public static let kIsEnumerationInstancePointerShift: Word = 59
+    public static let kIsEnumerationInstancePointerBits: Word = 0b1
+    public static let kIsEnumerationInstancePointerBitMask = Argon.kIsEnumerationInstancePointerBits << Argon.kIsEnumerationInstancePointerShift
+    
     public enum ObjectType:UInt64
         {
         case none = 0

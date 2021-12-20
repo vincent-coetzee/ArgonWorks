@@ -10,6 +10,17 @@ import AppKit
 
 public class Symbol:Node,VisitorReceiver,ErrorScope
     {
+    public var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(self.label)
+        hasher.combine("Swift.type(of: self)")
+        hasher.combine(self.memoryAddress)
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public var methodInstances:MethodInstances
         {
         []

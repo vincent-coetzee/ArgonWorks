@@ -56,6 +56,20 @@ public class TypeEnumeration: TypeConstructor
         fatalError()
         }
         
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        hasher.combine(self.enumeration.argonHash)
+        for type in self.generics
+            {
+            hasher.combine(type.argonHash)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
 //    public override var type: Type?
 //        {
 //        get

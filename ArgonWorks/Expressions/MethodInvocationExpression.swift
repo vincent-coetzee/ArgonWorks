@@ -144,7 +144,7 @@ public class MethodInvocationExpression: Expression
             try argument.value.emitValueCode(into: buffer, using: generator)
             buffer.append("PUSH",argument.value.place,.none,.none)
             }
-        buffer.append("CALL",.relocatable(.methodInstance(instance)),.none,.none)
+        buffer.append("CALL",.relocatable(.address(instance.memoryAddress)),.none,.none)
         buffer.append("ADD",.stackPointer,.literal(.integer(Argon.Integer(self.arguments.count * Argon.kArgumentSizeInBytes))),.none)
         self._place = .returnRegister
         }

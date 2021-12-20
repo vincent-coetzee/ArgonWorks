@@ -10,6 +10,17 @@ import AppKit
 
 public class Slot:Symbol
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        hasher.combine(self.offset)
+        hasher.combine(self.slotType)
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public enum SlotType:Int
         {
         case module
@@ -17,6 +28,35 @@ public class Slot:Symbol
         case `class`
         case header
         case magicNumber
+        case local
+        case virtualRead
+        case virtualWrite
+        case cocoon
+        
+        public var symbolString: String
+            {
+            switch(self)
+                {
+                case .module:
+                    return("#moduleSlot")
+                case .instance:
+                    return("#instanceSlot")
+                case .class:
+                    return("#classSlot")
+                case .header:
+                    return("#headerSlot")
+                case .magicNumber:
+                    return("#magicNumberSlot")
+                case .local:
+                    return("#localSlot")
+                case .virtualRead:
+                    return("#virtualReadSlot")
+                case .virtualWrite:
+                    return("#virtualWriteSlot")
+                case .cocoon:
+                    return("#cocoon")
+                }
+            }
         }
         
     public var isSytemSymbol: Bool
@@ -177,7 +217,26 @@ public class Slot:Symbol
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
         slotPointer.setAddress(self.parent.memoryAddress,atSlot: "container")
+        let enumeration = (ArgonModule.shared.lookup(label: "SlotType") as! Type).enumerationValue
+        let instanceType = ArgonModule.shared.enumerationInstance
+        instanceType.layoutInMemory(using: allocator)
+        if let aCase = enumeration.caseAtSymbol(self.slotType.symbolString)
+            {
+            let instance = segment.allocateEnumerationInstance(enumeration: enumeration,caseIndex: aCase.caseIndex, associatedValues: [])
+            MemoryPointer.dumpMemory(atAddress: instance,count: 30)
+            print(aCase.caseIndex)
+            slotPointer.setAddress(instance, atSlot: "slotType")
+            }
+        if let aCase = enumeration.caseAtSymbol("#moduleSlot")
+            {
+            let instance = MemoryPointer(address: slotPointer.address(atSlot: "slotType"))
+            instance.setInteger(aCase.caseIndex,atSlotNamed: "caseIndex")
+            }
         self.type?.layoutInMemory(using: allocator)
+        let instanceAddress = slotPointer.address(atSlot: "slotType")
+        let enumerationInstance = ClassBasedPointer(address: instanceAddress,type: ArgonModule.shared.enumerationInstance)
+        let caseIndex = enumerationInstance.integer(atSlot: "caseIndex")
+        print(caseIndex)
         }
         
     public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws

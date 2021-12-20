@@ -81,7 +81,7 @@ public class CastExpression: Expression
         try self.expression.emitCode(into: instance,using: generator)
         let temp = instance.nextTemporary()
         let typeClass = self.type as! TypeClass
-        instance.append("CAST",self.expression.place,.relocatable(.class(typeClass.theClass)),temp)
+        instance.append("CAST",self.expression.place,.relocatable(.address(typeClass.theClass.memoryAddress)),temp)
         self._place = temp
         }
     }

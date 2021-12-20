@@ -95,17 +95,17 @@ public class Node:NSObject,NamingContext,Identifiable,NSCoding
 
     public func setParent(_ node: Symbol)
         {
-        self.parent = .node(node)
+        self.setParent(Parent.node(node))
         }
         
     public func setParent(_ expression: Expression)
         {
-        self.parent = .expression(expression)
+        self.setParent(Parent.expression(expression))
         }
         
     public func setParent(_ block: Block)
         {
-        self.parent = .block(block)
+        self.setParent(Parent.block(block))
         }
         
     public func setParent(_ aParent: Parent)

@@ -374,6 +374,7 @@ public class ArgonModule: SystemModule
         self.addSystemClass(SystemClass(label: "MethodInstance").superclass(self.invokable).setType(.methodInstance))
         self.addSystemClass(SystemClass(label: "Instruction").superclass(self.object).setType(.instruction))
         self.addSystemClass(SystemClass(label: "DictionaryBucket").superclass(self.object).setType(.dictionaryBucket))
+        self.addSystemClass(SystemClass(label: "EnumerationInstance").superclass(self.object))
         self.addSystemClass(GenericSystemClass(label: "Dictionary",superclasses:[self.collection],types: [TypeContext.freshTypeVariable(named:"KEY")]).mcode("j").setType(.dictionary))
         self.addSystemClass(GenericSystemClass(label: "List",superclasses:[self.collection],types:[]).mcode("n").setType(.list))
         self.addSystemClass(GenericSystemClass(label: "ListNode",superclasses:[self.collection],types: [TypeContext.freshTypeVariable(named:"LELEMENT")]).mcode("N").setType(.listNode))
@@ -425,7 +426,7 @@ public class ArgonModule: SystemModule
         self.listNode.rawClass.slot("element",self.object).slot("next",self.listNode).slot("previous",self.listNode)
         self.methodInstance.rawClass.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("instructions",self.array.of(self.instruction))
         self.moduleClass.rawClass.virtual("isSystemModule",self.boolean).slot("symbols",self.typeClass).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass)
+        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass).slot("slotType",self.enumeration)
         self.string.rawClass.slot("count",self.integer).virtual("bytes",self.address).hasBytes(true)
         self.time.rawClass.virtual("hour",self.integer).virtual("minute",self.integer).virtual("second",self.integer).virtual("millisecond",self.integer)
         self.tuple.rawClass.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
@@ -433,6 +434,7 @@ public class ArgonModule: SystemModule
         self.vector.rawClass.slot("startBlock",self.block).slot("blockCount",self.integer).hasBytes(true)
         self.instruction.rawClass.slot("opcode",self.opcode).slot("offset",self.integer).slot("operand1",self.operand).slot("operand2",self.operand).slot("result",self.operand)
         self.parameter.rawClass.slot("tag",self.string).slot("retag",self.string).slot("type",self.typeClass).slot("tagIsShown",self.boolean).slot("isVariadic",self.boolean)
+        self.enumerationInstance.rawClass.slot("enumeration",self.enumeration).slot("caseIndex",self.integer).slot("associatedValues",self.array.of(self.object))
         }
 
     private func initBaseMethods()

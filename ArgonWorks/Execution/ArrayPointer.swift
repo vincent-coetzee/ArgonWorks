@@ -21,7 +21,7 @@ public class ArrayPointer: ObjectPointer,Collection
     
     public var endIndex: Int
         {
-        return(self.count - 1)
+        return(self.count)
         }
     
     public var array: Addresses

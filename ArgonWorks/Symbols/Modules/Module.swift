@@ -10,6 +10,19 @@ import AppKit
     
 public class Module:ContainerSymbol,Scope
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        for symbol in self.symbols
+            {
+            hasher.combine(symbol.argonHash)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public override var segmentType: Segment.SegmentType
         {
         .managed
@@ -393,10 +406,6 @@ public class Module:ContainerSymbol,Scope
             }
         for symbol in self.symbols
             {
-            if symbol.label == "Collection"
-                {
-                print("halt")
-                }
             symbol.layoutObjectSlots(using: using)
             }
         }
@@ -469,10 +478,6 @@ public class Module:ContainerSymbol,Scope
         do
             {
             self.layoutObjectSlots(using: allocator)
-            if self.label == "Argon"
-                {
-                print("halt")
-                }
             try self.allocateAddresses(using: allocator)
             self.layoutInMemory(using: allocator)
             return(self)

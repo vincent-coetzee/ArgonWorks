@@ -9,6 +9,21 @@ import AppKit
 
 public class EnumerationCase:Symbol
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        for type in self.associatedTypes
+            {
+            hasher.combine(type.argonHash)
+            }
+        hasher.combine(self.symbol.polynomialRollingHash)
+        hasher.combine(self.caseIndex)
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         LiteralExpression(.enumerationCase(self))
@@ -59,6 +74,7 @@ public class EnumerationCase:Symbol
     public var caseSizeInBytes:Int = 0
     public weak var enumeration: Enumeration!
     public var caseIndex = -1
+    public var symbolMemoryAddress: Address = 0
     
     init(symbol: Argon.Symbol,types: Types,enumeration: Enumeration)
         {
@@ -104,6 +120,7 @@ public class EnumerationCase:Symbol
             }
         self.wasAddressAllocationDone = true
         allocator.allocateAddress(for: self)
+        self.symbolMemoryAddress = allocator.registerSymbol(self.symbol)
         }
         
     public override func layoutInMemory(using allocator: AddressAllocator)
@@ -117,8 +134,8 @@ public class EnumerationCase:Symbol
         let enumCaseType = ArgonModule.shared.enumerationCase
         let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
         enumCasePointer.setClass(enumCaseType)
-        let symbolPointer = allocator.payload.symbolTable.addSymbol(self.symbol)
-        enumCasePointer.setAddress(symbolPointer,atSlot: "symbol")
+        let symbolAddress = allocator.payload.symbolTable.addSymbol(self.symbol)
+        enumCasePointer.setAddress(symbolAddress,atSlot: "symbol")
         enumCasePointer.setInteger(self.caseIndex,atSlot: "index")
         if self.associatedTypes.isEmpty
             {

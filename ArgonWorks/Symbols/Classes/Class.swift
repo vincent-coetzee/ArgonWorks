@@ -14,6 +14,22 @@ public var classesAreLocked = false
 
 public class Class:ContainerSymbol
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        for slot in self.layoutSlots
+            {
+            hasher.combine(slot.label)
+            }
+        for type in self.genericTypes
+            {
+            hasher.combine(type.argonHash)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
         
     public var genericSourceClass: Class
         {
@@ -124,6 +140,11 @@ public class Class:ContainerSymbol
     public override var canBecomeAClass: Bool
         {
         return(true)
+        }
+        
+    public var isValueClass: Bool
+        {
+        false
         }
         
     public override var canBecomeAType: Bool
@@ -864,10 +885,6 @@ public class Class:ContainerSymbol
         let classType = allocator.argonModule.lookup(label: "Class") as! Type
         let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: classType)
         classPointer.setClass(classType)
-        if self.label == "Object"
-            {
-            print("halt")
-            }
         classPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
         for supertype in self.superclasses
             {
@@ -891,7 +908,21 @@ public class Class:ContainerSymbol
             }
         let slotsArray = segment.allocateArray(size: self.layoutSlots.count,elements: self.layoutSlots.map{$0.memoryAddress})
         classPointer.setAddress(slotsArray,atSlot: "slots")
+        classPointer.setAddress(self.parent.memoryAddress,atSlot: "container")
         classPointer.setBoolean(self.isSystemClass,atSlot: "isSystemType")
+        classPointer.setInteger(self.instanceSizeInBytes,atSlot: "instanceSizeInBytes")
+        classPointer.setBoolean(self.isValueClass,atSlot: "isValue")
+        classPointer.setInteger(self.magicNumber,atSlot: "magicNumber")
+        classPointer.setInteger(self.argonHash,atSlot: "hash")
+        if let typesArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.genericTypes.count))
+            {
+            for type in self.genericTypes
+                {
+                type.layoutInMemory(using: allocator)
+                typesArray.append(type.memoryAddress)
+                }
+            classPointer.setArrayPointer(typesArray,atSlot: "typeParameters")
+            }
         if self.label == "Object"
             {
             print("OBJECT CLASS ADDRESS IS \(String(format: "%12X",self.memoryAddress)) \(self.memoryAddress.bitString)")
@@ -1005,6 +1036,10 @@ public class Class:ContainerSymbol
         for type in self.subclasses
             {
             try type.allocateAddresses(using: allocator)
+            }
+        for slot in self.layoutSlots
+            {
+            allocator.allocateAddress(for: slot)
             }
         }
         

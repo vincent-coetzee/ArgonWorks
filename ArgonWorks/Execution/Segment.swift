@@ -33,6 +33,11 @@ public class Segment
 
     public static let emptySegment = EmptySegment()
     
+    public var usedSizeInBytes: Int
+        {
+        Int(UInt64(self.nextAddress) - self.baseAddress)
+        }
+        
     public var isEmptySegment: Bool
         {
         false
@@ -43,6 +48,11 @@ public class Segment
         .empty
         }
         
+    public var segmentType: SegmentType
+        {
+        Self.segmentType
+        }
+        
     public let alignment = Word(MemoryLayout<Word>.alignment)
     
     internal let baseAddress: mach_vm_address_t
@@ -51,10 +61,12 @@ public class Segment
     internal var nextAddress: Word
     internal var wordPointer: WordPointer
     internal let argonModule: ArgonModule
+    internal let allocatedSizeInBytes: Int
     
     public init(memorySize: MemorySize,argonModule: ArgonModule) throws
         {
         self.segmentSizeInBytes = (memorySize.inBytes / 4096) * 4096
+        self.allocatedSizeInBytes = segmentSizeInBytes
         let address = Self.segmentType.rawValue
         let size = vm_size_t(self.segmentSizeInBytes)
         self.baseAddress = AllocateSegment(address,size)
@@ -77,6 +89,10 @@ public class Segment
             }
         }
         
+    public func write(toStream: UnsafeMutablePointer<FILE>) throws
+        {
+        fwrite(UnsafeRawPointer(bitPattern: Int(self.baseAddress)),self.usedSizeInBytes,1,toStream)
+        }
     ///
     /// Align the given value to the given alignment but make sure
     /// that it is always bigger by 1 x the alignment, this is to make
@@ -116,6 +132,7 @@ public class Segment
         header.tag = .header
         header.sizeInBytes = size
         symbol.memoryAddress = address
+        print("ALLOCATED \(size) BYTES AT \(address) FOR \(Swift.type(of: symbol)) \(symbol.label)")
         }
         
     public func allocateWords(count:Int) -> Address
@@ -147,6 +164,7 @@ public class Segment
         header.tag = .header
         header.sizeInBytes = size
         methodInstance.memoryAddress = address
+        print("ALLOCATED \(size) BYTES AT \(address) FOR METHOD INSTANCE \(methodInstance.label)")
         }
         
     public func allocateObject(ofClass aClass: Class,sizeOfExtraBytesInBytes: Int) -> Address
@@ -210,6 +228,28 @@ public class Segment
         objectPointer.isPersistent = false
         objectPointer.isForwarded = false
         objectPointer.magicNumber = stringType.magicNumber
+        return(address)
+        }
+        
+    public func allocateEnumerationInstance(enumeration: Enumeration,caseIndex: Int,associatedValues: Words) -> Address
+        {
+        let instanceType = self.argonModule.lookup(label: "EnumerationInstance") as! Type
+        let sizeInBytes = self.align(instanceType.instanceSizeInBytes,to: self.alignment)
+        let address = self.nextAddress
+        self.nextAddress += sizeInBytes
+        let objectPointer = ClassBasedPointer(address: address,type: instanceType)
+        objectPointer.tag = .header
+        objectPointer.setClass(instanceType)
+        objectPointer.hasBytes = false
+        objectPointer.sizeInBytes = sizeInBytes
+        objectPointer.flipCount = 0
+        objectPointer.isPersistent = false
+        objectPointer.isForwarded = false
+        objectPointer.magicNumber = instanceType.magicNumber
+        objectPointer.setAddress(enumeration.memoryAddress,atSlot: "enumeration")
+        objectPointer.setInteger(caseIndex,atSlot: "caseIndex")
+        let valuesAddress = self.allocateArray(size: associatedValues.count,elements: associatedValues)
+        objectPointer.setAddress(valuesAddress,atSlot: "associatedValues")
         return(address)
         }
         

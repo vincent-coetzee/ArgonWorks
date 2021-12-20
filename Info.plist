@@ -101,16 +101,6 @@
 			<string>$(PRODUCT_MODULE_NAME).ArgonDocument</string>
 		</dict>
 		<dict>
-			<key>LSTypeIsPackage</key>
-			<true/>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>ARP</string>
-			</array>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>com.macsemantics.argon.project</string>
-			</array>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>arp</string>
@@ -119,8 +109,16 @@
 			<string>ProjectIcon</string>
 			<key>CFBundleTypeIconSystemGenerated</key>
 			<integer>0</integer>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>com.macsemantics.argon.project</string>
+			</array>
 			<key>CFBundleTypeName</key>
 			<string>Argon Project File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>ARP</string>
+			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -129,8 +127,42 @@
 			<array>
 				<string>com.macsemantics.argon.project</string>
 			</array>
+			<key>LSTypeIsPackage</key>
+			<true/>
 			<key>NSDocumentClass</key>
 			<string>$(PRODUCT_MODULE_NAME).ProjectDocument</string>
+		</dict>
+		<dict>
+			<key>NSDocumentClass</key>
+			<string></string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>ARV</string>
+			</array>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>com.macsemantics.argon.velocity</string>
+			</array>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>arv</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>VelocityIcon</string>
+			<key>CFBundleTypeName</key>
+			<string>Argon Velocity File</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.macsemantics.argon.velocity</string>
+			</array>
 		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
@@ -257,6 +289,31 @@
 				<key>public.mime-type</key>
 				<array>
 					<string>com.macsemantics.argon.project</string>
+				</array>
+			</dict>
+		</dict>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Argon Velocity File</string>
+			<key>UTTypeIconFile</key>
+			<string>VelocityIcon</string>
+			<key>UTTypeIcons</key>
+			<dict/>
+			<key>UTTypeIdentifier</key>
+			<string>com.macsemantics.argon.velocity</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>arv</string>
+				</array>
+				<key>public.mime-type</key>
+				<array>
+					<string>com.macsemantics.argon.velocity</string>
 				</array>
 			</dict>
 		</dict>

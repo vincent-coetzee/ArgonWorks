@@ -181,6 +181,7 @@ public class ClassBasedPointer
         let theClass = (type as! TypeClass).theClass
         self.classAddress = theClass.memoryAddress.cleanAddress
         self.setInteger(theClass.magicNumber,atSlot: "_magicNumber")
+        self.setAddress(theClass.memoryAddress,atSlot: "_class")
         for supertype in theClass.superclasses
             {
             self.setLocalSlotValues(forClass: (supertype as! TypeClass).theClass)
@@ -237,89 +238,6 @@ public class ClassBasedPointer
             let index = slot.offset / Argon.kWordSizeInBytesInt
             self.wordPointer[index] = Word(bitPattern: integer)
             return
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func enumerationPointer(atSlot: String) -> Address
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            return(instance.pointer)
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setEnumerationPointer(_ address: Address,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            instance.pointer = address
-            self.wordPointer[index] = instance.bytes
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func enumerationCaseIndex(atSlot: String) -> Int
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            return(instance.caseIndex)
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setEnumerationCaseIndex(_ index:Int,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            instance.caseIndex = index
-            self.wordPointer[index] = instance.bytes
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func enumerationValueCount(atSlot: String) -> Int
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            return(instance.valueCount)
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setEnumerationValueCount(_ index:Int,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            instance.valueCount = index
-            self.wordPointer[index] = instance.bytes
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setEnumerationPointer(_ pointer:Address,caseIndex: Int,valueCount: Int,atSlot: String)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            let instance = EnumerationInstance(word: self.wordPointer[index])
-            instance.valueCount = valueCount
-            instance.caseIndex = caseIndex
-            instance.pointer = pointer
-            self.wordPointer[index] = instance.bytes
             }
         fatalError("Slot not found")
         }

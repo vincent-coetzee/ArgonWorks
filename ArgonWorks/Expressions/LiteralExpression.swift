@@ -639,11 +639,11 @@ public class LiteralExpression: Expression
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
                  instance.append(nil,"MOV",.relocatable(.address(enumeration.memoryAddress)),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.address(enumerationCase.memoryAddress)),.none,temp)
 //            case .method(let method):
 //                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.address(constant.memoryAddress)),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
                  instance.append(nil,"MOV",.relocatable(.address(function.memoryAddress)),.none,temp)
@@ -694,11 +694,11 @@ public class LiteralExpression: Expression
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
                  instance.append(nil,"MOV",.relocatable(.address(enumeration.memoryAddress)),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append(nil,"LOAD",.relocatable(.enumerationCase(enumerationCase)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.address(enumerationCase.memoryAddress)),.none,temp)
 //            case .method(let method):
 //                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append(nil,"LOAD",.relocatable(.constant(constant)),.none,temp)
+                 instance.append(nil,"LOAD",.relocatable(.address(constant.memoryAddress)),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
                  instance.append(nil,"MOV",.relocatable(.address(function.memoryAddress)),.none,temp)

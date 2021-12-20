@@ -20,9 +20,9 @@ public protocol ExecutionContext
 public class VirtualMachine
     {
     private var loadedObjectFiles: Array<ObjectFile>
-    internal let payload: Payload
+    internal let payload: VMPayload
     
-    init(payload: Payload)
+    init(payload: VMPayload)
         {
         self.payload = payload
         self.loadedObjectFiles = []
@@ -30,7 +30,7 @@ public class VirtualMachine
         
     init()
         {
-        self.payload = Payload()
+        self.payload = VMPayload()
         self.loadedObjectFiles = []
         }
         

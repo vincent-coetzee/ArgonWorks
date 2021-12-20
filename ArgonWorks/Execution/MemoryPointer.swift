@@ -31,39 +31,6 @@ public class MemoryPointer
         self.loadClass()
         }
         
-    public func display(indent: String)
-        {
-        print("\(indent)OBJECT AT ADDRESS: \(self.addressString)")
-        print("\(indent)CLASS: \(self.className)")
-        print("\(indent)SLOTS:")
-        for slot in self.slots.values.sorted(by: {$0.offset < $1.offset})
-            {
-            let name = slot.namePointer!.string
-            let value = self.word(atSlotNamed: name)
-            let tag = value.tag
-            var valueString = ""
-            switch(tag)
-                {
-                case .integer:
-                    valueString = "INTEGER: \(value)"
-                case .boolean:
-                    valueString = "BOOLEAN: \(value.booleanValue)"
-                case .byte:
-                    valueString = "BYTE: \(value.byteValue)"
-                case .character:
-                    valueString = "CHARACTER \(value.characterValue)"
-                case .header:
-                    valueString = "HEADER: \(value.bitString)"
-                case .object:
-                    let objectString = String(format: "%10X",value)
-                    valueString = "OBJECT: \(objectString)"
-                case .float:
-                    valueString = "FLOAT: \(value.floatValue)"
-            }
-            print("\(indent)\tSLOT \(name) :: \(slot.typePointer!.namePointer!.string) = \(valueString)")
-            }
-        }
-        
     private func loadClass()
         {
         self.classPointer = ClassPointer(dirtyAddress: self.wordPointer[2])
@@ -75,7 +42,7 @@ public class MemoryPointer
                 }
             }
         }
-
+        
     public func word(atSlotNamed slotName: String) -> Word
         {
         if let slot = self.slots[slotName]
@@ -177,8 +144,14 @@ public class MemoryPointer
                 let size = Header(word: value).sizeInBytes
                 valueString = "HEADER: BYTE SIZE: \(size)"
             case .object:
-                let objectString = String(format: "%14X",value)
-                valueString = "OBJECT: \(objectString)"
+                let objectString = String(format: "%010X",value)
+                var className = ""
+//                if value.cleanAddress != 0
+//                    {
+//                    let otherPointer = MemoryPointer(address: value.cleanAddress)
+//                    className = otherPointer.className
+//                    }
+                valueString = "OBJECT: \(objectString) \(className)"
             case .float:
                 valueString = "FLOAT: \(value.floatValue)"
             }

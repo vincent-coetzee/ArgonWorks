@@ -26,45 +26,47 @@ public class T3AInstruction: NSObject,NSCoding
             {
             switch(self)
                 {
-                case .self:
-                    return("self")
-                case .Self:
-                    return("Self")
-                case .super:
-                    return("super")
-                case .slot(let slot):
-                    return(slot.label)
-                case .function(let slot):
-                    return(slot.invocationLabel)
+//                case .self:
+//                    return("self")
+//                case .Self:
+//                    return("Self")
+//                case .super:
+//                    return("super")
+//                case .slot(let slot):
+//                    return(slot.label)
+//                case .function(let slot):
+//                    return(slot.invocationLabel)
 //                case .method(let slot):
 //                    return(slot.label)
-                case .module(let slot):
-                    return(slot.fullName.displayString)
-                case .class(let slot):
-                    return(slot.fullName.displayString)
-                case .enumeration(let slot):
-                    return(slot.label)
-                case .enumerationCase(let slot):
-                    return(slot.label)
-                case .constant(let slot):
-                    return(slot.label)
-                case .segmentDS:
-                    return("DS")
-                case .relocatableIndex(let slot):
-                    return("\(slot)")
-                case .methodInstance(let slot):
-                    return(slot.invocationLabel)
-                case .string(let string):
-                    return(string.string)
-                case .context(let method,let ip):
-                    return("\(method.invocationLabel):\(ip)")
-                case .type(let slot):
-                    return("Type(\(slot.label))")
+//                case .module(let slot):
+//                    return(slot.fullName.displayString)
+//                case .class(let slot):
+//                    return(slot.fullName.displayString)
+//                case .enumeration(let slot):
+//                    return(slot.label)
+//                case .enumerationCase(let slot):
+//                    return(slot.label)
+//                case .constant(let slot):
+//                    return(slot.label)
+//                case .segmentDS:
+//                    return("DS")
+//                case .relocatableIndex(let slot):
+//                    return("\(slot)")
+//                case .methodInstance(let slot):
+//                    return(slot.invocationLabel)
+//                case .string(let string):
+//                    return(string.string)
+//                case .context(let method,let ip):
+//                    return("\(method.invocationLabel):\(ip)")
+//                case .type(let slot):
+//                    return("Type(\(slot.label))")
                 case .closure(let buffer):
                     let count = buffer.count
                     return("Closure(\(count) instructions)")
                 case .address(let address):
                     return("\(String(format:"%010X",address))")
+                case .frame(let offset):
+                    return("Frame(\(offset))")
                 }
             }
             
@@ -72,48 +74,49 @@ public class T3AInstruction: NSObject,NSCoding
             {
             switch(self)
                 {
-                case .slot(let symbol):
-                    return(symbol)
-                case .function(let symbol):
-                    return(symbol)
+//                case .slot(let symbol):
+//                    return(symbol)
+//                case .function(let symbol):
+//                    return(symbol)
 //                case .method(let symbol):
 //                    return(symbol)
-                case .methodInstance(let symbol):
-                    return(symbol)
-                case .module(let symbol):
-                    return(symbol)
-                case .class(let symbol):
-                    return(symbol)
-                case .enumeration(let symbol):
-                    return(symbol)
-                case .enumerationCase(let symbol):
-                    return(symbol)
-                case .constant(let symbol):
-                    return(symbol)
+//                case .methodInstance(let symbol):
+//                    return(symbol)
+//                case .module(let symbol):
+//                    return(symbol)
+//                case .class(let symbol):
+//                    return(symbol)
+//                case .enumeration(let symbol):
+//                    return(symbol)
+//                case .enumerationCase(let symbol):
+//                    return(symbol)
+//                case .constant(let symbol):
+//                    return(symbol)
                 default:
                     return(nil)
                 }
             }
             
-        case `self`
-        case `Self`
-        case `super`
-        case slot(Slot)
-        case function(Function)
+//        case `self`
+//        case `Self`
+//        case `super`
+//        case slot(Slot)
+//        case function(Function)
 //        case method(Method)
-        case module(Module)
-        case `class`(Class)
-        case enumeration(Enumeration)
-        case enumerationCase(EnumerationCase)
-        case constant(Constant)
-        case segmentDS
-        case relocatableIndex(Int)
-        case methodInstance(MethodInstance)
+//        case module(Module)
+//        case `class`(Class)
+//        case enumeration(Enumeration)
+//        case enumerationCase(EnumerationCase)
+//        case constant(Constant)
+//        case segmentDS
+//        case relocatableIndex(Int)
+//        case methodInstance(MethodInstance)
         case closure(T3ABuffer)
-        case context(MethodInstance,Int)
-        case string(StaticString)
-        case type(Type)
+//        case context(MethodInstance,Int)
+//        case string(StaticString)
+//        case type(Type)
         case address(Address)
+        case frame(Int)
         }
 
     public indirect enum Operand
@@ -180,14 +183,8 @@ public class T3AInstruction: NSObject,NSCoding
                     return("\(literal)")
                 case .framePointer:
                     return("FRAME")
-                case .managedPointer:
-                    return("MANAGED")
                 case .stackPointer:
                     return("STACK")
-                case .dataPointer:
-                    return("DATA")
-                case .staticPointer:
-                    return("STATIC")
                 case .indirect(let base,let offset):
                     let string = offset == 0 ? "" : (offset > 0 ? "+\(offset)" : "\(offset)")
                     return("[\(base.displayString)\(string)]")
@@ -199,9 +196,6 @@ public class T3AInstruction: NSObject,NSCoding
         case returnRegister
         case framePointer
         case stackPointer
-        case dataPointer
-        case staticPointer
-        case managedPointer
         case temporary(Int)
         case label(T3ALabel)
         case relocatable(RelocatableValue)

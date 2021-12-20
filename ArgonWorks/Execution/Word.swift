@@ -216,7 +216,11 @@ extension Address
         get
             {
             let mask = Header.kTagBits << Header.kTagShift
-            return(Argon.Tag(rawValue: (self & mask) >> Header.kTagShift)!)
+            if let tag = Argon.Tag(rawValue: (self & mask) >> Header.kTagShift)
+                {
+                return(tag)
+                }
+            return(.integer)
             }
         set
             {
@@ -236,6 +240,12 @@ extension Address
             let value = (newValue.rawValue & Argon.kSegmentMask) << Argon.kSegmentShift
             self = (self & ~Argon.kSegmentExtendedMask) | value
             }
+        }
+        
+    public var isEnumerationInstancePointer: Bool
+        {
+        let value = (Argon.kIsEnumerationInstancePointerBitMask & self) >> Argon.kIsEnumerationInstancePointerShift
+        return(value & 1 == 1)
         }
         
     public var cleanAddress: Address

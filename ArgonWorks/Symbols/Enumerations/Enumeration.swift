@@ -9,6 +9,23 @@ import AppKit
 
 public class Enumeration:Symbol
     {
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(super.argonHash)
+        for aCase in self.cases
+            {
+            hasher.combine(aCase.argonHash)
+            }
+        for type in self.genericTypes
+            {
+            hasher.combine(type.argonHash)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public var isSystemEnumeration: Bool
         {
         false
@@ -160,20 +177,23 @@ public class Enumeration:Symbol
         enumPointer.setBoolean(self.isSystemEnumeration,atSlot: "isSystemType")
         }
         
-    public func setInstance(caseIndexTo symbol: Argon.Symbol,atSlot: String,inObject: Address)
-        {
-        if let someCase = self.caseAt(symbol: symbol)
-            {
-            let pointer = ObjectPointer(dirtyAddress: inObject)
-            }
-        fatalError("Enumeration \(self.label) does not have a case with symbol \(symbol)")
-        }
-        
-    public func caseAt(symbol: Argon.Symbol) -> EnumerationCase?
+    public func caseAtSymbol(_ symbol: Argon.Symbol) -> EnumerationCase?
         {
         for someCase in self.cases
             {
             if someCase.symbol == symbol
+                {
+                return(someCase)
+                }
+            }
+        return(nil)
+        }
+        
+    public func caseAtSymbol(_ address: Address) -> EnumerationCase?
+        {
+        for someCase in self.cases
+            {
+            if someCase.symbolMemoryAddress == address
                 {
                 return(someCase)
                 }

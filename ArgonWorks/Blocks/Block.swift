@@ -9,6 +9,19 @@ import Foundation
 
 public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,ErrorScope
     {
+    public var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(self)
+        for block in self.blocks
+            {
+            hasher.combine(block)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public var isMethodInstanceScope: Bool
         {
         false

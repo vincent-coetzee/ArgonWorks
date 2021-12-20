@@ -7,59 +7,19 @@
 
 import Foundation
 
-public struct Payload: ExecutionContext
-    {
-    public let stackSegment: StackSegment
-    public let staticSegment: StaticSegment
-    public let managedSegment: ManagedSegment
-    public let codeSegment: CodeSegment
 
-    public var symbolTable: SymbolTable
-        {
-        self._symbolTable
-        }
-        
-    private var _symbolTable: SymbolTable!
-    
-    init()
-        {
-        self.stackSegment = try! StackSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.staticSegment = try! StaticSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.managedSegment = try! ManagedSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.codeSegment = try! CodeSegment(memorySize: .megabytes(50),argonModule: ArgonModule.shared)
-        self._symbolTable = SymbolTable(context: self)
-        }
-        
-    public func segment(for symbol: Symbol) -> Segment
-        {
-        switch(symbol.segmentType)
-            {
-            case .empty:
-                break
-            case .static:
-                return(self.staticSegment)
-            case .managed:
-                return(self.managedSegment)
-            case .stack:
-                return(self.stackSegment)
-            case .code:
-                return(self.codeSegment)
-            }
-        fatalError("Can not determine segment")
-        }
-    }
     
 public class AddressAllocator: CompilerPass
     {
     public let compiler: Compiler
     public var wasCancelled = false
-    public var payload: Payload
+    public var payload: VMPayload
     public let argonModule: ArgonModule
     
     init(_ compiler: Compiler)
         {
         self.compiler = compiler
-        self.payload = Payload()
+        self.payload = VMPayload()
         self.argonModule = ArgonModule.shared
         }
         
@@ -81,6 +41,11 @@ public class AddressAllocator: CompilerPass
             return(nil)
             }
         return(newModule)
+        }
+        
+    public func registerSymbol(_ symbol: Argon.Symbol) -> Address
+        {
+        self.payload.symbolTable.addSymbol(symbol)
         }
         
     public func segment(for symbol: Symbol) -> Segment

@@ -78,7 +78,6 @@
 		BF60DFC22701F17700734AC3 /* Capsule.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC12701F17700734AC3 /* Capsule.swift */; };
 		BF60DFC427023E3600734AC3 /* NativeCType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC327023E3600734AC3 /* NativeCType.swift */; };
 		BF60DFC62702633D00734AC3 /* NSImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */; };
-		BF6132AF276F492400AB6E67 /* EnumerationInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6132AE276F492400AB6E67 /* EnumerationInstance.swift */; };
 		BF6132B1276F563E00AB6E67 /* SystemEnumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6132B0276F563E00AB6E67 /* SystemEnumeration.swift */; };
 		BF6132B3276F630400AB6E67 /* SymbolTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6132B2276F630400AB6E67 /* SymbolTable.swift */; };
 		BF6132B5276F713D00AB6E67 /* MemoryPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6132B4276F713D00AB6E67 /* MemoryPointer.swift */; };
@@ -286,6 +285,7 @@
 		BFEFA9D9276BCC3200894140 /* ClassBasedPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9D8276BCC3200894140 /* ClassBasedPointer.swift */; };
 		BFEFA9DB276BCEA500894140 /* Int+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9DA276BCEA500894140 /* Int+Extensions.swift */; };
 		BFF3B085275ED237004BEE35 /* InfixOperatorInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF3B084275ED237004BEE35 /* InfixOperatorInstance.swift */; };
+		BFF6FE69276FFEDC00AD170F /* VMPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF6FE68276FFEDC00AD170F /* VMPayload.swift */; };
 		BFFF07AD274EB47800F1E13F /* CompilerIssue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFF07AC274EB47800F1E13F /* CompilerIssue.swift */; };
 		BFFF07B2274F2EB500F1E13F /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = BFFF07B1274F2EB500F1E13F /* Collections */; };
 		BFFF07B4274F2EB500F1E13F /* DequeModule in Frameworks */ = {isa = PBXBuildFile; productRef = BFFF07B3274F2EB500F1E13F /* DequeModule */; };
@@ -365,7 +365,6 @@
 		BF60DFC12701F17700734AC3 /* Capsule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capsule.swift; sourceTree = "<group>"; };
 		BF60DFC327023E3600734AC3 /* NativeCType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCType.swift; sourceTree = "<group>"; };
 		BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSImage+Extensions.swift"; sourceTree = "<group>"; };
-		BF6132AE276F492400AB6E67 /* EnumerationInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumerationInstance.swift; sourceTree = "<group>"; };
 		BF6132B0276F563E00AB6E67 /* SystemEnumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemEnumeration.swift; sourceTree = "<group>"; };
 		BF6132B2276F630400AB6E67 /* SymbolTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolTable.swift; sourceTree = "<group>"; };
 		BF6132B4276F713D00AB6E67 /* MemoryPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPointer.swift; sourceTree = "<group>"; };
@@ -590,6 +589,7 @@
 		BFEFA9D8276BCC3200894140 /* ClassBasedPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassBasedPointer.swift; sourceTree = "<group>"; };
 		BFEFA9DA276BCEA500894140 /* Int+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Extensions.swift"; sourceTree = "<group>"; };
 		BFF3B084275ED237004BEE35 /* InfixOperatorInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfixOperatorInstance.swift; sourceTree = "<group>"; };
+		BFF6FE68276FFEDC00AD170F /* VMPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMPayload.swift; sourceTree = "<group>"; };
 		BFFF07AC274EB47800F1E13F /* CompilerIssue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompilerIssue.swift; sourceTree = "<group>"; };
 		BFFF07B7274F52E100F1E13F /* AssignmentExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentExpression.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -751,24 +751,24 @@
 				BFEFA9CA276B533F00894140 /* EmptySegment.swift */,
 				BFC1ECC326CFFA9F009B7C34 /* Header.swift */,
 				BFEFA9C2276B52D700894140 /* ManagedSegment.swift */,
+				BF6132B4276F713D00AB6E67 /* MemoryPointer.swift */,
 				BFC1ECAD26CFFA9F009B7C34 /* MemorySize.swift */,
 				BFD624FF2769E2070089B901 /* ObjectPointer.swift */,
+				BF6132BC276FCCCA00AB6E67 /* Pointer.swift */,
 				BFBC59752767DEFA00C4EEF1 /* PrimitiveExchange.swift */,
 				BFEB0F0627688EB500DF8F4F /* Segment.swift */,
 				BFEFA9CE276B547D00894140 /* SlotPointer.swift */,
 				BFEFA9C8276B530600894140 /* StackSegment.swift */,
 				BFEFA9C6276B52FA00894140 /* StaticSegment.swift */,
 				BFEFA9D2276B563600894140 /* StringPointer.swift */,
+				BF6132B2276F630400AB6E67 /* SymbolTable.swift */,
 				BFC1ECB126CFFA9F009B7C34 /* Timer.swift */,
 				BFEFA9BE276B529800894140 /* UInt16Pointer.swift */,
 				BFC1ECB526CFFA9F009B7C34 /* ValueHolder.swift */,
 				BFEFA9D6276B680600894140 /* VirtualMachine.swift */,
+				BFF6FE68276FFEDC00AD170F /* VMPayload.swift */,
 				BFC1ECC926CFFA9F009B7C34 /* Word.swift */,
 				BFEFA9C0276B52B400894140 /* WordPointer.swift */,
-				BF6132AE276F492400AB6E67 /* EnumerationInstance.swift */,
-				BF6132B2276F630400AB6E67 /* SymbolTable.swift */,
-				BF6132B4276F713D00AB6E67 /* MemoryPointer.swift */,
-				BF6132BC276FCCCA00AB6E67 /* Pointer.swift */,
 			);
 			path = Execution;
 			sourceTree = "<group>";
@@ -1196,6 +1196,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BFF6FE69276FFEDC00AD170F /* VMPayload.swift in Sources */,
 				BFC1ED3826CFFAB1009B7C34 /* ForkBlock.swift in Sources */,
 				BFC14AE327031528002CF4E7 /* HierarchySymbolWrapper.swift in Sources */,
 				BFC1ED4526CFFAB1009B7C34 /* WhenBlock.swift in Sources */,
@@ -1246,7 +1247,6 @@
 				BFB7FAFA2724015D00B8CEF0 /* SymbolWrapper.swift in Sources */,
 				BFC1ED4A26CFFAB1009B7C34 /* SignalBlock.swift in Sources */,
 				BFC1ED4226CFFAB1009B7C34 /* ReturnBlock.swift in Sources */,
-				BF6132AF276F492400AB6E67 /* EnumerationInstance.swift in Sources */,
 				BFC1ED4926CFFAB1009B7C34 /* WhileBlock.swift in Sources */,
 				BFC1ED6F26CFFABA009B7C34 /* Argon.swift in Sources */,
 				BFC1ED4626CFFAB1009B7C34 /* IfBlock.swift in Sources */,

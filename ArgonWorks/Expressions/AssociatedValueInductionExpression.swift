@@ -54,10 +54,10 @@ public class AssociatedValueInductionExpression: Expression
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        instance.append("ASSOC",.relocatable(.enumerationCase(expression.enumerationCase)),.literal(.integer(Argon.Integer(self.slots.count))),.none)
+//        instance.append("ASSOC",.relocatable(.enumerationCase(expression.enumerationCase)),.literal(.integer(Argon.Integer(self.slots.count))),.none)
         for slot in self.slots
             {
-            instance.append("AVSLOT",.relocatable(.slot(slot)),.none,.none)
+//            instance.append("AVSLOT",.relocatable(.slot(slot)),.none,.none)
             }
         }
     }
