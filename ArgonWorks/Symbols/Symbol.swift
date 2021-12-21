@@ -21,6 +21,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(Int(bitPattern: word))
         }
         
+    public var isEnumerationInstanceClass: Bool
+        {
+        false
+        }
+        
     public var methodInstances:MethodInstances
         {
         []
@@ -53,7 +58,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         
     public var sizeInBytes: Int
         {
-        0
+        fatalError()
         }
         
     public var extraSizeInBytes: Int
@@ -545,10 +550,6 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         let typeName = Swift.type(of: self)
         print("\(indent)\(typeName): \(self.label)")
         print("\(indent)INDEX: \(self.index)")
-        }
-            
-    public func resetJournalEntries()
-        {
         }
         
     public func isExpandable(forChildType type: ChildType) -> Bool

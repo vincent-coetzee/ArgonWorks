@@ -19,7 +19,7 @@ public class PrimitiveMethodInstance: MethodInstance
 
     public override var instructions: Array<T3AInstruction>
         {
-        [T3AInstruction(nil, "PRIM", .literal(.integer(self.primitiveIndex)), .none, .none)]
+        [T3AInstruction(nil, "PRIM",.integer(self.primitiveIndex), .none, .none)]
         }
         
     public var primitiveIndex:Argon.Integer = 0
@@ -46,7 +46,7 @@ public class PrimitiveMethodInstance: MethodInstance
  
     public override func emitCode(into buffer: T3ABuffer, using: CodeGenerator) throws
         {
-        buffer.append("PRIM",.literal(.integer(self.primitiveIndex)),.none,.none)
+        buffer.append("PRIM",.integer(self.primitiveIndex),.none,.none)
         }
         
     public override func typeCheck() throws

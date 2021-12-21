@@ -63,6 +63,12 @@ public class EnumerationCase:Symbol
         return("IconSlot")
         }
         
+    public override var sizeInBytes: Int
+        {
+        let type = ArgonModule.shared.enumerationCase
+        return(type.instanceSizeInBytes)
+        }
+        
     public override var typeCode:TypeCode
         {
         .enumerationCase
@@ -134,7 +140,7 @@ public class EnumerationCase:Symbol
         let enumCaseType = ArgonModule.shared.enumerationCase
         let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
         enumCasePointer.setClass(enumCaseType)
-        let symbolAddress = allocator.payload.symbolTable.addSymbol(self.symbol)
+        let symbolAddress = allocator.payload.symbolTable.registerSymbol(self.symbol)
         enumCasePointer.setAddress(symbolAddress,atSlot: "symbol")
         enumCasePointer.setInteger(self.caseIndex,atSlot: "index")
         if self.associatedTypes.isEmpty

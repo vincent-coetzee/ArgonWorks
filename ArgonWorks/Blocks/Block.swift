@@ -19,7 +19,7 @@ public class Block:NSObject,NamingContext,NSCoding,Displayable,VisitorReceiver,E
             }
         let hashValue = hasher.finalize()
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(abs(Int(bitPattern: word)))
         }
         
     public var isMethodInstanceScope: Bool

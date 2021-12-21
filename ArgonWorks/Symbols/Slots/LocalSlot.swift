@@ -48,12 +48,12 @@ public class LocalSlot:Slot
         
     public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-        self.place = .indirect(.framePointer,self.offset)
+        self.place = .frameOffset(self.offset)
         }
         
     public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
-        self.place = .indirect(.framePointer,self.offset)
+        self.place = .frameOffset(self.offset)
         }
     }
 

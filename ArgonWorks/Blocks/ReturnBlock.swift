@@ -96,6 +96,6 @@ public class ReturnBlock: Block
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         try self.value.emitCode(into: buffer,using: generator)
-        buffer.append(nil,"MOV",self.value.place,.none,.returnRegister)
+        buffer.append(nil,"MOV",self.value.place,.none,.returnValue)
         }
     }

@@ -23,6 +23,16 @@ public class TopModule: SystemModule
         .topModule
         }
         
+    public override var everyMethodInstance: MethodInstances
+        {
+        var instances = self.symbols.compactMap{$0 as? MethodInstance}
+        for module in (self.symbols.compactMap{$0 as? Module}.filter{!($0 is ArgonModule)})
+            {
+            instances.append(contentsOf: module.everyMethodInstance)
+            }
+        return(instances)
+        }
+        
     public var argonModule: ArgonModule
         {
         return(self.lookup(label: "Argon") as! ArgonModule)

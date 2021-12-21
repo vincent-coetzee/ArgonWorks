@@ -50,6 +50,20 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
+    public override var segmentType: Segment.SegmentType
+        {
+        .code
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        let instanceClass = ArgonModule.shared.methodInstance.classValue
+        var size = instanceClass.instanceSizeInBytes
+        size += Argon.kWordSizeInBytesInt
+        size += self.codeBuffer.count + T3AInstruction.sizeInBytes
+        return(size)
+        }
+        
     public override var argonHash: Int
         {
         var hasher = Hasher()
@@ -224,13 +238,25 @@ public class MethodInstance: Function
             return
             }
         self.wasMemoryLayoutDone = true
+        let addressString = String(format: "%16X",self.memoryAddress)
+        print("STARTING DUMP OF METHOD INSTANCE \(self.label) AT ADDRESS \(addressString)")
+        MemoryPointer.dumpMemory(atAddress: self.memoryAddress.cleanAddress,count: 200)
         let segment = context.segment(for: self)
         let methodInstanceType = ArgonModule.shared.lookup(label: "MethodInstance") as! Type
         let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType)
+        instancePointer.setClass(methodInstanceType)
         instancePointer.flipCount = 0
         instancePointer.hasBytes = false
         instancePointer.objectType = .methodInstance
         instancePointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        if let module = self.parent.node as? Module
+            {
+            instancePointer.setAddress(module.memoryAddress,atSlot: "container")
+            }
+        else
+            {
+            fatalError("Parent of method instance should be a module but is not.")
+            }
         let parameterType = ArgonModule.shared.parameter
         if let parmArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.parameters.count,elements: Array<Address>()))
             {
@@ -246,11 +272,17 @@ public class MethodInstance: Function
                 parmArray.append(parmPointer.address)
                 }
             }
-        let instructionCount = self.codeBuffer.count + 20
-        if let instructionArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: instructionCount, elements: Array<Address>()))
+        let baseSizeInBytes = methodInstanceType.instanceSizeInBytes
+        var wordPointer = WordPointer(bitPattern: self.memoryAddress + Word(baseSizeInBytes))
+        wordPointer.pointee = Word(integer: self.codeBuffer.count)
+        wordPointer += 1
+        for instruction in self.codeBuffer
             {
-            instancePointer.setArrayPointer(instructionArray,atSlot: "instructions")
+            instruction.install(intoPointer:wordPointer,context: context)
+            wordPointer += instruction.sizeInWords
             }
+        print("STARTING DUMP OF METHOD INSTANCE \(self.label) AT ADDRESS \(addressString)")
+        MemoryPointer.dumpMemory(atAddress: self.memoryAddress.cleanAddress,count: 200)
         }
         
     public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool

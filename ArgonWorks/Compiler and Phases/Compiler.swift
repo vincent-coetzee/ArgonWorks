@@ -65,7 +65,7 @@ public class Compiler
                     try! ObjectFile.write(module: module, topModule: TopModule.shared, atPath: "file:///Users/vincent/Desktop/module.argono")
                     let objectFile = try! ObjectFile.read(atPath: "file:///Users/vincent/Desktop/module.argono",topModule: TopModule.shared)
                     objectFile!.module.display(indent: "")
-                    if let module = CodeGenerator(self).processModule(module)
+                    if let module = CodeGenerator(self,payload: allocator.payload).processModule(module)
                         {
                         let vm = VirtualMachine(payload: allocator.payload)
                         module.install(inContext: vm.payload)

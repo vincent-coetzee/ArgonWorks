@@ -11,14 +11,14 @@ import Foundation
 public class CodeGenerator: CompilerPass
     {
     public let compiler: Compiler
-//    public let registerFile: RegisterFile
     public var wasCancelled = false
     public var isLValue = false
+    public let payload: VMPayload
     
-    public init(_ compiler: Compiler)
+    public init(_ compiler: Compiler,payload: VMPayload)
         {
         self.compiler = compiler
-//        self.registerFile = RegisterFile()
+        self.payload = payload
         }
         
     public func cancelCompletion()

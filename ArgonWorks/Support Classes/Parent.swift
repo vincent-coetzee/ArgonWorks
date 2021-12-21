@@ -145,6 +145,17 @@ public enum Parent:Storable
             }
         }
         
+    public var isEnumerationInstanceClass: Bool
+        {
+        switch(self)
+            {
+            case .node(let symbol):
+                return(symbol.isEnumerationInstanceClass)
+            default:
+                return(false)
+            }
+        }
+        
     public var memoryAddress: Address
         {
         switch(self)

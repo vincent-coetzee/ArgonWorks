@@ -23,7 +23,7 @@ import Foundation
 ///
 ///
 public class StandardMethodInstance: MethodInstance
-    {
+    {        
     public override var argonHash: Int
         {
         var hasher = Hasher()
@@ -122,7 +122,7 @@ public class StandardMethodInstance: MethodInstance
         {
         buffer.appendEntry(temporaryCount: self.localCount)
         try block.emitCode(into: buffer,using: generator)
-        buffer.appendExit()
+        buffer.appendExit(temporaryCount: self.localCount)
         buffer.append("RET",.none,.none,.none)
         }
         

@@ -59,6 +59,12 @@ public class Slot:Symbol
             }
         }
         
+    public override var sizeInBytes: Int
+        {
+        let type = ArgonModule.shared.slot
+        return(type.instanceSizeInBytes)
+        }
+        
     public var isSytemSymbol: Bool
         {
         false
@@ -217,26 +223,8 @@ public class Slot:Symbol
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
         slotPointer.setAddress(self.parent.memoryAddress,atSlot: "container")
-        let enumeration = (ArgonModule.shared.lookup(label: "SlotType") as! Type).enumerationValue
-        let instanceType = ArgonModule.shared.enumerationInstance
-        instanceType.layoutInMemory(using: allocator)
-        if let aCase = enumeration.caseAtSymbol(self.slotType.symbolString)
-            {
-            let instance = segment.allocateEnumerationInstance(enumeration: enumeration,caseIndex: aCase.caseIndex, associatedValues: [])
-            MemoryPointer.dumpMemory(atAddress: instance,count: 30)
-            print(aCase.caseIndex)
-            slotPointer.setAddress(instance, atSlot: "slotType")
-            }
-        if let aCase = enumeration.caseAtSymbol("#moduleSlot")
-            {
-            let instance = MemoryPointer(address: slotPointer.address(atSlot: "slotType"))
-            instance.setInteger(aCase.caseIndex,atSlotNamed: "caseIndex")
-            }
+        slotPointer.setInteger(self.slotType.rawValue, atSlot: "slotType")
         self.type?.layoutInMemory(using: allocator)
-        let instanceAddress = slotPointer.address(atSlot: "slotType")
-        let enumerationInstance = ClassBasedPointer(address: instanceAddress,type: ArgonModule.shared.enumerationInstance)
-        let caseIndex = enumerationInstance.integer(atSlot: "caseIndex")
-        print(caseIndex)
         }
         
     public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws

@@ -59,6 +59,18 @@ class AppDelegate: NSObject, NSApplicationDelegate
         Word.testWord()
         print("Size of Int is \(MemoryLayout<Int>.size)")
         StackSegment.testStackSegment()
+        ArgonModule.shared.layoutObjectSlots(using: AddressAllocator(compiler))
+        let payload = VMPayload()
+        let symbol1 = "symbol1"
+        let symbol1Handle = payload.symbolTable.registerSymbol(symbol1)
+        print("SYMBOL1 = \(symbol1Handle)")
+        let symbol2 = "this-is-a-symbol"
+        let symbol2Handle = payload.symbolTable.registerSymbol(symbol2)
+        print("SYMBOL2 = \(symbol2Handle)")
+        let symbol3 = "symbol1"
+        let symbol3Handle = payload.symbolTable.registerSymbol(symbol3)
+        print("SYMBOL3 = \(symbol3Handle)")
+        
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

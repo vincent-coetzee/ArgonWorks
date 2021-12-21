@@ -166,7 +166,7 @@ public class Initializer:Function,Scope
         {
         buffer.appendEntry(temporaryCount: 0)
         try self.block.emitCode(into: buffer, using: using)
-        buffer.appendExit()
+        buffer.appendExit(temporaryCount: 0)
         buffer.append("RET",.none,.none,.none)
         }
         

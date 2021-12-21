@@ -19,6 +19,43 @@ public indirect enum Literal:Hashable,Displayable
         Argon.kWordSizeInBytesInt
         }
         
+    public var wordValue: Word
+        {
+       switch(self)
+            {
+            case .nil:
+                return(0)
+            case .integer(let integer):
+                return(Word(integer: integer))
+            case .float(let float):
+                return(Word(float: float))
+            case .string(let string):
+                return(string.memoryAddress)
+            case .boolean(let boolean):
+                return(Word(boolean: boolean == .trueValue))
+            case .symbol(let symbol):
+                return(symbol.memoryAddress)
+            case .array(let array):
+                return(array.memoryAddress)
+            case .class(let aClass):
+                return(aClass.memoryAddress)
+            case .module(let module):
+                return(module.memoryAddress)
+            case .enumeration(let enumeration):
+                return(enumeration.memoryAddress)
+            case .enumerationCase(let aCase):
+                return(aCase.memoryAddress)
+//            case .method(let method):
+//                return("\(method.label)")
+            case .function(let function):
+                return(function.memoryAddress)
+            case .constant(let constant):
+                return(constant.memoryAddress)
+            case .address(let constant):
+                return(constant)
+            }
+        }
+        
     case `nil`
     case integer(Argon.Integer)
     case float(Argon.Float)
@@ -617,36 +654,36 @@ public class LiteralExpression: Expression
             case .float:
                 fatalError("Can not emit LValue of float")
             case .address(let address):
-                instance.append("LOAD",.literal(.address(address)),.none,temp)
+                instance.append("LOAD",.address(address),.none,temp)
             case .string(let staticString):
                 assert(staticString.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append(nil,"MOV",.relocatable(.address(staticString.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticString.memoryAddress),.none,temp)
             case .boolean(let boolean):
-                instance.append(nil,"MOV",.literal(.boolean(boolean)),.none,temp)
+                instance.append("MOV",.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
             case .symbol(let staticSymbol):
                 assert(staticSymbol.memoryAddress != 0,"StaticSymbol memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append(nil,"MOV",.relocatable(.address(staticSymbol.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticSymbol.memoryAddress),.none,temp)
             case .array(let staticArray):
                 assert(staticArray.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.relocatable(.address(staticArray.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticArray.memoryAddress),.none,temp)
             case .class(let aClass):
                 assert(aClass.memoryAddress != 0,"Class \(aClass.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(aClass.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(aClass.memoryAddress),.none,temp)
             case .module(let module):
                 assert(module.memoryAddress != 0,"Module \(module.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(module.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(module.memoryAddress),.none,temp)
             case .enumeration(let enumeration):
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(enumeration.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(enumeration.memoryAddress),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append(nil,"LOAD",.relocatable(.address(enumerationCase.memoryAddress)),.none,temp)
+                 instance.append("LOAD",.address(enumerationCase.memoryAddress),.none,temp)
 //            case .method(let method):
-//                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
+//                 instance.append("LOAD",.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append(nil,"LOAD",.relocatable(.address(constant.memoryAddress)),.none,temp)
+                 instance.append("LOAD",.address(constant.memoryAddress),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(function.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(function.memoryAddress),.none,temp)
             }
         self._place = temp
         }
@@ -666,42 +703,42 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .address(let address):
-                instance.append("MOV",.literal(.address(address)),.none,temp)
+                instance.append("MOV",.address(address),.none,temp)
             case .nil:
-                instance.append(nil,"MOV",.literal(.nil),.none,temp)
+                instance.append("MOV",.integer(0),.none,temp)
             case .integer(let integer):
-                instance.append(nil,"MOV",.literal(.integer(Argon.Integer(integer))),.none,temp)
+                instance.append("MOV",.integer(Argon.Integer(integer)),.none,temp)
             case .float(let float):
-                instance.append(nil,"MOV",.literal(.float(float)),.none,temp)
+                instance.append("MOV",.float(float),.none,temp)
             case .string(let staticString):
                 assert(staticString.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append(nil,"MOV",.relocatable(.address(staticString.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticString.memoryAddress),.none,temp)
             case .boolean(let boolean):
-                instance.append(nil,"MOV",.literal(.boolean(boolean)),.none,temp)
+                instance.append("MOV",.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
             case .symbol(let staticSymbol):
                 assert(staticSymbol.memoryAddress != 0,"StaticSymbol memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append(nil,"MOV",.relocatable(.address(staticSymbol.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticSymbol.memoryAddress),.none,temp)
             case .array(let staticArray):
                 assert(staticArray.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.relocatable(.address(staticArray.memoryAddress)),.none,temp)
+                instance.append("MOV",.address(staticArray.memoryAddress),.none,temp)
             case .class(let aClass):
                 assert(aClass.memoryAddress != 0,"Class \(aClass.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(aClass.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(aClass.memoryAddress),.none,temp)
             case .module(let module):
                 assert(module.memoryAddress != 0,"Module \(module.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(module.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(module.memoryAddress),.none,temp)
             case .enumeration(let enumeration):
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(enumeration.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(enumeration.memoryAddress),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append(nil,"LOAD",.relocatable(.address(enumerationCase.memoryAddress)),.none,temp)
+                 instance.append("LOAD",.address(enumerationCase.memoryAddress),.none,temp)
 //            case .method(let method):
-//                 instance.append(nil,"LOAD",.relocatable(.method(method)),.none,temp)
+//                 instance.append("LOAD",.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append(nil,"LOAD",.relocatable(.address(constant.memoryAddress)),.none,temp)
+                 instance.append("LOAD",.address(constant.memoryAddress),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
-                 instance.append(nil,"MOV",.relocatable(.address(function.memoryAddress)),.none,temp)
+                 instance.append("MOV",.address(function.memoryAddress),.none,temp)
             }
         self._place = temp
         }

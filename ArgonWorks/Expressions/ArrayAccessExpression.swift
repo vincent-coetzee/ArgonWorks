@@ -108,7 +108,7 @@ public class ArrayAccessExpression: Expression
         try self.array.emitPointerCode(into: buffer,using: using)
         try self.index.emitValueCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
-        buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
+        buffer.append("MUL",self.index.place,.integer(8),temporary)
         buffer.append("ADD",temporary,self.array.place,temporary)
         self._place = temporary
         }
@@ -118,7 +118,7 @@ public class ArrayAccessExpression: Expression
         try self.array.emitPointerCode(into: buffer,using: using)
         try self.index.emitValueCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
-        buffer.append("MUL",self.index.place,.literal(.integer(8)),temporary)
+        buffer.append("MUL",self.index.place,.integer(8),temporary)
         buffer.append("ADD",temporary,self.array.place,temporary)
         buffer.append("LFP", temporary,.none, temporary)
         self._place = temporary

@@ -384,7 +384,7 @@ public class ArgonModule: SystemModule
         self.addSystemClass(ClosureClass(label: "Closure",superclasses:[self.invokable]).mcode("C").setType(.closure))
         self.addSystemEnumeration(SystemEnumeration(label: "Opcode").cases("#CALL","#CALLP","#STP","#LFP","#IADD","#FADD","#ISUB","#FSUB","#IMUL","#FMUL","#IDIV","#FDIV","#IMOD","#FMOD","#IPOW","#FPOW","#ILT","#ILTEQ","#IEQ","#INEQ","#IGT","#IGTEQ","#FLT","FLTEQ","#FEQ","#FNEQ","#FGT","#FGTEQ","#INEG","#FNEG","#IBITAND","#IBITOR","#IBITXOR","#NOT","#BITNOT","#IINC","#IDEC","#IINCW","#IDECW","#RET","#PUSH","#POP","#MOV"))
         self.addSystemEnumeration(SystemEnumeration(label: "Literal").case("#integer",[self.integer]).case("float",[self.float]).case("boolean",[self.boolean]).case("byte",[self.byte]).case("character",[self.character]).case("string",[self.string]).case("address",[self.address]))
-        self.addSystemEnumeration(SystemEnumeration(label: "Operand").case("#literal",[self.literal]).case("#address",[self.address]))
+        self.addSystemEnumeration(SystemEnumeration(label: "Operand").case("#literal",[self.literal]).case("#address",[self.address]).case("#indirect",[self.integer,self.integer]).case("#return",[]).case("#stack",[]).case("#frame",[]).case("#label",[self.integer]).case("#temporary",[self.integer]).case("#literal",[self.literal]).case("#none",[]))
         self.addSystemEnumeration(SystemEnumeration(label: "SlotType").cases("#instanceSlot","#localSlot","#moduleSlot","#classSlot","#magicNumberSlot","#headerSlot","#virtualReadSlot","#virtualReadWriteSlot","#cocoonSlot"))
         classesAreLocked = true
         }
@@ -426,7 +426,7 @@ public class ArgonModule: SystemModule
         self.listNode.rawClass.slot("element",self.object).slot("next",self.listNode).slot("previous",self.listNode)
         self.methodInstance.rawClass.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("instructions",self.array.of(self.instruction))
         self.moduleClass.rawClass.virtual("isSystemModule",self.boolean).slot("symbols",self.typeClass).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass).slot("slotType",self.enumeration)
+        self.slot.rawClass.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass).slot("slotType",self.integer)
         self.string.rawClass.slot("count",self.integer).virtual("bytes",self.address).hasBytes(true)
         self.time.rawClass.virtual("hour",self.integer).virtual("minute",self.integer).virtual("second",self.integer).virtual("millisecond",self.integer)
         self.tuple.rawClass.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)

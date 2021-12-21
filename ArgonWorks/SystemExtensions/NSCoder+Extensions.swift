@@ -15,7 +15,7 @@ extension NSCoder
             {
         case .none:
             self.encode(1,forKey: forKey + "kind")
-        case .returnRegister:
+        case .returnValue:
             self.encode(2,forKey: forKey + "kind")
         case .temporary(let integer):
             self.encode(3,forKey: forKey + "kind")
@@ -23,26 +23,18 @@ extension NSCoder
         case .label(let label):
             self.encode(4,forKey: forKey + "kind")
             self.encode(label,forKey: forKey + "label")
-        case .relocatable(let relocatable):
+        case .address(let address):
             self.encode(5,forKey: forKey + "kind")
-            self.encodeRelocatableValue(relocatable,forKey: forKey + "relocatable")
-        case .literal(let literal):
+            self.encode(address,forKey: "address")
+        case .frameOffset(let offset):
             self.encode(6,forKey: forKey + "kind")
-            self.encodeLiteral(literal,forKey: forKey + "literal")
-        case .framePointer:
+            self.encode(offset,forKey: "offset")
+        case .integer(let integer):
             self.encode(7,forKey: forKey + "kind")
-        case .stackPointer:
+            self.encode(integer,forKey: "integer")
+        case .float(let float):
             self.encode(8,forKey: forKey + "kind")
-        case .indirect(let base,let offset):
-            self.encode(9,forKey: forKey + "kind")
-            self.encodeOperand(base,forKey: forKey + "base")
-            self.encode(offset,forKey: forKey + "offset")
-//        case .dataPointer:
-//            self.encode(10,forKey: forKey + "kind")
-//        case .staticPointer:
-//            self.encode(11,forKey: forKey + "kind")
-//        case .managedPointer:
-//            self.encode(12,forKey: forKey + "kind")
+            self.encode(float,forKey: "float")
             }
         }
         
@@ -54,141 +46,19 @@ extension NSCoder
             case 1:
                 return(.none)
             case 2:
-                return(.returnRegister)
+                return(.returnValue)
             case 3:
                 return(.temporary(self.decodeInteger(forKey: forKey + "temporary")))
             case 4:
                 return(.label(self.decodeObject(forKey: forKey + "label") as! T3ALabel))
             case 5:
-                return(.relocatable(self.decodeRelocatableValue(forKey: forKey + "relocatable")))
+                return(.address(Word(integer: self.decodeInteger(forKey: forKey + "address"))))
             case 6:
-                return(.literal(self.decodeLiteral(forKey: forKey + "literal")))
+                return(.frameOffset(self.decodeInteger(forKey: forKey + "offset")))
             case 7:
-                return(.framePointer)
+                return(.integer(Argon.Integer(self.decodeInteger(forKey: forKey + "integer"))))
             case 8:
-                return(.stackPointer)
-            case 9:
-                return(.indirect(self.decodeOperand(forKey: forKey + "base"),self.decodeInteger(forKey: "offset")))
-//            case 10:
-//                return(.dataPointer)
-//            case 11:
-//                return(.staticPointer)
-//            case 12:
-//                return(.managedPointer)
-            default:
-                fatalError("This should not happen")
-            }
-        }
-
-    public func encodeRelocatableValue(_ relocatableValue: T3AInstruction.RelocatableValue,forKey key: String)
-        {
-        switch(relocatableValue)
-            {
-//            case .function(let string):
-//                self.encode(1,forKey: key + "kind")
-//                self.encode(string,forKey: key + "function")
-//            case .class(let string):
-//                self.encode(2,forKey: key + "kind")
-//                self.encode(string,forKey: key + "class")
-//            case .module(let string):
-//                self.encode(3,forKey: key + "kind")
-//                self.encode(string,forKey: key + "module")
-//            case .enumeration(let string):
-//                self.encode(4,forKey: key + "kind")
-//                self.encode(string,forKey: key + "enumeration")
-//            case .method(let string):
-//                self.encode(5,forKey: key + "kind")
-//                self.encode(string,forKey: key + "method")
-//            case .enumerationCase(let string):
-//                self.encode(6,forKey: key + "kind")
-//                self.encode(string,forKey: key + "enumerationCase")
-//            case .constant(let string):
-//                self.encode(7,forKey: key + "kind")
-//                self.encode(string,forKey: key + "constant")
-//            case .self:
-//                self.encode(8,forKey: key + "kind")
-//            case .Self:
-//                self.encode(9,forKey: key + "kind")
-//            case .super:
-//                self.encode(10,forKey: key + "kind")
-//            case .segmentDS:
-//                self.encode(11,forKey: key + "kind")
-//            case .slot(let slot):
-//                self.encode(12,forKey: key + "kind")
-//                self.encode(slot,forKey: key + "slot")
-//            case .relocatableIndex(let index):
-//                self.encode(13,forKey: key + "kind")
-//                self.encode(index,forKey: key + "index")
-//            case .methodInstance(let instance):
-//                self.encode(14,forKey: key + "kind")
-//                self.encode(instance,forKey: key + "methodInstance")
-//            case .type(let type):
-//                self.encode(15,forKey: key + "kind")
-//                self.encode(type,forKey: key + "type")
-            case .closure(let buffer):
-                self.encode(16,forKey: key + "kind")
-                self.encode(buffer,forKey: key + "buffer")
-//            case .context(let instance,let ip):
-//                self.encode(17,forKey: key + "kind")
-//                self.encode(instance,forKey: key + "instance")
-//                self.encode(ip,forKey: key + "ip")
-//            case .string(let string):
-//                self.encode(18,forKey: key + "kind")
-//                self.encode(string,forKey: key + "string")
-            case .address(let address):
-                self.encode(19,forKey: key + "kind")
-                self.encode(Int(address),forKey: key + "address")
-            case .frame(let offset):
-                self.encode(20,forKey: key + "kind")
-                self.encode(offset,forKey: key + "offset")
-            }
-        }
-        
-    public func decodeRelocatableValue(forKey key: String) -> T3AInstruction.RelocatableValue
-        {
-        let kind = self.decodeInteger(forKey: key + "kind")
-        switch(kind)
-            {
-//            case 1:
-//                return(.function(self.decodeObject(forKey: key + "function") as! Function))
-//            case 2:
-//                return(.class(self.decodeObject(forKey: key + "class") as! Class))
-//            case 3:
-//                return(.module(self.decodeObject(forKey: key + "module") as! Module))
-//            case 4:
-//                return(.enumeration(self.decodeObject(forKey: key + "enumeration") as! Enumeration))
-//            case 5:
-//                return(.method(self.decodeObject(forKey: key + "method") as! Method))
-//            case 6:
-//                return(.enumerationCase(self.decodeObject(forKey: key + "enumerationCase") as! EnumerationCase))
-//            case 7:
-//                return(.constant(self.decodeObject(forKey: key + "constant") as! Constant))
-//            case 8:
-//                return(.self)
-//            case 9:
-//                return(.Self)
-//            case 10:
-//                return(.super)
-//            case 11:
-//                return(.segmentDS)
-//            case 12:
-//                return(.slot(self.decodeObject(forKey: key + "slot") as! Slot))
-//            case 13:
-//                return(.relocatableIndex(self.decodeInteger(forKey: key + "index")))
-//            case 14:
-//                return(.methodInstance(self.decodeObject(forKey: key + "methodInstance") as! MethodInstance))
-//            case 15:
-//                return(.type(self.decodeObject(forKey: key + "type") as! Type))
-            case 16:
-                return(.closure(self.decodeObject(forKey: key + "buffer") as! T3ABuffer))
-//            case 17:
-//                return(.context(self.decodeObject(forKey: key + "instance") as! MethodInstance,self.decodeInteger(forKey: key + "ip")))
-//            case 18:
-//                return(.string(self.decodeObject(forKey: key + "string") as! StaticString))
-            case 19:
-                return(.address(Address(self.decodeInteger(forKey: key + "address"))))
-            case 20:
-                return(.frame(self.decodeInteger(forKey: key + "offset")))
+                return(.float(self.decodeDouble(forKey: forKey + "float")))
             default:
                 fatalError("This should not happen")
             }
@@ -300,7 +170,7 @@ extension NSCoder
 //            case .literal(let literal):
 //                self.encode(4,forKey: key + "kind")
 //                self.encodeLiteralValue(literal,forKey: key + "literal")
-//            case .returnRegister:
+//            case .returnValue:
 //                self.encode(5,forKey: key + "kind")
 //            case .relocatable(let relocatable):
 //                self.encode(6,forKey: key + "kind")
@@ -322,7 +192,7 @@ extension NSCoder
 //            case 4:
 //                return(.literal(self.decodeLiteralValue(forKey: key + "literal")))
 //            case 5:
-//                return(.returnRegister)
+//                return(.returnValue)
 //            default:
 //                fatalError("This should not occur")
 //            }

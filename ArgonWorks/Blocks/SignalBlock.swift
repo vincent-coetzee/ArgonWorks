@@ -10,28 +10,33 @@ import Foundation
 public class SignalBlock: Block
     {
     private let symbol:String
+    private let staticSymbol: StaticSymbol
     
     public init(symbol: String)
         {
         self.symbol = symbol
+        self.staticSymbol = StaticSymbol(string: self.symbol)
+        Argon.addStatic(self.staticSymbol)
         super.init()
         }
         
     public required init?(coder: NSCoder)
         {
-        self.symbol = ""
+        self.symbol = coder.decodeObject(forKey: "symbol") as! String
+        self.staticSymbol = coder.decodeObject(forKey: "staticSymbol") as! StaticSymbol
         super.init(coder: coder)
         }
         
     public required init()
         {
         self.symbol = ""
+        self.staticSymbol = StaticSymbol(string: "")
         super.init()
         }
         
      public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        buffer.append(nil,"SIG",.literal(.symbol(StaticSymbol(string: self.symbol))),.none,.none)
+        buffer.append("SIG",.address(self.staticSymbol.memoryAddress),.none,.none)
         }
 
     public override func display(indent: String)

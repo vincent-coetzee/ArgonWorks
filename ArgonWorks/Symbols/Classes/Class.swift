@@ -31,6 +31,11 @@ public class Class:ContainerSymbol
         return(Int(bitPattern: word))
         }
         
+    public var localSizeInBytes: Int
+        {
+        self.localSlots.count * Argon.kWordSizeInBytesInt
+        }
+        
     public var genericSourceClass: Class
         {
         return(self)

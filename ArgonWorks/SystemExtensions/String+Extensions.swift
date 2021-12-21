@@ -29,9 +29,21 @@ extension String
         return(Int(hash & mask))
         }
         
+    public var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine("\(Swift.type(of: self))")
+        hasher.combine(self.utf16.count)
+        for code16 in self.utf16
+            {
+            hasher.combine(code16)
+            }
+        return(abs(hasher.finalize()))
+        }
+        
     public var polynomialRollingHash:Int
         {
-        let p:Int64 = 31
+        let p:Int64 = 53   // Use 3 instead of 31 because strings contains uppercase and lowercase characters
         let m:Int64 = Int64(1e9) + 9
         var powerOfP:Int64 = 1
         var hashValue:Int64 = 0

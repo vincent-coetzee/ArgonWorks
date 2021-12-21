@@ -130,7 +130,7 @@ public class TypeInstanciationTerm: Expression
             }
         var count:Argon.Integer = 1
         instance.append(lineNumber: location.line)
-        instance.append(nil,"MAKE",.relocatable(.address(self.type!.memoryAddress)),.none,.none)
+        instance.append(nil,"MAKE",.address(self.type!.memoryAddress),.none,.none)
         if let initializer = self.initializer
             {
             let temp = instance.nextTemporary()
@@ -140,14 +140,14 @@ public class TypeInstanciationTerm: Expression
                 instance.append(nil,"PUSH",argument.value.place,.none,.none)
                 count += 1
                 }
-            instance.append("PUSH",.returnRegister,.none,.none)
-            instance.append("CALL",.relocatable(.address(initializer.memoryAddress)),.none,.none)
-            instance.append("ADD",.stackPointer,.literal(.integer(8 * count)),.stackPointer)
+            instance.append("PUSH",.returnValue,.none,.none)
+            instance.append("CALL",.address(initializer.memoryAddress),.none,.none)
+            instance.append("POPN",.integer(8 * count))
             self._place = temp
             }
         else
             {
-            self._place = .returnRegister
+            self._place = .returnValue
             }
         }
     }

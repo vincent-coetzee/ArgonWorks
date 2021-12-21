@@ -29,12 +29,18 @@ public class PrimitiveClass: SystemClass
         return(true)
         }
         
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        self.wasMemoryLayoutDone = true
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        self.wasAddressAllocationDone = true
+        }
+        
     public override func layoutObjectSlots(using allocator: AddressAllocator)
         {
-        guard !self.wasSlotLayoutDone else
-            {
-            return
-            }
         self.wasSlotLayoutDone = true
         }
     }

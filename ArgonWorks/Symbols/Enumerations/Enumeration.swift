@@ -36,6 +36,12 @@ public class Enumeration:Symbol
         return(true)
         }
         
+    public override var sizeInBytes: Int
+        {
+        let type = ArgonModule.shared.enumeration
+        return(type.instanceSizeInBytes)
+        }
+        
     public override var asLiteralExpression: LiteralExpression?
         {
         LiteralExpression(Literal.enumeration(self))

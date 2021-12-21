@@ -161,18 +161,27 @@ public class MemoryPointer
     public static func dumpMemory(atAddress address: Address,count: Int)
         {
         let pointer = WordPointer(bitPattern: address.cleanAddress)
+        var offset = 0
         for index in 0..<count
             {
             let word = pointer[index]
             let addressString = String(format: "%014X",address + Word(index * Argon.kWordSizeInBytesInt))
             let wordBitString = word.bitString
-            let wordValueString = String(format: "% 10d",word)
             let wordString = Self.string(forTaggedValue: word)
+            if wordString.hasPrefix("HEADER")
+                {
+                offset = 0
+                }
+            else
+                {
+                offset += 1
+                }
+            let offsetString = String(format: "%05d",offset * Argon.kWordSizeInBytesInt)
             if word.tag == .header
                 {
                 print("----------------------------------------------------------------------------------------------------")
                 }
-            print("[\(addressString)] \(wordValueString) \(wordBitString) \(wordString)")
+            print("[\(addressString)] [\(offsetString)] \(wordBitString) \(wordString)")
             }
         }
     }

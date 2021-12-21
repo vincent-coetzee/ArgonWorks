@@ -128,6 +128,10 @@ public class Segment
         let size = self.align(symbol.sizeInBytes + symbol.extraSizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += size
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         let header = Header(atAddress: address)
         header.tag = .header
         header.sizeInBytes = size
@@ -140,6 +144,10 @@ public class Segment
         let size = self.align(count * Argon.kWordSizeInBytesInt,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += size
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         return(address)
         }
         
@@ -156,14 +164,22 @@ public class Segment
         
     public func allocateMemoryAddress(for methodInstance: MethodInstance)
         {
-        let sizeInBytes = ArgonModule.shared.methodInstance.sizeInBytes
+        let sizeInBytes = methodInstance.sizeInBytes
         let size = self.align(sizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += size
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         let header = Header(atAddress: address)
         header.tag = .header
         header.sizeInBytes = size
         methodInstance.memoryAddress = address
+        let addressString = String(format: "%16X",address)
+        print("STARTING DUMP OF METHOD INSTANCE AT ADDRESS \(addressString)")
+        MemoryPointer.dumpMemory(atAddress: address,count: 200)
+        print("HEADER SIZE IN BYTES = \(header.sizeInBytes)")
         print("ALLOCATED \(size) BYTES AT \(address) FOR METHOD INSTANCE \(methodInstance.label)")
         }
         
@@ -172,6 +188,10 @@ public class Segment
         let size = self.align(aClass.instanceSizeInBytes + sizeOfExtraBytesInBytes)
         let address = self.nextAddress
         self.nextAddress += size
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         let objectPointer = ClassBasedPointer(address: address.cleanAddress,class: aClass)
         objectPointer.tag = .header
         objectPointer.setClass(aClass)
@@ -191,6 +211,10 @@ public class Segment
         {
         let sizeInBytes = self.align(module.sizeInBytes,to: self.alignment)
         let address = self.nextAddress
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         self.nextAddress += sizeInBytes
         if let objectPointer = ObjectPointer(dirtyAddress: address)
             {
@@ -213,6 +237,10 @@ public class Segment
         let totalSizeInBytes = self.align(extraSize + sizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += Word(totalSizeInBytes)
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         if let stringPointer = StringPointer(dirtyAddress: address)
             {
             stringPointer.string = string
@@ -237,6 +265,10 @@ public class Segment
         let sizeInBytes = self.align(instanceType.instanceSizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += sizeInBytes
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         let objectPointer = ClassBasedPointer(address: address,type: instanceType)
         objectPointer.tag = .header
         objectPointer.setClass(instanceType)
@@ -262,6 +294,10 @@ public class Segment
         let totalSizeInBytes = self.align(extraSize + sizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += Word(totalSizeInBytes)
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         if let stringPointer = StringPointer(dirtyAddress: address)
             {
             stringPointer.string = string
@@ -291,6 +327,10 @@ public class Segment
         let sizeInBytes = self.align(slotType.sizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += Word(sizeInBytes)
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         if let slotPointer = SlotPointer(dirtyAddress: address)
             {
             slotPointer.nameAddress = self.allocateString(name)
@@ -315,6 +355,10 @@ public class Segment
         let totalSizeInBytes = self.align(extraSize + sizeInBytes,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += Word(totalSizeInBytes)
+        if self.nextAddress > self.lastAddress
+            {
+            fatalError("Size allocation exceeded in segment \(self.segmentType).")
+            }
         let arrayPointer = ClassBasedPointer(address: address,type: arrayType)
         arrayPointer.hasBytes = true
         arrayPointer.sizeInBytes = totalSizeInBytes

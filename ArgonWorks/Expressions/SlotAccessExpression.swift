@@ -87,7 +87,7 @@ public class SlotAccessExpression: Expression
         try expression.emitValueCode(into: buffer,using: using)
         try self.receiver.emitPointerCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
-        buffer.append("ADD",self.receiver.place,.literal(.integer(Argon.Integer(slot.offset))),temporary)
+        buffer.append("ADD",self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
         buffer.append("STIP",expression.place,.none,temporary)
         self._place = temporary
         }
@@ -104,7 +104,7 @@ public class SlotAccessExpression: Expression
         if let slot = self.slot
             {
             let temporary = into.nextTemporary()
-            into.append("IADD",.literal(.integer(Argon.Integer(slot.offset))),.none,temporary)
+            into.append("IADD",.integer(Argon.Integer(slot.offset)),.none,temporary)
             into.append("LFP",temporary,.none,temporary)
             self._place = temporary
             }

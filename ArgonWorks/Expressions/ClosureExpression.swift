@@ -55,7 +55,7 @@ public class ClosureExpression: Expression
             fatalError("Closure in closure expression is nil.")
             }
         try closure.emitCode(into: buffer,using: generator)
-        self._place = .relocatable(.closure(closure.buffer))
+        self._place = .address(closure.memoryAddress)
         }
         
     public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws

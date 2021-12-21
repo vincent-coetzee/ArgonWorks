@@ -30,6 +30,15 @@ public struct VMPayload: ExecutionContext
         self._symbolTable = SymbolTable(context: self)
         }
         
+    init(stackSegmentSize: MemorySize = .megabytes(25),staticSegmentSize:MemorySize = .megabytes(25),managedSegmentSize: MemorySize = .megabytes(50),codeSegmentSize: MemorySize = .megabytes(25))
+        {
+        self.stackSegment = try! StackSegment(memorySize: stackSegmentSize,argonModule: ArgonModule.shared)
+        self.staticSegment = try! StaticSegment(memorySize: staticSegmentSize,argonModule: ArgonModule.shared)
+        self.managedSegment = try! ManagedSegment(memorySize: managedSegmentSize,argonModule: ArgonModule.shared)
+        self.codeSegment = try! CodeSegment(memorySize: codeSegmentSize,argonModule: ArgonModule.shared)
+        self._symbolTable = SymbolTable(context: self)
+        }
+        
     public func segment(for symbol: Symbol) -> Segment
         {
         switch(symbol.segmentType)

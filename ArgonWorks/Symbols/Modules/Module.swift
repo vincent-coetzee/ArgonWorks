@@ -28,6 +28,16 @@ public class Module:ContainerSymbol,Scope
         .managed
         }
         
+    public var everyMethodInstance: MethodInstances
+        {
+        var instances = self.symbols.compactMap{$0 as? MethodInstance}
+        for module in (self.symbols.compactMap{$0 as? Module})
+            {
+            instances.append(contentsOf: module.everyMethodInstance)
+            }
+        return(instances)
+        }
+        
     public var parentModule: Module?
         {
         switch(self.parent)
@@ -342,7 +352,7 @@ public class Module:ContainerSymbol,Scope
             }
         return(nil)
         }
-
+        
     public func typeCheckModule() -> Module?
         {
             let typeContext = TypeContext(scope: self.enclosingScope)
@@ -496,14 +506,14 @@ public class Module:ContainerSymbol,Scope
     public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary()
-        buffer.append("MOV",.literal(.address(self.memoryAddress)),.none,temporary)
+        buffer.append("MOV",.address(self.memoryAddress),.none,temporary)
         self.place = temporary
         }
         
     public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary()
-        buffer.append("MOV",.literal(.address(self.memoryAddress)),.none,temporary)
+        buffer.append("MOV",.address(self.memoryAddress),.none,temporary)
         self.place = temporary
         }
     }

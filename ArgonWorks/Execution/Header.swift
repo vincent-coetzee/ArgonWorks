@@ -90,8 +90,7 @@ public class Header
             }
         set
             {
-            var theValue = newValue / Argon.kWordSizeInBytesWord
-            theValue = theValue > Self.kSizeBits ? Self.kSizeBits : theValue
+            let theValue = newValue / Argon.kWordSizeInBytesWord
             let value = (theValue & Self.kSizeBits) << Self.kSizeShift
             self.bytes = (self.bytes & ~(Self.kSizeBits << Self.kSizeShift)) | value
             }

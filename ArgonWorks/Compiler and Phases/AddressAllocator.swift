@@ -45,7 +45,7 @@ public class AddressAllocator: CompilerPass
         
     public func registerSymbol(_ symbol: Argon.Symbol) -> Address
         {
-        self.payload.symbolTable.addSymbol(symbol)
+        self.payload.symbolTable.registerSymbol(symbol)
         }
         
     public func segment(for symbol: Symbol) -> Segment

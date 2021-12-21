@@ -9,7 +9,9 @@ import Foundation
 
 public class T3AInstruction: NSObject,NSCoding
     {
-    public static let sizeInBytes: Int = 6 * Argon.kWordSizeInBytesInt
+    public static let sizeInBytes: Int = 12 * Argon.kWordSizeInBytesInt
+    
+    public let sizeInWords: Int = 12
     
     private static var nextTemp = 1
     
@@ -19,130 +21,9 @@ public class T3AInstruction: NSObject,NSCoding
         T3AInstruction.nextTemp += 1
         return(.temporary(index))
         }
-
-    public enum RelocatableValue
-        {
-        public var displayString: String
-            {
-            switch(self)
-                {
-//                case .self:
-//                    return("self")
-//                case .Self:
-//                    return("Self")
-//                case .super:
-//                    return("super")
-//                case .slot(let slot):
-//                    return(slot.label)
-//                case .function(let slot):
-//                    return(slot.invocationLabel)
-//                case .method(let slot):
-//                    return(slot.label)
-//                case .module(let slot):
-//                    return(slot.fullName.displayString)
-//                case .class(let slot):
-//                    return(slot.fullName.displayString)
-//                case .enumeration(let slot):
-//                    return(slot.label)
-//                case .enumerationCase(let slot):
-//                    return(slot.label)
-//                case .constant(let slot):
-//                    return(slot.label)
-//                case .segmentDS:
-//                    return("DS")
-//                case .relocatableIndex(let slot):
-//                    return("\(slot)")
-//                case .methodInstance(let slot):
-//                    return(slot.invocationLabel)
-//                case .string(let string):
-//                    return(string.string)
-//                case .context(let method,let ip):
-//                    return("\(method.invocationLabel):\(ip)")
-//                case .type(let slot):
-//                    return("Type(\(slot.label))")
-                case .closure(let buffer):
-                    let count = buffer.count
-                    return("Closure(\(count) instructions)")
-                case .address(let address):
-                    return("\(String(format:"%010X",address))")
-                case .frame(let offset):
-                    return("Frame(\(offset))")
-                }
-            }
-            
-        public var symbol: Symbol?
-            {
-            switch(self)
-                {
-//                case .slot(let symbol):
-//                    return(symbol)
-//                case .function(let symbol):
-//                    return(symbol)
-//                case .method(let symbol):
-//                    return(symbol)
-//                case .methodInstance(let symbol):
-//                    return(symbol)
-//                case .module(let symbol):
-//                    return(symbol)
-//                case .class(let symbol):
-//                    return(symbol)
-//                case .enumeration(let symbol):
-//                    return(symbol)
-//                case .enumerationCase(let symbol):
-//                    return(symbol)
-//                case .constant(let symbol):
-//                    return(symbol)
-                default:
-                    return(nil)
-                }
-            }
-            
-//        case `self`
-//        case `Self`
-//        case `super`
-//        case slot(Slot)
-//        case function(Function)
-//        case method(Method)
-//        case module(Module)
-//        case `class`(Class)
-//        case enumeration(Enumeration)
-//        case enumerationCase(EnumerationCase)
-//        case constant(Constant)
-//        case segmentDS
-//        case relocatableIndex(Int)
-//        case methodInstance(MethodInstance)
-        case closure(T3ABuffer)
-//        case context(MethodInstance,Int)
-//        case string(StaticString)
-//        case type(Type)
-        case address(Address)
-        case frame(Int)
-        }
-
+        
     public indirect enum Operand
         {
-        public var relocatableValue: RelocatableValue
-            {
-            switch(self)
-                {
-                case .relocatable(let value):
-                    return(value)
-                default:
-                    fatalError("This should not be asked of this value.")
-                }
-            }
-            
-        public var isRelocatable: Bool
-            {
-            switch(self)
-                {
-                case .relocatable:
-                    return(true)
-                default:
-                    return(false)
-                }
-            }
-            
         public var isNone: Bool
             {
             switch(self)
@@ -171,89 +52,110 @@ public class T3AInstruction: NSObject,NSCoding
                 {
                 case .none:
                     return("NONE")
-                case .returnRegister:
-                    return("RR")
+                case .returnValue:
+                    return("RV")
                 case .temporary(let integer):
                     return("TEMP_\(integer)")
                 case .label(let label):
                     return(label.displayString)
-                case .relocatable(let relocatable):
-                    return(relocatable.displayString)
-                case .literal(let literal):
-                    return("\(literal)")
-                case .framePointer:
-                    return("FRAME")
-                case .stackPointer:
-                    return("STACK")
-                case .indirect(let base,let offset):
-                    let string = offset == 0 ? "" : (offset > 0 ? "+\(offset)" : "\(offset)")
-                    return("[\(base.displayString)\(string)]")
+                case .address(let address):
+                    return("ADDRESS(\(address))")
+                case .frameOffset(let offset):
+                    return("FRAME(\(offset))")
+                case .integer(let integer):
+                    return("INT(\(integer))")
+                case .float(let float):
+                    return("FLOAT(\(float))")
+                }
+            }
+            
+        public var rawValue: Int
+            {
+            switch(self)
+                {
+                case .none:
+                    return(0)
+                case .returnValue:
+                    return(1)
+                case .temporary:
+                    return(2)
+                case .label:
+                    return(3)
+                case .address:
+                    return(4)
+                case .integer:
+                    return(5)
+                case .float:
+                    return(6)
+                case .frameOffset:
+                    return(7)
                 }
             }
             
         case none
-        case indirect(Operand,Int)
-        case returnRegister
-        case framePointer
-        case stackPointer
+        case returnValue
         case temporary(Int)
         case label(T3ALabel)
-        case relocatable(RelocatableValue)
-        case literal(Literal)
+        case address(Address)
+        case frameOffset(Int)
+        case integer(Argon.Integer)
+        case float(Argon.Float)
         
         public func isInteger(_ integer:Int) -> Bool
             {
             switch(self)
                 {
-                case .literal(let literal):
-                    switch(literal)
-                        {
-                        case .integer(let anInt):
-                            return(Int(anInt) == integer)
-                        default:
-                            break
-                        }
+                case .integer:
+                    return(true)
                 default:
-                    break
+                    return(false)
                 }
-            return(false)
+            }
+            
+        public func install(intoPointer: WordPointer,context: ExecutionContext)
+            {
+            var pointer = intoPointer
+            switch(self)
+                {
+                case .none:
+                    pointer.pointee = Word(integer: self.rawValue)
+                case .returnValue:
+                    pointer.pointee = Word(integer: self.rawValue)
+                case .integer(let integer):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = Word(integer: integer)
+                    pointer += 1
+                case .address(let address):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = address
+                    pointer += 1
+                case .temporary(let index):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = Word(integer: index)
+                case .label(let label):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = Word(integer: label.index)
+                    pointer += 1
+                case .frameOffset(let integer):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = Word(integer: integer)
+                    pointer += 1
+                case .float(let float):
+                    pointer.pointee = Word(integer: self.rawValue)
+                    pointer += 1
+                    pointer.pointee = Word(float: float)
+                    pointer += 1
+                }
             }
         }
         
     public var displayString: String
         {
-        if self.opcode == "CMT"
-            {
-            switch(self.operand1)
-                {
-                case .literal(let literal):
-                    switch(literal)
-                        {
-                        case .string(let string):
-                            return(";;  \(string)")
-                        default:
-                            return("")
-                        }
-                default:
-                    return("")
-                }
-            }
-        if self.opcode == "LINE"
-            {
-            switch(self.operand1)
-                {
-                case .literal(let literal):
-                    switch(literal)
-                        {
-                        case .integer(let integer):
-                            return(";;  LINE \(integer)")
-                        default:
-                            return("")
-                        }
-                default:
-                    return("")
-                }
-            }
         let labelString = self.label.isNil ? "       " : (self.label!.displayString + ":")
         var columns:Array<String> = []
         if self.operand1.isNotNone
@@ -272,6 +174,7 @@ public class T3AInstruction: NSObject,NSCoding
         return(labelString + self.opcode + " " + string)
         }
         
+    public var comment: String?
     public var offset: Int = 0
     public var label: T3ALabel?
     public let opcode: String
@@ -279,18 +182,6 @@ public class T3AInstruction: NSObject,NSCoding
     public var operand2: Operand = .none
     public var result: Operand = .none
     
-    init(lineNumber: Int)
-        {
-        self.opcode = "LINE"
-        self.operand1 = .literal(.integer(Argon.Integer(lineNumber)))
-        }
-        
-    init(comment: String)
-        {
-        self.opcode = "COMMENT"
-        self.operand1 = .literal(.string(StaticString(string: comment)))
-        }
-        
     init(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: Operand,_ operand2: Operand,_ result: Operand)
         {
         self.label = label
@@ -304,6 +195,7 @@ public class T3AInstruction: NSObject,NSCoding
         {
 //        print("START DECODE T3AInstruction")
         self.offset = coder.decodeInteger(forKey: "offset")
+        self.comment = coder.decodeObject(forKey: "comment") as? String
         self.label = coder.decodeObject(forKey: "label") as? T3ALabel
         self.opcode = coder.decodeObject(forKey: "opcode") as! String
         self.operand1 = coder.decodeOperand(forKey: "operand1")
@@ -320,12 +212,34 @@ public class T3AInstruction: NSObject,NSCoding
     public func encode(with coder: NSCoder)
         {
 //        print("ENCODE \(Swift.type(of: self)) OFFSET \(offset)")
+        coder.encode(self.comment,forKey: "comment")
         coder.encode(self.offset,forKey: "offset")
         coder.encode(self.label,forKey: "label")
         coder.encode(self.opcode,forKey: "opcode")
         coder.encodeOperand(self.operand1,forKey: "operand1")
         coder.encodeOperand(self.operand2,forKey: "operand2")
         coder.encodeOperand(self.result,forKey: "result")
+        }
+        
+    public var sizeInBytes: Int
+        {
+        12 * Argon.kWordSizeInBytesInt
+        }
+        
+    public func install(intoPointer aPointer: WordPointer,context: ExecutionContext)
+        {
+        var pointer = aPointer
+        pointer.pointee = Word(integer: self.offset)
+        pointer += 1
+        pointer.pointee = Word(integer: self.label?.index ?? 0)
+        pointer += 1
+        pointer.pointee = context.symbolTable.registerSymbol("#" + self.opcode)
+        pointer += 1
+        self.operand1.install(intoPointer: pointer,context: context)
+        pointer += 3
+        self.operand2.install(intoPointer: pointer,context: context)
+        pointer += 3
+        self.result.install(intoPointer: pointer,context: context)
         }
     }
 

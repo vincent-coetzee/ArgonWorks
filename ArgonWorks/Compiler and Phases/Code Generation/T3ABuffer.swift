@@ -74,21 +74,10 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         T3ALabel()
         }
         
-    public func append(comment: String)
+    
+    public func append(lineNumber line: Int)
         {
-        let instruction = T3AInstruction(comment: comment)
-        instruction.offset = currentOffset
-        self.currentOffset += 1
-        self.instructions.append(instruction)
-        }
-        
-    public func append(lineNumber: Int)
-        {
-        guard self.currentOffset > 0 && !self.instructions[self.currentOffset - 1].operand1.isInteger(lineNumber) else
-            {
-            return
-            }
-        self.append(nil,"LINE",.literal(.integer(Argon.Integer(lineNumber))),.none,.none)
+        self.append("LINE",.integer(Argon.Integer(line)))
         }
         
     public func append(_ opcode: String,_ operand1: T3AInstruction.Operand = .none,_ operand2: T3AInstruction.Operand = .none,_ result: T3AInstruction.Operand = .none)
@@ -98,7 +87,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func append(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
         {
-        if opcode != "LINE" && opcode != "CMT"
+        if opcode != "LINE"
             {
             if self.pendingLabel.isNotNil && label.isNotNil
                 {
@@ -110,7 +99,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
                 }
             }
         var instruction: T3AInstruction
-        if opcode == "LINE" || opcode == "CMT"
+        if opcode == "LINE"
             {
             instruction = T3AInstruction(nil,opcode,operand1,operand2,result)
             }
@@ -121,7 +110,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         instruction.offset = currentOffset
         self.currentOffset += 1
         self.instructions.append(instruction)
-        if opcode != "LINE" && opcode != "CMT"
+        if opcode != "LINE"
             {
             self.pendingLabel = nil
             }
@@ -137,14 +126,11 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func appendEntry(temporaryCount: Int)
         {
-        self.append("PUSH",.framePointer,.none,.none)
-        self.append("MOV",.stackPointer,.none,.framePointer)
-        self.append("SUB",.stackPointer,.literal(.integer(Argon.Integer(8*temporaryCount))),.stackPointer)
+        self.append("ENTER",.integer(Argon.Integer(8*temporaryCount)),.none,.none)
         }
         
-    public func appendExit()
+    public func appendExit(temporaryCount: Int)
         {
-        self.append("MOV",.framePointer,.stackPointer,.none)
-        self.append("POP",.framePointer,.none,.none)
+        self.append("LEAVE",.integer(Argon.Integer(8*temporaryCount)),.none,.none)
         }
     }

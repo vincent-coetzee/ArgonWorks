@@ -14,6 +14,11 @@ public class SystemClass:Class
 //        return(self.self)
 //        }
         
+    public override var isEnumerationInstanceClass: Bool
+        {
+        self.label == "EnumerationInstance"
+        }
+        
     public override var segmentType: Segment.SegmentType
         {
         .static
