@@ -91,6 +91,8 @@ public class SymbolTerm: Expression
             {
             case .type(let type):
                 self.type = type
+            case .module(let module):
+                self.type = TypeModule(module: module)
             default:
                 fatalError()
             }

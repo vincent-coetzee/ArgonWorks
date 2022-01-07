@@ -134,6 +134,7 @@ public class StandardMethodInstance: MethodInstance
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         newInstance.block = (self.block.freshTypeVariable(inContext: context))
+        newInstance.block.setContainer(.symbol(newInstance))
 //        newInstance.block._methodInstance = newInstance
         newInstance.type = self.type.freshTypeVariable(inContext: context)
         return(newInstance)
@@ -150,6 +151,10 @@ public class StandardMethodInstance: MethodInstance
 
     public override func initializeType(inContext context: TypeContext)
         {
+        if self.label == "<"
+            {
+            print("halt")
+            }
         self.parameters.forEach{$0.initializeType(inContext: context)}
         self.returnType.initializeType(inContext: context)
         self.block.initializeType(inContext: context)

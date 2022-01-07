@@ -215,7 +215,7 @@ public class TypeContext
             newSymbol.wasMemoryLayoutDone = symbol.wasMemoryLayoutDone
             newSymbol.wasSlotLayoutDone = symbol.wasSlotLayoutDone
             newSymbol.wasAddressAllocationDone = symbol.wasAddressAllocationDone
-            newSymbol.type = self.substitute(symbol.type)
+            newSymbol.type = symbol.type.isNil ? nil : self.substitute(symbol.type)
             return(newSymbol)
             }
             
@@ -271,7 +271,7 @@ public class TypeContext
             let newReturnType = self.substitute(methodInstance.returnType as! Type) as! Type
             let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
             let newInstance = methodInstance.substitute(from: self)
-            newInstance.type = self.substitute(methodInstance.type)
+            newInstance.type = methodInstance.type.isNil ? nil : self.substitute(methodInstance.type)
             newInstance.issues = methodInstance.issues
             newInstance.parameters = newParameters
             newInstance.returnType = newReturnType
@@ -287,6 +287,18 @@ public class TypeContext
                     throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.base.displayString)->\(left.slotLabel) != \(right.base.displayString)->\(right.slotLabel)"))
                     }
                 try self.unifySubtypes(left.base,right.base)
+                return
+                }
+            if let left = lhs as? TypeClassClass,let right = rhs as? TypeClassClass
+                {
+                if !left.isSubclass(of: right)
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+                    }
+                for (leftType,rightType) in zip(left.generics,right.generics)
+                    {
+                    try self.unifySubtypes(leftType,rightType)
+                    }
                 return
                 }
             if let left = lhs as? TypeClass,let right = rhs as? TypeClass
@@ -393,6 +405,18 @@ public class TypeContext
                     throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.base.displayString)->\(left.slotLabel) != \(right.base.displayString)->\(right.slotLabel)"))
                     }
                 try self.unify(left.base,right.base)
+                return
+                }
+            if let left = lhs as? TypeClassClass,let right = rhs as? TypeClassClass
+                {
+                if left != right && left != self.typeContext!.objectType && right != self.typeContext!.objectType
+                    {
+                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+                    }
+                for (leftType,rightType) in zip(left.generics,right.generics)
+                    {
+                    try self.unify(leftType,rightType)
+                    }
                 return
                 }
             if let left = lhs as? TypeClass,let right = rhs as? TypeClass

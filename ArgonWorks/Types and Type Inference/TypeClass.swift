@@ -111,11 +111,6 @@ public class TypeClass: TypeConstructor
         return(1 + (self.supertype as! TypeClass).depth)
         }
         
-    public override var isSystemType: Bool
-        {
-        self._isSystemType
-        }
-        
     public var allSubclasses: Types
         {
         self.subtypes
@@ -171,7 +166,6 @@ public class TypeClass: TypeConstructor
     /// class to be a type.
     ///
     ///
-    public var _isSystemType: Bool
     private var _subtypes = Types()
     public private(set) var magicNumber: Int = 0
     public private(set) var supertype: Type?
@@ -184,14 +178,12 @@ public class TypeClass: TypeConstructor
     required init(label: Label,isSystem: Bool = false,generics: Types = [])
         {
         self.magicNumber = label.polynomialRollingHash
-        self._isSystemType = false
         super.init(label: label,generics: [])
         }
         
     required init?(coder: NSCoder)
         {
         print("START DECODE TYPE CLASS")
-        self._isSystemType = coder.decodeBool(forKey: "isSystemType")
         self._subtypes = coder.decodeObject(forKey: "subtypes") as! Types
         self.magicNumber = coder.decodeInteger(forKey: "magicNumber")
         self.supertype = coder.decodeObject(forKey: "supertype") as? Type
@@ -205,18 +197,16 @@ public class TypeClass: TypeConstructor
     
     required init(label: Label)
         {
-        self._isSystemType = false
         super.init(label: label)
         }
     
     public override func of(_ type: Type) -> Type
         {
-        TypeClassInstance(archetype: self,generics: [type])
+        self.withGenerics([type])
         }
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self._isSystemType,forKey: "isSystemType")
         coder.encode(self.hasBytes,forKey: "hasBytes")
         coder.encode(self._subtypes,forKey: "subtypes")
         coder.encode(self.magicNumber,forKey: "magicNumber")
@@ -231,6 +221,7 @@ public class TypeClass: TypeConstructor
         {
         let newClass = Self(label: self.label,isSystem: self.isSystemType,generics: self.generics + types)
         newClass.setIndex(self.index)
+        newClass.flags(self.typeFlags.subtracting(.kArcheTypeFlag))
         newClass.hasBytes = self.hasBytes
         newClass._subtypes = self._subtypes
         newClass.magicNumber = self.magicNumber
@@ -303,8 +294,11 @@ public class TypeClass: TypeConstructor
         self.layoutSlots.append(slot)
         }
         
-    public func layoutInMemory(atAddress: Address,isGenericInstance: Bool,generics: Types,using allocator: AddressAllocator)
+    public override func layoutInMemory(using allocator: AddressAllocator)
         {
+//        
+//    public func layoutInMemory(atAddress: Address,isGenericInstance: Bool,generics: Types,using allocator: AddressAllocator)
+//        {
         guard !self.wasMemoryLayoutDone else
             {
             return
@@ -312,7 +306,7 @@ public class TypeClass: TypeConstructor
         self.wasMemoryLayoutDone = true
         let segment = allocator.segment(for: self.segmentType)
         let classType = allocator.argonModule.lookup(label: "Class") as! Type
-        let classPointer = ClassBasedPointer(address: atAddress.cleanAddress,type: classType)
+        let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: classType)
         classPointer.setClass(classType)
         classPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
         self.supertype?.layoutInMemory(using: allocator)
@@ -332,14 +326,14 @@ public class TypeClass: TypeConstructor
             }
         let slotsArray = segment.allocateArray(size: self.layoutSlots.count,elements: self.layoutSlots.map{$0.memoryAddress})
         classPointer.setAddress(slotsArray,atSlot: "slots")
-        classPointer.setAddress(self.module!.memoryAddress,atSlot: "container")
+        classPointer.setAddress(self.module!.memoryAddress,atSlot: "module")
         classPointer.setBoolean(self.isSystemClass,atSlot: "isSystemType")
         classPointer.setInteger(self.instanceSizeInBytes,atSlot: "instanceSizeInBytes")
         classPointer.setBoolean(self.isValueClass,atSlot: "isValue")
         classPointer.setInteger(self.magicNumber,atSlot: "magicNumber")
         classPointer.setInteger(self.argonHash,atSlot: "hash")
-        classPointer.setBoolean(isGenericInstance,atSlot: "isGenericInstance")
-        classPointer.setBoolean(!isGenericInstance,atSlot: "isArchetype")
+        classPointer.setBoolean(!self.isArcheType,atSlot: "isGenericInstance")
+        classPointer.setBoolean(self.isArcheType,atSlot: "isArchetype")
         if generics.isEmpty
             {
             classPointer.setAddress(0,atSlot: "typeParameters")
@@ -359,7 +353,7 @@ public class TypeClass: TypeConstructor
         if self.label == "Object"
             {
             print("OBJECT CLASS ADDRESS IS \(String(format: "%12X",self.memoryAddress)) \(self.memoryAddress.bitString)")
-            MemoryPointer.dumpMemory(atAddress: atAddress,count: 100)
+            MemoryPointer.dumpMemory(atAddress: self.memoryAddress,count: 100)
             }
         }
         
@@ -446,7 +440,7 @@ public class TypeClass: TypeConstructor
             }
         self.wasAddressAllocationDone = true
 //        print("ABOUT TO ALLOCATE ADDRESS FOR CLASS \(self.label), SIZE IN BYTES IS \(self.sizeInBytes)")
-//        allocator.allocateAddress(for: self)
+        allocator.allocateAddress(for: self)
 //        print("AFTER ALLOCATE ADDRESS FOR CLASS, ADDRESS IS \(self.memoryAddress)")
 //        let header = Header(atAddress: self.memoryAddress)
 //        print("HEADER SIZE IN WORDS IS \(header.sizeInWords) SHOULD BE \(self.sizeInBytes / 8)")

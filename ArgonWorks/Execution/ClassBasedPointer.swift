@@ -182,7 +182,7 @@ public class ClassBasedPointer
         self.classAddress = theClass.memoryAddress.cleanAddress
         self.setInteger(theClass.magicNumber,atSlot: "_magicNumber")
         self.setAddress(theClass.memoryAddress,atSlot: "_class")
-        self.setLocalSlotValues(forClass: (theClass.superclassType as! TypeClass))
+        self.setLocalSlotValues(forClass: (theClass.supertype as! TypeClass))
         }
         
     public func setClass(_ aClass: TypeClass)

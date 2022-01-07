@@ -199,7 +199,7 @@ public class MethodInstance: Function
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let instance = MethodInstance(label: self.label)
+        let instance = Self(label: self.label)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)

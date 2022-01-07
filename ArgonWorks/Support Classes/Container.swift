@@ -106,7 +106,7 @@ public enum Container: Scope
             switch(self)
                 {
                 case .none:
-                    fatalError()
+                    return(nil)
                 case .symbol(let symbol):
                     return(symbol.container)
                 case .type(let type):

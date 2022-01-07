@@ -107,12 +107,42 @@ public class Type: Symbol,Displayable,UserDisplayable
         
     public override var isSystemType: Bool
         {
-        false
+        self._flags.contains(.kSystemTypeFlag)
+        }
+        
+    public var isValueType: Bool
+        {
+        self._flags.contains(.kValueTypeFlag)
+        }
+        
+    public var isRootType: Bool
+        {
+        self._flags.contains(.kRootTypeFlag)
+        }
+        
+    public var isArrayType: Bool
+        {
+        self._flags.contains(.kArrayTypeFlag)
+        }
+        
+    public var isClassClassType: Bool
+        {
+        self._flags.contains(.kClassClassFlag)
+        }
+        
+    public override var isPrimitiveType: Bool
+        {
+        self._flags.contains(.kPrimitiveTypeFlag)
+        }
+        
+    public var isArcheType: Bool
+        {
+        self._flags.contains(.kArcheTypeFlag)
         }
     
     public override var fullName: Name
         {
-        self.module.fullName
+        self.module.isNil ? Name() : self.module!.fullName
         }
         
     public override var isType: Bool
@@ -125,7 +155,12 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
-    private var _isSystemType = false
+    public var typeFlags: TypeFlags
+        {
+        self._flags
+        }
+        
+    private var _flags: TypeFlags = []
     
     required init(label: Label)
         {
@@ -140,6 +175,7 @@ public class Type: Symbol,Displayable,UserDisplayable
     required init?(coder: NSCoder)
         {
         print("START DECODE TYPE")
+        self._flags = TypeFlags(rawValue: UInt16(coder.decodeInteger(forKey: "flags")))
         super.init(coder: coder)
         print("END DECODE TYPE")
         }
@@ -152,8 +188,16 @@ public class Type: Symbol,Displayable,UserDisplayable
     public override func encode(with coder: NSCoder)
         {
         print("START ENCODE TYPE \(self.label)")
+        coder.encode(self._flags.rawValue,forKey: "flags")
         super.encode(with: coder)
         print("END ENCODE TYPE")
+        }
+        
+    @discardableResult
+    public func flags(_ flag: TypeFlags) -> Self
+        {
+        self._flags = self._flags.union(flag)
+        return(self)
         }
         
     internal func freshType(inContext: TypeContext) -> Type

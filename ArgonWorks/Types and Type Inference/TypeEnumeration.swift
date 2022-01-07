@@ -172,11 +172,11 @@ public class TypeEnumeration: TypeConstructor
         
     public override func layoutInMemory(using allocator: AddressAllocator)
         {
-        fatalError()
-        }
-        
-    public func layoutInMemory(atAddress: Address,isGenericInstance: Bool,using allocator: AddressAllocator)
-        {
+//        print("ENUMERATION NEEDS TO BE LAID OUT IN MEMORY")
+//        }
+//
+//    public func layoutInMemory(atAddress: Address,isGenericInstance: Bool,using allocator: AddressAllocator)
+//        {
         guard !self.wasMemoryLayoutDone else
             {
             return
@@ -184,7 +184,7 @@ public class TypeEnumeration: TypeConstructor
         self.wasMemoryLayoutDone = true
         let segment = allocator.segment(for: self.segmentType)
         let enumType = ArgonModule.shared.enumeration
-        let enumPointer = ClassBasedPointer(address: atAddress,type: enumType)
+        let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType)
         enumPointer.setClass(enumType)
         enumPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
         if self.generics.isEmpty
