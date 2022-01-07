@@ -34,8 +34,8 @@ public class MethodSignature
                 }
             else if typeA.isClass && typeB.isClass && argumentType.isClass
                 {
-                let argumentClassList = argumentType.classValue.precedenceList
-                if let typeAIndex = argumentClassList.firstIndex(of: typeA.classValue),let typeBIndex = argumentClassList.firstIndex(of: typeB.classValue)
+                let argumentClassList = (argumentType as! TypeClass).precedenceList
+                if let typeAIndex = argumentClassList.firstIndex(of: (typeA as! TypeClass)),let typeBIndex = argumentClassList.firstIndex(of: (typeB as! TypeClass))
                     {
                     orderings.append(typeAIndex > typeBIndex ? .more : .less)
                     }

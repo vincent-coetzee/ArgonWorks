@@ -47,12 +47,6 @@ public class StandardMethodInstance: MethodInstance
         }
 
     internal var block: MethodInstanceBlock! = nil
-        {
-        didSet
-            {
-            self.block?.setParent(self)
-            }
-        }
         
     public var genericParameters = Types()
     
@@ -74,14 +68,14 @@ public class StandardMethodInstance: MethodInstance
         {
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
+        self.block.setContainer(.symbol(self))
         }
         
     public init(_ label:Label)
         {
         super.init(label:label)
         self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
+        self.block.setContainer(.symbol(self))
         }
         
     convenience init(label: Label,parameters: Parameters,returnType:Type)
@@ -95,7 +89,7 @@ public class StandardMethodInstance: MethodInstance
             }
         }
 
-    public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
+    public func `where`(_ name:String,_ aClass:TypeClass) -> MethodInstance
         {
         return(self)
         }
@@ -113,9 +107,9 @@ public class StandardMethodInstance: MethodInstance
             }
         }
         
-    public func hasSameReturnType(_ clazz: Class) -> Bool
+    public func hasSameReturnType(_ clazz: TypeClass) -> Bool
         {
-        return(self.returnType == clazz.type)
+        return(self.returnType == clazz)
         }
 
     public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
@@ -123,7 +117,7 @@ public class StandardMethodInstance: MethodInstance
         buffer.appendEntry(temporaryCount: self.localCount)
         try block.emitCode(into: buffer,using: generator)
         buffer.appendExit(temporaryCount: self.localCount)
-        buffer.append("RET",.none,.none,.none)
+        buffer.append(.RET)
         }
         
     public override func addDeclaration(_ location: Location)
@@ -140,9 +134,8 @@ public class StandardMethodInstance: MethodInstance
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         newInstance.block = (self.block.freshTypeVariable(inContext: context))
-        newInstance.block._methodInstance = newInstance
-        newInstance.block.setParent(newInstance)
-        newInstance.type = self.type?.freshTypeVariable(inContext: context)
+//        newInstance.block._methodInstance = newInstance
+        newInstance.type = self.type.freshTypeVariable(inContext: context)
         return(newInstance)
         }
         
@@ -150,7 +143,6 @@ public class StandardMethodInstance: MethodInstance
         {
         let instance = StandardMethodInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -161,7 +153,7 @@ public class StandardMethodInstance: MethodInstance
         self.parameters.forEach{$0.initializeType(inContext: context)}
         self.returnType.initializeType(inContext: context)
         self.block.initializeType(inContext: context)
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context))
+        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context)))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -171,7 +163,7 @@ public class StandardMethodInstance: MethodInstance
         self.block.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.returnType,right: self.block.type,origin: .symbol(self)))
         let parameterTypes = self.parameters.map{$0.type!}
-        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type!),origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.type,right: Argon.addType(TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type)),origin: .symbol(self)))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

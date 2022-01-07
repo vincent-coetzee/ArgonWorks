@@ -16,7 +16,17 @@ import Foundation
 ///
 public class TopModule: SystemModule
     {
-    public static var shared = TopModule(instanceNumber: 0)
+    public static func resetTopModule()
+        {
+        Self.shared = nil
+        Self.shared = TopModule(instanceNumber: 0)
+        let argonModule = ArgonModule(instanceNumber: 0)
+        Self.shared.addSymbol(argonModule)
+        ArgonModule.shared = argonModule
+        ArgonModule.shared.initialize()
+        }
+        
+    public static var shared: TopModule!
     
     public override var typeCode:TypeCode
         {
@@ -37,15 +47,6 @@ public class TopModule: SystemModule
         {
         return(self.lookup(label: "Argon") as! ArgonModule)
         }
-    ///
-    ///
-    /// We ARE the primary context, so just return ourselves
-    ///
-    ///
-    public override var primaryContext: NamingContext
-        {
-        return(self)
-        }
         
 //    public var moduleRoot: Module
 //        {
@@ -56,12 +57,6 @@ public class TopModule: SystemModule
     public var allModules: Symbols
         {
         return(self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label})
-        }
-
-
-    public override var topModule: TopModule
-        {
-        return(self)
         }
         
     public override var fullName: Name
@@ -77,7 +72,6 @@ public class TopModule: SystemModule
     init(instanceNumber: Int)
         {
         super.init(label: "Root")
-        self.addSymbol(ArgonModule(instanceNumber: instanceNumber))
         self.setIndex(UUID.systemUUID(0))
         }
 //

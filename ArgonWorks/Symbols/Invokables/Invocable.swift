@@ -7,8 +7,41 @@
 
 import AppKit
 
-public class Invocable: Symbol,BlockContext
+public class Invocable: Symbol,Scope,StackFrame
     {
+    public var isMethodInstanceScope: Bool
+        {
+        false
+        }
+        
+    public var parentScope: Scope?
+        {
+        get
+            {
+            self.module
+            }
+        set
+            {
+            self.module = newValue as? Module
+            }
+        }
+    
+    public override func addSymbol(_ symbol: Symbol)
+        {
+        if symbol is LocalSlot
+            {
+            self.addLocalSlot(symbol as! LocalSlot)
+            }
+        else if symbol is Parameter
+            {
+            self.addParameterSlot(symbol as! Parameter)
+            }
+        else
+            {
+            fatalError("Attempting to add symbol of type \(symbol) to an Invocable")
+            }
+        }
+    
     public var arity: Int
         {
         self.parameters.count
@@ -82,7 +115,7 @@ public class Invocable: Symbol,BlockContext
                 return(symbol)
                 }
             }
-        return(self.parent.lookup(label: label))
+        return(self.module.lookup(label: label))
         }
         
     public func addTemporaries(_ types: Types)
@@ -93,13 +126,12 @@ public class Invocable: Symbol,BlockContext
             }
         }
         
-    public func addLocalSlot(_ localSlot:LocalSlot)
+    public override func addLocalSlot(_ localSlot:LocalSlot)
         {
         self.localSymbols.append(localSlot)
         localSlot.frame = self
         localSlot.offset = self.nextLocalSlotOffset
         self.nextLocalSlotOffset -= 8
-        localSlot.wasAddedToBlockContext = true
         self.localCount += 1
         }
         

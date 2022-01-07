@@ -63,9 +63,9 @@ public indirect enum Literal:Hashable,Displayable
     case boolean(Argon.Boolean)
     case symbol(StaticSymbol)
     case array(StaticArray)
-    case `class`(Class)
+    case `class`(TypeClass)
     case module(Module)
-    case enumeration(Enumeration)
+    case enumeration(TypeEnumeration)
     case enumerationCase(EnumerationCase)
     case constant(Constant)
     case function(Function)
@@ -76,10 +76,10 @@ public indirect enum Literal:Hashable,Displayable
         self = .integer(Argon.Integer(integer))
         }
         
-    init(type: Type)
-        {
-        self = type.literal
-        }
+//    init(type: Type)
+//        {
+//        self = type.literal
+//        }
         
 //    init(coder: NSCoder,forKey: String)
 //        {
@@ -232,14 +232,14 @@ public indirect enum Literal:Hashable,Displayable
             case .module:
                 return(context.moduleType)
             case .enumeration(let enumeration):
-                return(TypeEnumeration(enumeration: enumeration,generics: enumeration.genericTypes))
+                return(TypeEnumeration(label: enumeration.label,generics: enumeration.generics))
             case .enumerationCase:
                 return(context.enumerationCaseType)
 //            case .method(let instance):
 //                return(TypeFunction(label: instance.fullName.displayString,method: instance))
 //                fatalError()
             case .function(let function):
-                return(TypeFunction(label: function.label,types: function.parameters.map{$0.type!},returnType: function.returnType))
+                return(TypeFunction(label: function.label,types: function.parameters.map{$0.type},returnType: function.returnType))
             case .constant(let constant):
                 return(constant.type)
             case .address:
@@ -249,7 +249,7 @@ public indirect enum Literal:Hashable,Displayable
         
     public func display(indent: String)
         {
-        print("\(indent)LITERAL \(self) \(self.type!.displayString)")
+        print("\(indent)LITERAL \(self) \(self.type.displayString)")
         }
         
     public func substitute(from substitution: TypeContext.Substitution) -> Literal
@@ -271,11 +271,11 @@ public indirect enum Literal:Hashable,Displayable
             case .array:
                 return(self)
             case .class(let aClass):
-                return(.class(substitution.substitute(aClass) as! Class))
+                return(.class(substitution.substitute(aClass) as! TypeClass))
             case .module(let module):
                 return(.module(substitution.substitute(module) as! Module))
             case .enumeration(let enumeration):
-                return(.enumeration(substitution.substitute(enumeration) as! Enumeration))
+                return(.enumeration(substitution.substitute(enumeration) as! TypeEnumeration))
             case .enumerationCase(let aCase):
                 return(.enumerationCase(substitution.substitute(aCase) as! EnumerationCase))
 //            case .method(let instance):
@@ -385,7 +385,7 @@ public class LiteralExpression: Expression
 //            }
 //        }
         
-    public var classLiteral: Class
+    public var classLiteral: TypeClass
         {
         switch(self.literal)
             {
@@ -452,11 +452,11 @@ public class LiteralExpression: Expression
         
     public let literal:Literal
 
-    init(_ type:Type)
-        {
-        self.literal = Literal(type: type)
-        super.init()
-        }
+//    init(_ type:Type)
+//        {
+//        self.literal = Literal(type: type)
+//        super.init()
+//        }
         
     init(_ literal:Literal)
         {
@@ -504,16 +504,7 @@ public class LiteralExpression: Expression
                 let aType = self.literal.type(inContext: context)
                 context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
             case .class(let aClass):
-                var aType: Type
-                if aClass is GenericClass
-                    {
-                    let genericClass = aClass as! GenericClass
-                    aType = TypeClass(class: aClass,generics: genericClass.types)
-                    }
-                else
-                    {
-                    aType = TypeClass(class: aClass,generics: [])
-                    }
+                    let aType = Argon.addType(TypeClass(label: aClass.label,generics: []))
                 context.append(TypeConstraint(left: self.type,right: aType,origin: .expression(self)))
             case .module:
                 context.append(TypeConstraint(left: self.type,right: context.moduleType,origin: .expression(self)))
@@ -551,19 +542,11 @@ public class LiteralExpression: Expression
             case .array(let array):
                 self.type = array.type(inContext: context)
             case .class(let aClass):
-                if aClass is GenericClass
-                    {
-                    let genericClass = aClass as! GenericClass
-                    self.type = TypeClass(class: aClass,generics: genericClass.types)
-                    }
-                else
-                    {
-                    self.type = TypeClass(class: aClass,generics: [])
-                    }
+                    self.type = Argon.addType(TypeClass(label: aClass.label,generics: []))
             case .module(let module):
-                self.type = TypeModule(module: module)
+                self.type = module.type
             case .enumeration(let enumeration):
-                self.type = enumeration.type!
+                self.type = enumeration.type
             case .enumerationCase(let aCase):
                 self.type = aCase.type
 //            case .method(let method):
@@ -577,7 +560,7 @@ public class LiteralExpression: Expression
         
     public override func display(indent: String)
         {
-        print("\(indent)LITERAL \(self.literal) \(self.type!.displayString)")
+        print("\(indent)LITERAL \(self.literal) \(self.type.displayString)")
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -602,37 +585,8 @@ public class LiteralExpression: Expression
             case .module(let module):
                 return(module.lookupSlot(label: selector))
             case .class(let aClass):
-                return(aClass.metaclass?.lookupSlot(label: selector))
-            default:
-                return(nil)
-            }
-        }
-        
-    public override func lookup(label child: String) -> Symbol?
-        {
-        switch(self.literal)
-            {
-            case .class(let aClass):
-                if let symbol = aClass.lookup(label: child)
-                    {
-                    return(symbol)
-                    }
-                return(nil)
-            case .module(let module):
-                if let symbol = module.lookup(label: child)
-                    {
-                    return(symbol)
-                    }
-                else
-                    {
-                    return(nil)
-                    }
-            case .enumeration(let enumeration):
-                if let symbol = enumeration.lookup(label: child)
-                    {
-                    return(symbol)
-                    }
-                return(nil)
+//                return(aClass.lookupSlot(label: selector))
+                fatalError()
             default:
                 return(nil)
             }
@@ -654,36 +608,36 @@ public class LiteralExpression: Expression
             case .float:
                 fatalError("Can not emit LValue of float")
             case .address(let address):
-                instance.append("LOAD",.address(address),.none,temp)
+                instance.append(.LDI,.address(address),.none,temp)
             case .string(let staticString):
                 assert(staticString.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticString.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticString.memoryAddress),.none,temp)
             case .boolean(let boolean):
-                instance.append("MOV",.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
+                instance.append(.MOV,.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
             case .symbol(let staticSymbol):
                 assert(staticSymbol.memoryAddress != 0,"StaticSymbol memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticSymbol.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticSymbol.memoryAddress),.none,temp)
             case .array(let staticArray):
                 assert(staticArray.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticArray.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticArray.memoryAddress),.none,temp)
             case .class(let aClass):
                 assert(aClass.memoryAddress != 0,"Class \(aClass.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(aClass.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(aClass.memoryAddress),.none,temp)
             case .module(let module):
                 assert(module.memoryAddress != 0,"Module \(module.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(module.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(module.memoryAddress),.none,temp)
             case .enumeration(let enumeration):
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(enumeration.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(enumeration.memoryAddress),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append("LOAD",.address(enumerationCase.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(enumerationCase.memoryAddress),.none,temp)
 //            case .method(let method):
 //                 instance.append("LOAD",.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append("LOAD",.address(constant.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(constant.memoryAddress),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(function.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(function.memoryAddress),.none,temp)
             }
         self._place = temp
         }
@@ -703,42 +657,42 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .address(let address):
-                instance.append("MOV",.address(address),.none,temp)
+                instance.append(.MOV,.address(address),.none,temp)
             case .nil:
-                instance.append("MOV",.integer(0),.none,temp)
+                instance.append(.LDI,.integer(0),.none,temp)
             case .integer(let integer):
-                instance.append("MOV",.integer(Argon.Integer(integer)),.none,temp)
+                instance.append(.LDI,.integer(Argon.Integer(integer)),.none,temp)
             case .float(let float):
-                instance.append("MOV",.float(float),.none,temp)
+                instance.append(.LDI,.float(float),.none,temp)
             case .string(let staticString):
                 assert(staticString.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticString.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticString.memoryAddress),.none,temp)
             case .boolean(let boolean):
-                instance.append("MOV",.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
+                instance.append(.LDI,.integer(Argon.Integer(boolean == .trueValue ? 1 : 0)),.none,temp)
             case .symbol(let staticSymbol):
                 assert(staticSymbol.memoryAddress != 0,"StaticSymbol memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticSymbol.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticSymbol.memoryAddress),.none,temp)
             case .array(let staticArray):
                 assert(staticArray.memoryAddress != 0,"StaticArray memoryAddress == 0, this means it was probably not in the static table and so did have an address allocated.")
-                instance.append("MOV",.address(staticArray.memoryAddress),.none,temp)
+                instance.append(.MOV,.address(staticArray.memoryAddress),.none,temp)
             case .class(let aClass):
                 assert(aClass.memoryAddress != 0,"Class \(aClass.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(aClass.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(aClass.memoryAddress),.none,temp)
             case .module(let module):
                 assert(module.memoryAddress != 0,"Module \(module.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(module.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(module.memoryAddress),.none,temp)
             case .enumeration(let enumeration):
                 assert(enumeration.memoryAddress != 0,"Enumeration \(enumeration.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(enumeration.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(enumeration.memoryAddress),.none,temp)
             case .enumerationCase(let enumerationCase):
-                 instance.append("LOAD",.address(enumerationCase.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(enumerationCase.memoryAddress),.none,temp)
 //            case .method(let method):
 //                 instance.append("LOAD",.method(method)),.none,temp)
             case .constant(let constant):
-                 instance.append("LOAD",.address(constant.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(constant.memoryAddress),.none,temp)
             case .function(let function):
                 assert(function.memoryAddress != 0,"Function \(function.label) memoryAddress == 0.")
-                 instance.append("MOV",.address(function.memoryAddress),.none,temp)
+                 instance.append(.MOV,.address(function.memoryAddress),.none,temp)
             }
         self._place = temp
         }

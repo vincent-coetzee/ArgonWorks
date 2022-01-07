@@ -9,6 +9,11 @@ import Foundation
 
 public class TypeConstructor: Type
     {
+    public static func ==(lhs: TypeConstructor,rhs: TypeConstructor) -> Bool
+        {
+        lhs.index == rhs.index && lhs.generics == rhs.generics
+        }
+        
     public override var isTypeConstructor: Bool
         {
         true
@@ -40,6 +45,20 @@ public class TypeConstructor: Type
                 }
             }
         return(false)
+        }
+        
+    public override var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine("\(Swift.type(of: self))")
+        hasher.combine(self.label)
+        for type in self.generics
+            {
+            hasher.combine(type.argonHash)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
         }
         
     public override var typeVariables: TypeVariables
@@ -88,5 +107,13 @@ public class TypeConstructor: Type
                 }
             }
         return(false)
+        }
+        
+    @discardableResult
+    public override func typeVar(_ label: Label) -> Type
+        {
+        let typeVariable = TypeContext.freshTypeVariable(named: label)
+        self.generics.append(typeVariable)
+        return(self)
         }
     }

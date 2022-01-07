@@ -47,7 +47,7 @@ public class SystemModule: Module
             }
         if name.isRooted
             {
-            if let context = self.primaryContext.lookup(label: name.first)
+            if let context = TopModule.shared.lookup(label: name.first)
                 {
                 return(context.lookup(name: name.withoutFirst))
                 }

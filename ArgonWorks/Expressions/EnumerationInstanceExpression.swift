@@ -65,14 +65,14 @@ public class EnumerationInstanceExpression: Expression
             instance.append(lineNumber: location.line)
             }
         var count:Argon.Integer = 1
-        instance.append("PUSH",.address(self.theCase.memoryAddress),.none,.none)
-        if self.theCase.hasAssociatedTypes
+        instance.append(.PUSH,.address(self.theCase.memoryAddress),.none,.none)
+        if self.theCase.hasAssociatedValues
             {
             let values = self.associatedValues!
             for value in values
                 {
                 try value.emitCode(into: instance,using: generator)
-                instance.append("PUSH",value.place,.none,.none)
+                instance.append(.PUSH,value.place,.none,.none)
                 count += 1
                 }
             }

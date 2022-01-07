@@ -22,9 +22,9 @@ public class HierarchySymbolWrapper
             switch(self)
                 {
                 case .class:
-                    return(symbol is Class || symbol is Slot || symbol is Module || symbol is SymbolGroup)
+                    return(symbol is TypeClass || symbol is Slot || symbol is Module || symbol is SymbolGroup)
                 case .enumeration:
-                    return(symbol is Enumeration || symbol is EnumerationCase || symbol is Module || symbol is SymbolGroup)
+                    return(symbol is TypeEnumeration || symbol is EnumerationCase || symbol is Module || symbol is SymbolGroup)
                 case .constant:
                     return(symbol is Constant || symbol is Module || symbol is SymbolGroup)
                 case .method:
@@ -198,7 +198,7 @@ public class HierarchySymbolWrapper
             let kids = self.children
             let symbol = self.symbols.first!
             let kidNames = symbol.childName
-            if symbol is Module || symbol is SymbolGroup || symbol is Class || symbol is Enumeration
+            if symbol is Module || symbol is SymbolGroup || symbol is TypeClass || symbol is TypeEnumeration
                 {
                 if kids.count == 1
                     {

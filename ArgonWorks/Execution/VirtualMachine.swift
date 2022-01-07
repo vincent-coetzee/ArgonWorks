@@ -13,7 +13,7 @@ public protocol ExecutionContext
     var managedSegment: ManagedSegment { get }
     var staticSegment: StaticSegment { get }
     var codeSegment: CodeSegment { get }
-    var symbolTable: SymbolTable { get }
+    var symbolRegistry: SymbolRegistry { get }
     func segment(for: Symbol) -> Segment
     }
     

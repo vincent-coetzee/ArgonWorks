@@ -103,7 +103,7 @@ public class ClassPointer: ObjectPointer
             }
         }
         
-    public var superclassesPointer: ArrayPointer?
+    public var superclassPointer: ArrayPointer?
         {
         set
             {

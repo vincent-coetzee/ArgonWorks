@@ -52,7 +52,7 @@ public class SlotExpression: Expression
         {
         let newSlot = substitution.substitute(self.slot)
         let expression = SlotExpression(slot: newSlot) as! Self
-        substitution.typeContext?.bind(newSlot.type!,to: newSlot.label)
+        substitution.typeContext?.bind(newSlot.type,to: newSlot.label)
         expression.issues = self.issues
         return(expression)
         }
@@ -72,7 +72,7 @@ public class SlotExpression: Expression
         {
         try expression.emitValueCode(into: into,using: using)
         try self.emitPointerCode(into: into,using: using)
-        into.append("SIP",expression.place,.none,self.place)
+        into.append(.STP,expression.place,.none,self.place)
         }
         
     public override func emitValueCode(into buffer: T3ABuffer,using: CodeGenerator) throws
@@ -85,14 +85,9 @@ public class SlotExpression: Expression
         try self.slot.emitLValue(into: buffer,using: using)
         }
         
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.slot.lookup(label: label))
-        }
-        
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
-        if slot.type!.isGenericClass
+        if slot.type.isGenericClass
             {
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The type of the slot '\(slot.label)' contains an uninstanciated class which is invalid.")
@@ -106,7 +101,7 @@ public class SlotExpression: Expression
             instance.append(lineNumber: location.line)
             }
         let temp = instance.nextTemporary()
-        instance.append(nil,"MOV",.frameOffset(self.slot.offset),.none,temp)
+        instance.append(.MOV,.frameOffset(self.slot.offset),.none,temp)
         self._place = temp
         }
     }

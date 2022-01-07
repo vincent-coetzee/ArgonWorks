@@ -17,7 +17,6 @@ public class ClosureExpression: Expression
         self.closure = closure
         self.closureSlot = nil
         super.init()
-        self.closure!.setParent(self)
         }
         
     public init(slot:Slot,arguments: Arguments)
@@ -72,7 +71,7 @@ public class ClosureExpression: Expression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = ClosureExpression(closure: substitution.substitute(self.closure!))
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -80,8 +79,8 @@ public class ClosureExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.closure!.initializeType(inContext: context)
-        let label = self.closure!.parameters.map{$0.type!.displayString}.joined(separator: "x") + "->" + self.closure!.returnType.displayString
-        self.type = TypeFunction(label: label, types: self.closure!.parameters.map{$0.type!}, returnType: self.closure!.returnType)
+        let label = self.closure!.parameters.map{$0.type.displayString}.joined(separator: "x") + "->" + self.closure!.returnType.displayString
+        self.type = Argon.addType(TypeFunction(label: label, types: self.closure!.parameters.map{$0.type}, returnType: self.closure!.returnType))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

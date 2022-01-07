@@ -7,47 +7,36 @@
 
 import Foundation
 
-public class MethodInstanceBlock: Block,BlockContext,Scope
+public class MethodInstanceBlock: Block
     {
-    public override var isMethodInstanceScope: Bool
-        {
-        true
-        }
-        
-    internal var _methodInstance: MethodInstance
-    
-    public override var methodInstance: MethodInstance
-        {
-        return(self._methodInstance)
-        }
+    internal var methodInstance: MethodInstance?
         
     public override var declaration: Location?
         {
-        self.methodInstance.declaration
+        self.methodInstance?.declaration
         }
         
     required init()
         {
-        self._methodInstance = MethodInstance(label: "")
+        self.methodInstance = nil
         super.init()
         }
         
     init(methodInstance:MethodInstance)
         {
-        self._methodInstance = methodInstance
+        self.methodInstance = methodInstance
         super.init()
-        self.setParent(methodInstance)
         }
         
     public required init?(coder: NSCoder)
         {
-        self._methodInstance = coder.decodeObject(forKey: "methodInstance") as! MethodInstance
+        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
         super.init(coder: coder)
         }
     
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self._methodInstance,forKey: "methodInstance")
+        coder.encode(self.methodInstance,forKey: "methodInstance")
         super.encode(with: coder)
         }
         
@@ -60,14 +49,14 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
                 return(symbol)
                 }
             }
-        return(self.parent.lookup(label: label))
+        return(nil)
         }
         
     public func addParameters(_ parameters: Parameters)
         {
         for parameter in parameters
             {
-            self.methodInstance.addParameterSlot(parameter)
+            self.methodInstance?.addParameterSlot(parameter)
             }
         }
         
@@ -78,7 +67,7 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
             {
             newBlock.addBlock(substitution.substitute(block))
             }
-        newBlock.type = substitution.substitute(self.type!)
+        newBlock.type = substitution.substitute(self.type)
         newBlock.issues = self.issues
         return(newBlock)
         }
@@ -100,7 +89,7 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        let returnBlocks = self.returnBlocks.filter{$0.enclosingScope.isMethodInstanceScope}
+        let returnBlocks = self.returnBlocks.filter{$0.containsMethodInstanceScope}
         for block in returnBlocks
             {
             context.append(TypeConstraint(left: block.type, right: self.type, origin: .block(self)))
@@ -113,7 +102,7 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
             {
             block.initializeType(inContext: context)
             }
-        self.type = self.methodInstance.returnType.freshTypeVariable(inContext: context)
+        self.type = ArgonModule.shared.void
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -122,13 +111,6 @@ public class MethodInstanceBlock: Block,BlockContext,Scope
             {
             block.analyzeSemantics(using: analyzer)
             }
-        }
-        
-    public override func deepCopy() -> Self
-        {
-        let newBlock = super.deepCopy()
-        newBlock._methodInstance = self.methodInstance
-        return(newBlock)
         }
         
     public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws

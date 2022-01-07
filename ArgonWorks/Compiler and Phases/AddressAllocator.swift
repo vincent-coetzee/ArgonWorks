@@ -45,14 +45,14 @@ public class AddressAllocator: CompilerPass
         
     public func registerSymbol(_ symbol: Argon.Symbol) -> Address
         {
-        self.payload.symbolTable.registerSymbol(symbol)
+        self.payload.symbolRegistry.registerSymbol(symbol)
         }
         
-    public func segment(for symbol: Symbol) -> Segment
+    public func segment(for segmentType: Segment.SegmentType) -> Segment
         {
-        switch(symbol.segmentType)
+        switch(segmentType)
             {
-            case .empty:
+            case .null:
                 break
             case .static:
                 return(self.payload.staticSegment)
@@ -68,52 +68,19 @@ public class AddressAllocator: CompilerPass
         
     public func allocateAddress(for symbol: Symbol)
         {
-        switch(symbol.segmentType)
-            {
-            case .empty:
-                break
-            case .static:
-                self.payload.staticSegment.allocateMemoryAddress(for: symbol)
-            case .managed:
-                self.payload.managedSegment.allocateMemoryAddress(for: symbol)
-            case .stack:
-                self.payload.stackSegment.allocateMemoryAddress(for: symbol)
-            case .code:
-                self.payload.codeSegment.allocateMemoryAddress(for: symbol)
-            }
+        let segment = self.segment(for: symbol.segmentType)
+        segment.allocateMemoryAddress(for: symbol)
         }
         
     public func allocateAddress(for methodInstance: MethodInstance)
         {
-        switch(methodInstance.segmentType)
-            {
-            case .empty:
-                break
-            case .static:
-                self.payload.staticSegment.allocateMemoryAddress(for: methodInstance)
-            case .managed:
-                self.payload.managedSegment.allocateMemoryAddress(for: methodInstance)
-            case .stack:
-                self.payload.stackSegment.allocateMemoryAddress(for: methodInstance)
-            case .code:
-                self.payload.codeSegment.allocateMemoryAddress(for: methodInstance)
-            }
+        let segment = self.segment(for: methodInstance.segmentType)
+        segment.allocateMemoryAddress(for: methodInstance)
         }
         
     public func allocateAddress(for aStatic: StaticObject)
         {
-        switch(aStatic.segmentType)
-            {
-            case .empty:
-                break
-            case .static:
-                self.payload.staticSegment.allocateMemoryAddress(for: aStatic)
-            case .managed:
-                self.payload.managedSegment.allocateMemoryAddress(for: aStatic)
-            case .stack:
-                self.payload.stackSegment.allocateMemoryAddress(for: aStatic)
-            case .code:
-                self.payload.codeSegment.allocateMemoryAddress(for: aStatic)
-            }
+        let segment = self.segment(for: aStatic.segmentType)
+        segment.allocateMemoryAddress(for: aStatic)
         }
     }

@@ -9,6 +9,16 @@ import Foundation
 
 public class TypeMemberSlot: Type
     {
+    public override var argonHash: Int
+        {
+        var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.slotLabel.argonHash
+        hashValue = hashValue << 13 ^ self.base.argonHash
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     internal let slotLabel: Label
     internal let base: Type
     

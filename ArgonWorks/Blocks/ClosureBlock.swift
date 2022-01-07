@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ClosureBlock: Block,BlockContext
+public class ClosureBlock: Block
     {
     public override var hasInlineReturnBlock: Bool
         {

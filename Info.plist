@@ -39,38 +39,6 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>argonb</string>
-			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>SymbolsIcon</string>
-			<key>CFBundleTypeIconSystemGenerated</key>
-			<integer>0</integer>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>com.macsemantics.argon.symbols</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>Argon Symbols File</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>ARGB</string>
-			</array>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>LSHandlerRank</key>
-			<string>Owner</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>com.macsemantics.argon.symbols</string>
-			</array>
-			<key>LSTypeIsPackage</key>
-			<integer>0</integer>
-			<key>NSDocumentClass</key>
-			<string>$(PRODUCT_MODULE_NAME).SymbolsDocument</string>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
-			<array>
 				<string>argon</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
@@ -133,28 +101,24 @@
 			<string>$(PRODUCT_MODULE_NAME).ProjectDocument</string>
 		</dict>
 		<dict>
-			<key>NSDocumentClass</key>
-			<string></string>
-			<key>LSTypeIsPackage</key>
-			<false/>
-			<key>CFBundleTypeIconSystemGenerated</key>
-			<integer>0</integer>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>ARV</string>
-			</array>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>com.macsemantics.argon.velocity</string>
-			</array>
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>arv</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>VelocityIcon</string>
+			<key>CFBundleTypeIconSystemGenerated</key>
+			<integer>0</integer>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>com.macsemantics.argon.velocity</string>
+			</array>
 			<key>CFBundleTypeName</key>
 			<string>Argon Velocity File</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>ARV</string>
+			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -163,6 +127,10 @@
 			<array>
 				<string>com.macsemantics.argon.velocity</string>
 			</array>
+			<key>LSTypeIsPackage</key>
+			<false/>
+			<key>NSDocumentClass</key>
+			<string>$(PRODUCT_MODULE_NAME).VelocityDocument</string>
 		</dict>
 	</array>
 	<key>UTExportedTypeDeclarations</key>
@@ -214,56 +182,6 @@
 				<key>public.mime-type</key>
 				<array>
 					<string>com.macsemantics.argon.object</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>Argon Symbols File</string>
-			<key>UTTypeIconFile</key>
-			<string>SymbolsIcon</string>
-			<key>UTTypeIcons</key>
-			<dict/>
-			<key>UTTypeIdentifier</key>
-			<string>com.macsemantics.argon.symbols</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>argonb</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>com.macsemantics.argon.symbols</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>Argon Bolt File</string>
-			<key>UTTypeIconFile</key>
-			<string>BoltIcon</string>
-			<key>UTTypeIcons</key>
-			<dict/>
-			<key>UTTypeIdentifier</key>
-			<string>com.macsemantics.argon.bolt</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>argont</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>com.macsemantics.argon.bolt</string>
 				</array>
 			</dict>
 		</dict>

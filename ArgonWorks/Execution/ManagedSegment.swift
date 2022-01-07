@@ -13,7 +13,7 @@ public class ManagedSegment: Segment
     public class Space
         {
         internal let baseAddress: Address
-        internal let nextAddress: Address
+        internal var nextAddress: Address
         internal let lastAddress: Address
         internal let sizeInBytes: Word
         
@@ -25,9 +25,24 @@ public class ManagedSegment: Segment
             self.sizeInBytes = sizeInBytes
             }
             
-        internal func allocateSizeInBytes(_ size: Word) -> Address?
+        internal func allocateSizeInBytes(_ size: Word) throws -> Address
             {
-            return(nil)
+            if self.nextAddress + size >= self.lastAddress
+                {
+                throw(RuntimeIssue.outOfFlipSpace)
+                }
+            let address = self.nextAddress
+            self.nextAddress += size
+            return(address)
+            }
+            
+        deinit
+            {
+            let errorCode = DeallocateSegment(self.baseAddress,vm_size_t(self.sizeInBytes))
+            if errorCode != 0
+                {
+                print("ERROR: \(errorCode) deallocating segment at address \(String(format: "%X",self.baseAddress)) of size \(self.sizeInBytes).")
+                }
             }
         }
         
@@ -55,31 +70,28 @@ public class ManagedSegment: Segment
         let fromSpaceAddress = AllocateSegment(fromSpaceBaseAddress,UInt(aSize))
         if fromSpaceAddress != fromSpaceBaseAddress
             {
-            throw(RuntimeIssue("Requested space address and allocated space address are different."))
+            throw(RuntimeIssue.requestedAddressDiffersFromActualAddress)
             }
         self.fromSpace = Space(baseAddress: fromSpaceAddress,sizeInBytes: Word(aSize))
         let toSpaceAddress = AllocateSegment(toSpaceBaseAddress,UInt(aSize))
         if toSpaceAddress != toSpaceBaseAddress
             {
-            throw(RuntimeIssue("Requested space address and allocated space address are different."))
+            throw(RuntimeIssue.requestedAddressDiffersFromActualAddress)
             }
         self.toSpace = Space(baseAddress: toSpaceAddress,sizeInBytes: Word(aSize))
         self.currentSpace = fromSpace
         }
         
-    public func allocateObject(ofClass someClass: Class) -> Address
+    public func allocateObject(ofClass someClass: TypeClass) throws -> Address
         {
         let sizeInBytes = self.align(someClass.instanceSizeInBytes + someClass.extraSizeInBytes)
-        if let address = self.currentSpace.allocateSizeInBytes(sizeInBytes)
-            {
-            let pointer = ObjectPointer(dirtyAddress: address)!
-            pointer.sizeInBytes = Word(sizeInBytes)
-            pointer.tag = .header
-            pointer.classAddress = someClass.memoryAddress
-            pointer.magicNumber = someClass.magicNumber
-            return(Word(object: address))
-            }
-        // do swap and gc
-        return(0)
+        let address = try self.currentSpace.allocateSizeInBytes(sizeInBytes)
+        let pointer = ClassBasedPointer(address: address,type: someClass)
+        pointer.setClass(someClass)
+        pointer.sizeInBytes = Word(sizeInBytes)
+        pointer.tag = .header
+        pointer.classAddress = someClass.memoryAddress
+        pointer.magicNumber = someClass.magicNumber
+        return(Word(object: address))
         }
     }

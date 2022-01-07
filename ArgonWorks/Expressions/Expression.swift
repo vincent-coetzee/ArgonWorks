@@ -9,16 +9,6 @@ import Foundation
 
 public class Expression: NSObject,NSCoding,VisitorReceiver
     {
-    public var enclosingMethodInstanceScope: Scope
-        {
-        var aScope = self.enclosingScope
-        while !aScope.isMethodInstanceScope
-            {
-            aScope = aScope.enclosingScope
-            }
-        return(aScope)
-        }
-        
     public var declarationLine: Int
         {
         if let location = self.declaration
@@ -32,11 +22,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     public var diagnosticString: String
         {
         ""
-        }
-        
-    public var enclosingScope: Scope
-        {
-        return(self.parent.enclosingScope)
         }
         
     public var enumerationCaseHasAssociatedTypes: Bool
@@ -93,11 +78,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(false)
         }
         
-    public var topModule: TopModule
-        {
-        return(self.parent.topModule)
-        }
-        
     public var canBeScoped: Bool
         {
         return(false)
@@ -125,10 +105,8 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     
     public private(set) var locations = SourceLocations()
     public internal(set) var _place: T3AInstruction.Operand = .none
-    public private(set) var parent: Parent = .none
-    internal var type: Type? = nil
+    internal var type: Type = Type()
     public var issues = CompilerIssues()
-    public private(set) var container: Container?
     
     public override init()
         {
@@ -136,15 +114,13 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public required init?(coder: NSCoder)
         {
-        self.parent = coder.decodeParent(forKey: "parent")!
         self.locations = coder.decodeSourceLocations(forKey: "locations")
-        self.type = coder.decodeObject(forKey: "type") as? Type
+        self.type = coder.decodeObject(forKey: "type") as! Type
         super.init()
         }
 
     public func encode(with coder:NSCoder)
         {
-        coder.encodeParent(self.parent,forKey: "parent")
         coder.encodeSourceLocations(self.locations,forKey:"locations")
         coder.encode(self.type,forKey: "type")
         }
@@ -172,16 +148,6 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public func allocateAddresses(using allocator:AddressAllocator) throws
         {
-        }
-        
-    public func lookup(label: Label) -> Symbol?
-        {
-        return(self.parent.lookup(label: label))
-        }
-        
-    public func lookupN(name: Name) -> Symbols?
-        {
-        return(self.parent.lookupN(name: name))
         }
 
     public func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -247,25 +213,25 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
 //        fatalError("This should have been implemented")
         }
         
-    public func setParent(_ block: Block)
-        {
-        self.parent = .block(block)
-        }
-        
-    public func setParent(_ symbol: Symbol)
-        {
-        self.parent = .node(symbol)
-        }
-        
-    public func setParent(_ expression: Expression)
-        {
-        self.parent = .expression(expression)
-        }
-        
-    public func setParent(_ parent: Parent)
-        {
-        self.parent = parent
-        }
+//    public func setParent(_ block: Block)
+//        {
+//        self.parent = .block(block)
+//        }
+//        
+//    public func setParent(_ symbol: Symbol)
+//        {
+//        self.parent = .node(symbol)
+//        }
+//        
+//    public func setParent(_ expression: Expression)
+//        {
+//        self.parent = .expression(expression)
+//        }
+//        
+//    public func setParent(_ parent: Parent)
+//        {
+//        self.parent = parent
+//        }
         
     public var displayString: String
         {
@@ -281,24 +247,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         return(self)
         }
-        
-    public func printParentChain()
-        {
-        print("\(self)")
-        self.parent.printParentChain()
-        }
     }
     
 
 public typealias Expressions = Array<Expression>
-
-extension Expressions
-    {
-    public func setParent(_ block: Block)
-        {
-        for element in self
-            {
-            element.setParent(block)
-            }
-        }
-    }

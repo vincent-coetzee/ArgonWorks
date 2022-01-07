@@ -75,7 +75,7 @@ public class SelectBlock: Block
             {
             block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        block.type = self.type?.freshTypeVariable(inContext: context)
+        block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         

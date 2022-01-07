@@ -155,7 +155,7 @@ public class ClassElement: SymbolElement
         let symbols = symbol.allChildren
         var kids = Symbols()
         kids += symbols.filter{$0 is Module || $0 is SymbolGroup}
-        kids += symbols.filter{$0 is Class}
+        kids += symbols.filter{$0 is TypeClass}
         return(kids.map{ClassElement(symbol: $0)}.sorted{$0.label<$1.label})
         }
     }
@@ -247,7 +247,7 @@ public class EnumerationElement: SymbolElement
         let symbols = symbol.allChildren
         var kids = Symbols()
         kids += symbols.filter{$0 is Module || $0 is SymbolGroup}
-        kids += symbols.filter{$0 is Enumeration}
+        kids += symbols.filter{$0 is TypeEnumeration}
         return(kids.map{EnumerationElement(symbol: $0)}.sorted{$0.label<$1.label})
         }
     }

@@ -16,12 +16,12 @@ public class ModuleHolder: Module
     
     public override var iconName: String
         {
-        self.module.iconName
+        self.module!.iconName
         }
         
     public override var isExpandable: Bool
         {
-        return(self.module.symbols.count > 0)
+        return(self.module!.symbols.count > 0)
         }
         
     public override func children(forChildType type: ChildType) -> Array<Symbol>
@@ -31,17 +31,15 @@ public class ModuleHolder: Module
         
     public override var children: Array<Symbol>
         {
-        let kids = self.module.symbols.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label < $1.label}
+        let kids = self.module!.symbols.filter{$0 is TypeClass || $0 is TypeEnumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label < $1.label}
         let values = kids.map{ElementHolder($0)}
         return(values)
         }
         
-    private let module: Module
-    
     init(_ module: Module)
         {
-        self.module = module
         super.init(label: module.label)
+        self.module = module
         }
         
         required init?(coder: NSCoder) {
@@ -50,19 +48,18 @@ public class ModuleHolder: Module
         
      public required init(label: Label)
         {
-        self.module = Module(label: "")
         super.init(label: label)
         }
         
     public override func invert(cell: HierarchyCellView)
         {
         super.invert(cell: cell)
-        self.module.invert(cell: cell)
+        self.module!.invert(cell: cell)
         }
         
     public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
         {
-        self.module.configure(cell: cell,foregroundColor: foregroundColor.isNil ? self.defaultColor : foregroundColor!)
+        self.module!.configure(cell: cell,foregroundColor: foregroundColor.isNil ? self.defaultColor : foregroundColor!)
         }
     }
 
@@ -91,22 +88,22 @@ public class ElementHolder: Symbol
         
     public override var children: Array<Symbol>
         {
-        if self.symbol.isEnumeration
-            {
-            let items = (self.symbol as! Enumeration).children.map{ElementHolder($0)}
-            return(items)
-            }
-        else if self.symbol is ContainerSymbol
-            {
-            let container = self.symbol as! ContainerSymbol
-            let kids = container.symbols.filter{$0 is Class || $0 is Enumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label<$1.label}
-            var values = kids.map{ElementHolder($0)}
-            if self.symbol.isClass
-                {
-                values.append(contentsOf: (self.symbol as! Class).localSubclasses.map{ElementHolder($0)})
-                }
-            return(values)
-            }
+//        if self.symbol.isEnumeration
+//            {
+//            let items = (self.symbol as! Enumeration).children.map{ElementHolder($0)}
+//            return(items)
+//            }
+//        else if self.symbol is ContainerSymbol
+//            {
+//            let container = self.symbol as! ContainerSymbol
+//            let kids = container.symbols.filter{$0 is TypeClass || $0 is TypeEnumeration || $0 is Module || $0 is Constant || $0 is TypeAlias || $0 is Function}.sorted{$0.label<$1.label}
+//            var values = kids.map{ElementHolder($0)}
+//            if self.symbol.isClass
+//                {
+//                values.append(contentsOf: (self.symbol as! TypeClass).localSubclasses.map{ElementHolder($0)})
+//                }
+//            return(values)
+//            }
         return([])
         }
         

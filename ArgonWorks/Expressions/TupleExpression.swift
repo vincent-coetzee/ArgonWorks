@@ -60,7 +60,7 @@ public class TupleExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.tuple.initializeType(inContext: context)
-        self.type = self.tuple.type!
+        self.type = self.tuple.type
         }
         
     public func append(_ expression: Expression)

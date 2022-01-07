@@ -53,24 +53,24 @@ public class ArrayPointer: ObjectPointer,Collection
         {
         get
             {
-            Int(self.wordPointer[13])
+            Int(self.wordPointer[10])
             }
         set
             {
-            self.wordPointer[13] = Word(newValue)
+            self.wordPointer[10] = Word(newValue)
             }
         }
         
     public var size: Int
         {
-        Int(self.wordPointer[15])
+        Int(self.wordPointer[12])
         }
         
     internal var elementPointer: WordPointer
     
     public required init?(dirtyAddress: Word)
         {
-        self.elementPointer = WordPointer(bitPattern: dirtyAddress.cleanAddress + Word(16 * MemoryLayout<Word>.size))
+        self.elementPointer = WordPointer(bitPattern: dirtyAddress.cleanAddress + Word(15 * MemoryLayout<Word>.size))
         super.init(dirtyAddress: dirtyAddress)
         }
         

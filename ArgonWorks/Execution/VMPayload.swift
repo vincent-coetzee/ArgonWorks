@@ -14,12 +14,12 @@ public struct VMPayload: ExecutionContext
     public let managedSegment: ManagedSegment
     public let codeSegment: CodeSegment
 
-    public var symbolTable: SymbolTable
+    public var symbolRegistry: SymbolRegistry
         {
-        self._symbolTable
+        self._symbolRegistry
         }
         
-    private var _symbolTable: SymbolTable!
+    private var _symbolRegistry: SymbolRegistry!
     
     init()
         {
@@ -27,7 +27,7 @@ public struct VMPayload: ExecutionContext
         self.staticSegment = try! StaticSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
         self.managedSegment = try! ManagedSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
         self.codeSegment = try! CodeSegment(memorySize: .megabytes(50),argonModule: ArgonModule.shared)
-        self._symbolTable = SymbolTable(context: self)
+        self._symbolRegistry = SymbolRegistry(context: self)
         }
         
     init(stackSegmentSize: MemorySize = .megabytes(25),staticSegmentSize:MemorySize = .megabytes(25),managedSegmentSize: MemorySize = .megabytes(50),codeSegmentSize: MemorySize = .megabytes(25))
@@ -36,14 +36,14 @@ public struct VMPayload: ExecutionContext
         self.staticSegment = try! StaticSegment(memorySize: staticSegmentSize,argonModule: ArgonModule.shared)
         self.managedSegment = try! ManagedSegment(memorySize: managedSegmentSize,argonModule: ArgonModule.shared)
         self.codeSegment = try! CodeSegment(memorySize: codeSegmentSize,argonModule: ArgonModule.shared)
-        self._symbolTable = SymbolTable(context: self)
+        self._symbolRegistry = SymbolRegistry(context: self)
         }
         
     public func segment(for symbol: Symbol) -> Segment
         {
         switch(symbol.segmentType)
             {
-            case .empty:
+            case .null:
                 break
             case .static:
                 return(self.staticSegment)
@@ -69,6 +69,9 @@ public struct VMPayload: ExecutionContext
         /// the number of segments written out, the order of the segments and their
         /// sizes.
         ///
+        /// COUNT
+        /// TYPE SPACE-USED SPACE-ALLOCATED ADDRESS-OF-ALLOCATION
+        ///
         let segments = [self.codeSegment,self.stackSegment,self.staticSegment,self.managedSegment]
         var count: Word = 4
         fwrite(&count,MemoryLayout<Word>.size,1,fileStream)
@@ -77,9 +80,11 @@ public struct VMPayload: ExecutionContext
             var type = segment.segmentType.rawValue
             var used = Word(segment.usedSizeInBytes)
             var allocated = Word(segment.allocatedSizeInBytes)
+            var address = segment.baseAddress
             fwrite(&type,MemoryLayout<Word>.size,1,fileStream)
             fwrite(&used,MemoryLayout<Word>.size,1,fileStream)
             fwrite(&allocated,MemoryLayout<Word>.size,1,fileStream)
+            fwrite(&address,MemoryLayout<Word>.size,1,fileStream)
             }
         for segment in segments
             {

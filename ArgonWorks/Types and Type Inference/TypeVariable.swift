@@ -43,15 +43,23 @@ public class TypeVariable: Type
         [self]
         }
         
-    public override var type: Type?
+    public override var type: Type!
         {
         get
             {
-            self.boundType.isNil ? nil : self.boundType!.type
+            self.boundType.isNil ? Type() : self.boundType!.type
             }
         set
             {
             }
+        }
+    public override var argonHash: Int
+        {
+        var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.id
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
         }
 
     public override var displayString: String
@@ -102,6 +110,26 @@ public class TypeVariable: Type
         self.boundType = variable
         return(variable as! Self)
         }
+        
+//    public override func setParent(_ parent: Parent)
+//        {
+//        self.parent = parent
+//        }
+//        
+//    public override func setParent(_ symbol: Symbol)
+//        {
+//        self.parent = .node(symbol)
+//        }
+//        
+//    public override func setParent(_ expression: Expression)
+//        {
+//        self.parent = .expression(expression)
+//        }
+//        
+//    public override func setParent(_ block: Block)
+//        {
+//        self.parent = .block(block)
+//        }
     }
     
 public typealias TypeVariables = Array<TypeVariable>

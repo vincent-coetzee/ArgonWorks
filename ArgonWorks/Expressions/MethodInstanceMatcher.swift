@@ -14,7 +14,6 @@ public class MethodInstanceMatcher
     private let argumentExpressions: Expressions
     private var origin: TypeConstraint.Origin!
     private let reportErrors: Bool
-    private var enclosingScope: Scope!
     private var methodInstance: MethodInstance?
     private var location: Location!
     private var typeContext:TypeContext!
@@ -22,11 +21,12 @@ public class MethodInstanceMatcher
     private var constraints = TypeConstraints()
     private var returnType: Type!
     
-    init(methodInstances: MethodInstances,argumentExpressions:Expressions,reportErrors:Bool)
+    init(typeContext: TypeContext,methodInstances: MethodInstances,argumentExpressions:Expressions,reportErrors:Bool)
         {
+        self.typeContext = typeContext
         self.methodInstances = methodInstances
         self.argumentExpressions = argumentExpressions
-        self.argumentTypes = argumentExpressions.map{$0.type!}
+        self.argumentTypes = argumentExpressions.map{$0.type}
         self.reportErrors = reportErrors
         }
         
@@ -34,12 +34,6 @@ public class MethodInstanceMatcher
         {
         self.origin = origin
         self.location = location
-        }
-        
-    internal func setEnclosingScope(_ scope: Scope,inContext context:TypeContext)
-        {
-        self.typeContext = context
-        self.enclosingScope = scope
         }
         
     internal func appendReturnType(_ type:Type)
@@ -116,32 +110,31 @@ public class MethodInstanceMatcher
                 print("OK: USING \(self.constraints.count) CONSTRAINTS")
                 let substitution = newContext.unify()
                 print("OK: UNIFIED TYPES")
-                if let newInstance = substitution.substitute(instance)
+                let newInstance = substitution.substitute(instance)
+                newInstance.originalMethodInstance = instance
+                let types = self.argumentTypes.map{substitution.substitute($0)}
+                print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
+                print("OK: ARGUMENTS ARE \(types)")
+                if !newInstance.hasVariableTypes
                     {
-                    newInstance.originalMethodInstance = instance
-                    let types = self.argumentTypes.map{substitution.substitute($0)!}
-                    print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
-                    print("OK: ARGUMENTS ARE \(types)")
-                    if !newInstance.hasVariableTypes
+                    print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
+                    if newInstance.parameterTypesAreSupertypes(ofTypes: types)
                         {
-                        print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
-                        if newInstance.parameterTypesAreSupertypes(ofTypes: types)
-                            {
-                            print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
-                            readyInstances.append(newInstance)
-                            mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
-                            print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
-                            }
-                        else
-                            {
-                            print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
-                            }
+                        print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
+                        readyInstances.append(newInstance)
+                        mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
+                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
                         }
                     else
                         {
-                        print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
+                        print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
                         }
                     }
+                else
+                    {
+                    print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
+                    }
+                
                 }
             }
         print("OK: COMPLETED TESTING OF \(readyInstances.count) INSTANCES")

@@ -135,11 +135,11 @@ extension NSCoder
             case 7:
                 return(.array(self.decodeObject(forKey: "array") as! StaticArray))
             case 8:
-                return(.class(self.decodeObject(forKey: forKey + "class") as! Class))
+                return(.class(self.decodeObject(forKey: forKey + "class") as! TypeClass))
             case 9:
                 return(.module(self.decodeObject(forKey: forKey + "module") as! Module))
             case 10:
-                return(.enumeration(self.decodeObject(forKey: forKey + "enumeration") as! Enumeration))
+                return(.enumeration(self.decodeObject(forKey: forKey + "enumeration") as! TypeEnumeration))
             case 11:
                 return(.enumerationCase(self.decodeObject(forKey: forKey + "enumerationCase") as! EnumerationCase))
 //            case 12:
@@ -414,23 +414,23 @@ extension NSCoder
         return(string as? String)
         }
         
-    public func encodeParent(_ parent: Parent,forKey key: String)
-        {
-        switch(parent)
-            {
-            case .none:
-                self.encode(0,forKey: key + "type")
-            case .node(let node):
-                self.encode(1,forKey: key + "type")
-                self.encode(node,forKey: key + "node")
-            case .block(let block):
-                self.encode(2,forKey: key + "type")
-                self.encode(block,forKey: key + "block")
-            case .expression(let expression):
-                self.encode(3,forKey: key + "type")
-                self.encode(expression,forKey: key + "expression")
-            }
-        }
+//    public func encodeParent(_ parent: Parent,forKey key: String)
+//        {
+//        switch(parent)
+//            {
+//            case .none:
+//                self.encode(0,forKey: key + "type")
+//            case .node(let node):
+//                self.encode(1,forKey: key + "type")
+//                self.encode(node,forKey: key + "node")
+//            case .block(let block):
+//                self.encode(2,forKey: key + "type")
+//                self.encode(block,forKey: key + "block")
+//            case .expression(let expression):
+//                self.encode(3,forKey: key + "type")
+//                self.encode(expression,forKey: key + "expression")
+//            }
+//        }
 
     public func decodeNodeLocations(forKey: String) -> NodeLocations
         {
@@ -530,23 +530,63 @@ extension NSCoder
         let string = self.decodeObject(forKey: forKey + "rawValue") as! String
         return(PrivacyScope(rawValue: string)!)
         }
+//        
+//    public func decodeParent(forKey key: String) -> Parent?
+//        {
+//        let type = self.decodeInteger(forKey: key + "type")
+//        switch(type)
+//            {
+//            case 0:
+//                return(Parent.none)
+//            case 1:
+//                return(Parent.node(self.decodeObject(forKey: key + "node") as! Symbol))
+//            case 2:
+//                return(Parent.block(self.decodeObject(forKey: key + "block") as! Block))
+//            case 3:
+//                return(Parent.expression(self.decodeObject(forKey: key + "expression") as! Expression))
+//            default:
+//                return(nil)
+//            }
+//        }
         
-    public func decodeParent(forKey key: String) -> Parent?
+    public func encode(_ container: Container,forKey: String)
         {
-        let type = self.decodeInteger(forKey: key + "type")
-        switch(type)
+        switch(container)
+            {
+            case .none:
+                self.encode(0,forKey: forKey + "kind")
+            case .type(let type):
+                self.encode(1,forKey: forKey + "kind")
+                self.encode(type,forKey: forKey + "type")
+            case .symbol(let symbol):
+                self.encode(2,forKey: forKey + "kind")
+                self.encode(symbol,forKey: forKey + "symbol")
+            case .block(let block):
+                self.encode(3,forKey: forKey + "kind")
+                self.encode(block,forKey: forKey + "block")
+            case .scope(let scope):
+                self.encode(4,forKey: forKey + "kind")
+                self.encode(scope,forKey: forKey + "scope")
+            }
+        }
+        
+    public func decodeContainer(forKey: String) -> Container
+        {
+        let kind = self.decodeInteger(forKey: forKey + "kind")
+        switch(kind)
             {
             case 0:
-                return(Parent.none)
+                break
             case 1:
-                return(Parent.node(self.decodeObject(forKey: key + "node") as! Symbol))
+                return(.type(self.decodeObject(forKey: forKey + "type") as! Type))
             case 2:
-                return(Parent.block(self.decodeObject(forKey: key + "block") as! Block))
+                return(.symbol(self.decodeObject(forKey: forKey + "symbol") as! Symbol))
             case 3:
-                return(Parent.expression(self.decodeObject(forKey: key + "expression") as! Expression))
+                return(.block(self.decodeObject(forKey: forKey + "block") as! Block))
             default:
-                return(nil)
+                fatalError("This should not happen.")
             }
+        fatalError("This should not happen.")
         }
         
     public func decodeTokenSymbol(forKey: String) -> Token.Symbol

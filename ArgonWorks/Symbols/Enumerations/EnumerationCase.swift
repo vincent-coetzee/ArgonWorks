@@ -11,15 +11,13 @@ public class EnumerationCase:Symbol
     {
     public override var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine(super.argonHash)
-        for type in self.associatedTypes
+        var hashValue = super.argonHash
+        for slot in self.associatedTypes
             {
-            hasher.combine(type.argonHash)
+            hashValue = hashValue << 13 ^ slot.argonHash
             }
-        hasher.combine(self.symbol.polynomialRollingHash)
-        hasher.combine(self.caseIndex)
-        let hashValue = hasher.finalize()
+        hashValue = hashValue << 13 ^ self.symbol.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.caseIndex
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
         }
@@ -34,16 +32,16 @@ public class EnumerationCase:Symbol
         return(true)
         }
         
-    public var hasAssociatedTypes: Bool
+    public var hasAssociatedValues: Bool
         {
         return(!self.associatedTypes.isEmpty)
         }
         
-    public override var type: Type?
+    public override var type: Type!
         {
         get
             {
-            return(self.enumeration.type)
+            return(self.enumeration)
             }
         set
             {
@@ -78,11 +76,11 @@ public class EnumerationCase:Symbol
     public var symbol: Argon.Symbol
     public var rawValue: LiteralExpression?
     public var caseSizeInBytes:Int = 0
-    public weak var enumeration: Enumeration!
+    public weak var enumeration: TypeEnumeration!
     public var caseIndex = -1
     public var symbolMemoryAddress: Address = 0
     
-    init(symbol: Argon.Symbol,types: Types,enumeration: Enumeration)
+    init(symbol: Argon.Symbol,types: Types,enumeration: TypeEnumeration)
         {
         self.enumeration = enumeration
         self.symbol = symbol
@@ -93,7 +91,7 @@ public class EnumerationCase:Symbol
     
     public required init?(coder: NSCoder)
         {
-        self.enumeration = coder.decodeObject(forKey: "enumeration") as? Enumeration
+        self.enumeration = coder.decodeObject(forKey: "enumeration") as? TypeEnumeration
         self.symbol = coder.decodeObject(forKey: "symbol") as! Argon.Symbol
         self.rawValue = coder.decodeObject(forKey: "rawValue") as? LiteralExpression
         self.caseIndex = coder.decodeInteger(forKey: "caseIndex")
@@ -136,11 +134,11 @@ public class EnumerationCase:Symbol
             return
             }
         self.wasMemoryLayoutDone = true
-        let segment = allocator.segment(for: self)
+        let segment = allocator.segment(for: self.segmentType)
         let enumCaseType = ArgonModule.shared.enumerationCase
         let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
         enumCasePointer.setClass(enumCaseType)
-        let symbolAddress = allocator.payload.symbolTable.registerSymbol(self.symbol)
+        let symbolAddress = allocator.payload.symbolRegistry.registerSymbol(self.symbol)
         enumCasePointer.setAddress(symbolAddress,atSlot: "symbol")
         enumCasePointer.setInteger(self.caseIndex,atSlot: "index")
         if self.associatedTypes.isEmpty
@@ -165,7 +163,7 @@ public class EnumerationCase:Symbol
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = super.substitute(from: substitution)
-        copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)!}
+        copy.associatedTypes = self.associatedTypes.map{substitution.substitute($0)}
         copy.symbol = self.symbol
         copy.rawValue = self.rawValue.isNil ? nil : (substitution.substitute(self.rawValue!) as! LiteralExpression)
         return(copy)

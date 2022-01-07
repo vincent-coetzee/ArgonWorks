@@ -82,7 +82,7 @@ public class StaticString: StaticObject
         
     public override var sizeInBytes: Int
         {
-        (ArgonModule.shared.lookup(label: "String") as! Type).classValue.sizeInBytes
+        (ArgonModule.shared.lookup(label: "String") as! Type).sizeInBytes
         }
         
     public override var extraSizeInBytes: Int
@@ -157,7 +157,7 @@ public class StaticArray: StaticObject
         case symbol(Symbol)
         case slot(Slot)
         case literal(Literal)
-        case `class`(Class)
+        case `class`(TypeClass)
         
         public var sizeInBytes: Int
             {
@@ -231,7 +231,7 @@ public class StaticArray: StaticObject
                 case 3:
                     self = .literal(coder.decodeLiteral(forKey: forKey + "literal"))
                 case 4:
-                    self = .class(coder.decodeObject(forKey: forKey + "class") as! Class)
+                    self = .class(coder.decodeObject(forKey: forKey + "class") as! TypeClass)
                 default:
                     fatalError()
                 }
@@ -242,7 +242,7 @@ public class StaticArray: StaticObject
     
     public override var sizeInBytes: Int
         {
-        (ArgonModule.shared.lookup(label: "Array") as! Type).classValue.sizeInBytes
+        (ArgonModule.shared.lookup(label: "Array") as! Type).sizeInBytes
         }
         
     public override var extraSizeInBytes: Int
@@ -266,7 +266,7 @@ public class StaticArray: StaticObject
         super.init()
         }
         
-    init(_ classes: Classes)
+    init(_ classes: TypeClasses)
         {
         self.elements = classes.map{.class($0)}
         super.init()
@@ -327,6 +327,6 @@ public class StaticArray: StaticObject
     public override func type(inContext context: TypeContext) -> Type
         {
         let elementType = self.elements.first!.type(inContext: context)!
-        return(TypeClass(class: (context.arrayType as! TypeClass).theClass,generics: [elementType]))
+        return(TypeClass(label: context.arrayType.label,generics: [elementType]))
         }
     }

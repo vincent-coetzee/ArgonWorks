@@ -24,10 +24,6 @@ public class MethodInvocationExpression: Expression
         self.methodInstances = methodInstances
         self.arguments = arguments
         super.init()
-        for argument in arguments
-            {
-            argument.value.setParent(self)
-            }
         }
         
     required init?(coder: NSCoder)
@@ -68,7 +64,7 @@ public class MethodInvocationExpression: Expression
         print("\(indent)ARGUMENTS:")
         for argument in self.arguments
             {
-            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type!.displayString)")
+            print("\(indent)\t\(argument.tag ?? "") \(argument.value.type.displayString)")
             }
         if let instance = self.methodInstance
             {
@@ -85,10 +81,9 @@ public class MethodInvocationExpression: Expression
         print("METHOD INVOCATION EXPRESSION")
         let newArguments = self.arguments.map{$0.initializeType(inContext: context)}
         newArguments.forEach{$0.initializeTypeConstraints(inContext: context)}
-        let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: newArguments.map{$0.value}, reportErrors: true)
-        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.methodInstances, argumentExpressions: newArguments.map{$0.value}, reportErrors: true)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-        methodMatcher.appendReturnType(self.type!)
+        methodMatcher.appendReturnType(self.type)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
             self.methodInstance = specificInstance
@@ -134,18 +129,22 @@ public class MethodInvocationExpression: Expression
         
     public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
         {
-        guard let instance = self.methodInstance else
-            {
-            print("Can not emit code for nil method instance")
-            return
-            }
         for argument in self.arguments.reversed()
             {
             try argument.value.emitValueCode(into: buffer, using: generator)
-            buffer.append("PUSH",argument.value.place,.none,.none)
+            buffer.append(.PUSH,argument.value.place,.none,.none)
             }
-        buffer.append("CALL",.address(instance.memoryAddress),.none,.none)
-        buffer.append("POPN",.integer(Argon.Integer(self.arguments.count * Argon.kArgumentSizeInBytes)))
+        if let instance = self.methodInstance
+            {
+            buffer.append(.CALL,.address(instance.memoryAddress),.none,.none)
+            }
+        else
+            {
+            let label = self.methodInstances.first!.label
+            let address = generator.emitStaticString(label)
+            buffer.append(.CALLD,.address(address))
+            }
+        buffer.append(.POPN,.integer(Argon.Integer(self.arguments.count * Argon.kArgumentSizeInBytes)))
         self._place = .returnValue
         }
     }

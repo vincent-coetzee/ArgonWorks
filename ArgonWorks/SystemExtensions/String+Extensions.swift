@@ -31,14 +31,7 @@ extension String
         
     public var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine("\(Swift.type(of: self))")
-        hasher.combine(self.utf16.count)
-        for code16 in self.utf16
-            {
-            hasher.combine(code16)
-            }
-        return(abs(hasher.finalize()))
+        self.polynomialRollingHash
         }
         
     public var polynomialRollingHash:Int
@@ -48,7 +41,6 @@ extension String
         var powerOfP:Int64 = 1
         var hashValue:Int64 = 0
         let aValue = Int64(Character("A").asciiValue!)
-        
         for char in self
             {
             hashValue = (hashValue + (Int64(char.asciiValue!) - aValue + 1) * powerOfP) % m
@@ -103,6 +95,15 @@ extension String
     public var fileComponents: Array<String>
         {
         return(self.components(separatedBy: "/"))
+        }
+        
+    public var uppercasingFirstLetter: String
+        {
+        guard !self.isEmpty else
+            {
+            return(self)
+            }
+        return(self.prefix(1).uppercased() + self.dropFirst())
         }
         
     public var lowercasingFirstLetter: String

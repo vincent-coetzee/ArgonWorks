@@ -196,6 +196,10 @@ public struct Argon
         case instruction = 48
         case opcode = 49
         case operand = 50
+        case wordBlock = 51
+        case arrayBlock = 52
+        case vectorBlock = 53
+        case setBlock = 54
         case custom = 100
         }
         
@@ -207,6 +211,7 @@ public struct Argon
         
     public static var staticTable = Array<StaticObject>()
     
+    @discardableResult
     public static func addStatic<T>(_ staticObject: T) -> T where T:StaticObject
         {
         for element in self.staticTable
@@ -218,6 +223,41 @@ public struct Argon
             }
         self.staticTable.append(staticObject)
         return(staticObject)
+        }
+        
+    public static var typeTable = Dictionary<Int,Type>()
+    
+    @discardableResult
+    public static func addType(_ type: Type) -> Type
+        {
+//        return(type)
+        if self.typeTable.isEmpty
+            {
+            print("halt")
+            }
+        if let oldType = Self.typeTable[type.argonHash]
+            {
+            print("FOUND EXISTING TYPE \(type)")
+            return(oldType)
+            }
+        print("DID NOT FIND \(type)")
+        Self.typeTable[type.argonHash] = type
+        return(type)
+        }
+        
+    public static func typeAtKey(_ key: Int) -> Type?
+        {
+        Self.typeTable[key]
+        }
+        
+    public static func resetStatics()
+        {
+        self.staticTable = []
+        }
+        
+    public static func resetTypes()
+        {
+        self.typeTable = [:]
         }
     }
 

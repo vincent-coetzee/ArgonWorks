@@ -7,40 +7,39 @@
 
 import Foundation
 
-public protocol ErrorScope
-    {
-    func appendIssue(at: Location,message: String)
-    func appendWarningIssue(at: Location,message: String)
-    }
     
-public protocol Scope
+public protocol Scope: IssueHolder
     {
-    var topModule: TopModule { get }
     var isMethodInstanceScope: Bool { get }
-    var isClosureScope: Bool { get }
-    var isInitializerScope: Bool { get }
-    var isSlotScope: Bool { get }
-    var enclosingScope: Scope { get }
-    var enclosingBlockContext: BlockContext { get }
-    var parent: Parent { get }
+    var module: Module! { get }
+    var parentScope: Scope? { get set }
     func addSymbol(_ symbol: Symbol)
+    func addLocalSlot(_ localSlot: LocalSlot)
     func lookup(label: Label) -> Symbol?
     func lookup(name: Name) -> Symbol?
     func lookupN(label: Label) -> Symbols?
     func lookupN(name: Name) -> Symbols?
-    func appendIssue(at: Location,message: String)
+    func setContainer(_ scope: Scope?)
     }
 
 extension Scope
-    {        
-    public var initializerScope: Scope
+    {
+    public var containsMethodInstanceScope: Bool
         {
-        var scope: Scope = self
-        while !scope.isInitializerScope
+        if self.isMethodInstanceScope
             {
-            scope = scope.parent.enclosingScope
+            return(true)
             }
-        return(scope)
+        if self.parentScope.isNil
+            {
+            return(false)
+            }
+        return(self.parentScope!.containsMethodInstanceScope)
+        }
+        
+    public mutating func setContainer(_ scope: Scope?)
+        {
+        self.parentScope = scope!
         }
         
     public func lookupPrefixOperatorInstances(label: Label) -> PrefixOperatorInstances?

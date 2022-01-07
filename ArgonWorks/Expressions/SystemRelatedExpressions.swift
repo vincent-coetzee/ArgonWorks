@@ -11,7 +11,7 @@ public class ClassExpression: Expression
     {
     public override var displayString: String
         {
-        return("CLASS(\(self.expression.displayString),\(self.type!.displayString)")
+        return("CLASS(\(self.expression.displayString),\(self.type.displayString)")
         }
 
     private let expression: Expression
@@ -34,15 +34,10 @@ public class ClassExpression: Expression
         super.init()
         }
         
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.type!.lookup(label: label))
-        }
-        
     public override func visit(visitor: Visitor) throws
         {
         try self.expression.visit(visitor: visitor)
-        try self.type!.visit(visitor: visitor)
+        try self.type.visit(visitor: visitor)
         try visitor.accept(self)
         }
         
@@ -55,6 +50,6 @@ public class ClassExpression: Expression
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.expression.initializeTypeConstraints(inContext: context)
-        self.type!.initializeTypeConstraints(inContext: context)
+        self.type.initializeTypeConstraints(inContext: context)
         }
     }

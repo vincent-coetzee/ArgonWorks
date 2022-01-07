@@ -148,17 +148,17 @@ public class ClassBasedPointer
         }
         
     private let someAddress: Address
-    private let someClass: Class
+    private let someClass: TypeClass
     private var someSlots: Dictionary<Label,Slot>
     private let wordPointer: WordPointer
     private let header: Header
     
     convenience init(address: Address,type: Type)
         {
-        self.init(address: address,class: (type as! TypeClass).theClass)
+        self.init(address: address,class: (type as! TypeClass))
         }
         
-    init(address: Address,class aClass: Class)
+    init(address: Address,class aClass: TypeClass)
         {
         self.someClass = aClass
         self.someAddress = address.cleanAddress
@@ -178,28 +178,22 @@ public class ClassBasedPointer
         
     public func setClass(_ type: Type)
         {
-        let theClass = (type as! TypeClass).theClass
+        let theClass = (type as! TypeClass)
         self.classAddress = theClass.memoryAddress.cleanAddress
         self.setInteger(theClass.magicNumber,atSlot: "_magicNumber")
         self.setAddress(theClass.memoryAddress,atSlot: "_class")
-        for supertype in theClass.superclasses
-            {
-            self.setLocalSlotValues(forClass: (supertype as! TypeClass).theClass)
-            }
+        self.setLocalSlotValues(forClass: (theClass.superclassType as! TypeClass))
         }
         
-    public func setClass(_ aClass: Class)
+    public func setClass(_ aClass: TypeClass)
         {
         self.classAddress = aClass.memoryAddress.cleanAddress
         self.setInteger(aClass.magicNumber,atSlot: "_magicNumber")
         self.setAddress(aClass.memoryAddress,atSlot: "_class")
-        for supertype in aClass.superclasses
-            {
-            self.setLocalSlotValues(forClass: (supertype as! TypeClass).theClass)
-            }
+        self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass))
         }
         
-    private func setLocalSlotValues(forClass aClass: Class)
+    private func setLocalSlotValues(forClass aClass: TypeClass)
         {
         for slot in aClass.localSystemSlots
             {
@@ -215,9 +209,9 @@ public class ClassBasedPointer
                     break
                 }
             }
-        for superclass in aClass.superclasses
+        if aClass.supertype.isNotNil
             {
-            self.setLocalSlotValues(forClass: (superclass as! TypeClass).theClass)
+            self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass))
             }
         }
         
@@ -387,5 +381,17 @@ public class ClassBasedPointer
             return
             }
         fatalError("Slot not found")
+        }
+        
+    public func encodeEnumerationCase(_ aCase:EnumerationCase,associatedValues: Words? = nil,atSlot: String)
+        {
+        if let slot = self.someSlots[atSlot]
+            {
+            if let values = associatedValues,aCase.associatedTypes.count == values.count
+                {
+                }
+            fatalError("Asscociated type count in enumeration case is \(aCase.associatedTypes.count) but \(associatedValues.count) were passed in.")
+            }
+        fatalError("Slot \(atSlot) not found.")
         }
     }

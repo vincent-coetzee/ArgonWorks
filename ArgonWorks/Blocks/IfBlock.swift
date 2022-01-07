@@ -17,18 +17,17 @@ public class IfBlock: Block
     internal var condition:Expression
     
     internal var elseBlock: Block?
-        {
-        didSet
-            {
-            self.elseBlock?.setParent(self)
-            }
-        }
+//        {
+//        didSet
+//            {
+//            self.elseBlock?.setParent(self)
+//            }
+//        }
     
     public init(condition: Expression)
         {
         self.condition = condition
         super.init()
-        self.condition.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -61,7 +60,7 @@ public class IfBlock: Block
             {
             ifBlock.addBlock(substitution.substitute(block))
             }
-        ifBlock.type = substitution.substitute(self.type!)
+        ifBlock.type = substitution.substitute(self.type)
         return(ifBlock as! Self)
         }
         
@@ -72,7 +71,7 @@ public class IfBlock: Block
             {
             ifBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
-        ifBlock.type = self.type?.freshTypeVariable(inContext: context)
+        ifBlock.type = self.type.freshTypeVariable(inContext: context)
         return(ifBlock as! Self)
         }
         
@@ -119,7 +118,7 @@ public class IfBlock: Block
         {
         let outLabel = buffer.nextLabel()
         try self.condition.emitCode(into: buffer,using: using)
-        buffer.append(nil,"BRF",self.condition.place,.none,.label(outLabel))
+        buffer.append(nil,.BRAF,self.condition.place,.none,.label(outLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)

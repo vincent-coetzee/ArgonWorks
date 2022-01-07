@@ -100,7 +100,7 @@ public enum TupleElement
             case .tuple(let tuple):
                 return(.tuple(substitution.substitute(tuple)))
             case .type(let type):
-                return(.type(substitution.substitute(type)!))
+                return(.type(substitution.substitute(type)))
             }
         }
         
@@ -185,10 +185,10 @@ public enum TupleElement
                 return(self.slotType(slot: slot,inContext: context))
             case .tuple(let tuple):
                 tuple.initializeType(inContext: context)
-                return(tuple.type!)
+                return(tuple.type)
             case .expression(let expression):
                 expression.initializeType(inContext: context)
-                return(expression.type!)
+                return(expression.type)
             case .type(let type):
                 return(type)
             }
@@ -196,7 +196,7 @@ public enum TupleElement
         
     private func slotType(slot: Slot,inContext context: TypeContext) -> Type
         {
-        if slot.type.isNil
+        if slot.type.isTypeVariable
             {
             if let slotType = context.lookupBinding(atLabel: slot.label)
                 {
@@ -205,28 +205,14 @@ public enum TupleElement
                 }
             else
                 {
-                slot.type = context.freshTypeVariable()
-                context.bind(slot.type!,to: slot.label)
-                return(slot.type!)
+                context.bind(slot.type,to: slot.label)
+                return(slot.type)
                 }
             }
-        else if slot.type!.isTypeVariable
+        else if slot.type.isClass || slot.type.isEnumeration
             {
-            if let slotType = context.lookupBinding(atLabel: slot.label)
-                {
-                slot.type = slotType
-                return(slotType)
-                }
-            else
-                {
-                context.bind(slot.type!,to: slot.label)
-                return(slot.type!)
-                }
-            }
-        else if slot.type!.isClass || slot.type!.isEnumeration
-            {
-            context.bind(slot.type!,to: slot.label)
-            return(slot.type!)
+            context.bind(slot.type,to: slot.label)
+            return(slot.type)
             }
         else
             {
@@ -251,16 +237,16 @@ public enum TupleElement
             }
         }
         
-    func setParent(_ parent: Parent)
-        {
-        switch(self)
-            {
-            case .expression(let expression):
-                expression.setParent(parent)
-            default:
-                break
-            }
-        }
+//    func setParent(_ parent: Parent)
+//        {
+//        switch(self)
+//            {
+//            case .expression(let expression):
+//                expression.setParent(parent)
+//            default:
+//                break
+//            }
+//        }
         
     func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
         {
@@ -305,14 +291,14 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         }
         
     internal private(set) var elements = Array<TupleElement>()
-    internal var type: Type?
-    internal var parent: Parent = .none
-        {
-        didSet
-            {
-            self.elements.forEach{$0.setParent(parent)}
-            }
-        }
+    internal var type: Type = Type()
+//    internal var parent: Parent = .none
+//        {
+//        didSet
+//            {
+//            self.elements.forEach{$0.setParent(parent)}
+//            }
+//        }
     
     override init()
         {
@@ -334,7 +320,6 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     public required init?(coder: NSCoder)
         {
         let count = coder.decodeInteger(forKey: "count")
-        self.parent = coder.decodeParent(forKey: "parent")!
         self.elements = []
         for index in 0..<count
             {
@@ -370,7 +355,6 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     public func encode(with coder:NSCoder)
         {
         coder.encode(self.elements.count,forKey: "count")
-        coder.encodeParent(self.parent,forKey: "parent")
         var index = 0
         for element in self.elements
             {
@@ -441,7 +425,7 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         self.elements.forEach{$0.initializeType(inContext: context)}
         let types = self.elements.map{$0.type!}
         let label = types.map{$0.displayString}.joined(separator: "x")
-        self.type = TypeConstructor(label: label,generics: types)
+        self.type = Argon.addType(TypeConstructor(label: label,generics: types))
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext)

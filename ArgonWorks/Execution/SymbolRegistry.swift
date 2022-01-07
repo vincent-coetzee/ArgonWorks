@@ -7,10 +7,11 @@
 
 import Foundation
 
-public class SymbolTable
+public class SymbolRegistry
     {
     private struct Bucket
         {
+        var header: Word
         var symbolPointer: Address
         var nextPointer: Address
         var symbolIndex: Word
@@ -30,6 +31,13 @@ public class SymbolTable
         self.context = context
         self.baseAddress = context.staticSegment.allocateWords(count: Int(Self.kTableSize))
         self.wordPointer = WordPointer(bitPattern: self.baseAddress)
+        }
+        
+    public func write(onStream: UnsafeMutablePointer<FILE>)
+        {
+        var address = self.baseAddress
+        fwrite(&address,MemoryLayout<Word>.size,1,onStream)
+        fwrite(&self.symbolIndex,MemoryLayout<Int>.size,1,onStream)
         }
         
     public func registerSymbol(_ symbol: Argon.Symbol) -> Word
@@ -85,7 +93,7 @@ public class SymbolTable
         
     private func insertNewSymbol(_ symbol: Argon.Symbol,atIndex: Int,afterBucket: BucketPointer) -> Word
         {
-        let newBucket = self.context.staticSegment.allocateWords(count: 2)
+        let newBucket = self.context.staticSegment.allocateWords(count: 3)
         let newSymbol = self.context.staticSegment.allocateSymbol(symbol)
         afterBucket.pointee.nextPointer = newBucket
         let bucketPointer = BucketPointer(bitPattern: newBucket)

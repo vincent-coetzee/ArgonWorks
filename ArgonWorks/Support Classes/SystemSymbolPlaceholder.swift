@@ -9,21 +9,25 @@ import Foundation
 
 public class SystemSymbolPlaceholder: NSObject, NSCoding
     {
-    private let originalName: Name
+    private let originalKey: Int
+    private let label: String
     
     init(original: Symbol)
         {
-        self.originalName = original.fullName
+        self.originalKey = original.argonHash
+        self.label = "\(original)"
         }
         
-    public required init(coder: NSCoder)
+    public required init?(coder: NSCoder)
         {
-        self.originalName = Name(coder: coder,forKey: "originalName")
+        self.originalKey = coder.decodeInteger(forKey: "originalKey")
+        self.label = coder.decodeObject(forKey: "label") as! String
         }
         
     public func encode(with coder:NSCoder)
         {
-        self.originalName.encode(with: coder,forKey:"originalName")
+        coder.encode(self.originalKey,forKey:"originalKey")
+        coder.encode(self.label,forKey: "label")
 //        coder.encodeName(self.originalName,forKey: "originalName")
         }
         
@@ -31,11 +35,11 @@ public class SystemSymbolPlaceholder: NSObject, NSCoding
         {
         if let importer = coder as? ImportUnarchiver
             {
-            if let object = TopModule.shared.lookup(name: self.originalName)
+            if let object = Argon.typeAtKey(self.originalKey)
                 {
                 return(object)
                 }
-            fatalError("Can not resolve system symbol \(self.originalName.displayString) in topModule.")
+            fatalError("Can not resolve system symbol \(self.originalKey) in topModule.")
             }
         return(self)
         }

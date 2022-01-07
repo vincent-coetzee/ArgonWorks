@@ -9,17 +9,33 @@ import Foundation
 
 public class InstanceSlot: Slot
     {
+    public var `class`:TypeClass!
+        
     public override var isSystemSymbol: Bool
         {
-        return(self.parentClass.isSystemSymbol)
+        return(self.class.isSystemSymbol)
         }
         
-    public var parentClass: Class
+    public required init?(coder: NSCoder)
         {
-        if case let Parent.node(node) = self.parent
-            {
-            return(node as! Class)
-            }
-        fatalError("The parent of this instance slot is not a class")
+        self.class = coder.decodeObject(forKey: "class") as? TypeClass
+        super.init(coder: coder)
+        }
+    
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        }
+    
+    required init(labeled: Label, ofType: Type)
+        {
+        super.init(label: labeled)
+        self.type = ofType
+        }
+    
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.class,forKey: "class")
+        super.encode(with: coder)
         }
     }

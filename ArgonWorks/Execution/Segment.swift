@@ -8,14 +8,11 @@
 import Foundation
 import MachMemory
 
-public struct RuntimeIssue: Error
+public enum RuntimeIssue: Error
     {
-    internal let message: String
-    
-    init(_ message: String)
-        {
-        self.message = message
-        }
+    case outOfFlipSpace
+    case requestedAddressDiffersFromActualAddress
+    case invalidAddressAllocated
     }
     
 public class Segment
@@ -24,7 +21,7 @@ public class Segment
     
     public enum SegmentType:Word
         {
-        case empty =      0
+        case null =        549755813888
         case `static` =   1099511627776
         case code =       2199023255552
         case stack =      4398046511104
@@ -45,7 +42,7 @@ public class Segment
         
     public class var segmentType: SegmentType
         {
-        .empty
+        .null
         }
         
     public var segmentType: SegmentType
@@ -72,7 +69,7 @@ public class Segment
         self.baseAddress = AllocateSegment(address,size)
         if self.baseAddress != address
             {
-            throw(RuntimeIssue("Requested segment address and allocated segment address are different."))
+            throw(RuntimeIssue.requestedAddressDiffersFromActualAddress)
             }
         self.lastAddress = self.baseAddress + Word(self.segmentSizeInBytes)
         self.argonModule = argonModule
@@ -141,9 +138,13 @@ public class Segment
         
     public func allocateWords(count:Int) -> Address
         {
-        let size = self.align(count * Argon.kWordSizeInBytesInt,to: self.alignment)
+        let size = self.align((count + 1) * Argon.kWordSizeInBytesInt,to: self.alignment)
         let address = self.nextAddress
         self.nextAddress += size
+        let header = Header(atAddress: address)
+        header.tag = .header
+        header.sizeInBytes = size
+        header.objectType = Argon.ObjectType.wordBlock
         if self.nextAddress > self.lastAddress
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
@@ -183,54 +184,29 @@ public class Segment
         print("ALLOCATED \(size) BYTES AT \(address) FOR METHOD INSTANCE \(methodInstance.label)")
         }
         
-    public func allocateObject(ofClass aClass: Class,sizeOfExtraBytesInBytes: Int) -> Address
+    public func allocateObject(ofType type: Type,extraSizeInBytes: Int) -> Address
         {
-        let size = self.align(aClass.instanceSizeInBytes + sizeOfExtraBytesInBytes)
+        assert(type.isClass,"Creating an object can only be done with a class, enumerations can not be allocated.")
+        let size = self.align(type.instanceSizeInBytes + extraSizeInBytes)
         let address = self.nextAddress
         self.nextAddress += size
         if self.nextAddress > self.lastAddress
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let objectPointer = ClassBasedPointer(address: address.cleanAddress,class: aClass)
+        let objectPointer = ClassBasedPointer(address: address.cleanAddress,type: type)
         objectPointer.tag = .header
-        objectPointer.setClass(aClass)
-        objectPointer.hasBytes = sizeOfExtraBytesInBytes > 0
+        objectPointer.setClass(type)
+        objectPointer.hasBytes = extraSizeInBytes > 0
         objectPointer.flipCount = 0
         objectPointer.isForwarded = false
         objectPointer.sizeInBytes = size
         return(address)
         }
         
-    public func allocateObject(ofClass type: Type,sizeOfExtraBytesInBytes: Int) -> Address
-        {
-        return(self.allocateObject(ofClass: type.classValue, sizeOfExtraBytesInBytes: sizeOfExtraBytesInBytes))
-        }
-        
-    public func allocateModule(_ module: Module) -> Address
-        {
-        let sizeInBytes = self.align(module.sizeInBytes,to: self.alignment)
-        let address = self.nextAddress
-        if self.nextAddress > self.lastAddress
-            {
-            fatalError("Size allocation exceeded in segment \(self.segmentType).")
-            }
-        self.nextAddress += sizeInBytes
-        if let objectPointer = ObjectPointer(dirtyAddress: address)
-            {
-            objectPointer.tag = .header
-            objectPointer.magicNumber = (self.argonModule.lookup(label: "Module") as! Type).magicNumber
-            objectPointer.hasBytes = false
-            objectPointer.flipCount = 0
-            objectPointer.isForwarded = false
-            objectPointer.sizeInBytes = sizeInBytes
-            }
-        return(address)
-        }
-        
     public func allocateSymbol(_ string: String) -> Address
         {
-        let stringType = self.argonModule.lookup(label: "Symbol") as! Type
+        let stringType = self.argonModule.lookup(label: "Symbol") as! TypeClass
         let sizeInBytes = self.align(stringType.instanceSizeInBytes,to: self.alignment)
         let count = string.utf16.count + 2
         let extraSize = self.align(count * 2 + (count / 3 + 1) * 2,to: self.alignment)
@@ -256,38 +232,12 @@ public class Segment
         objectPointer.isPersistent = false
         objectPointer.isForwarded = false
         objectPointer.magicNumber = stringType.magicNumber
-        return(address)
-        }
-        
-    public func allocateEnumerationInstance(enumeration: Enumeration,caseIndex: Int,associatedValues: Words) -> Address
-        {
-        let instanceType = self.argonModule.lookup(label: "EnumerationInstance") as! Type
-        let sizeInBytes = self.align(instanceType.instanceSizeInBytes,to: self.alignment)
-        let address = self.nextAddress
-        self.nextAddress += sizeInBytes
-        if self.nextAddress > self.lastAddress
-            {
-            fatalError("Size allocation exceeded in segment \(self.segmentType).")
-            }
-        let objectPointer = ClassBasedPointer(address: address,type: instanceType)
-        objectPointer.tag = .header
-        objectPointer.setClass(instanceType)
-        objectPointer.hasBytes = false
-        objectPointer.sizeInBytes = sizeInBytes
-        objectPointer.flipCount = 0
-        objectPointer.isPersistent = false
-        objectPointer.isForwarded = false
-        objectPointer.magicNumber = instanceType.magicNumber
-        objectPointer.setAddress(enumeration.memoryAddress,atSlot: "enumeration")
-        objectPointer.setInteger(caseIndex,atSlot: "caseIndex")
-        let valuesAddress = self.allocateArray(size: associatedValues.count,elements: associatedValues)
-        objectPointer.setAddress(valuesAddress,atSlot: "associatedValues")
         return(address)
         }
         
     public func allocateString(_ string: String) -> Address
         {
-        let stringType = self.argonModule.lookup(label: "String") as! Type
+        let stringType = self.argonModule.lookup(label: "String") as! TypeClass
         let sizeInBytes = self.align(stringType.instanceSizeInBytes,to: self.alignment)
         let count = string.utf16.count + 2
         let extraSize = self.align(count * 2 + (count / 3 + 1) * 2,to: self.alignment)
@@ -313,31 +263,6 @@ public class Segment
         objectPointer.isPersistent = false
         objectPointer.isForwarded = false
         objectPointer.magicNumber = stringType.magicNumber
-        return(address)
-        }
-        
-//    public func allocateClass(class aClass: Class) -> Address
-//        {
-//
-//        }
-        
-    public func allocateBootstrapSlot(name:String,offset:Int) -> Address
-        {
-        let slotType = self.argonModule.lookup(label: "Slot") as! Type
-        let sizeInBytes = self.align(slotType.sizeInBytes,to: self.alignment)
-        let address = self.nextAddress
-        self.nextAddress += Word(sizeInBytes)
-        if self.nextAddress > self.lastAddress
-            {
-            fatalError("Size allocation exceeded in segment \(self.segmentType).")
-            }
-        if let slotPointer = SlotPointer(dirtyAddress: address)
-            {
-            slotPointer.nameAddress = self.allocateString(name)
-            slotPointer.offset = offset
-            Self.pointersNeedingBackpatching.append(slotPointer)
-            }
-        Header(atAddress: address).tag = .header
         return(address)
         }
         
@@ -386,21 +311,6 @@ public class Segment
         let addresses = elements.map{$0.cleanAddress}
         return(self.allocateArray(size: size,elements: addresses))
         }
-//
-//    public func allocateBootstrapObject(ofType type: Type) -> Address
-//        {
-//        let objectSize = type.sizeInBytes
-//        let offset = self.nextAddress - self.baseAddress
-//
-//        }
-//
-//    public func allocateString(_ string: String) -> Address
-//        {
-//        let stringLength = string.utf16.count + 1
-//        let stringType = argonModule.lookup(label: "String") as! Type
-//        let totalSize = stringType.sizeInBytes + stringLength
-//        let address = self.allocateObject(ofType: stringType)
-//        }
         
     public func display(indent: String,count: Int)
         {

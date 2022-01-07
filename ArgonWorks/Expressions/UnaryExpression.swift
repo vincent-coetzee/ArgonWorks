@@ -22,7 +22,6 @@ public class UnaryExpression: Expression
         self.operationName = operation.rawValue
         self.rhs = rhs
         super.init()
-        self.rhs.setParent(self)
         }
         
     required init?(coder: NSCoder)
@@ -68,22 +67,30 @@ public class UnaryExpression: Expression
             instance.append(lineNumber: location.line)
             }
         try self.rhs.emitCode(into: instance, using: using)
-        var opcode = "NOP"
+        var opcode = Opcode.NOP
         switch(self.operationName)
             {
             case "-":
-                if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger || self.type == ArgonModule.shared.byte || self.type == ArgonModule.shared.character
+                if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger
                     {
-                    opcode = "INEG"
+                    opcode = .INEG64
+                    }
+                else if self.type == ArgonModule.shared.byte
+                    {
+                    opcode = .INEG8
+                    }
+                else if self.type == ArgonModule.shared.character
+                    {
+                    opcode = .INEG16
                     }
                 else if self.type == ArgonModule.shared.float
                     {
-                    opcode = "FNEG"
+                    opcode = .FNEG64
                     }
             case "~":
-                opcode = "IBITNOT"
+                opcode = .IBNOT64
             case "!":
-                opcode = "NOT"
+                opcode = .NOT
             default:
                 fatalError("Unhandled unary operation.")
             }
@@ -99,22 +106,22 @@ public class UnaryExpression: Expression
             instance.append(lineNumber: location.line)
             }
         try self.rhs.emitCode(into: instance, using: using)
-        var opcode = "NOP"
+        var opcode:Opcode = .NOP
         switch(self.operationName)
             {
             case "sub":
                 if self.type == ArgonModule.shared.integer.type
                     {
-                    opcode = "INEG"
+                    opcode = .INEG64
                     }
                 else
                     {
-                    opcode = "FNEG"
+                    opcode = .FNEG64
                     }
             case "bitNot":
-                opcode = "IBITNOT"
+                opcode = .IBNOT64
             case "not":
-                opcode = "NOT"
+                opcode = .NOT
             default:
                 break
             }

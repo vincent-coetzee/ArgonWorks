@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol BlockContext
+public protocol StackFrame
     {
     func addLocalSlot(_ local: LocalSlot)
     func addParameterSlot(_ paramater: Parameter)

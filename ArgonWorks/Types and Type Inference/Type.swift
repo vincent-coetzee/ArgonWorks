@@ -10,52 +10,9 @@ import FFI
 
 public class Type: Symbol,Displayable,UserDisplayable
     {
-    private static var typeMappings = Dictionary<Name,Type>()
-    
-    internal static func of(_ aClass: Class) -> Type
-        {
-        if let type = self.typeMappings[aClass.fullName]
-            {
-            return(type)
-            }
-        let type = TypeClass(class: aClass)
-        self.typeMappings[aClass.fullName] = type
-        return(type)
-        }
-        
-    internal static func of(_ aClass: GenericClass) -> Type
-        {
-        if let type = self.typeMappings[aClass.fullName] as? TypeClass
-            {
-            if type.isGenericClass && type.rawGenericClass.types == aClass.types
-                {
-                return(type)
-                }
-            }
-        let type = TypeClass(class: aClass,generics: aClass.types)
-        self.typeMappings[aClass.fullName] = type
-        return(type)
-        }
-        
-    internal static func of(_ enumeration: Enumeration) -> Type
-        {
-        if let type = self.typeMappings[enumeration.fullName]
-            {
-            return(type)
-            }
-        let type = TypeEnumeration(label: enumeration.label,enumeration: enumeration)
-        self.typeMappings[enumeration.fullName] = type
-        return(type)
-        }
-
     public static func ==(lhs: Type,rhs: Type) -> Bool
         {
-        lhs === rhs
-        }
-        
-    public var magicNumber: Int
-        {
-        fatalError()
+        lhs.index == rhs.index
         }
         
     public var ffiType: ffi_type
@@ -93,16 +50,6 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
-    public var rawClass: Class
-        {
-        fatalError()
-        }
-
-    public var literal: Literal
-        {
-        fatalError()
-        }
-        
     public var arrayElementType: Type
         {
         fatalError()
@@ -133,11 +80,6 @@ public class Type: Symbol,Displayable,UserDisplayable
         false
         }
         
-    public var rawGenericClass: GenericClass
-        {
-        fatalError()
-        }
-        
     public var mangledName: String
         {
         fatalError()
@@ -148,31 +90,43 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
+    public var subtypes: Types
+        {
+        []
+        }
+        
     public override var displayString: String
         {
         "Type()"
         }
-
-    public var localAndInheritedSlots: Slots
+        
+    public var isGeneric: Bool
         {
-        Slots()
+        false
         }
         
-    public var depth: Int
+    public override var isSystemType: Bool
         {
-        return(0)
+        false
+        }
+    
+    public override var fullName: Name
+        {
+        self.module.fullName
         }
         
-    public var allSubclasses: Types
+    public override var isType: Bool
         {
-        Types()
+        true
         }
         
-    public var enumerationValue: Enumeration
+    public var superclassType: Type
         {
         fatalError()
         }
         
+    private var _isSystemType = false
+    
     required init(label: Label)
         {
         super.init(label: label)
@@ -207,11 +161,6 @@ public class Type: Symbol,Displayable,UserDisplayable
         return(self)
         }
         
-    public func initializer(_ primitiveIndex: Int,_ args:Type...)
-        {
-        fatalError()
-        }
-        
     public func isSubtype(of: Type) -> Bool
         {
         false
@@ -227,10 +176,82 @@ public class Type: Symbol,Displayable,UserDisplayable
         self
         }
         
+    public func superclass(_ type:Type) -> Type
+        {
+        fatalError()
+        }
+        
     public func contains(_ type:Type) -> Bool
         {
         false
         }
+        
+    public func withGenerics(_ types: Types) -> Type
+        {
+        self
+        }
+        
+    public func mcode(_ string: String) -> Type
+        {
+        self
+        }
+        
+    public func setType(_ objectType:Argon.ObjectType) -> Type
+        {
+        self
+        }
+        
+    public func addLayoutSlot(_ slot: Slot)
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func slot(_ label: Label,_ type: Type) -> Type
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func hasBytes(_ bool:Bool) -> Type
+        {
+        fatalError()
+        }
+        
+    public func printLayout()
+        {
+        }
+        
+    public func addSubtype(_ type: Type)
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func typeVar(_ label: Label) -> Type
+        {
+        fatalError()
+        }
+        
+//    public override func setParent(_ parent: Parent)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ symbol: Symbol)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ expression: Expression)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ block: Block)
+//        {
+//        fatalError()
+//        }
     }
 
 public typealias Types = Array<Type>

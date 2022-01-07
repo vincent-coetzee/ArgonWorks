@@ -9,6 +9,18 @@ import Foundation
 
 public class Parameter:LocalSlot,Displayable
     {
+    public override var argonHash: Int
+        {
+        var hashValue = super.argonHash
+        hashValue = hashValue << 13 ^ self.type.argonHash
+        if self.relabel.isNotNil
+            {
+            hashValue = hashValue << 13 ^ self.relabel!.argonHash
+            }
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public override var displayString: String
         {
         return("\(self.label)::\(type.displayString)")
@@ -75,19 +87,19 @@ public class Parameter:LocalSlot,Displayable
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let newType = self.type!.freshTypeVariable(inContext: context)
+        let newType = self.type.freshTypeVariable(inContext: context)
         let newParameter = Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic)
         return(newParameter as! Self)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type!)!, isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
+        return(Parameter(label: self.label, relabel: self.relabel, type:  substitution.substitute(self.type), isVisible: self.isVisible, isVariadic: self.isVariadic) as! Self)
         }
         
     public func flatten() -> Parameter
         {
-        Parameter(label: self.label, relabel: self.relabel, type: self.type!.type!, isVisible: self.isVisible, isVariadic: self.isVariadic)
+        Parameter(label: self.label, relabel: self.relabel, type: self.type.type, isVisible: self.isVisible, isVariadic: self.isVariadic)
         }
         
 //    public func withSolution(_ solution: SolutionSpace) -> Parameter

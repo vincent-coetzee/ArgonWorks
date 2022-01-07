@@ -39,10 +39,6 @@ public class InvocationExpression: Expression
         self.location = location
         self.arguments = arguments
         super.init()
-        for argument in arguments
-            {
-            argument.value.setParent(self)
-            }
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

@@ -12,7 +12,6 @@ public class CodeGenerator: CompilerPass
     {
     public let compiler: Compiler
     public var wasCancelled = false
-    public var isLValue = false
     public let payload: VMPayload
     
     public init(_ compiler: Compiler,payload: VMPayload)
@@ -24,6 +23,11 @@ public class CodeGenerator: CompilerPass
     public func cancelCompletion()
         {
         self.wasCancelled = true
+        }
+        
+    public func emitStaticString(_ string: String) -> Address
+        {
+        return(payload.staticSegment.allocateString(string))
         }
         
     public func processModule(_ module: Module?) -> Module?

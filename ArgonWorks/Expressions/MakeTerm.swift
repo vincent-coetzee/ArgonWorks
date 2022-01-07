@@ -7,15 +7,27 @@
 
 import Foundation
 
-public class TypeInstanciationTerm: Expression
+///
+///
+/// A MakeTerm creates instances of classes. The MakeTerm is of the form
+///
+/// MAKE(SomeClass,arg1,arg2,arg3)
+///
+/// After a class is made and the instance actually exists, the compiler
+/// will go looking for a method called "initialize", whose arguments most
+/// closely match those passed to the MAKE term and then invoke that method
+/// passing the arguments ( and the instance ) to that method. The methods
+/// are examined at compile time not at runtime, so loading extra methods
+/// in at runtime won't cause them to be invoked.
+///
+/// 
+public class MakeTerm: Expression
     {
     private var arguments: Arguments
-    private var initializer: Initializer?
-    
+
     required init?(coder: NSCoder)
         {
         self.arguments = coder.decodeArguments(forKey: "arguments")
-        self.initializer = coder.decodeObject(forKey: "initializer") as? Initializer
         super.init(coder: coder)
         }
         
@@ -23,7 +35,6 @@ public class TypeInstanciationTerm: Expression
         {
         super.encode(with: coder)
         coder.encodeArguments(self.arguments,forKey: "arguments")
-        coder.encode(self.initializer,forKey: "initializer")
         }
 
     public init(type: Type,arguments: Arguments)
@@ -31,10 +42,6 @@ public class TypeInstanciationTerm: Expression
         self.arguments = arguments
         super.init()
         self.type = type
-        for argument in arguments
-            {
-            argument.value.setParent(self)
-            }
         }
         
     public override func display(indent: String)
@@ -56,37 +63,20 @@ public class TypeInstanciationTerm: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let term = TypeInstanciationTerm(type: substitution.substitute(self.type)!,arguments: self.arguments.map{substitution.substitute($0)})
-        term.type = substitution.substitute(self.type!)
+        let term = MakeTerm(type: substitution.substitute(self.type),arguments: self.arguments.map{substitution.substitute($0)})
+        term.type = substitution.substitute(self.type)
         term.issues = self.issues
         return(term as! Self)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
-        if self.initializer.isNotNil
-            {
-            self.initializer!.initializeType(inContext: context)
-            self.initializer!.parameters.forEach{$0.initializeType(inContext: context)}
-            }
         self.arguments = self.arguments.map{$0.initializeType(inContext: context)}
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.arguments.forEach{$0.initializeTypeConstraints(inContext: context)}
-        if self.type!.isClass && !self.type!.classValue.initializers.isEmpty
-            {
-            self.initializer = self.type!.classValue.mostSpecificInitializer(forArguments: self.arguments,inContext: context)
-            }
-        if self.initializer.isNotNil
-            {
-            for (argument,parameter) in zip(self.arguments,self.initializer!.parameters)
-                {
-                context.append(SubTypeConstraint(subtype: argument.value.type,supertype: parameter.type,origin: .expression(self)))
-                }
-            context.append(TypeConstraint(left: self.type,right: self.initializer?.declaringType,origin: .expression(self)))
-            }
         }
         
     public override func visit(visitor: Visitor) throws
@@ -95,27 +85,18 @@ public class TypeInstanciationTerm: Expression
             {
             try argument.visit(visitor: visitor)
             }
-        if self.initializer.isNotNil
-            {
-            try initializer!.visit(visitor: visitor)
-            }
         try visitor.accept(self)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        if self.type!.isGenericClass
+        if self.type.isGenericClass
             {
             analyzer.cancelCompletion()
             analyzer.dispatchError(at: self.declaration!, message: "The class of this MAKE term is an uninstanciated class and can not be used until it is instanciated.")
             }
         }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.type?.lookup(label: label))
-        }
-        
+
     public override func emitValueCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         try self.emitCode(into: instance,using: generator)
@@ -128,26 +109,14 @@ public class TypeInstanciationTerm: Expression
             print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
             return
             }
-        var count:Argon.Integer = 1
         instance.append(lineNumber: location.line)
-        instance.append(nil,"MAKE",.address(self.type!.memoryAddress),.none,.none)
-        if let initializer = self.initializer
-            {
-            let temp = instance.nextTemporary()
-            for argument in self.arguments.reversed()
-                {
-                try argument.value.emitCode(into: instance,using: generator)
-                instance.append(nil,"PUSH",argument.value.place,.none,.none)
-                count += 1
-                }
-            instance.append("PUSH",.returnValue,.none,.none)
-            instance.append("CALL",.address(initializer.memoryAddress),.none,.none)
-            instance.append("POPN",.integer(8 * count))
-            self._place = temp
-            }
-        else
-            {
-            self._place = .returnValue
-            }
+        instance.append(.MAKE,.address(self.type.memoryAddress))
+        ///
+        ///
+        /// Need to add the logic for identifying and invoking the appropriate
+        /// initialize method.
+        ///
+        ///
+        self._place = .returnValue
         }
     }

@@ -70,7 +70,7 @@ public class AssignmentOperatorExpression: Expression
         {
         let expression = AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs))
         expression.issues = self.issues
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         return(expression as! Self)
         }
         
@@ -93,7 +93,7 @@ public class AssignmentOperatorExpression: Expression
             }
         try self.lhs.emitCode(into: instance,using: generator)
         try self.rhs.emitCode(into: instance,using: generator)
-        instance.append(nil,"MOVINDIRECT",self.lhs.place,rhs.place,.none)
+        instance.append(.MOVP,self.lhs.place,rhs.place,.none)
         if rhs.place.isNone
             {
             print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")

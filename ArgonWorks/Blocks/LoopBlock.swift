@@ -7,31 +7,11 @@
 
 import Foundation
 
-public class LoopBlock: Block,BlockContext,Scope
+public class LoopBlock: Block
     {
     public var startExpressions: Array<Expression>!
-        {
-        didSet
-            {
-            self.startExpressions.setParent(self)
-            }
-        }
-        
-    public var endExpression: Expression!
-        {
-        didSet
-            {
-            self.endExpression.setParent(self)
-            }
-        }
-        
+    public var endExpression: Expression!        
     public var updateExpressions: Array<Expression>!
-        {
-        didSet
-            {
-            self.updateExpressions.setParent(self)
-            }
-        }
     
     required init()
         {
@@ -44,15 +24,6 @@ public class LoopBlock: Block,BlockContext,Scope
         self.endExpression = end
         self.updateExpressions = update
         super.init()
-        for expression in start
-            {
-            expression.setParent(self)
-            }
-        for expression in update
-            {
-            expression.setParent(self)
-            }
-        end.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -89,7 +60,7 @@ public class LoopBlock: Block,BlockContext,Scope
             {
             block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        block.type = self.type?.freshTypeVariable(inContext: context)
+        block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         
@@ -141,10 +112,10 @@ public class LoopBlock: Block,BlockContext,Scope
         for block in self.blocks
             {
             let newBlock = substitution.substitute(block)
-            newBlock.type = substitution.substitute(block.type!)
+            newBlock.type = substitution.substitute(block.type)
             loop.addBlock(newBlock)
             }
-        loop.type = substitution.substitute(self.type!)
+        loop.type = substitution.substitute(self.type)
         return(loop as! Self)
         }
         
@@ -200,7 +171,7 @@ public class LoopBlock: Block,BlockContext,Scope
             try expression.emitCode(into: buffer,using: using)
             }
         try self.endExpression.emitCode(into: buffer,using: using)
-        buffer.append(nil,"BRLT",.none,.none,.label(label))
+        buffer.append(nil,.BRAF,.none,.none,.label(label))
         }
     }
 

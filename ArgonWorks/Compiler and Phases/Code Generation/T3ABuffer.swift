@@ -77,17 +77,17 @@ public class T3ABuffer: NSObject,NSCoding,Collection
     
     public func append(lineNumber line: Int)
         {
-        self.append("LINE",.integer(Argon.Integer(line)))
+        self.append(.LINE,.integer(Argon.Integer(line)))
         }
         
-    public func append(_ opcode: String,_ operand1: T3AInstruction.Operand = .none,_ operand2: T3AInstruction.Operand = .none,_ result: T3AInstruction.Operand = .none)
+    public func append(_ opcode: Opcode,_ operand1: T3AInstruction.Operand = .none,_ operand2: T3AInstruction.Operand = .none,_ result: T3AInstruction.Operand = .none)
         {
         self.append(nil,opcode,operand1,operand2,result)
         }
         
-    public func append(_ label: T3ALabel? = nil,_ opcode: String,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
+    public func append(_ label: T3ALabel? = nil,_ opcode: Opcode,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
         {
-        if opcode != "LINE"
+        if opcode != .LINE
             {
             if self.pendingLabel.isNotNil && label.isNotNil
                 {
@@ -99,7 +99,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
                 }
             }
         var instruction: T3AInstruction
-        if opcode == "LINE"
+        if opcode == .LINE
             {
             instruction = T3AInstruction(nil,opcode,operand1,operand2,result)
             }
@@ -110,7 +110,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         instruction.offset = currentOffset
         self.currentOffset += 1
         self.instructions.append(instruction)
-        if opcode != "LINE"
+        if opcode != .LINE
             {
             self.pendingLabel = nil
             }
@@ -126,11 +126,11 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func appendEntry(temporaryCount: Int)
         {
-        self.append("ENTER",.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+        self.append(.ENTER,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
         }
         
     public func appendExit(temporaryCount: Int)
         {
-        self.append("LEAVE",.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+        self.append(.LEAVE,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
         }
     }

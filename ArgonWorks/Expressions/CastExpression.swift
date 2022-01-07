@@ -11,7 +11,7 @@ public class CastExpression: Expression
     {
     public override var displayString: String
         {
-        return("CAST(\(self.expression.displayString),\(self.type!.displayString)")
+        return("CAST(\(self.expression.displayString),\(self.type.displayString)")
         }
 
     private let expression: Expression
@@ -35,15 +35,10 @@ public class CastExpression: Expression
         self.type = type
         }
         
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.type!.lookup(label: label))
-        }
-        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = CastExpression(expression: substitution.substitute(self.expression),type: substitution.substitute(self.type)!)
-        expression.type = substitution.substitute(self.type!)
+        let expression = CastExpression(expression: substitution.substitute(self.expression),type: substitution.substitute(self.type))
+        expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -51,22 +46,22 @@ public class CastExpression: Expression
     public override func visit(visitor: Visitor) throws
         {
         try self.expression.visit(visitor: visitor)
-        try self.type!.visit(visitor: visitor)
+        try self.type.visit(visitor: visitor)
         try visitor.accept(self)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
         self.expression.initializeType(inContext: context)
-        self.type!.initializeType(inContext: context)
+        self.type.initializeType(inContext: context)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.expression.initializeTypeConstraints(inContext: context)
-        self.type!.initializeTypeConstraints(inContext: context)
+        self.type.initializeTypeConstraints(inContext: context)
         context.append(SubTypeConstraint(subtype: self.expression.type,supertype: self.type,origin:.expression(self)))
-        if !self.expression.type!.isSubtype(of: self.type!)
+        if !self.expression.type.isSubtype(of: self.type)
             {
             self.appendIssue(at: self.declaration!, message: "'\(self.expression.type.userString)' does not inherit from '\(self.type.userString)' so the cast will fail.")
             }
@@ -81,7 +76,7 @@ public class CastExpression: Expression
         try self.expression.emitCode(into: instance,using: generator)
         let temp = instance.nextTemporary()
         let typeClass = self.type as! TypeClass
-        instance.append("CAST",self.expression.place,.address(typeClass.theClass.memoryAddress),temp)
+        instance.append(.CAST,self.expression.place,.address(typeClass.memoryAddress),temp)
         self._place = temp
         }
     }

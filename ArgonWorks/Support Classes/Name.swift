@@ -7,6 +7,11 @@
 
 import Foundation
 
+public protocol Nameable
+    {
+    var fullName: Name { get }
+    }
+
 public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     {
     public static func ==(lhs:Name,rhs:Name) -> Bool

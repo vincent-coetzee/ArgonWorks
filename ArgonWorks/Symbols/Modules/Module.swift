@@ -10,15 +10,30 @@ import AppKit
     
 public class Module:ContainerSymbol,Scope
     {
+    public var isMethodInstanceScope: Bool
+        {
+        false
+        }
+        
+    public var parentScope: Scope?
+        {
+        get
+            {
+            self.module
+            }
+        set
+            {
+            self.module = newValue as? Module
+            }
+        }
+        
     public override var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine(super.argonHash)
+        var hashValue = super.argonHash
         for symbol in self.symbols
             {
-            hasher.combine(symbol.argonHash)
+            hashValue = hashValue << 13 ^ symbol.argonHash
             }
-        let hashValue = hasher.finalize()
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
         }
@@ -37,17 +52,6 @@ public class Module:ContainerSymbol,Scope
             }
         return(instances)
         }
-        
-    public var parentModule: Module?
-        {
-        switch(self.parent)
-            {
-            case .node(let node):
-                return(node as! Module)
-            default:
-                return(nil)
-            }
-        }
     
     public var instanceSizeInBytes: Int
         {
@@ -57,56 +61,20 @@ public class Module:ContainerSymbol,Scope
         return(size + slotsSize)
         }
         
-    public var enclosingBlockContext: BlockContext
-        {
-        fatalError()
-        }
-        
-    public var moduleSlots: Slots
-        {
-        self.symbols.compactMap{$0 as? ModuleSlot}.sorted{$0.label < $1.label}
-        }
-        
-    public var isBlockContextScope: Bool
-        {
-        false
-        }
-        
-    public var isSlotScope: Bool
-        {
-        false
-        }
-        
-    public var isMethodInstanceScope: Bool
-        {
-        false
-        }
-        
-    public var isClosureScope: Bool
-        {
-        false
-        }
-        
-    public var isInitializerScope: Bool
-        {
-        false
-        }
-        
     public override var sizeInBytes: Int
         {
         let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
-        let moduleClass = moduleType.classValue
-        return(moduleClass.instanceSizeInBytes + (self.moduleSlots.count * Argon.kWordSizeInBytesInt))
+        return(moduleType.instanceSizeInBytes + (self.moduleSlots.count * Argon.kWordSizeInBytesInt))
         }
-        
-    public override var enclosingScope: Scope
-        {
-        self.parent.enclosingScope
-        }
-        
+
     public var isMainModule: Bool
         {
         false
+        }
+        
+    public var moduleSlots: Array<ModuleSlot>
+        {
+        self.symbols.compactMap{$0 as? ModuleSlot}
         }
         
     public var firstMainModule: MainModule?
@@ -119,6 +87,19 @@ public class Module:ContainerSymbol,Scope
                 }
             }
         return(nil)
+        }
+        
+    public override var type: Type!
+        {
+        get
+            {
+            super.type = TypeConstructor(label: self.label, generics: [ArgonModule.shared.moduleType])
+            return(super.type)
+            }
+        set
+            {
+            super.type = newValue
+            }
         }
         
     public var firstMainMethod: Method?
@@ -144,7 +125,6 @@ public class Module:ContainerSymbol,Scope
     public required init(label: Label)
         {
         super.init(label: label)
-        self.type = TypeModule(module: self)
         }
         
     public required init?(coder: NSCoder)
@@ -159,6 +139,11 @@ public class Module:ContainerSymbol,Scope
         {
         coder.encode(self.imports,forKey: "imports")
         super.encode(with: coder)
+        }
+        
+    public override func addLocalSlot(_ localSlot: LocalSlot)
+        {
+        fatalError()
         }
         
     public func layoutObjectSlots(withArgonModule argonModule: ArgonModule)
@@ -185,16 +170,16 @@ public class Module:ContainerSymbol,Scope
         .module
         }
         
-    public var classes:Classes
+    public var classes:TypeClasses
         {
-        var classes = Array(self.symbols.compactMap{$0 as? Class})
+        var classes = Array(self.symbols.compactMap{$0 as? TypeClass})
         classes += self.symbols.compactMap{($0 as? Module)?.classes}.flatMap{$0}
         return(classes)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
-        self.type = (self.enclosingScope.lookup(label: "Module") as! Type)
+        self.type = ArgonModule.shared.moduleType
         for symbol in self.symbols
             {
             symbol.initializeType(inContext: context)
@@ -231,37 +216,6 @@ public class Module:ContainerSymbol,Scope
             }
         }
         
-    public override func lookup(index: UUID) -> Symbol?
-        {
-        for symbol in self.symbols
-            {
-            if symbol.index == index
-                {
-                return(symbol)
-                }
-            if let found = symbol.lookup(index: index)
-                {
-                return(found)
-                }
-            }
-        return(nil)
-        }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        if let symbol = super.lookup(label: label)
-            {
-            return(symbol)
-            }
-        for anImport in self.imports
-            {
-            if let symbol = anImport.lookup(label: label)
-                {
-                return(symbol)
-                }
-            }
-        return(self.parent.lookup(label: label))
-        }
         
     public override func addSymbol(_ symbol: Symbol)
         {
@@ -270,6 +224,7 @@ public class Module:ContainerSymbol,Scope
             self.imports.append(symbol as! Importer)
             }
         super.addSymbol(symbol)
+        symbol.module = self
         }
         
     public func slotWithLabel(_ label: Label) -> Slot?
@@ -328,7 +283,7 @@ public class Module:ContainerSymbol,Scope
         {
         for aSymbol in self.symbols
             {
-            if aSymbol.id == symbol.id
+            if aSymbol.index == symbol.index
                 {
                 return(true)
                 }
@@ -355,22 +310,22 @@ public class Module:ContainerSymbol,Scope
         
     public func typeCheckModule() -> Module?
         {
-            let typeContext = TypeContext(scope: self.enclosingScope)
+            let typeContext = TypeContext()
             let tempModule = Self(label: self.label)
-            tempModule.setParent(self.parent)
             for symbol in self.symbols
                 {
+                symbol.initializeType(inContext: typeContext)
                 let newSymbol = symbol.freshTypeVariable(inContext: typeContext)
-                newSymbol.setParent(tempModule)
                 newSymbol.initializeType(inContext: typeContext)
                 newSymbol.initializeTypeConstraints(inContext: typeContext)
                 tempModule.addSymbol(newSymbol)
                 }
             let substitution = typeContext.unify()
             let newModule = Self(label: self.label)
+            Argon.resetTypes()
             for symbol in tempModule.symbols
                 {
-                newModule.addSymbol(substitution.substitute(symbol)!)
+                newModule.addSymbol(substitution.substitute(symbol))
                 }
             for symbol in newModule.symbols
                 {
@@ -392,7 +347,6 @@ public class Module:ContainerSymbol,Scope
         newModule.wasMemoryLayoutDone = self.wasMemoryLayoutDone
         newModule.wasAddressAllocationDone = self.wasAddressAllocationDone
         newModule.memoryAddress = self.memoryAddress
-        newModule.setParent(self.parent)
         return(newModule)
         }
         
@@ -406,7 +360,7 @@ public class Module:ContainerSymbol,Scope
         return(nil)
         }
         
-    public override func layoutObjectSlots(using: AddressAllocator)
+    public override func layoutObjectSlots()
         {
         var offset = 0
         for slot in self.moduleSlots
@@ -416,7 +370,7 @@ public class Module:ContainerSymbol,Scope
             }
         for symbol in self.symbols
             {
-            symbol.layoutObjectSlots(using: using)
+            symbol.layoutObjectSlots()
             }
         }
         
@@ -448,7 +402,7 @@ public class Module:ContainerSymbol,Scope
         ///
         /// Need to do some stuff to pump the module into memory
         ///
-        let segment = allocator.segment(for: self)
+        let segment = allocator.segment(for: self.segmentType)
         let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
         let modulePointer = ClassBasedPointer(address: self.memoryAddress,type: moduleType)
         modulePointer.setClass(moduleType)
@@ -487,7 +441,7 @@ public class Module:ContainerSymbol,Scope
         ///
         do
             {
-            self.layoutObjectSlots(using: allocator)
+            self.layoutObjectSlots()
             try self.allocateAddresses(using: allocator)
             self.layoutInMemory(using: allocator)
             return(self)
@@ -506,14 +460,14 @@ public class Module:ContainerSymbol,Scope
     public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary()
-        buffer.append("MOV",.address(self.memoryAddress),.none,temporary)
+        buffer.append(.MOV,.address(self.memoryAddress),.none,temporary)
         self.place = temporary
         }
         
     public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary()
-        buffer.append("MOV",.address(self.memoryAddress),.none,temporary)
+        buffer.append(.MOV,.address(self.memoryAddress),.none,temporary)
         self.place = temporary
         }
     }

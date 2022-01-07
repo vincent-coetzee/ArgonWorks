@@ -31,8 +31,6 @@ public class AssignmentExpression: Expression
         self.rhs = rhs
         self.lhs = lhs
         super.init()
-        self.lhs.setParent(self)
-        self.rhs.setParent(self)
         }
         
     public override func visit(visitor: Visitor) throws
@@ -45,7 +43,7 @@ public class AssignmentExpression: Expression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -53,7 +51,7 @@ public class AssignmentExpression: Expression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = AssignmentExpression(self.lhs.freshTypeVariable(inContext: context),self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         

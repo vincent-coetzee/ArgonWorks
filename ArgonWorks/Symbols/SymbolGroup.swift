@@ -11,7 +11,7 @@ public class SymbolGroup:ContainerSymbol
     {
     public override var fullName: Name
         {
-        return(self.parent.fullName)
+        return(self.module.fullName)
         }
         
     public override var isSymbolGroup: Bool
@@ -24,11 +24,11 @@ public class SymbolGroup:ContainerSymbol
         "IconGroup"
         }
         
-    public override var type: Type?
+    public override var type: Type!
         {
         get
             {
-            return(self.parent.type)
+            return(self.module!.type)
             }
         set
             {
@@ -91,7 +91,7 @@ public class SymbolGroup:ContainerSymbol
             }
         if name.isRooted
             {
-            if let context = self.primaryContext.lookup(label: name.first)
+            if let context = TopModule.shared.lookup(label: name.first)
                 {
                 return(context.lookup(name: name.withoutFirst))
                 }
@@ -124,7 +124,7 @@ public class SymbolGroup:ContainerSymbol
         {
         for aSymbol in self.symbols
             {
-            if aSymbol.id == symbol.id
+            if aSymbol.index == symbol.index
                 {
                 return(true)
                 }

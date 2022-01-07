@@ -34,7 +34,7 @@ public class ComparisonExpression: BinaryExpression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = ComparisonExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
@@ -42,8 +42,8 @@ public class ComparisonExpression: BinaryExpression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(self.type!)
-        expression.selectedMethodInstance = substitution.substitute(self.selectedMethodInstance)
+        expression.type = substitution.substitute(self.type)
+        expression.selectedMethodInstance = self.selectedMethodInstance.isNil ? nil : substitution.substitute(self.selectedMethodInstance!)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -60,8 +60,7 @@ public class ComparisonExpression: BinaryExpression
         self.rhs.initializeTypeConstraints(inContext: context)
         if !self.methodInstances.isEmpty
             {
-            let methodMatcher = MethodInstanceMatcher(methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
-            methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+            let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
             methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
             methodMatcher.appendTypeConstraint(lhs: self.lhs.type,rhs: self.rhs.type)
             methodMatcher.appendTypeConstraint(lhs: self.type,rhs: context.booleanType)
@@ -92,77 +91,77 @@ public class ComparisonExpression: BinaryExpression
         switch(self.operation.rawValue,methodInstance.returnType.label)
             {
             case ("<","Integer"):
-                instance.append("ILT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILT64,self.lhs.place,self.rhs.place,temporary)
             case ("<","Float"):
-                instance.append("FLT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FLT64,self.lhs.place,self.rhs.place,temporary)
             case ("<","UInteger"):
-                instance.append("ILT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILT64,self.lhs.place,self.rhs.place,temporary)
             case ("<","String"):
-                instance.append("SLT",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SLT,self.lhs.place,self.rhs.place,temporary)
             case ("<","Byte"):
-                instance.append("ILT8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILT8,self.lhs.place,self.rhs.place,temporary)
             case ("<","Character"):
-                instance.append("ILT16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILT16,self.lhs.place,self.rhs.place,temporary)
             case ("<=","Integer"):
-                instance.append("ILTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILTE64,self.lhs.place,self.rhs.place,temporary)
             case ("<=","Float"):
-                instance.append("FLTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FLTE64,self.lhs.place,self.rhs.place,temporary)
             case ("<=","UInteger"):
-                instance.append("ILTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILTE64,self.lhs.place,self.rhs.place,temporary)
             case ("<=","String"):
-                instance.append("SLTE",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SLTE,self.lhs.place,self.rhs.place,temporary)
             case ("<=","Byte"):
-                instance.append("ILTE8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILTE8,self.lhs.place,self.rhs.place,temporary)
             case ("<=","Character"):
-                instance.append("ILTE16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.ILTE16,self.lhs.place,self.rhs.place,temporary)
             case ("==","Integer"):
-                instance.append("IEQ64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("==","Float"):
-                instance.append("FEQ64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("==","UInteger"):
-                instance.append("IEQ64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("==","String"):
-                instance.append("SEQ",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SEQ,self.lhs.place,self.rhs.place,temporary)
             case ("==","Byte"):
-                instance.append("IEQ8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IEQ8,self.lhs.place,self.rhs.place,temporary)
             case ("==","Character"):
-                instance.append("IEQ16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IEQ16,self.lhs.place,self.rhs.place,temporary)
             case (">=","Integer"):
-                instance.append("IGTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGTE64,self.lhs.place,self.rhs.place,temporary)
             case (">=","Float"):
-                instance.append("FGTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FGTE64,self.lhs.place,self.rhs.place,temporary)
             case (">=","UInteger"):
-                instance.append("IGTE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGTE64,self.lhs.place,self.rhs.place,temporary)
             case (">=","String"):
-                instance.append("SGTE",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SGTE,self.lhs.place,self.rhs.place,temporary)
             case (">=","Byte"):
-                instance.append("IGTE8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGTE8,self.lhs.place,self.rhs.place,temporary)
             case (">=","Character"):
-                instance.append("IGTE16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGTE16,self.lhs.place,self.rhs.place,temporary)
             case (">","Integer"):
-                instance.append("IGT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGT64,self.lhs.place,self.rhs.place,temporary)
             case (">","Float"):
-                instance.append("FGT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FGT64,self.lhs.place,self.rhs.place,temporary)
             case (">","UInteger"):
-                instance.append("IGT64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGT64,self.lhs.place,self.rhs.place,temporary)
             case (">","String"):
-                instance.append("SGT",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SGT,self.lhs.place,self.rhs.place,temporary)
             case (">","Byte"):
-                instance.append("IGT8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGT8,self.lhs.place,self.rhs.place,temporary)
             case (">","Character"):
-                instance.append("IGT16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IGT16,self.lhs.place,self.rhs.place,temporary)
             case ("!=","Integer"):
-                instance.append("INE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.INEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("!=","Float"):
-                instance.append("FNE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.FNEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("!=","UInteger"):
-                instance.append("INE64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.INEQ64,self.lhs.place,self.rhs.place,temporary)
             case ("!=","String"):
-                instance.append("SNE",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.SNEQ,self.lhs.place,self.rhs.place,temporary)
             case ("!=","Byte"):
-                instance.append("INE8",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.INEQ8,self.lhs.place,self.rhs.place,temporary)
             case ("!=","Character"):
-                instance.append("INE16",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.INEQ16,self.lhs.place,self.rhs.place,temporary)
             default:
                 fatalError("This should not happen.")
             }

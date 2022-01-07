@@ -68,11 +68,11 @@ public class SlotAccessExpression: Expression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = SlotAccessExpression(substitution.substitute(self.receiver),slotLabel: self.slotLabel)
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         if let aSlot = self.slot
             {
             expression.slot = aSlot
-            expression.slot!.type = substitution.substitute(aSlot.type!)
+            expression.slot!.type = substitution.substitute(aSlot.type)
             }
         expression.issues = self.issues
         return(expression as! Self)
@@ -80,15 +80,18 @@ public class SlotAccessExpression: Expression
         
     public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        guard let slot = self.slot else
-            {
-            fatalError("Slot is nil, can not assign into nil slot.")
-            }
         try expression.emitValueCode(into: buffer,using: using)
         try self.receiver.emitPointerCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary()
-        buffer.append("ADD",self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
-        buffer.append("STIP",expression.place,.none,temporary)
+        if let slot = self.slot
+            {
+            buffer.append(.IADD64,self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
+            buffer.append(.STP,expression.place,.none,temporary)
+            }
+        else
+            {
+            buffer.append(.STSD,.address(using.emitStaticString(self.slotLabel)))
+            }
         self._place = temporary
         }
         
@@ -104,8 +107,8 @@ public class SlotAccessExpression: Expression
         if let slot = self.slot
             {
             let temporary = into.nextTemporary()
-            into.append("IADD",.integer(Argon.Integer(slot.offset)),.none,temporary)
-            into.append("LFP",temporary,.none,temporary)
+            into.append(.IADD64,.integer(Argon.Integer(slot.offset)),.none,temporary)
+            into.append(.LDP,temporary,.none,temporary)
             self._place = temporary
             }
         }
@@ -113,19 +116,20 @@ public class SlotAccessExpression: Expression
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.receiver.initializeTypeConstraints(inContext: context)
-        if let aType = self.receiver.type,!aType.isTypeVariable
+        let aType = self.receiver.type
+        if !aType.isTypeVariable
             {
             if let aSlot = aType.lookup(label: self.slotLabel) as? Slot
                 {
                 self.slot = aSlot
-                self.type = aSlot.type!
-                context.append(TypeConstraint(left: self.type,right: aSlot.type!,origin: .expression(self)))
-                context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
-                context.append(TypeConstraint(left: self.slot!.type!,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
+                self.type = aSlot.type
+                context.append(TypeConstraint(left: self.type,right: aSlot.type,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
+                context.append(TypeConstraint(left: self.slot!.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
                 }
             else
                 {
-                self.appendIssue(at: self.declaration!, message: "The base type of this expression '\(self.receiver.type!.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
+                self.appendIssue(at: self.declaration!, message: "The base type of this expression '\(self.receiver.type.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
                 return
                 }
             }
@@ -133,29 +137,24 @@ public class SlotAccessExpression: Expression
             {
             self.slot = Slot(label: self.slotLabel)
             context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
-            context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
-            context.append(TypeConstraint(left: self.slot!.type!,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type!),origin: .expression(self)))
+            context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
+            context.append(TypeConstraint(left: self.slot!.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
             let substitution = context.unify()
-            let receiverType = substitution.substitute(self.receiver.type)!
+            let receiverType = substitution.substitute(self.receiver.type)
             guard receiverType.isClass else
                 {
                 self.appendIssue(at: self.declaration!, message: "Unable to infer base type of slot parent in this expression.")
                 return
                 }
-            guard let aSlot = receiverType.classValue.lookup(label: self.slotLabel) as? Slot else
+            guard let aSlot = receiverType.lookup(label: self.slotLabel) as? Slot else
                 {
-                self.appendIssue(at: self.declaration!, message: "The inferred base type of this expression '\(self.receiver.type!.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
+                self.appendIssue(at: self.declaration!, message: "The inferred base type of this expression '\(self.receiver.type.displayString)' does not have a slot labeled '\(self.slotLabel)'.")
                 return
                 }
             self.slot = aSlot
-            self.slot!.type = substitution.substitute(aSlot.type!)
-            context.append(TypeConstraint(left: self.type,right: self.slot!.type!,origin: .expression(self)))
+            self.slot!.type = substitution.substitute(aSlot.type)
+            context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
             }
-        }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.type?.lookup(label: label))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

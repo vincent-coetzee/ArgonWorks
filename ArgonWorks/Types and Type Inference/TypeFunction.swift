@@ -30,6 +30,19 @@ public class TypeFunction: TypeConstructor
         return(false)
         }
         
+    public override var argonHash: Int
+        {
+        var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.returnType.argonHash
+        for type in self.generics
+            {
+            hashValue = hashValue << 13 ^ type.argonHash
+            }
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     internal var returnType: Type
     
     init(label: Label,types: Types,returnType: Type)

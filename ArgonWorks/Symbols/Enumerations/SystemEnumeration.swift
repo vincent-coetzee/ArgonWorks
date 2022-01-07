@@ -7,20 +7,20 @@
 
 import Foundation
 
-public class SystemEnumeration: Enumeration
-    {
-    public override var isSystemEnumeration: Bool
-        {
-        false
-        }
-        
-    public override var isSystemSymbol: Bool
-        {
-        true
-        }
-        
-    public override var segmentType: Segment.SegmentType
-        {
-        .static
-        }
-    }
+//public class SystemEnumeration: Enumeration
+//    {
+//    public override var isSystemEnumeration: Bool
+//        {
+//        false
+//        }
+//        
+//    public override var isSystemSymbol: Bool
+//        {
+//        true
+//        }
+//        
+//    public override var segmentType: Segment.SegmentType
+//        {
+//        .static
+//        }
+//    }

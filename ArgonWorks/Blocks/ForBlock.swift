@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ForBlock: Block,BlockContext,Scope
+public class ForBlock: Block
     {
     private var inductionSlot:LocalSlot
     private var elements: Expression
@@ -17,8 +17,6 @@ public class ForBlock: Block,BlockContext,Scope
         self.inductionSlot = inductionSlot
         self.elements = elements
         super.init()
-        self.elements.setParent(self)
-        self.inductionSlot.setParent(self)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -29,7 +27,7 @@ public class ForBlock: Block,BlockContext,Scope
             let newBlock = block.freshTypeVariable(inContext: context)
             forBlock.addBlock(newBlock)
             }
-        forBlock.type = self.type?.freshTypeVariable(inContext: context)
+        forBlock.type = self.type.freshTypeVariable(inContext: context)
         return(forBlock as! Self)
         }
         
@@ -39,10 +37,10 @@ public class ForBlock: Block,BlockContext,Scope
         for block in self.blocks
             {
             let newBlock = substitution.substitute(block)
-            newBlock.type = substitution.substitute(block.type!)
+            newBlock.type = substitution.substitute(block.type)
             forBlock.addBlock(newBlock)
             }
-        forBlock.type = substitution.substitute(self.type!)
+        forBlock.type = substitution.substitute(self.type)
         return(forBlock as! Self)
         }
 
@@ -64,8 +62,8 @@ public class ForBlock: Block,BlockContext,Scope
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        let collectionClass = (self.enclosingScope.lookup(name: Name("\\\\Argon\\Iterable")) as! TypeClass).theClass
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: TypeClass(class: collectionClass, generics: [self.inductionSlot.type!]),origin: .block(self)))
+        let collectionClass = ArgonModule.shared.iterable
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: Argon.addType(TypeClass(label: collectionClass.label, generics: [self.inductionSlot.type])),origin: .block(self)))
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
         }
         
@@ -78,6 +76,20 @@ public class ForBlock: Block,BlockContext,Scope
             {
             block.display(indent: indent + "\t")
             }
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        if let declaration = self.declaration
+            {
+            buffer.append(lineNumber: declaration.line)
+            }
+        let label = buffer.nextLabel()
+        buffer.append(.ENTER,.integer(1),.none,.none)
+        try self.elements.emitValueCode(into: buffer,using: using)
+        let type = ArgonModule.shared.iterable
+        let temporary = buffer.nextTemporary()
+        buffer.append(.CAST,self.elements.place,.address(type.memoryAddress),temporary)
         }
         
     public override func visit(visitor: Visitor) throws

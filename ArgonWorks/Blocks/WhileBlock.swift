@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class WhileBlock: Block,BlockContext,Scope
+public class WhileBlock: Block
     {
     private let condition:Expression
     
@@ -15,7 +15,6 @@ public class WhileBlock: Block,BlockContext,Scope
         {
         self.condition = condition
         super.init()
-        self.condition.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -54,7 +53,7 @@ public class WhileBlock: Block,BlockContext,Scope
             {
             block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        block.type = self.type?.freshTypeVariable(inContext: context)
+        block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         
@@ -84,19 +83,19 @@ public class WhileBlock: Block,BlockContext,Scope
         let endLabel = buffer.nextLabel()
         buffer.pendingLabel = startLabel
         try self.condition.emitCode(into: buffer,using: generator)
-        buffer.append(nil,"BRF",self.condition.place,.none,.label(endLabel))
+        buffer.append(nil,.BRAF,self.condition.place,.none,.label(endLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: generator)
             }
-        buffer.append(nil,"BR",.none,.none,.label(startLabel))
+        buffer.append(nil,.BRA,.none,.none,.label(startLabel))
         buffer.pendingLabel = endLabel
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let aBlock = WhileBlock(condition: substitution.substitute(self.condition))
-        aBlock.type = substitution.substitute(self.type!)
+        aBlock.type = substitution.substitute(self.type)
         for block in self.blocks
             {
             aBlock.addBlock(substitution.substitute(block))

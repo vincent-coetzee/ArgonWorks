@@ -19,20 +19,21 @@ public class Compiler
             
     init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
+        Argon.resetStatics()
+        Argon.resetTypes()
+        TopModule.resetTopModule()
         self.source = source
-        TopModule.shared = TopModule(instanceNumber: Self.instanceCounter)
-        ArgonModule.shared = TopModule.shared.argonModule
-        Self.instanceCounter += 1
         self.currentPass = nil
         self.tokenRenderer = tokenRenderer
         self.tokenRenderer.update(source)
+
         }
 
     init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
-        TopModule.shared = TopModule(instanceNumber: Self.instanceCounter)
-        ArgonModule.shared = TopModule.shared.argonModule
-        Self.instanceCounter += 1
+        Argon.resetStatics()
+        Argon.resetTypes()
+        TopModule.resetTopModule()
         self.currentPass = nil
         self.source = ""
         self.tokenRenderer = tokenRenderer
@@ -55,10 +56,10 @@ public class Compiler
                 let allocator = AddressAllocator(self)
                 if let module = allocator.processModule(module)
                     {
-                    ArgonModule.shared.class.classValue.printLayout()
-                    ArgonModule.shared.array.classValue.printLayout()
-                    ArgonModule.shared.object.classValue.printLayout()
-                    ArgonModule.shared.slot.classValue.printLayout()
+                    ArgonModule.shared.class.printLayout()
+                    ArgonModule.shared.array.printLayout()
+                    ArgonModule.shared.object.printLayout()
+                    ArgonModule.shared.slot.printLayout()
                     let memoryPointer = MemoryPointer(address: ArgonModule.shared.object.memoryAddress)
                     MemoryPointer.dumpMemory(atAddress: memoryPointer.address,count: 100)
                     try! allocator.payload.write(toPath: "/Users/vincent/Desktop/TestFile.arv")
@@ -74,6 +75,7 @@ public class Compiler
                             {
                             let visitor = TestVisitor.visit(module)
 //                            self.allIssues = visitor.allIssues
+                            print(visitor.allIssues)
                             let someIssues = module.issues
                             print(someIssues)
 //                            self.reportingContext.pushIssues(self.allIssues)

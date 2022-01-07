@@ -15,7 +15,6 @@ public class PrefixExpression: OperatorExpression
         {
         self.rhs = rhs
         super.init(operatorLabel: operatorLabel,operators: operators)
-        self.rhs.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -42,7 +41,7 @@ public class PrefixExpression: OperatorExpression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
@@ -67,7 +66,7 @@ public class PrefixExpression: OperatorExpression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         expression.methodInstance = self.methodInstance?.substitute(from: substitution)
         expression.issues = self.issues
         return(expression as! Self)
@@ -76,10 +75,9 @@ public class PrefixExpression: OperatorExpression
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.rhs.initializeTypeConstraints(inContext: context)
-        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.rhs], reportErrors: true)
-        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.operators, argumentExpressions: [self.rhs], reportErrors: true)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-        methodMatcher.appendReturnType(self.type!)
+        methodMatcher.appendReturnType(self.type)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
             self.methodInstance = specificInstance
@@ -91,6 +89,22 @@ public class PrefixExpression: OperatorExpression
             print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
             self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operatorLabel)' ) can not be resolved. Try making it more specific.")
             }
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
+        {
+        try self.rhs.emitPointerCode(into: buffer, using: generator)
+        buffer.append(.PUSH,self.rhs.place)
+        if let instance = self.methodInstance
+            {
+            buffer.append(.CALL,.address(instance.memoryAddress))
+            }
+        else
+            {
+            let address = generator.emitStaticString(self.operatorLabel)
+            buffer.append(.CALLD,.address(address))
+            }
+        buffer.append(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
         }
     }
 

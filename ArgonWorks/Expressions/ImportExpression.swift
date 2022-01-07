@@ -30,9 +30,4 @@ public class ImportExpression: Expression
         coder.encode(self.importSymbol,forKey: "import")
         super.encode(with: coder)
         }
-    
-    public override func lookup(label: Label) -> Symbol?
-        {
-        return(self.importSymbol.lookup(label: label))
-        }
     }

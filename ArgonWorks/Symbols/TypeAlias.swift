@@ -11,10 +11,8 @@ public class TypeAlias:Symbol
     {
     public override var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine(super.argonHash)
-        hasher.combine(self.type!.argonHash)
-        let hashValue = hasher.finalize()
+        var hashValue = super.argonHash
+        hashValue = hashValue << 13 ^ self.type.argonHash
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
         }
@@ -32,11 +30,6 @@ public class TypeAlias:Symbol
     public override var isType: Bool
         {
         return(true)
-        }
-        
-    public override var classValue: Class
-        {
-        self.type!.classValue
         }
 //        
 //    public override var canBecomeAClass: Bool
@@ -56,7 +49,7 @@ public class TypeAlias:Symbol
         
     public var mangledName: String
         {
-        return(self.type!.mangledName)
+        return(self.type.mangledName)
         }
         
     public override var iconName: String
@@ -78,20 +71,17 @@ public class TypeAlias:Symbol
         {
 //        print("START DECODE TYPE ALIAS")
         super.init(coder: coder)
-        self.type = (coder.decodeObject(forKey: "_type") as! Type)
 //        print("END DECODE TYPE ALIAS \(self.label)")
         }
         
     public required init(label: Label)
         {
         super.init(label: label)
-        self.type = Type()
         }
         
     public override func encode(with coder:NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.type,forKey: "_type")
         }
         
     public override var typeCode:TypeCode
@@ -106,16 +96,11 @@ public class TypeAlias:Symbol
         
     public func isSubtype(of alias: TypeAlias) -> Bool
         {
-        return(self.type!.isSubtype(of: alias.type!))
+        return(self.type.isSubtype(of: alias.type))
         }
         
-    public func isSubtype(of enumeration: Enumeration) -> Bool
+    public func isInclusiveSubclass(of aClass: TypeClass) -> Bool
         {
-        return(self.type! == enumeration.type!)
-        }
-        
-    public func isInclusiveSubclass(of aClass: Class) -> Bool
-        {
-        return(self.type!.isSubtype(of: aClass.type!))
+        return(self.type.isSubtype(of: aClass))
         }
     }

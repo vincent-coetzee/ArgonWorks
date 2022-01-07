@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
     {
     func applicationDidFinishLaunching(_ aNotification: Notification)
         {
+        TopModule.resetTopModule()
 //        let families = NSFontManager.shared.availableFontFamilies.sorted{$0 < $1}
 //        for family in families
 //            {
@@ -34,7 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         assert(type1 == type2,"Type1 should == type2")
         let type3 = TypeVariable(index: 2001)
         assert(type1 != type3,"Type3 should not == type1")
-        let compiler = Compiler(source: "", reportingContext: NullReporter.shared, tokenRenderer: NullTokenRenderer.shared)
+        let compiler:Compiler? = Compiler(source: "", reportingContext: NullReporter.shared, tokenRenderer: NullTokenRenderer.shared)
         let items = ArgonModule.shared.lookupN(label: "-")
         print(items)
         let type = ArgonModule.shared.lookup(label: "Void") as! Type
@@ -42,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let slot1 = Slot(label: "slot1",type: ArgonModule.shared.integer)
         let slot2 = Slot(label: "slot2",type: ArgonModule.shared.string)
         let tuple1 = Tuple(.slot(slot1),.slot(slot2))
-        let context = TypeContext(scope: ArgonModule.shared)
+        let context = TypeContext()
         tuple1.initializeType(inContext: context)
         print(tuple1.type.displayString)
         let slot1Expression = SlotExpression(slot: slot1)
@@ -51,26 +52,52 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let right2Expression = LiteralExpression(.string(StaticString(string: "hello")))
         let assignmentExpression = AssignmentExpression(TupleExpression(slot1Expression,slot2Expression),TupleExpression(right1Expression,right2Expression))
         assignmentExpression.initializeType(inContext: context)
-        print(assignmentExpression.lhs.type!.displayString)
-        print(assignmentExpression.rhs.type!.displayString)
+        print(assignmentExpression.lhs.type.displayString)
+        print(assignmentExpression.rhs.type.displayString)
         let pointer = Word(object: 0)
         print(pointer.bitString)
+        let object = ArgonModule.shared.object
+        var allocator:AddressAllocator? = AddressAllocator(compiler!)
+        ArgonModule.shared.layoutObjectSlots()
+//        object.printLayout()
+//        let array = ArgonModule.shared.array
+//        array.printLayout()
+//        let aClass = ArgonModule.shared.class
+//        aClass.printLayout()
+//        let string = ArgonModule.shared.string
+//        string.printLayout()
+//        let enumeration = ArgonModule.shared.enumeration
+//        enumeration.printLayout()
+//        let module = ArgonModule.shared.moduleType
+//        module.printLayout()
         Header.test()
         Word.testWord()
         print("Size of Int is \(MemoryLayout<Int>.size)")
         StackSegment.testStackSegment()
-        ArgonModule.shared.layoutObjectSlots(using: AddressAllocator(compiler))
+        allocator = nil
         let payload = VMPayload()
         let symbol1 = "symbol1"
-        let symbol1Handle = payload.symbolTable.registerSymbol(symbol1)
+        let symbol1Handle = payload.symbolRegistry.registerSymbol(symbol1)
         print("SYMBOL1 = \(symbol1Handle)")
         let symbol2 = "this-is-a-symbol"
-        let symbol2Handle = payload.symbolTable.registerSymbol(symbol2)
+        let symbol2Handle = payload.symbolRegistry.registerSymbol(symbol2)
         print("SYMBOL2 = \(symbol2Handle)")
         let symbol3 = "symbol1"
-        let symbol3Handle = payload.symbolTable.registerSymbol(symbol3)
+        let symbol3Handle = payload.symbolRegistry.registerSymbol(symbol3)
         print("SYMBOL3 = \(symbol3Handle)")
         
+        let module1 = Module(label: "module1")
+        let module2 = Module(label: "module2")
+        let class1 = TypeClass(label: "class1")
+        let class2 = TypeClass(label: "class2")
+        module1.setContainer(.symbol(TopModule.shared))
+        module1.addSymbol(module2)
+        module2.addSymbol(class1)
+        module1.addSymbol(class2)
+        assert(module1.lookup(name: Name("\\\\Argon\\Array")).isNotNil)
+        assert(module1.lookup(label: "module2").isNotNil)
+        assert(module2.lookup(label: "class1").isNotNil)
+        assert(module2.lookup(label: "class2").isNotNil)
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

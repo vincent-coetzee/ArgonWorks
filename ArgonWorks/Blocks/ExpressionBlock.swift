@@ -16,7 +16,6 @@ public class ExpressionBlock: Block
         {
         self.expression = expression
         super.init()
-        expression.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -45,7 +44,7 @@ public class ExpressionBlock: Block
             {
             newBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
-        newBlock.type = self.type?.freshTypeVariable(inContext: context)
+        newBlock.type = self.type.freshTypeVariable(inContext: context)
         return(newBlock as! Self)
         }
         
@@ -59,7 +58,7 @@ public class ExpressionBlock: Block
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let block = ExpressionBlock(substitution.substitute(self.expression))
-        block.type = substitution.substitute(self.type!)
+        block.type = substitution.substitute(self.type)
         block.issues = self.issues
         return(block as! Self)
         }

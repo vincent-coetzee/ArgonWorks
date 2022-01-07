@@ -8,17 +8,20 @@
 import Foundation
 import AppKit
 
-public class Symbol:Node,VisitorReceiver,ErrorScope
+public class Symbol:Node,VisitorReceiver,IssueHolder
     {
     public var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine(self.label)
-        hasher.combine("Swift.type(of: self)")
-        hasher.combine(self.memoryAddress)
-        let hashValue = hasher.finalize()
+        let hash1 = "Swift.type(of: self)".polynomialRollingHash
+        let hash2 = self.label.polynomialRollingHash
+        let hashValue = hash1 << 13 ^ hash2
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
+        }
+        
+    public var fullName: Name
+        {
+        self.container.fullName + self.label
         }
         
     public var isEnumerationInstanceClass: Bool
@@ -104,11 +107,6 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
     public var isForwardReferenceClass: Bool
         {
         return(false)
-        }
-        
-    public var classValue: Class
-        {
-        fatalError()
         }
         
     public var isArrayClassInstance: Bool
@@ -273,22 +271,19 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         return(self.issues)
         }
         
-    internal var frame: BlockContext?
     internal var wasAddressAllocationDone = false
     internal var wasMemoryLayoutDone = false
     internal var wasSlotLayoutDone = false
     internal var locations: SourceLocations = SourceLocations()
-    public var privacyScope:PrivacyScope? = nil
-    internal var source: String?
     private var _selectionColor: NSColor?
-    public private(set) var isLoaded = false
     public private(set) var isImported = false
     public private(set) var loader: Loader?
-    public var compiler: Compiler!
     public var issues = CompilerIssues()
-    public var type: Type?
+    public var type: Type!
     public var place: T3AInstruction.Operand = .none
     public var memoryAddress: Address = 0
+    public private(set) var container: Container = .none
+    public var module: Module!
     
     public required init(label: Label)
         {
@@ -300,11 +295,11 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
 //        #if DEBUG
 //        print("START DECODE SYMBOL")
 //        #endif
-        self.privacyScope = coder.decodePrivacyScope(forKey: "privacyScope")
-        self.source = coder.decodeObject(forKey: "source") as? String
         self.type = coder.decodeObject(forKey: "theType") as? Type
         self.memoryAddress = Address(coder.decodeInteger(forKey: "memoryAddress"))
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
+        self.container = coder.decodeContainer(forKey: "container")
+        self.module = coder.decodeObject(forKey: "module") as? Module
         super.init(coder: coder)
 //        #if DEBUG
 //        print("END DECODE SYMBOL \(self.label)")
@@ -316,23 +311,23 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
 //        #if DEBUG
 //        print("ENCODE SYMBOL \(self.label)")
 //        #endif
-        coder.encodePrivacyScope(self.privacyScope,forKey: "privacyScope")
-        coder.encode(self.source,forKey: "source")
+        coder.encode(self.container,forKey: "container")
         coder.encode(self.type,forKey: "theType")
         coder.encode(Int(self.memoryAddress),forKey: "memoryAddress")
         coder.encodeCompilerIssues(self.issues,forKey: "issues")
+        coder.encode(self.module,forKey: "module")
         super.encode(with: coder)
         }
         
-//    public override func awakeAfter(using coder: NSCoder) -> Any?
-//        {
-//        if let unarchiver = coder as? ImportUnarchiver
-//            {
-//            self.isLoaded = true
-//            self.loader = unarchiver.loader
-//            }
-//        return(self)
-//        }
+    public func setContainer(_ container: Container)
+        {
+        self.container = container
+        }
+        
+    public func setContainer(_ scope:Scope?)
+        {
+        self.container = .scope(scope!)
+        }
         
    public func allocateAddresses(using: AddressAllocator) throws
         {
@@ -393,24 +388,23 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         self.issues.append(contentsOf: issues)
         }
         
-    public func printParentChain()
-        {
-        self.parent.printParentChain()
-        }
-        
     public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
         {
         if let exporter = archiver as? ImportArchiver
             {
             if exporter.isSwappingSystemTypes && self.isSystemType
                 {
-                if self is SystemClass
+                if self is TypeClass && self.isSystemType
                     {
                     print("Error substituting class, should be type")
                     }
                 exporter.noteSwappedSystemType(self)
                 let holder = SystemSymbolPlaceholder(original: self)
-                print("SUBSTITUTING \(self.fullName.displayString)")
+                if self.argonHash == 0
+                    {
+                    print("halt")
+                    }
+                print("SUBSTITUTING \(self.argonHash) \(self.displayString)")
                 return(holder)
                 }
             if exporter.isSwappingImportedSymbols && self.isImported
@@ -441,7 +435,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
     public func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = Self.init(label: self.label)
-        copy.type = substitution.substitute(self.type!)
+        copy.type = substitution.substitute(self.type)
         copy.issues = self.issues
         return(copy)
         }
@@ -534,10 +528,6 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         {
         return(self.children[atIndex])
         }
-        
-    public override func removeSymbol(_ symbol: Symbol)
-        {
-        }
     
     public func childCount(forChildType type: ChildType) -> Int
         {
@@ -562,7 +552,7 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         let allKids = self.children
         if type == .class
             {
-            return(allKids.filter{$0 is Class || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+            return(allKids.filter{$0 is TypeClass || $0 is SymbolGroup}.sorted{$0.label < $1.label})
             }
         else if type == .method
             {
@@ -588,17 +578,120 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         {
         return(false)
         }
+//        
+//    public func lookup(index: UUID) -> Symbol?
+//        {
+//        if self.index == index
+//            {
+//            return(self)
+//            }
+//        return(nil)
+//        }
         
-    public func lookup(index: UUID) -> Symbol?
+    public func addLocalSlot(_ localSlot: LocalSlot)
         {
-        if self.index == index
-            {
-            return(self)
-            }
-        return(nil)
+        fatalError()
         }
         
-    public func layoutObjectSlots(using: AddressAllocator)
+    public func addSymbol(_ symbol: Symbol)
+        {
+        fatalError("addSymbol should not be called on a \(Swift.type(of: self)).")
+        }
+        
+    public func lookup(label: Label) -> Symbol?
+        {
+        fatalError("lookup should not be called on a \(Swift.type(of: self)).")
+        }
+        
+    public func lookup(name: Name) -> Symbol?
+        {
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = TopModule.shared.lookup(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start)
+                    }
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
+            }
+        else if let start = self.lookup(label: name.first)
+            {
+            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
+            }
+        return(self.module?.lookup(name: name))
+        }
+        
+    public func lookupN(label: Label) -> Symbols?
+        {
+        return(self.module?.lookupN(label: label))
+        }
+        
+    public func lookupN(name: Name) -> Symbols?
+        {
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = TopModule.shared.lookupN(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start.nilIfEmpty)
+                    }
+                if let symbol = (start.first)?.lookupN(name: name.withoutFirst)
+                    {
+                    return(symbol.nilIfEmpty)
+                    }
+                }
+            return(nil)
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookupN(label: name.first)
+                {
+                return(symbol.nilIfEmpty)
+                }
+            }
+        else if let start = self.lookupN(label: name.first)
+            {
+            if let symbol = start.first?.lookupN(name: name.withoutFirst)
+                {
+                return(symbol.nilIfEmpty)
+                }
+            }
+        return(self.module?.lookupN(name: name))
+        }
+        
+    public func layoutObjectSlots()
         {
         }
         
@@ -623,14 +716,10 @@ public class Symbol:Node,VisitorReceiver,ErrorScope
         self.locations.append(.declaration(location))
         }
         
-    public func superclass(_ string: String) -> Class
-        {
-        fatalError("This should have been overridden")
-        }
-        
-    public func removeObject(taggedWith: Int)
-        {
-        }
+//    public func superclass(_ string: String) -> Class
+//        {
+//        fatalError("This should have been overridden")
+//        }
         
     public func addReference(_ location:Location)
         {

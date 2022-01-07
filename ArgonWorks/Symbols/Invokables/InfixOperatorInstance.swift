@@ -13,7 +13,6 @@ public class InfixOperatorInstance: StandardMethodInstance
         {
         let instance = InfixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -28,7 +27,6 @@ public class PostfixOperatorInstance: StandardMethodInstance
         {
         let instance = PostfixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -43,7 +41,6 @@ public class PrefixOperatorInstance: StandardMethodInstance
         {
         let instance = PrefixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -58,7 +55,6 @@ public class PrimitiveInfixOperatorInstance: InfixOperatorInstance
         {
         let instance = PrimitiveInfixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -73,7 +69,6 @@ public class PrimitivePostfixOperatorInstance: PostfixOperatorInstance
         {
         let instance = PrimitivePostfixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
@@ -88,7 +83,6 @@ public class PrimitivePrefixOperatorInstance: PrefixOperatorInstance
         {
         let instance = PrimitivePrefixOperatorInstance(label: self.label)
         instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.block.setParent(instance)
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)

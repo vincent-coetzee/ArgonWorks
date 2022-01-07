@@ -25,6 +25,20 @@ public class TypeApplication: Type
         return(false)
         }
         
+    public override var argonHash: Int
+        {
+        var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.returnType.argonHash
+        hashValue = hashValue << 13 ^ self.function.argonHash
+        for type in self.types
+            {
+            hashValue = hashValue << 13 ^ type.argonHash
+            }
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     internal let function: TypeFunction
     internal let types: Types
     internal let returnType: Type
@@ -53,7 +67,7 @@ public class TypeApplication: Type
         {
         self.types = []
         self.returnType = Type()
-        self.function = TypeFunction(label: "", types: [], returnType: Type())
+        self.function = Argon.addType(TypeFunction(label: "", types: [], returnType: Type())) as! TypeFunction
         super.init()
         }
         

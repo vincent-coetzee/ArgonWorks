@@ -12,7 +12,7 @@ public class BooleanExpression: BinaryExpression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = BooleanExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         expression.selectedMethodInstance = self.selectedMethodInstance
         expression.issues = self.issues
         return(expression as! Self)
@@ -21,7 +21,7 @@ public class BooleanExpression: BinaryExpression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = BooleanExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
@@ -54,9 +54,9 @@ public class BooleanExpression: BinaryExpression
         switch(self.operation.rawValue,methodInstance.returnType.label)
             {
             case ("&&","Boolean"):
-                instance.append("IADD64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IAND64,self.lhs.place,self.rhs.place,temporary)
             case ("||","Boolean"):
-                instance.append("IADD64",self.lhs.place,self.rhs.place,temporary)
+                instance.append(.IOR64,self.lhs.place,self.rhs.place,temporary)
             default:
                 fatalError("This should not happen.")
             }

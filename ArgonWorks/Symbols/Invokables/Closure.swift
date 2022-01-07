@@ -7,38 +7,8 @@
 
 import Foundation
 
-public class Closure:Invocable,Scope
+public class Closure:Invocable
     {
-    public var enclosingBlockContext: BlockContext
-        {
-        self
-        }
-        
-    public var isSlotScope: Bool
-        {
-        false
-        }
-        
-    public override var enclosingScope: Scope
-        {
-        return(self)
-        }
-        
-    public var isMethodInstanceScope: Bool
-        {
-        return(false)
-        }
-        
-    public var isClosureScope: Bool
-        {
-        return(true)
-        }
-        
-    public var isInitializerScope: Bool
-        {
-        return(false)
-        }
-        
     public let block: Block
     public let buffer: T3ABuffer
     
@@ -47,7 +17,6 @@ public class Closure:Invocable,Scope
         self.block = Block()
         self.buffer = T3ABuffer()
         super.init(label: label)
-        self.block.setParent(self)
         }
     
     public required init?(coder: NSCoder)
@@ -73,7 +42,7 @@ public class Closure:Invocable,Scope
                 return(symbol)
                 }
             }
-        return(self.parent.lookup(label: label))
+        return(self.parentScope?.lookup(label: label))
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -86,7 +55,7 @@ public class Closure:Invocable,Scope
             {
             newClosure.block.addBlock(substitution.substitute(block))
             }
-        self.type = substitution.substitute(self.type!)
+        self.type = substitution.substitute(self.type)
         return(newClosure as! Self)
         }
         
@@ -109,7 +78,7 @@ public class Closure:Invocable,Scope
             {
             block.initializeType(inContext: context)
             }
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
+        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

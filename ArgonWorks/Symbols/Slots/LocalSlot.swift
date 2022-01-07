@@ -9,7 +9,9 @@ import Foundation
 
 public class LocalSlot:Slot
     {
-    public var wasAddedToBlockContext = false
+//    public var wasAddedToBlockContext = false
+
+    public var frame: StackFrame?
     
     init(label:Label,type:Type?,value:Expression?)
         {
@@ -43,7 +45,7 @@ public class LocalSlot:Slot
         
     public override func lookup(label: String) -> Symbol?
         {
-        return(self.type?.lookup(label: label))
+        return(self.type.lookup(label: label))
         }
         
     public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws

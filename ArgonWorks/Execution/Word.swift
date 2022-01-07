@@ -192,6 +192,20 @@ extension Word
         self.init(bitPattern: Int64(integer))
         }
         
+    public mutating func setValue<T>(_ value: T,of bitPattern: BitPattern) where T:RawRepresentable,T.RawValue == Word
+        {
+        let bitValue = value.rawValue & bitPattern.bits
+        let mask = bitPattern.bits << bitPattern.shift
+        self &= ~mask
+        self |= bitValue << bitPattern.shift
+        }
+        
+    public func value<T>(of bitPattern: BitPattern) -> T where T:RawRepresentable,T.RawValue == Word
+        {
+        let bits = (self & (bitPattern.bits << bitPattern.shift)) >> bitPattern.shift
+        return(T(rawValue: bits)!)
+        }
+        
     public static func testWord()
         {
         let pointer = Word(object: 1)

@@ -24,8 +24,6 @@ public class LetBlock: Block
         self.lhs = lhs
         self.rhs = rhs
         super.init()
-        self.lhs.parent = .block(self)
-        self.rhs.parent = .block(self)
         assert(!self.lhs.isEmpty)
         assert(!self.rhs.isEmpty)
         }
@@ -73,14 +71,14 @@ public class LetBlock: Block
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let block = LetBlock(location: self.location,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
-        block.type = self.type?.freshTypeVariable(inContext: context)
+        block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let block = LetBlock(location: self.location,lhs: substitution.substitute(self.lhs),rhs: substitution.substitute(self.rhs))
-        block.type = substitution.substitute(self.type!)
+        block.type = substitution.substitute(self.type)
         return(block as! Self)
         }
         

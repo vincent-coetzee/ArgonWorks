@@ -50,6 +50,11 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
+    public override var isMethodInstanceScope: Bool
+        {
+        true
+        }
+        
     public override var segmentType: Segment.SegmentType
         {
         .code
@@ -57,7 +62,7 @@ public class MethodInstance: Function
         
     public override var sizeInBytes: Int
         {
-        let instanceClass = ArgonModule.shared.methodInstance.classValue
+        let instanceClass = ArgonModule.shared.methodInstance
         var size = instanceClass.instanceSizeInBytes
         size += Argon.kWordSizeInBytesInt
         size += self.codeBuffer.count + T3AInstruction.sizeInBytes
@@ -66,11 +71,12 @@ public class MethodInstance: Function
         
     public override var argonHash: Int
         {
-        var hasher = Hasher()
-        hasher.combine(super.argonHash)
-        hasher.combine(self.returnType.argonHash)
-        self.parameters.forEach{hasher.combine($0.argonHash)}
-        let hashValue = hasher.finalize()
+        var hashValue = super.argonHash
+        for slot in self.parameters
+            {
+            hashValue = hashValue << 13 ^ slot.argonHash
+            }
+        hashValue = hashValue << 13 ^ self.returnType.argonHash
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
         }
@@ -92,13 +98,13 @@ public class MethodInstance: Function
         
     public var typeSignature:TypeSignature
         {
-        TypeSignature(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
+        TypeSignature(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
         }
         
     public var mangledName: String
         {
         let start = self.label
-        let next = self.parameters.map{$0.type!.mangledName}.joined(separator: "_")
+        let next = self.parameters.map{$0.type.mangledName}.joined(separator: "_")
         let end = "=" + self.returnType.mangledName
         return(start + "." + next + end)
         }
@@ -118,7 +124,7 @@ public class MethodInstance: Function
             }
         for parameter in self.parameters
             {
-            if parameter.type!.isTypeVariable
+            if parameter.type.isTypeVariable
                 {
                 return(false)
                 }
@@ -151,7 +157,7 @@ public class MethodInstance: Function
         {
         for parameter in self.parameters
             {
-            if parameter.type!.hasVariableTypes
+            if parameter.type.hasVariableTypes
                 {
                 return(true)
                 }
@@ -249,9 +255,9 @@ public class MethodInstance: Function
         instancePointer.hasBytes = false
         instancePointer.objectType = .methodInstance
         instancePointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
-        if let module = self.parent.node as? Module
+        if let module = self.module
             {
-            instancePointer.setAddress(module.memoryAddress,atSlot: "container")
+            instancePointer.setAddress(module.memoryAddress,atSlot: "module")
             }
         else
             {
@@ -262,12 +268,12 @@ public class MethodInstance: Function
             {
             for parm in self.parameters
                 {
-                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofClass: parameterType, sizeOfExtraBytesInBytes: 0),type: parameterType)
+                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofType: parameterType, extraSizeInBytes: 0),type: parameterType)
                 parmPointer.setStringAddress(segment.allocateString(parm.label),atSlot: "tag")
                 parmPointer.setBoolean(parm.isVisible,atSlot: "tagIsShown")
                 parmPointer.setBoolean(parm.isVariadic,atSlot: "isVariadic")
-                parm.type?.install(inContext: context)
-                parmPointer.setAddress(parm.type?.memoryAddress ?? 0,atSlot: "type")
+                parm.type.install(inContext: context)
+                parmPointer.setAddress(parm.type.memoryAddress,atSlot: "type")
                 parmPointer.setStringAddress(parm.relabel.isNil ? 0 : segment.allocateString(parm.relabel!),atSlot: "retag")
                 parmArray.append(parmPointer.address)
                 }
@@ -332,8 +338,8 @@ public class MethodInstance: Function
                 }
             else if typeA.isClass && typeB.isClass && argumentType.isClass
                 {
-                let argumentClassList = argumentType.classValue.precedenceList
-                if let typeAIndex = argumentClassList.firstIndex(of: typeA.classValue),let typeBIndex = argumentClassList.firstIndex(of: typeB.classValue)
+                let argumentClassList = (argumentType as! TypeClass).precedenceList
+                if let typeAIndex = argumentClassList.firstIndex(of: typeA as! TypeClass),let typeBIndex = argumentClassList.firstIndex(of: typeB as! TypeClass)
                     {
                     orderings.append(typeAIndex > typeBIndex ? .more : .less)
                     }
@@ -373,11 +379,11 @@ public class MethodInstance: Function
                 {
                 return(false)
                 }
-            if argument.type!.isClass && parameter.type!.isClass && !argument.type!.isSubtype(of: parameter.type!)
+            if argument.type!.isClass && parameter.type.isClass && !argument.type!.isSubtype(of: parameter.type)
                 {
                 return(false)
                 }
-            if argument.type!.isEnumeration && parameter.type!.isEnumeration && argument.type! != parameter.type!
+            if argument.type!.isEnumeration && parameter.type.isEnumeration && argument.type! != parameter.type
                 {
                 return(false)
                 }

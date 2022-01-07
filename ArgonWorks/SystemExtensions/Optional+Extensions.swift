@@ -32,6 +32,35 @@ extension Optional
         }
     }
 
+
+extension Optional where Wrapped:Collection
+    {
+    public var count: Int
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.count)
+            default:
+                return(0)
+            }
+        }
+    }
+    
+extension Optional where Wrapped:Nameable
+    {
+    public var fullName: Name
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.fullName)
+            default:
+                return(Name("\\\\"))
+            }
+        }
+    }
+    
 extension Optional where Wrapped:Displayable
     {
     public var displayString: String

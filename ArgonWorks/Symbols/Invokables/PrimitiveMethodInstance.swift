@@ -17,10 +17,10 @@ public class PrimitiveMethodInstance: MethodInstance
         return(instance)
         }
 
-    public override var instructions: Array<T3AInstruction>
-        {
-        [T3AInstruction(nil, "PRIM",.integer(self.primitiveIndex), .none, .none)]
-        }
+//    public override var instructions: Array<T3AInstruction>
+//        {
+//        [T3AInstruction(.PRIM,.integer(self.primitiveIndex), .none, .none)]
+//        }
         
     public var primitiveIndex:Argon.Integer = 0
     
@@ -33,7 +33,7 @@ public class PrimitiveMethodInstance: MethodInstance
         
     public override func initializeType(inContext context: TypeContext)
         {
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type!},returnType: self.returnType)
+        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType))
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -41,12 +41,12 @@ public class PrimitiveMethodInstance: MethodInstance
         self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         self.returnType.initializeTypeConstraints(inContext: context)
         let parameterTypes = self.parameters.map{$0.type!}
-        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.type,right: Argon.addType(TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType)),origin: .symbol(self)))
         }
  
     public override func emitCode(into buffer: T3ABuffer, using: CodeGenerator) throws
         {
-        buffer.append("PRIM",.integer(self.primitiveIndex),.none,.none)
+        buffer.append(.PRIM,.integer(self.primitiveIndex),.none,.none)
         }
         
     public override func typeCheck() throws
@@ -68,7 +68,7 @@ public class PrimitiveMethodInstance: MethodInstance
         var index = 0
         for parameter in self.parameters
             {
-            print("\(indent)\tPARAMETER[\(index)] \(parameter.label) \(parameter.type!.displayString)")
+            print("\(indent)\tPARAMETER[\(index)] \(parameter.label) \(parameter.type.displayString)")
             index += 1
             }
         print("\(indent)\tRETURN TYPE \(self.returnType.displayString)")

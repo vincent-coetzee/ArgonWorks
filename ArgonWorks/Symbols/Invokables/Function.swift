@@ -44,7 +44,7 @@ public class Function:Invocable,Displayable
         {
         let argTypes:UnsafeMutablePointer<ffi_type>? = UnsafeMutablePointer<ffi_type>.allocate(capacity: self.parameters.count)
         var argPointer = argTypes
-        for type in self.parameters.map({$0.type!.ffiType})
+        for type in self.parameters.map({$0.type.ffiType})
             {
             argPointer?.pointee = type
             argPointer = argPointer! + 1

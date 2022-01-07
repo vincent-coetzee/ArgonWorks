@@ -145,7 +145,7 @@ public class MemoryPointer
                 valueString = "HEADER: BYTE SIZE: \(size)"
             case .object:
                 let objectString = String(format: "%010X",value)
-                var className = ""
+                let className = ""
 //                if value.cleanAddress != 0
 //                    {
 //                    let otherPointer = MemoryPointer(address: value.cleanAddress)

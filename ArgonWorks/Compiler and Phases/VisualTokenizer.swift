@@ -28,9 +28,7 @@ public class VisualTokenizer: SemanticTokenRenderer
     
     init(lineNumberView: LineNumberTextView,reporter: Reporter)
         {
-        let topModule = TopModule(instanceNumber: 0)
-        let argonModule = topModule.argonModule
-        self.systemClassNames = argonModule.classes.map{$0.label}
+        self.systemClassNames = ArgonModule.shared.classes.map{$0.label}
         self.lineNumberView = lineNumberView
         self.reportingContext = reporter
         self.font = NSFont(name: "Menlo",size: 12)!

@@ -82,22 +82,22 @@ public class ContainerSymbol:Symbol
         return(self.symbols.sorted{$0.label < $1.label})
         }
         
-    public var classesWithNotDirectlyContainedSuperclasses:Classes
-        {
-        var classes = self.symbols.filter{$0 is Class}.map{$0 as! Class}
-        classes = classes.filter{$0.localSuperclasses.isEmpty}
-        for aClass in self.symbols.filter({$0 is Class}).map({$0 as! Class})
-            {
-            for superclass in aClass.localSuperclasses
-                {
-                if !self.directlyContains(symbol: superclass)
-                    {
-                    classes.append(aClass)
-                    }
-                }
-            }
-        return(classes)
-        }
+//    public var classesWithNotDirectlyContainedSuperclasses:Classes
+//        {
+//        var classes = self.symbols.filter{$0 is Class}.map{$0 as! Class}
+//        classes = classes.filter{$0.localSuperclasses.isEmpty}
+//        for aClass in self.symbols.filter({$0 is Class}).map({$0 as! Class})
+//            {
+//            for superclass in aClass.localSuperclasses
+//                {
+//                if !self.directlyContains(symbol: superclass)
+//                    {
+//                    classes.append(aClass)
+//                    }
+//                }
+//            }
+//        return(classes)
+//        }
         
     public required init?(coder: NSCoder)
         {
@@ -115,39 +115,7 @@ public class ContainerSymbol:Symbol
         coder.encode(self.symbols,forKey: "symbols")
         super.encode(with: coder)
         }
-    ///
-    ///
-    /// Support for naming context
-    ///
-    ///
-    public override func lookup(label:String) -> Symbol?
-        {
-        for symbol in self.symbols
-            {
-            if symbol.label == label
-                {
-                return(symbol)
-                }
-            }
-        return(self.parent.lookup(label: label))
-        }
-        
-    public override func lookupN(label: Label) -> Symbols?
-        {
-        var found = Symbols()
-        for symbol in self.symbols
-            {
-            if symbol.label == label
-                {
-                found.append(symbol)
-                }
-            }
-        if let more = self.parent.lookupN(label: label)
-            {
-            found.append(contentsOf: more)
-            }
-        return(found.isEmpty ? nil : found)
-        }
+
         
     public override func display(indent: String)
         {
@@ -156,11 +124,6 @@ public class ContainerSymbol:Symbol
             {
             symbol.display(indent: indent + "\t")
             }
-        }
-        
-    public override func setSymbol(_ symbol:Symbol,atName: Name)
-        {
-        fatalError()
         }
         
     public override func initializeType(inContext context: TypeContext)
@@ -197,20 +160,110 @@ public class ContainerSymbol:Symbol
             }
         }
         
-    public override func addSymbol(_ symbol:Symbol)
+    public override func addSymbol(_ symbol: Symbol)
         {
         self.symbols.append(symbol)
-        symbol.setParent(self)
         symbol.setContainer(.symbol(self))
         }
         
-    public func addSymbols(_ symbols:Array<Symbol>) -> ContainerSymbol
+    public override func lookup(label: Label) -> Symbol?
         {
-        for symbol in symbols
+        for symbol in self.symbols
             {
-            self.addSymbol(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
-        return(self)
+        return(self.module?.lookup(label: label))
+        }
+        
+    public override func lookup(name: Name) -> Symbol?
+        {
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = TopModule.shared.lookup(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start)
+                    }
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
+            }
+        else if let start = self.lookup(label: name.first)
+            {
+            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
+            }
+        return(self.module?.lookup(name: name))
+        }
+        
+    public override func lookupN(label: Label) -> Symbols?
+        {
+        self.symbols.filter{$0.label == label}.nilIfEmpty
+        }
+        
+    public override func lookupN(name: Name) -> Symbols?
+        {
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = TopModule.shared.lookupN(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start.nilIfEmpty)
+                    }
+                if let symbol = (start.first)?.lookupN(name: name.withoutFirst)
+                    {
+                    return(symbol.nilIfEmpty)
+                    }
+                }
+            return(nil)
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookupN(label: name.first)
+                {
+                return(symbol.nilIfEmpty)
+                }
+            }
+        else if let start = self.lookupN(label: name.first)
+            {
+            if let symbol = start.first?.lookupN(name: name.withoutFirst)
+                {
+                return(symbol.nilIfEmpty)
+                }
+            }
+        return(self.module?.lookupN(name: name))
         }
         
     public override func allocateAddresses(using allocator:AddressAllocator) throws
@@ -220,7 +273,6 @@ public class ContainerSymbol:Symbol
             try symbol.allocateAddresses(using: allocator)
             }
         }
-        
         
     public override func install(inContext: ExecutionContext)
         {

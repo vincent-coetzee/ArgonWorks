@@ -15,7 +15,6 @@ public class PostfixExpression: OperatorExpression
         {
         self.lhs = lhs
         super.init(operatorLabel: operatorLabel,operators: operators)
-        self.lhs.setParent(self)
         }
         
     public required init?(coder: NSCoder)
@@ -35,8 +34,8 @@ public class PostfixExpression: OperatorExpression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators, lhs: substitution.substitute(self.lhs))
-        expression.type = substitution.substitute(self.type!)
-        expression.methodInstance = substitution.substitute(self.methodInstance)
+        expression.type = substitution.substitute(self.type)
+        expression.methodInstance = self.methodInstance.isNil ? nil : substitution.substitute(self.methodInstance!)
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -44,7 +43,7 @@ public class PostfixExpression: OperatorExpression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: self.lhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
@@ -66,8 +65,7 @@ public class PostfixExpression: OperatorExpression
         {
         self.lhs.initializeTypeConstraints(inContext: context)
         context.append(SubTypeConstraint(subtype: self.lhs.type,supertype: context.integerType,origin:.expression(self)))
-        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: [self.lhs], reportErrors: true)
-        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.operators, argumentExpressions: [self.lhs], reportErrors: true)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
         methodMatcher.appendReturnType(context.voidType)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
@@ -92,5 +90,21 @@ public class PostfixExpression: OperatorExpression
         {
         try self.lhs.visit(visitor: visitor)
         try visitor.accept(self)
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
+        {
+        try self.lhs.emitPointerCode(into: buffer, using: generator)
+        buffer.append(.PUSH,self.lhs.place)
+        if let instance = self.methodInstance
+            {
+            buffer.append(.CALL,.address(instance.memoryAddress))
+            }
+        else
+            {
+            let address = generator.emitStaticString(self.operatorLabel)
+            buffer.append(.CALLD,.address(address))
+            }
+        buffer.append(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
         }
     }

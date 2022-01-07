@@ -72,7 +72,7 @@ extension Arguments
     {
     public var resultTypes: Array<Type>
         {
-        return(self.map{$0.value.type!})
+        return(self.map{$0.value.type})
         }
         
     public func allocateAddresses(using: AddressAllocator) throws

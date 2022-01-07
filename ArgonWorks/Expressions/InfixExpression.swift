@@ -17,8 +17,6 @@ public class InfixExpression: OperatorExpression
         self.lhs = lhs
         self.rhs = rhs
         super.init(operatorLabel: operatorLabel,operators:  operators)
-        self.lhs.setParent(self)
-        self.rhs.setParent(self)
         }
         
     public override var displayString: String
@@ -50,7 +48,7 @@ public class InfixExpression: OperatorExpression
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = InfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
-        expression.type = self.type?.freshTypeVariable(inContext: context)
+        expression.type = self.type.freshTypeVariable(inContext: context)
         expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
@@ -68,10 +66,9 @@ public class InfixExpression: OperatorExpression
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
         let newArguments = [self.lhs,self.rhs]
-        let methodMatcher = MethodInstanceMatcher(methodInstances: self.operators, argumentExpressions: newArguments, reportErrors: true)
-        methodMatcher.setEnclosingScope(self.enclosingScope, inContext: context)
+        let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.operators, argumentExpressions: newArguments, reportErrors: true)
         methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-        methodMatcher.appendReturnType(self.type!)
+        methodMatcher.appendReturnType(self.type)
         if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
             {
             self.methodInstance = specificInstance
@@ -88,14 +85,26 @@ public class InfixExpression: OperatorExpression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let expression = InfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: substitution.substitute(self.lhs),rhs: substitution.substitute(self.rhs))
-        expression.type = substitution.substitute(self.type!)
+        expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
         return(expression as! Self)
         }
         
     public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        
+        try self.lhs.emitPointerCode(into: instance, using: generator)
+        try self.rhs.emitPointerCode(into: instance, using: generator)
+        instance.append(.PUSH,self.lhs.place)
+        instance.append(.PUSH,self.rhs.place)
+        if self.methodInstance.isNil
+            {
+            let address = generator.emitStaticString(self.operatorLabel)
+            instance.append(.CALLD,.address(address))
+            }
+        else
+            {
+            instance.append(.CALL,.address(self.methodInstance!.memoryAddress))
+            }
         }
     }
 

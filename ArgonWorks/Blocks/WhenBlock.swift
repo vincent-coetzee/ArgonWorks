@@ -53,7 +53,7 @@ public class WhenBlock: Block
             {
             block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        block.type = self.type?.freshTypeVariable(inContext: context)
+        block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         
