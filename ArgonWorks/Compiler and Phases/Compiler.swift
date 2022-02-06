@@ -16,7 +16,8 @@ public class Compiler
     internal var completionWasCancelled: Bool = false
     internal var tokenRenderer:SemanticTokenRenderer
     internal let source: String
-            
+    internal let reporter: Reporter
+    
     init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
         Argon.resetStatics()
@@ -26,7 +27,7 @@ public class Compiler
         self.currentPass = nil
         self.tokenRenderer = tokenRenderer
         self.tokenRenderer.update(source)
-
+        self.reporter = reportingContext
         }
 
     init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
@@ -37,6 +38,7 @@ public class Compiler
         self.currentPass = nil
         self.source = ""
         self.tokenRenderer = tokenRenderer
+        self.reporter = reportingContext
 //        let cleanTokens = tokens.filter{!$0.isWhitespace}
         }
 
@@ -45,42 +47,51 @@ public class Compiler
         self.completionWasCancelled = true
         }
 
+//                    ArgonModule.shared.class.printLayout()
+//                    ArgonModule.shared.array.printLayout()
+//                    ArgonModule.shared.object.printLayout()
+//                    ArgonModule.shared.slot.printLayout()
+//                    let memoryPointer = MemoryPointer(address: ArgonModule.shared.object.memoryAddress)
+//                    MemoryPointer.dumpMemory(atAddress: memoryPointer.address,count: 100)
+//                    try! allocator.payload.write(toPath: "/Users/vincent/Desktop/NewFile.argonv")
+//                    try! ObjectFile.write(module: module, topModule: TopModule.shared, atPath: "file:///Users/vincent/Desktop/test.argono")
+//                    let objectFile = try! ObjectFile.read(atPath: "file:///Users/vincent/Desktop/test.argono",topModule: TopModule.shared)
+//                    objectFile!.module.display(indent: "")
+
     @discardableResult
-    public func compile(parseOnly: Bool = false) -> Module?
+    public func compile(parseOnly: Bool = false,moduleReceiver: ModuleReceiver? = nil) -> Module?
         {
-//        self.reportingContext.resetReporting()
+        let addressAllocator = AddressAllocator()
         if let module = Parser(self).processModule(nil)
             {
             if let module = module.typeCheckModule()
                 {
-                let allocator = AddressAllocator(self)
-                if let module = allocator.processModule(module)
+                if let module = addressAllocator.processModule(module)
                     {
-                    ArgonModule.shared.class.printLayout()
-                    ArgonModule.shared.array.printLayout()
-                    ArgonModule.shared.object.printLayout()
-                    ArgonModule.shared.slot.printLayout()
-                    let memoryPointer = MemoryPointer(address: ArgonModule.shared.object.memoryAddress)
-                    MemoryPointer.dumpMemory(atAddress: memoryPointer.address,count: 100)
-                    try! allocator.payload.write(toPath: "/Users/vincent/Desktop/TestFile.arv")
-                    try! ObjectFile.write(module: module, topModule: TopModule.shared, atPath: "file:///Users/vincent/Desktop/module.argono")
-                    let objectFile = try! ObjectFile.read(atPath: "file:///Users/vincent/Desktop/module.argono",topModule: TopModule.shared)
-                    objectFile!.module.display(indent: "")
-                    if let module = CodeGenerator(self,payload: allocator.payload).processModule(module)
+                    if let module = CodeGenerator(self,addressAllocator: addressAllocator).processModule(module)
                         {
-                        let vm = VirtualMachine(payload: allocator.payload)
-                        module.install(inContext: vm.payload)
+                        moduleReceiver?.moduleUpdated(module)
+                        addressAllocator.payload.installArgonModule(ArgonModule.shared)
+                        addressAllocator.payload.installClientModule(module)
+                        addressAllocator.payload.installMainMethod(module.mainMethod)
+                        let vm = VirtualMachine(payload: addressAllocator.payload)
+                        try! vm.payload.write(toPath: "/Users/vincent/Desktop/InferenceSample.carton")
                         module.display(indent: "")
+                        for symbol in module.symbols
+                            {
+                            print("\(symbol.label) \(Swift.type(of: symbol)) \(symbol.memoryAddress)")
+                            }
                         if let module = Optimizer(self).processModule(module)
                             {
                             let visitor = TestVisitor.visit(module)
 //                            self.allIssues = visitor.allIssues
-                            print(visitor.allIssues)
+//                            print(visitor.allIssues)
                             let someIssues = module.issues
-                            print(someIssues)
-//                            self.reportingContext.pushIssues(self.allIssues)
+//                            print(someIssues)
+                            self.reporter.pushIssues(visitor.allIssues)
                             return(module)
                             }
+
                         }
                     }
                 }

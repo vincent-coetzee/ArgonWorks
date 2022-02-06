@@ -57,11 +57,11 @@ public class FunctionInvocationExpression: Expression
 //            }
         }
         
-    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
         }
     }

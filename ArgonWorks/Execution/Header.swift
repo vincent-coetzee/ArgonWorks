@@ -9,23 +9,23 @@ import Foundation
     
 public class Header
     {
-    public static let kSizeBits:UInt64 = 0b11111111_11111111_111111111_11111111_11111111
-    public static let kSizeShift:UInt64 = 18
-    public static let kHasBytesBits:UInt64 = 0b1
-    public static let kHasBytesShift = 17
-    public static let kFlipBits:UInt64 = 0b11111111
-    public static let kFlipShift = 9
-    public static let kForwardedBits:UInt64 = 0b1
-    public static let kForwardedShift = 8
-    public static let kTagBits:UInt64 = 0b111
-    public static let kTagShift:UInt64 = 60
-    public static let kPersistentBits:UInt64 = 0b1
-    public static let kPersistentShift:UInt64 = 7
-    public static let kTypeBits:UInt64 = 0b1111111
-    public static let kTypeShift:UInt64 = 0
-    
-    public static let kTagBitsMask = Header.kTagBits << Header.kTagShift
-    
+//    public static let kSizeBits:UInt64 = 0b11111111_11111111_11111111_11111111_11111111
+//    public static let kSizeShift:UInt64 = 18
+//    public static let kHasBytesBits:UInt64 = 0b1
+//    public static let kHasBytesShift = 17
+//    public static let kFlipBits:UInt64 = 0b11111111
+//    public static let kFlipShift = 9
+//    public static let kForwardedBits:UInt64 = 0b1
+//    public static let kForwardedShift = 8
+//    public static let kTagBits:UInt64 = 0b111
+//    public static let kTagShift:UInt64 = 60
+//    public static let kPersistentBits:UInt64 = 0b1
+//    public static let kPersistentShift:UInt64 = 7
+//    public static let kTypeBits:UInt64 = 0b1111111
+//    public static let kTypeShift:UInt64 = 0
+//
+//    public static let kTagBitsMask = Header.kTagBits << Header.kTagShift
+//
     public static func test()
         {
         let header = Header(word: 0)
@@ -57,7 +57,7 @@ public class Header
         assert(header.objectType == .array,"Header.objectType should be array and is not.")
         let value = 2 << 40
         header.sizeInWords = value
-        assert(header.sizeInWords == Int(Self.kSizeBits),"Header.sizeInWords should be \(Self.kSizeBits) but is \(header.sizeInWords)")
+        assert(header.sizeInWords == Int(Argon.kHeaderSizeInWordsBits),"Header.sizeInWords should be \(Argon.kHeaderSizeInWordsBits) but is \(header.sizeInWords)")
         print(header.bitString)
         }
         
@@ -70,14 +70,14 @@ public class Header
         {
         get
             {
-            let mask = Self.kSizeBits << Self.kSizeShift
-            return(Int((self.bytes & mask) >> Self.kSizeShift))
+            let mask = Argon.kHeaderSizeInWordsBits << Argon.kHeaderSizeInWordsShift
+            return(Int((self.bytes & mask) >> Argon.kHeaderSizeInWordsShift))
             }
         set
             {
-            let theValue = UInt64(newValue) > Self.kSizeBits ? Self.kSizeBits : UInt64(newValue)
-            let value = (theValue & Self.kSizeBits) << Self.kSizeShift
-            self.bytes = (self.bytes & ~(Self.kSizeBits << Self.kSizeShift)) | value
+            let theValue = UInt64(newValue) > Argon.kHeaderSizeInWordsBits ? Argon.kHeaderSizeInWordsBits : UInt64(newValue)
+            let value = (theValue & Argon.kHeaderSizeInWordsBits) << Argon.kHeaderSizeInWordsShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderSizeInWordsBits << Argon.kHeaderSizeInWordsShift)) | value
             }
         }
         
@@ -85,14 +85,11 @@ public class Header
         {
         get
             {
-            let mask = Self.kSizeBits << Self.kSizeShift
-            return(((self.bytes & mask) >> Self.kSizeShift) * Argon.kWordSizeInBytesWord)
+            Word(self.sizeInWords) * Argon.kWordSizeInBytesWord
             }
         set
             {
-            let theValue = newValue / Argon.kWordSizeInBytesWord
-            let value = (theValue & Self.kSizeBits) << Self.kSizeShift
-            self.bytes = (self.bytes & ~(Self.kSizeBits << Self.kSizeShift)) | value
+            self.sizeInWords = Int(newValue) / Argon.kWordSizeInBytesInt
             }
         }
         
@@ -100,13 +97,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kPersistentBits << Self.kPersistentShift
-            return(((self.bytes & mask) >> Self.kPersistentShift) == 1)
+            let mask = Argon.kHeaderPersistentBits << Argon.kHeaderPersistentShift
+            return(((self.bytes & mask) >> Argon.kHeaderPersistentShift) == 1)
             }
         set
             {
-            let value = ((newValue ? 1 : 0) & Self.kPersistentBits) << Self.kPersistentShift
-            self.bytes = (self.bytes & ~(Self.kPersistentBits << Self.kPersistentShift)) | value
+            let value = ((newValue ? 1 : 0) & Argon.kHeaderPersistentBits) << Argon.kHeaderPersistentShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderPersistentBits << Argon.kHeaderPersistentShift)) | value
             }
         }
         
@@ -114,13 +111,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kTypeBits << Self.kTypeShift
-            return(TypeCode(rawValue: Int((self.bytes & mask) >> Self.kTypeShift))!)
+            let mask = Argon.kHeaderTypeBits << Argon.kHeaderTypeShift
+            return(TypeCode(rawValue: Int((self.bytes & mask) >> Argon.kHeaderTypeShift))!)
             }
         set
             {
-            let value = (UInt64(newValue.rawValue) & Self.kTypeBits) << Self.kTypeShift
-            self.bytes = (self.bytes & ~(Self.kTypeBits << Self.kTypeShift)) | value
+            let value = (UInt64(newValue.rawValue) & Argon.kHeaderTypeBits) << Argon.kHeaderTypeShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderTypeBits << Argon.kHeaderTypeShift)) | value
             }
         }
         
@@ -128,13 +125,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kTypeBits << Self.kTypeShift
-            return(Argon.ObjectType(rawValue: UInt64((self.bytes & mask) >> Self.kTypeShift))!)
+            let mask = Argon.kHeaderTypeBits << Argon.kHeaderTypeShift
+            return(Argon.ObjectType(rawValue: UInt64((self.bytes & mask) >> Argon.kHeaderTypeShift))!)
             }
         set
             {
-            let value = (newValue.rawValue & Self.kTypeBits) << Self.kTypeShift
-            self.bytes = (self.bytes & ~(Self.kTypeBits << Self.kTypeShift)) | value
+            let value = (newValue.rawValue & Argon.kHeaderTypeBits) << Argon.kHeaderTypeShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderTypeBits << Argon.kHeaderTypeShift)) | value
             }
         }
         
@@ -142,13 +139,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kTagBits << Self.kTagShift
-            return(Argon.Tag(rawValue: (self.bytes & mask) >> Self.kTagShift)!)
+            let mask = Argon.kTagBits << Argon.kTagShift
+            return(Argon.Tag(rawValue: (self.bytes & mask) >> Argon.kTagShift)!)
             }
         set
             {
-            let value = (newValue.rawValue & Self.kTagBits) << Self.kTagShift
-            self.bytes = (self.bytes & ~(Self.kTagBits << Self.kTagShift)) | value
+            let value = (newValue.rawValue & Argon.kTagBits) << Argon.kTagShift
+            self.bytes = (self.bytes & ~(Argon.kTagBits << Argon.kTagShift)) | value
             }
         }
         
@@ -156,13 +153,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kHasBytesBits << Self.kHasBytesShift
-            return(((self.bytes & mask) >> Self.kHasBytesShift) == 1)
+            let mask = Argon.kHeaderHasBytesBits << Argon.kHeaderHasBytesShift
+            return(((self.bytes & mask) >> Argon.kHeaderHasBytesShift) == 1)
             }
         set
             {
-            let value = (UInt64(newValue ? 1 : 0) & Self.kHasBytesBits) << Self.kHasBytesShift
-            self.bytes = (self.bytes & ~(Self.kHasBytesBits << Self.kHasBytesShift)) | value
+            let value = (UInt64(newValue ? 1 : 0) & Argon.kHeaderHasBytesBits) << Argon.kHeaderHasBytesShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderHasBytesBits << Argon.kHeaderHasBytesShift)) | value
             }
         }
         
@@ -170,13 +167,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kForwardedBits << Self.kForwardedShift
-            return(((self.bytes & mask) >> Self.kForwardedShift) == 1)
+            let mask = Argon.kHeaderForwardedBits << Argon.kHeaderForwardedShift
+            return(((self.bytes & mask) >> Argon.kHeaderForwardedShift) == 1)
             }
         set
             {
-            let value = (UInt64(newValue ? 1 : 0) & Self.kForwardedBits) << Self.kForwardedShift
-            self.bytes = (self.bytes & ~(Self.kForwardedBits << Self.kForwardedShift)) | value
+            let value = (UInt64(newValue ? 1 : 0) & Argon.kHeaderForwardedBits) << Argon.kHeaderForwardedShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderForwardedBits << Argon.kHeaderForwardedShift)) | value
             }
         }
         
@@ -184,13 +181,13 @@ public class Header
         {
         get
             {
-            let mask = Self.kFlipBits << Self.kFlipShift
-            return(Int((self.bytes & mask) >> Self.kFlipShift))
+            let mask = Argon.kHeaderFlipBits << Argon.kHeaderFlipShift
+            return(Int((self.bytes & mask) >> Argon.kHeaderFlipShift))
             }
         set
             {
-            let value = (UInt64(newValue) & Self.kFlipBits) << Self.kFlipShift
-            self.bytes = (self.bytes & ~(Self.kFlipBits << Self.kFlipShift)) | value
+            let value = (UInt64(newValue) & Argon.kHeaderFlipBits) << Argon.kHeaderFlipShift
+            self.bytes = (self.bytes & ~(Argon.kHeaderFlipBits << Argon.kHeaderFlipShift)) | value
             }
         }
         

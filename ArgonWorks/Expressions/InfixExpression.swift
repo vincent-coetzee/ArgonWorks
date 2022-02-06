@@ -55,14 +55,14 @@ public class InfixExpression: OperatorExpression
         
     public override func initializeType(inContext context: TypeContext)
         {
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
         self.type = self.operators.first!.returnType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        print("INFIX EXPRESSION")
-        self.lhs.initializeType(inContext: context)
-        self.rhs.initializeType(inContext: context)
+
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
         let newArguments = [self.lhs,self.rhs]
@@ -73,11 +73,9 @@ public class InfixExpression: OperatorExpression
             {
             self.methodInstance = specificInstance
             assert(self.methodInstance.isNotNil,"Original method instance is nil and should not be.")
-            print("FOUND MOST SPECIFIC INSTANCE FOR \(self.operators.first!.label) = \(specificInstance.displayString)")
             }
         else
             {
-            print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE FOR \(self.operators.first!.label)")
             self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operators.first!.label)' ) can not be resolved. Try making it more specific.")
             }
         }
@@ -86,25 +84,32 @@ public class InfixExpression: OperatorExpression
         {
         let expression = InfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: substitution.substitute(self.lhs),rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type)
+        let types = [expression.lhs.type,expression.rhs.type]
+        let newOperators = self.operators.map{substitution.substitute($0)}
+        let sorted = newOperators.filter{$0.parameterTypesAreSupertypes(ofTypes: types)}.sorted{$0.moreSpecific(than: $1, forTypes: types)}
+        expression.methodInstance = sorted.first
         expression.issues = self.issues
         return(expression as! Self)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        try self.lhs.emitPointerCode(into: instance, using: generator)
-        try self.rhs.emitPointerCode(into: instance, using: generator)
-        instance.append(.PUSH,self.lhs.place)
-        instance.append(.PUSH,self.rhs.place)
+        try self.lhs.emitAddressCode(into: instance, using: generator)
+        try self.rhs.emitAddressCode(into: instance, using: generator)
+        instance.add(.PUSH,self.lhs.place)
+        instance.add(.PUSH,self.rhs.place)
         if self.methodInstance.isNil
             {
-            let address = generator.emitStaticString(self.operatorLabel)
-            instance.append(.CALLD,.address(address))
+            let label = "#" + self.operatorLabel
+            let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
+            instance.add(.SEND,.integer(symbol),.register(.RR))
             }
         else
             {
-            instance.append(.CALL,.address(self.methodInstance!.memoryAddress))
+            assert(self.methodInstance!.memoryAddress != 0)
+            instance.add(.CALL,.address(self.methodInstance!.memoryAddress))
             }
+        self._place = .register(.RR)
         }
     }
 

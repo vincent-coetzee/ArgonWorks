@@ -14,6 +14,23 @@ public class ClassBasedPointer
         self.someAddress
         }
         
+    public var isClass: Bool
+        {
+        guard self.someSlots["name"].isNotNil else
+            {
+            return(false)
+            }
+        let address = self.address(atSlot: "name")
+        if address.isNotNil
+            {
+            if let stringPointer = StringPointer(dirtyAddress: address!)
+                {
+                return(stringPointer.string == "Class")
+                }
+            }
+        return(false)
+        }
+        
     public var sizeInWords: Int
         {
         get
@@ -127,11 +144,11 @@ public class ClassBasedPointer
         {
         get
             {
-            return(ClassPointer(dirtyAddress: self.classAddress))
+            return(ClassPointer(address: self.classAddress))
             }
         set
             {
-            self.classAddress = newValue.dirtyAddress
+            self.classAddress = Word(pointer: newValue.isNil ? 0 : newValue!.address.cleanAddress)
             }
         }
         
@@ -143,14 +160,27 @@ public class ClassBasedPointer
             }
         set
             {
-            self.wordPointer[2] = newValue.objectAddress
+            self.wordPointer[2] = Word(pointer: newValue)
             }
         }
         
+    public var hash: Int
+        {
+        let offset = self.someSlots["hash"]!.offset
+        let size = Int(self.sizeInBytes)
+        var hashValue:Int = 0
+        for index in (offset/8)..<(size/8)
+            {
+            hashValue = hashValue << 13 ^ Int(bitPattern: self.wordPointer[index])
+            }
+        self.setInteger(hashValue,atSlot: "hash")
+        return(hashValue)
+        }
+        
     private let someAddress: Address
-    private let someClass: TypeClass
+    internal let someClass: TypeClass
     private var someSlots: Dictionary<Label,Slot>
-    private let wordPointer: WordPointer
+    internal let wordPointer: WordPointer
     private let header: Header
     
     convenience init(address: Address,type: Type)
@@ -179,42 +209,44 @@ public class ClassBasedPointer
     public func setClass(_ type: Type)
         {
         let theClass = (type as! TypeClass)
-        self.classAddress = theClass.memoryAddress.cleanAddress
-        self.setInteger(theClass.magicNumber,atSlot: "_magicNumber")
-        self.setAddress(theClass.memoryAddress,atSlot: "_class")
-        self.setLocalSlotValues(forClass: (theClass.supertype as! TypeClass))
+        self.setClass(theClass)
+        }
+        
+    private func setLocalSlotValues(forClass aClass: TypeClass,inClass: TypeClass)
+        {
+        for slot in aClass.localSystemSlots
+            {
+            let slotName = slot.nameInClass(aClass)
+            if slot.slotType.contains(.kSystemClassSlot)
+                {
+                self.setClassAddress(aClass.memoryAddress,atSlot: slotName)
+                }
+            else if slot.slotType.contains(.kSystemHeaderSlot) || slot.slotType.contains(.kSystemInnerSlot)
+                {
+                let actualSlot = inClass.layoutSlot(atLabel: slotName)
+                self.setWord(Word(inner: actualSlot.offset),atSlot: slotName)
+                }
+            else if slot.slotType.contains(.kSystemMagicNumberSlot)
+                {
+                self.setInteger(aClass.magicNumber,atSlot: slotName)
+                }
+
+            }
+        if aClass.supertype.isNotNil
+            {
+            self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass),inClass: inClass)
+            }
         }
         
     public func setClass(_ aClass: TypeClass)
         {
-        self.classAddress = aClass.memoryAddress.cleanAddress
-        self.setInteger(aClass.magicNumber,atSlot: "_magicNumber")
-        self.setAddress(aClass.memoryAddress,atSlot: "_class")
-        self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass))
+        self.header.tag = .header
+        self.header.hasBytes = aClass.hasBytes
+        self.magicNumber = aClass.magicNumber
+        self.classAddress = aClass.memoryAddress
+        self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass),inClass: aClass)
         }
-        
-    private func setLocalSlotValues(forClass aClass: TypeClass)
-        {
-        for slot in aClass.localSystemSlots
-            {
-            switch(slot.slotType)
-                {
-                case .class:
-                    self.setAddress(aClass.memoryAddress,atSlot: slot.label)
-                case .header:
-                    self.setWord(0,atSlot: slot.label)
-                case .magicNumber:
-                    self.setInteger(aClass.magicNumber,atSlot: slot.label)
-                default:
-                    break
-                }
-            }
-        if aClass.supertype.isNotNil
-            {
-            self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass))
-            }
-        }
-        
+    
     public func integer(atSlot: String) -> Int
         {
         if let slot = self.someSlots[atSlot]
@@ -230,7 +262,7 @@ public class ClassBasedPointer
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = Word(bitPattern: integer)
+            self.wordPointer[index] = Word(integer: integer)
             return
             }
         fatalError("Slot not found")
@@ -272,7 +304,7 @@ public class ClassBasedPointer
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = address.objectAddress
+            self.wordPointer[index] = address.pointerAddress
             return
             }
         fatalError("Slot not found")
@@ -299,12 +331,12 @@ public class ClassBasedPointer
         fatalError("Slot not found")
         }
         
-    public func address(atSlot: String) -> Address
+    public func address(atSlot: String) -> Address?
         {
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(self.wordPointer[index].cleanAddress)
+            return(self.wordPointer[index].isNull ? nil : self.wordPointer[index].cleanAddress)
             }
         fatalError("Slot not found")
         }
@@ -314,7 +346,22 @@ public class ClassBasedPointer
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = address.objectAddress
+            if address.isNotNil && address! == 0
+                {
+                print("halt")
+                }
+            self.wordPointer[index] = address.isNil ? Argon.kNullTag: Word(pointer: address!.cleanAddress)
+            return
+            }
+        fatalError("Slot not found")
+        }
+        
+    public func setArrayAddress(_ address: Address?,atSlot: Label)
+        {
+        if let slot = self.someSlots[atSlot]
+            {
+            let index = slot.offset / Argon.kWordSizeInBytesInt
+            self.wordPointer[index] = address.isNil ? Argon.kNullTag : Word(pointer: address.cleanAddress)
             return
             }
         fatalError("Slot not found")
@@ -330,12 +377,12 @@ public class ClassBasedPointer
         fatalError("Slot not found")
         }
         
-    public func setArrayPointer(_ array: ArrayPointer,atSlot: Label)
+    public func setArrayPointer(_ array: ArrayPointer?,atSlot: Label)
         {
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = array.cleanAddress.objectAddress
+            self.wordPointer[index] = (array.isNil || (array.isNotNil && array!.cleanAddress == 0)) ? Argon.kNullTag : Word(pointer: array!.cleanAddress)
             return
             }
         fatalError("Slot not found")
@@ -356,7 +403,7 @@ public class ClassBasedPointer
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = string.cleanAddress.objectAddress
+            self.wordPointer[index] = Word(pointer: string.cleanAddress)
             return
             }
         fatalError("Slot not found")
@@ -372,26 +419,28 @@ public class ClassBasedPointer
         fatalError("Slot not found")
         }
         
-    public func setStringAddress(_ string: Address,atSlot: Label)
+    public func setStringAddress(_ string: Address?,atSlot: Label)
         {
         if let slot = self.someSlots[atSlot]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = string.cleanAddress.objectAddress
+            self.wordPointer[index] = (string.isNil || (string.isNotNil && string!.cleanAddress == 0)) ? Argon.kNullTag : Word(pointer: string!.cleanAddress)
             return
             }
         fatalError("Slot not found")
         }
-        
-    public func encodeEnumerationCase(_ aCase:EnumerationCase,associatedValues: Words? = nil,atSlot: String)
+    public func setClassAddress(_ string: Address?,atSlot: Label)
         {
         if let slot = self.someSlots[atSlot]
             {
-            if let values = associatedValues,aCase.associatedTypes.count == values.count
+            if string.isNotNil && string! == 0
                 {
+                fatalError()
                 }
-            fatalError("Asscociated type count in enumeration case is \(aCase.associatedTypes.count) but \(associatedValues.count) were passed in.")
+            let index = slot.offset / Argon.kWordSizeInBytesInt
+            self.wordPointer[index] = string.isNil ? Argon.kNullTag : Word(pointer: string!.cleanAddress)
+            return
             }
-        fatalError("Slot \(atSlot) not found.")
+        fatalError("Slot not found")
         }
     }

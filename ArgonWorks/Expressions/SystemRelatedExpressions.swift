@@ -44,12 +44,19 @@ public class ClassExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.expression.initializeType(inContext: context)
-        self.type = ArgonModule.shared.class
+        self.type = ArgonModule.shared.classType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.expression.initializeTypeConstraints(inContext: context)
         self.type.initializeTypeConstraints(inContext: context)
+        }
+        
+    public override func emitValueCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
+        {
+        try self.expression.emitAddressCode(into: buffer, using: using)
+        buffer.add(.CLASS,self.expression.place,.register(.RR))
+        self._place = .register(.RR)
         }
     }

@@ -60,73 +60,46 @@ public class UnaryExpression: Expression
         UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
         }
         
-    public override func emitValueCode(into instance: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into instance: InstructionBuffer,using: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
         try self.rhs.emitCode(into: instance, using: using)
         var opcode = Opcode.NOP
+        let temp = instance.nextTemporary
         switch(self.operationName)
             {
             case "-":
                 if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger
                     {
-                    opcode = .INEG64
+                    instance.add(.i64,.NEG,rhs.place,temp)
                     }
                 else if self.type == ArgonModule.shared.byte
                     {
-                    opcode = .INEG8
+                    instance.add(.i8,.NEG,rhs.place,temp)
                     }
                 else if self.type == ArgonModule.shared.character
                     {
-                    opcode = .INEG16
+                    instance.add(.i16,.NEG,rhs.place,temp)
                     }
                 else if self.type == ArgonModule.shared.float
                     {
-                    opcode = .FNEG64
+                    instance.add(.f64,.NEG,rhs.place,temp)
                     }
             case "~":
-                opcode = .IBNOT64
+                    instance.add(.i64,.LNOT,rhs.place,temp)
             case "!":
-                opcode = .NOT
+                    instance.add(.i64,.NOT,rhs.place,temp)
             default:
                 fatalError("Unhandled unary operation.")
             }
-        let temp = instance.nextTemporary()
-        instance.append(opcode,rhs.place,.none,temp)
         self._place = temp
         }
         
-    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
         {
-        if let location = self.declaration
-            {
-            instance.append(lineNumber: location.line)
-            }
-        try self.rhs.emitCode(into: instance, using: using)
-        var opcode:Opcode = .NOP
-        switch(self.operationName)
-            {
-            case "sub":
-                if self.type == ArgonModule.shared.integer.type
-                    {
-                    opcode = .INEG64
-                    }
-                else
-                    {
-                    opcode = .FNEG64
-                    }
-            case "bitNot":
-                opcode = .IBNOT64
-            case "not":
-                opcode = .NOT
-            default:
-                break
-            }
-        let temp = instance.nextTemporary()
-        instance.append(nil,opcode,rhs.place,.none,temp)
-        self._place = temp
+        try self.emitValueCode(into: instance,using: using)
         }
     }

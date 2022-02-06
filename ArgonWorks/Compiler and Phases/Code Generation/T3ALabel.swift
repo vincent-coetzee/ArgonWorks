@@ -17,6 +17,7 @@ public class T3ALabel: NSObject,NSCoding
     private static var nextIndex = 1
     
     internal let index: Int
+    internal var address: Address = 0
     
     override init()
         {

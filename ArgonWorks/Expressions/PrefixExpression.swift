@@ -67,7 +67,10 @@ public class PrefixExpression: OperatorExpression
         {
         let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type)
-        expression.methodInstance = self.methodInstance?.substitute(from: substitution)
+        let types = [expression.rhs.type,expression.rhs.type]
+        let newOperators = self.operators.map{substitution.substitute($0)}
+        let sorted = newOperators.filter{$0.parameterTypesAreSupertypes(ofTypes: types)}.sorted{$0.moreSpecific(than: $1, forTypes: types)}
+        expression.methodInstance = sorted.first
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -75,36 +78,26 @@ public class PrefixExpression: OperatorExpression
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.rhs.initializeTypeConstraints(inContext: context)
-        let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.operators, argumentExpressions: [self.rhs], reportErrors: true)
-        methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-        methodMatcher.appendReturnType(self.type)
-        if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
-            {
-            self.methodInstance = specificInstance
-            print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
-            methodMatcher.appendTypeConstraints(to: context)
-            }
-        else
-            {
-            print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
-            self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operatorLabel)' ) can not be resolved. Try making it more specific.")
-            }
+        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
         }
         
-    public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer, using generator: CodeGenerator) throws
         {
         try self.rhs.emitPointerCode(into: buffer, using: generator)
-        buffer.append(.PUSH,self.rhs.place)
+        buffer.add(.PUSH,self.rhs.place)
         if let instance = self.methodInstance
             {
-            buffer.append(.CALL,.address(instance.memoryAddress))
+            generator.registerMethodInstanceIfNeeded(instance)
+            assert(instance.memoryAddress != 0)
+            buffer.add(.CALL,.address(instance.memoryAddress))
             }
         else
             {
-            let address = generator.emitStaticString(self.operatorLabel)
-            buffer.append(.CALLD,.address(address))
+            let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol("#" + self.operatorLabel))
+            buffer.add(.SEND,.integer(symbol),.register(.RR))
             }
-        buffer.append(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
+        buffer.add(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
+        self._place = .register(.RR)
         }
     }
 

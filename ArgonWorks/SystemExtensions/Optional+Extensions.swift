@@ -31,6 +31,31 @@ extension Optional
             }
         }
     }
+    
+extension Optional where Wrapped == Address
+    {
+    public var isNotNil: Bool
+        {
+        switch(self)
+            {
+            case .some(let address):
+                return(address.isNotNil)
+            case .none:
+                return(false)
+            }
+        }
+        
+    public var isNil: Bool
+        {
+        switch(self)
+            {
+            case .some(let address):
+                return(address.isNil)
+            case .none:
+                return(true)
+            }
+        }
+    }
 
 
 extension Optional where Wrapped:Collection
@@ -82,9 +107,9 @@ extension Optional where Wrapped == Word
         switch(self)
             {
             case .some(let word):
-                return(word.objectAddress)
+                return(word.pointerAddress)
             default:
-                return(Address(0).objectAddress)
+                return(Address(0).pointerAddress)
             }
         }
         
@@ -118,9 +143,9 @@ extension Optional where Wrapped:Pointer
         switch(self)
             {
             case .some(let word):
-                return(word.cleanAddress.objectAddress)
+                return(word.cleanAddress.pointerAddress)
             default:
-                return(Address(0).objectAddress)
+                return(Address(0).pointerAddress)
             }
         }
         

@@ -9,6 +9,11 @@ import Foundation
 
 public class SlotExpression: Expression
     {
+    public override var isReadOnlyExpression: Bool
+        {
+        self.slot.slotType.contains(.kReadOnlySlot)
+        }
+        
     public override var displayString: String
         {
         return("\(self.slot.label)")
@@ -51,6 +56,7 @@ public class SlotExpression: Expression
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let newSlot = substitution.substitute(self.slot)
+        newSlot.offset = self.slot.offset
         let expression = SlotExpression(slot: newSlot) as! Self
         substitution.typeContext?.bind(newSlot.type,to: newSlot.label)
         expression.issues = self.issues
@@ -68,21 +74,23 @@ public class SlotExpression: Expression
         self.type = self.slot.type
         }
         
-    public override func assign(from expression: Expression,into: T3ABuffer,using: CodeGenerator) throws
+    public override func assign(from expression: Expression,into: InstructionBuffer,using: CodeGenerator) throws
         {
         try expression.emitValueCode(into: into,using: using)
-        try self.emitPointerCode(into: into,using: using)
-        into.append(.STP,expression.place,.none,self.place)
+        try self.emitAddressCode(into: into,using: using)
+        into.add(.STOREP,expression.place,self.place,.integer(0))
         }
         
-    public override func emitValueCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.slot.emitRValue(into: buffer,using: using)
+        self._place = self.slot.place
         }
         
-    public override func emitPointerCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitAddressCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.slot.emitLValue(into: buffer,using: using)
+        self._place = self.slot.place
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -94,14 +102,14 @@ public class SlotExpression: Expression
             }
         }
 
-    public override func emitCode(into instance: T3ABuffer, using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer, using generator: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
-        let temp = instance.nextTemporary()
-        instance.append(.MOV,.frameOffset(self.slot.offset),.none,temp)
+        let temp = instance.nextTemporary
+        instance.add(.MOVE,.frameOffset(self.slot.offset),temp)
         self._place = temp
         }
     }

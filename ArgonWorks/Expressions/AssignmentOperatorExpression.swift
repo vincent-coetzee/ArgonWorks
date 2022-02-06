@@ -85,18 +85,14 @@ public class AssignmentOperatorExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
         try self.lhs.emitCode(into: instance,using: generator)
         try self.rhs.emitCode(into: instance,using: generator)
-        instance.append(.MOVP,self.lhs.place,rhs.place,.none)
-        if rhs.place.isNone
-            {
-            print("WARNING: In AssignmentExpression in line \(self.declaration!) RHS.place == .none")
-            }
+        instance.add(.i64,.MOVE,self.lhs.place,rhs.place,.none)
         }
     }

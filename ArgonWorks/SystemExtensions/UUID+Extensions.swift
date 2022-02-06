@@ -14,20 +14,17 @@ fileprivate var SystemUUIDCounter = 1
     
 extension UUID
     {
-    public static func startSystemUUIDs()
+    init(system: Int)
         {
-        _GeneratingSystemUUIDS = true
-        }
-    
-    public static func stopSystemUUIDs()
-        {
-        _GeneratingSystemUUIDS = false
-        }
-    
-    init(index: Int)
-        {
-        let bottomString = String(format: "%012X",index)
+        let bottomString = String(format: "%012X",system)
         let string = "00000000-0000-0000-0000-" + bottomString
+        self.init(uuidString: string)!
+        }
+        
+    init(standard: Int)
+        {
+        let topString = String(format: "%08X",standard)
+        let string = topString + "-0000-0000-0000-000000000000"
         self.init(uuidString: string)!
         }
         

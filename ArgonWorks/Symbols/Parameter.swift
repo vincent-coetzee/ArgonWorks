@@ -53,8 +53,11 @@ public class Parameter:LocalSlot,Displayable
         super.init(label: label,type: type,value: nil)
         }
     
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator)
         {
+        let temp = buffer.nextTemporary
+        buffer.add(.MOVE,.frameOffset(self.offset),temp)
+        self.place = temp
         }
         
     required init(labeled: Label, ofType: Type) {
@@ -90,6 +93,15 @@ public class Parameter:LocalSlot,Displayable
         let newType = self.type.freshTypeVariable(inContext: context)
         let newParameter = Parameter(label: self.label, relabel: self.relabel, type: newType, isVisible: self.isVisible, isVariadic: self.isVariadic)
         return(newParameter as! Self)
+        }
+        
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? Parameter
+            {
+            return(self.label == second.label && self.type == second.type && self.relabel == second.relabel && self.isVisible == second.isVisible)
+            }
+        return(super.isEqual(object))
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self

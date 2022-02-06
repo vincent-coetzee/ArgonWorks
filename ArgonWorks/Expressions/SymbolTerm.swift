@@ -69,17 +69,23 @@ public class SymbolTerm: Expression
         super.encode(with: coder)
         }
         
-    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
-        fatalError()
+        try self.emitAddressCode(into: into,using: using)
         }
         
-    public override func emitPointerCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitAddressCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         switch(self.termType)
             {
             case .type(let type):
-                fatalError()
+                let temp = into.nextTemporary
+                into.add(.MOVE,.address(type.memoryAddress),temp)
+                self._place = temp
+            case .module(let module):
+                let temp = into.nextTemporary
+                into.add(.MOVE,.address(module.memoryAddress),temp)
+                self._place = temp
             default:
                 fatalError()
             }

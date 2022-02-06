@@ -85,7 +85,7 @@
 			<string>Argon Project File</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
-				<string>ARP</string>
+				<string>ARPP</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
@@ -103,7 +103,7 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>arv</string>
+				<string>argonv</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>VelocityIcon</string>
@@ -117,12 +117,12 @@
 			<string>Argon Velocity File</string>
 			<key>CFBundleTypeOSTypes</key>
 			<array>
-				<string>ARV</string>
+				<string>ARVV</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
-			<string>Owner</string>
+			<string>None</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>com.macsemantics.argon.velocity</string>
@@ -227,7 +227,7 @@
 			<dict>
 				<key>public.filename-extension</key>
 				<array>
-					<string>arv</string>
+					<string>argonv</string>
 				</array>
 				<key>public.mime-type</key>
 				<array>

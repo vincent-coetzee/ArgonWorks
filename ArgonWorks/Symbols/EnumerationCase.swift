@@ -9,6 +9,17 @@ import AppKit
 
 public class EnumerationCase:Symbol
     {
+    public static func ==(lhs: EnumerationCase,rhs: EnumerationCase) -> Bool
+        {
+        lhs.caseIndex == rhs.caseIndex && lhs.enumeration.index == rhs.enumeration.index && lhs.associatedTypes == rhs.associatedTypes
+        }
+        
+        
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
     public override var argonHash: Int
         {
         var hashValue = super.argonHash
@@ -48,7 +59,7 @@ public class EnumerationCase:Symbol
             }
         }
         
-    public var instanceSizeInBytes: Int
+    public override var instanceSizeInBytes: Int
         {
         ///
         /// 1 word for the instance + 1 word for every associated value
@@ -78,8 +89,30 @@ public class EnumerationCase:Symbol
     public var caseSizeInBytes:Int = 0
     public weak var enumeration: TypeEnumeration!
     public var caseIndex = -1
-    public var symbolMemoryAddress: Address = 0
+    public var symbolIndex: Int = 0
     
+    public func clone() -> Self
+        {
+        let copy = Self(label: self.label)
+        copy.setIndex(self.index)
+        copy.associatedTypes = self.associatedTypes
+        copy.symbol = self.symbol
+        copy.rawValue = self.rawValue
+        copy.enumeration = self.enumeration
+        copy.caseIndex = self.caseIndex
+        copy.symbolIndex = self.symbolIndex
+        return(copy)
+        }
+        
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? EnumerationCase
+            {
+            return(self.symbol == second.symbol && self.caseIndex == second.caseIndex && self.associatedTypes == second.associatedTypes && self.enumeration.index == second.enumeration.index)
+            }
+        return(super.isEqual(object))
+        }
+        
     init(symbol: Argon.Symbol,types: Types,enumeration: TypeEnumeration)
         {
         self.enumeration = enumeration
@@ -116,7 +149,7 @@ public class EnumerationCase:Symbol
         super.encode(with: coder)
         }
         
-   public override func allocateAddresses(using allocator: AddressAllocator) throws
+   public override func allocateAddresses(using allocator: AddressAllocator)
         {
         guard !self.wasAddressAllocationDone else
             {
@@ -124,7 +157,6 @@ public class EnumerationCase:Symbol
             }
         self.wasAddressAllocationDone = true
         allocator.allocateAddress(for: self)
-        self.symbolMemoryAddress = allocator.registerSymbol(self.symbol)
         }
         
     public override func layoutInMemory(using allocator: AddressAllocator)
@@ -138,12 +170,12 @@ public class EnumerationCase:Symbol
         let enumCaseType = ArgonModule.shared.enumerationCase
         let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
         enumCasePointer.setClass(enumCaseType)
-        let symbolAddress = allocator.payload.symbolRegistry.registerSymbol(self.symbol)
-        enumCasePointer.setAddress(symbolAddress,atSlot: "symbol")
+        self.symbolIndex = allocator.payload.symbolRegistry.registerSymbol(self.symbol)
+        enumCasePointer.setInteger(self.symbolIndex,atSlot: "symbol")
         enumCasePointer.setInteger(self.caseIndex,atSlot: "index")
         if self.associatedTypes.isEmpty
             {
-            enumCasePointer.setAddress(0,atSlot: "associatedTypes")
+            enumCasePointer.setAddress(nil,atSlot: "associatedTypes")
             }
         else
             {

@@ -24,9 +24,9 @@ public class ReturnBlock: Block
         return(true)
         }
         
-    public var value: Expression = Expression()
+    public var value: Expression?
         
-    public init(expression: Expression)
+    public init(expression: Expression?)
         {
         self.value = expression
         super.init()
@@ -34,7 +34,7 @@ public class ReturnBlock: Block
     
     public required init?(coder: NSCoder)
         {
-        self.value = coder.decodeObject(forKey: "value") as! Expression
+        self.value = coder.decodeObject(forKey: "value") as? Expression
         super.init(coder: coder)
         }
         
@@ -53,31 +53,35 @@ public class ReturnBlock: Block
     public override func display(indent: String)
         {
         print("\(indent)RETURN: \(Swift.type(of: self))")
-        self.value.display(indent: indent + "\t")
+        if self.value.isNotNil
+            {
+            self.value!.display(indent: indent + "\t")
+            }
         }
         
     public override func visit(visitor: Visitor) throws
         {
-        try self.value.visit(visitor: visitor)
+        try self.value?.visit(visitor: visitor)
         try super.visit(visitor: visitor)
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let block = ReturnBlock(expression: substitution.substitute(self.value))
-        block.type = substitution.substitute(self.type)
-        return(block as! Self)
+        let newBlock = super.substitute(from: substitution)
+        newBlock.value = self.value.isNil ? nil : substitution.substitute(self.value!)
+        newBlock.type = substitution.substitute(self.type)
+        return(newBlock)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
-        self.value.initializeType(inContext: context)
-        self.type = self.value.type
+        self.value?.initializeType(inContext: context)
+        self.type = self.value.isNotNil ? self.value!.type : ArgonModule.shared.void
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        self.value.initializeTypeConstraints(inContext: context)
+        self.value?.initializeTypeConstraints(inContext: context)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -86,14 +90,18 @@ public class ReturnBlock: Block
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let block = ReturnBlock(expression: self.value.freshTypeVariable(inContext: context))
+        let block = ReturnBlock(expression: self.value?.freshTypeVariable(inContext: context))
         block.type = self.type.freshTypeVariable(inContext: context)
         return(block as! Self)
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        try self.value.emitCode(into: buffer,using: generator)
-        buffer.append(nil,.MOV,self.value.place,.none,.returnValue)
+        try self.value?.emitCode(into: buffer,using: generator)
+        if self.value.isNotNil
+            {
+            buffer.add(.MOVE,self.value!.place,.register(.RR))
+            }
+        buffer.add(.RET)
         }
     }

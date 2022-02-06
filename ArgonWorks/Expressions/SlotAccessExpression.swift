@@ -21,6 +21,9 @@ public class SlotAccessExpression: Expression
     private var isLValue = false
     private var selector: String?
      
+    public var isSlotReader = false
+    public var isSlotWriter = false
+    
     required init?(coder: NSCoder)
         {
 //        print("START DECODE SLOT ACCESS EXPRESSION")
@@ -78,19 +81,20 @@ public class SlotAccessExpression: Expression
         return(expression as! Self)
         }
         
-    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func assign(from expression: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         try expression.emitValueCode(into: buffer,using: using)
-        try self.receiver.emitPointerCode(into: buffer,using: using)
-        let temporary = buffer.nextTemporary()
+        try self.receiver.emitAddressCode(into: buffer,using: using)
+        let temporary = buffer.nextTemporary
         if let slot = self.slot
             {
-            buffer.append(.IADD64,self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
-            buffer.append(.STP,expression.place,.none,temporary)
+            buffer.add(.i64,.ADD,self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
+            buffer.add(.STOREP,expression.place,temporary,.integer(0))
             }
         else
             {
-            buffer.append(.STSD,.address(using.emitStaticString(self.slotLabel)))
+            buffer.add(.LOOKUP,self.receiver.place,.address(using.emitStaticString(self.slotLabel)),temporary)
+            buffer.add(.STOREP,expression.place,temporary,.integer(0))
             }
         self._place = temporary
         }
@@ -101,16 +105,20 @@ public class SlotAccessExpression: Expression
         self.type = context.freshTypeVariable()
         }
 
-    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
-        try self.receiver.emitPointerCode(into: into,using: using)
+        try self.receiver.emitAddressCode(into: into,using: using)
+        let temporary = into.nextTemporary
         if let slot = self.slot
             {
-            let temporary = into.nextTemporary()
-            into.append(.IADD64,.integer(Argon.Integer(slot.offset)),.none,temporary)
-            into.append(.LDP,temporary,.none,temporary)
-            self._place = temporary
+            into.add(.i64,.ADD,.integer(Argon.Integer(slot.offset)),temporary)
+            into.add(.LOADP,temporary,.integer(0),temporary)
             }
+        else
+            {
+            into.add(.LOOKUP,self.receiver.place,.address(using.emitStaticString(self.slotLabel)),temporary)
+            }
+        self._place = temporary
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -119,7 +127,7 @@ public class SlotAccessExpression: Expression
         let aType = self.receiver.type
         if !aType.isTypeVariable
             {
-            if let aSlot = aType.lookup(label: self.slotLabel) as? Slot
+            if let aSlot = aType.lookup(label: self.slotLabel.withoutHash()) as? Slot
                 {
                 self.slot = aSlot
                 self.type = aSlot.type
@@ -135,7 +143,7 @@ public class SlotAccessExpression: Expression
             }
         else
             {
-            self.slot = Slot(label: self.slotLabel)
+            self.slot = Slot(label: self.slotLabel.withoutHash())
             context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
             context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
             context.append(TypeConstraint(left: self.slot!.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))

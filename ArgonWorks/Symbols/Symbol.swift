@@ -8,8 +8,68 @@
 import Foundation
 import AppKit
 
-public class Symbol:Node,VisitorReceiver,IssueHolder
+public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
     {
+//    public override var className: String
+//        {
+//        "\(Swift.type(of: self))"
+//        }
+        
+    public var classLabel: String
+        {
+        "\(Swift.type(of: self)) \(self.label)"
+        }
+        
+    public var memoryAddressField: String
+        {
+        String(format: "%010llX",self.memoryAddress)
+        }
+        
+    public var typeNameField: String
+        {
+        self.type.isNil ? "nil" : "\(Swift.type(of: self.type!))(\(self.type!.label))"
+        }
+        
+    public var outlineItemFields: Dictionary<String, FieldBox>
+        {
+        var fields = Dictionary<String,FieldBox>()
+        fields["class"] = FieldBox(label: "class",root: self,keyPath: \Symbol.classLabel)
+        fields["index"] = FieldBox(label: "index",root: self,keyPath: \Symbol.index)
+        fields["memoryAddress"] = FieldBox(label: "memoryAddress",root: self,keyPath: \Symbol.memoryAddressField)
+        fields["container"] = FieldBox(label: "container",root: self,keyPath: \Symbol.container)
+        fields["typeName"] = FieldBox(label: "typeName",root: self,keyPath: \Symbol.typeNameField)
+        return(fields)
+        }
+    
+    public var childOutlineItemCount: Int
+        {
+        1
+        }
+
+    public var hasChildOutlineItems: Bool
+        {
+        true
+        }
+        
+    public var isOutlineItemExpandable: Bool
+        {
+        true
+        }
+
+    public func childOutlineItem(atIndex: Int) -> OutlineItem
+        {
+        if atIndex == 0
+            {
+            return(self.type)
+            }
+        fatalError()
+        }
+    
+    public static func ==(lhs:Symbol,rhs:Symbol) -> Bool
+        {
+        lhs.fullName == rhs.fullName
+        }
+        
     public var argonHash: Int
         {
         let hash1 = "Swift.type(of: self)".polynomialRollingHash
@@ -21,7 +81,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public var fullName: Name
         {
-        self.container.fullName + self.label
+        if self.module.isNil
+            {
+            return(Name("\\\\"))
+            }
+        return(self.module.fullName + self.label)
         }
         
     public var isEnumerationInstanceClass: Bool
@@ -59,11 +123,26 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         return(false)
         }
         
+    ///
+    /// This is the size in memory of the actual structure this represents.
+    /// For example: the sizeInBytes of a TypeClass is the size of an instance
+    /// of a class in memory.
+    ///
     public var sizeInBytes: Int
         {
         fatalError()
         }
-        
+    ///
+    ///
+    /// This number represents the size of the actual instance of one of the
+    /// receiver's types in memory. For example, the instance size in bytes is
+    /// the amount of space an instance of the given class will take in memory.
+    ///
+    ///
+    public var instanceSizeInBytes: Int
+        {
+        fatalError()
+        }
     public var extraSizeInBytes: Int
         {
         0
@@ -246,6 +325,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         return(false)
         }
         
+    public var moduleScope: Module?
+        {
+        nil
+        }
+        
     public var typeCode:TypeCode
         {
         fatalError("TypeCode being called on Symbol which is not valid")
@@ -272,6 +356,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         }
         
     internal var wasAddressAllocationDone = false
+    internal var wasInstallationDone = false
     internal var wasMemoryLayoutDone = false
     internal var wasSlotLayoutDone = false
     internal var locations: SourceLocations = SourceLocations()
@@ -280,14 +365,16 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
     public private(set) var loader: Loader?
     public var issues = CompilerIssues()
     public var type: Type!
-    public var place: T3AInstruction.Operand = .none
-    public var memoryAddress: Address = 0
-    public private(set) var container: Container = .none
-    public var module: Module!
+    public var place: Instruction.Operand = .none
+    public private(set) var memoryAddress: Address = 0
+    public var container: Container = .none
+    public private(set) var module: Module!
+    public var ancestors = Symbols()
     
     public required init(label: Label)
         {
         super.init(label: label)
+        self.ancestors.append(self)
         }
         
     public required init?(coder: NSCoder)
@@ -295,11 +382,15 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        #if DEBUG
 //        print("START DECODE SYMBOL")
 //        #endif
-        self.type = coder.decodeObject(forKey: "theType") as? Type
+        self.wasAddressAllocationDone = coder.decodeBool(forKey: "wasAddressAllocationDone")
+        self.wasMemoryLayoutDone = coder.decodeBool(forKey: "wasMemoryLayoutDone")
+        self.wasSlotLayoutDone = coder.decodeBool(forKey: "wasSlotLayoutDone")
+        self.type = coder.decodeObject(forKey: "type") as? Type
         self.memoryAddress = Address(coder.decodeInteger(forKey: "memoryAddress"))
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
         self.container = coder.decodeContainer(forKey: "container")
         self.module = coder.decodeObject(forKey: "module") as? Module
+        self.locations = coder.decodeSourceLocations(forKey: "symboloLocations")
         super.init(coder: coder)
 //        #if DEBUG
 //        print("END DECODE SYMBOL \(self.label)")
@@ -311,33 +402,42 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        #if DEBUG
 //        print("ENCODE SYMBOL \(self.label)")
 //        #endif
-        coder.encode(self.container,forKey: "container")
-        coder.encode(self.type,forKey: "theType")
+        coder.encode(self.wasAddressAllocationDone,forKey: "wasAddressAllocationDone")
+        coder.encode(self.wasMemoryLayoutDone,forKey: "wasMemoryLayoutDone")
+        coder.encode(self.wasSlotLayoutDone,forKey: "wasSlotLayoutDone")
+        coder.encodeSourceLocations(self.locations,forKey: "symbolLocations")
+        coder.encodeContainer(self.container,forKey: "container")
+        coder.encode(self.type,forKey: "type")
         coder.encode(Int(self.memoryAddress),forKey: "memoryAddress")
         coder.encodeCompilerIssues(self.issues,forKey: "issues")
         coder.encode(self.module,forKey: "module")
         super.encode(with: coder)
         }
         
-    public func setContainer(_ container: Container)
+    public override func isEqual(_ object: Any?) -> Bool
         {
-        self.container = container
+        if let second = object as? Symbol
+            {
+            return(self.label == second.label && self.module == second.module)
+            }
+        return(super.isEqual(object))
         }
         
-    public func setContainer(_ scope:Scope?)
+    public func setModule(_ module: Module)
         {
-        self.container = .scope(scope!)
+        self.module = module
         }
         
-   public func allocateAddresses(using: AddressAllocator) throws
+    public func setMemoryAddress(_ address: Address)
         {
+        self.memoryAddress = address
         }
         
     public func emitCode(using: CodeGenerator) throws
         {
         }
         
-    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
+    public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
 //        fatalError("Should not have been called")
         }
@@ -356,6 +456,10 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        }
+        
+    public func inferType(inContext context: TypeContext)
         {
         }
         
@@ -396,15 +500,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
                 {
                 if self is TypeClass && self.isSystemType
                     {
-                    print("Error substituting class, should be type")
+                    fatalError()
                     }
                 exporter.noteSwappedSystemType(self)
                 let holder = SystemSymbolPlaceholder(original: self)
-                if self.argonHash == 0
-                    {
-                    print("halt")
-                    }
-                print("SUBSTITUTING \(self.argonHash) \(self.displayString)")
+                assert(self.argonHash != 0)
                 return(holder)
                 }
             if exporter.isSwappingImportedSymbols && self.isImported
@@ -417,17 +517,17 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         return(self)
         }
         
-    public func assign(from: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+    public func assign(from: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
         }
         
-    public func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been overriden in a subclass.")
         }
         
-    public func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
         }
@@ -435,6 +535,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
     public func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let copy = Self.init(label: self.label)
+        copy.setIndex(self.index)
         copy.type = substitution.substitute(self.type)
         copy.issues = self.issues
         return(copy)
@@ -693,14 +794,35 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public func layoutObjectSlots()
         {
+        self.wasSlotLayoutDone = true
         }
         
     public func layoutInMemory(using: AddressAllocator)
         {
+        self.wasMemoryLayoutDone = true
         }
         
     public func install(inContext: ExecutionContext)
         {
+        self.wasInstallationDone = true
+        }
+        
+    public func inferType()
+        {
+        }
+        
+        
+   public func allocateAddresses(using: AddressAllocator)
+        {
+        self.wasAddressAllocationDone = true
+        }
+        
+    public func prepareSymbol(allocator: AddressAllocator)
+        {
+        self.layoutObjectSlots()
+        self.allocateAddresses(using: allocator)
+        self.layoutInMemory(using: allocator)
+        self.install(inContext: allocator.payload)
         }
         
     public func addDeclaration(_ location:Location)

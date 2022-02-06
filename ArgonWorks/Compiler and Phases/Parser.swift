@@ -15,6 +15,21 @@ public enum ParseError: Error
         
 public class Parser: CompilerPass
     {
+    private var enclosingModule: Module
+        {
+        var aScope = self.currentScope
+        while aScope.moduleScope.isNil
+            {
+            aScope = aScope.parentScope!
+            }
+        return(aScope.moduleScope as! Module)
+        }
+        
+    private var enclosingMethodInstance: MethodInstance
+        {
+        self.currentScope.enclosingMethodInstance
+        }
+        
     internal private(set) var token:Token = .none
     private var lastToken:Token = .none
     public let compiler:Compiler
@@ -99,7 +114,7 @@ public class Parser: CompilerPass
     private func pushContext(_ scope: Scope)
         {
         var newScope = scope
-        newScope.parentScope = self.currentScope
+        newScope.container = self.currentScope.asContainer
         self.scopeStack.push(self.currentScope)
         self.currentScope = scope
         }
@@ -284,6 +299,7 @@ public class Parser: CompilerPass
 
     private func parseMainMethod() throws
         {
+        try self.nextToken()
         let method = try self.parseMethodInstance()
         method.isMainMethod = true
         }
@@ -413,6 +429,10 @@ public class Parser: CompilerPass
                     }
                 else
                     {
+                    if self.token.isMainDirective
+                        {
+                        try self.nextToken()
+                        }
                     if !self.token.isKeyword
                         {
                         return
@@ -532,7 +552,7 @@ public class Parser: CompilerPass
         let location = self.token.location
         let operatorKindToken = self.token
         try self.nextToken()
-//        var primitiveIndex:Argon.Integer = 0
+        var primitiveIndex:Argon.Integer = 0
         var issues = CompilerIssues()
         if self.token.isPrimitive
             {
@@ -545,10 +565,10 @@ public class Parser: CompilerPass
                     self.cancelCompletion()
                     issues.appendIssue(at: location, "A PRIMITIVE index was expected after the PRIMITIVE keyword.")
                     }
-//                else
-//                    {
-//                    primitiveIndex = self.token.integerLiteral
-//                    }
+                else
+                    {
+                    primitiveIndex = self.token.integerLiteral
+                    }
                 try self.nextToken()
                 }
             }
@@ -637,6 +657,10 @@ public class Parser: CompilerPass
         instance.addDeclaration(location)
         self.addSymbol(instance)
         instance.addTemporaries(types)
+        if isPrimitive
+            {
+            (instance as! PrimitiveInstance).primitiveIndex = primitiveIndex
+            }
         if !isPrimitive
             {
             try self.parseBraces
@@ -817,9 +841,9 @@ public class Parser: CompilerPass
         let label = try self.parseLabel()
 //        let enumeration = Enumeration(label: label)
         var rawType = ArgonModule.shared.integer
-        let type = Argon.addType(TypeEnumeration(label: label, generics: [])) as! TypeEnumeration
-        type.setContainer(.type(type))
-        type.module = (self.currentScope as! Module)
+        let type = TypeEnumeration(label: label, generics: [])
+        type.container = .module(self.currentScope as! Module)
+        type.setModule(self.currentScope as! Module)
         self.addSymbol(type)
         type.addDeclaration(location)
         var issues = CompilerIssues()
@@ -846,6 +870,11 @@ public class Parser: CompilerPass
         let parms = [Parameter(label: "symbol", type: ArgonModule.shared.symbol, isVisible: false, isVariadic: false)]
         let methodInstance = EnumerationCaseMethodInstance(label: "_\(label)",parameters: parms,returnType: type)
         methodInstance.addDeclaration(location)
+        let rawValueInstance = PrimitiveMethodInstance(label: "rawValue")
+        rawValueInstance.primitiveIndex = 200
+        rawValueInstance.addParameterSlot(Parameter(label: "enumeration",type: type))
+        rawValueInstance.returnType = ArgonModule.shared.symbol
+        self.addSymbol(rawValueInstance)
 //        let method = Method(label: "_\(label)")
 //        method.addDeclaration(location)
         self.addSymbol(methodInstance)
@@ -1100,19 +1129,11 @@ public class Parser: CompilerPass
                 let name = try self.parseName()
                 if let value = self.currentScope.lookup(name: name) as? Type
                     {
-                    if value.isTypeVariable
-                        {
-                        types.append(value)
-                        }
-                    else
-                        {
-//                        issues.appendIssue(at: self.token.location,"A concrete type '\(name.displayString)' is not valid here.")
-                        types.append(value)
-                        }
+                    types.append(value)
                     }
                 else
                     {
-                    let type = TypeVariable(label: name.last)
+                    let type = TypeContext.freshTypeVariable(named: name.last)
                     types.append(type)
                     self.addSymbol(type)
                     }
@@ -1213,15 +1234,15 @@ public class Parser: CompilerPass
             {
             if typeParameters.isEmpty
                 {
-                aClass = Argon.addType(TypeClass(label: label,generics: [])) as? TypeClass
+                aClass = TypeClass(label: label,generics: [])
                 }
             else
                 {
-                aClass = Argon.addType(TypeClass(label: label,generics: typeParameters)) as? TypeClass
+                aClass = TypeClass(label: label,generics: typeParameters)
                 }
             }
         aClass!.addDeclaration(location)
-        aClass!.module = (self.currentScope as! Module)
+        aClass!.setModule(self.currentScope as! Module)
         if !classExists
             {
             self.addSymbol(aClass!)
@@ -1232,6 +1253,7 @@ public class Parser: CompilerPass
             }
         if self.token.isGluon
             {
+            try self.nextToken()
             var issues = CompilerIssues()
             let aSuper = try self.parseType(&issues)
             aClass!.setSupertype(aSuper)
@@ -1248,14 +1270,20 @@ public class Parser: CompilerPass
                 if self.token.isSlot
                     {
                     let slot = try self.parseSlot()
-                    aClass!.addLayoutSlot(slot)
+                    aClass!.addInstanceSlot(slot)
+                    let reader = aClass!.slotReader(forSlot: slot)
+                    reader.isAutoGenerated = true
+                    self.addSymbol(reader)
+                    let writer = aClass!.slotWriter(forSlot: slot)
+                    writer.isAutoGenerated = true
+                    self.addSymbol(writer)
                     }
                 else if self.token.isClass
                     {
                     if try self.peekToken1().isSlot
                         {
                         let slot = try self.parseClassSlot()
-                        aClass!.type.addLayoutSlot(slot)
+                        aClass!.type.addInstanceSlot(slot)
                         }
                     else
                         {
@@ -1268,6 +1296,8 @@ public class Parser: CompilerPass
                     }
                 }
             }
+        aClass!.initMetatype(inModule: aClass!.module)
+        aClass!.layoutObjectSlots()
         return(aClass!)
         }
         
@@ -1371,6 +1401,28 @@ public class Parser: CompilerPass
         return(value)
         }
         
+    internal func parseBrackets<T>(_ closure: () throws -> T)  throws -> T
+        {
+        if !self.token.isLeftBracket
+            {
+            self.currentScope.appendIssue(at: self.token.location,message: "'[' was expected but \(self.token) was found.")
+            }
+        else
+            {
+            try self.nextToken()
+            }
+        let value = try closure()
+        if !self.token.isRightBracket
+            {
+            self.currentScope.appendIssue(at: self.token.location,message: "']' was expected but \(self.token) was found.")
+            }
+        else
+            {
+            try self.nextToken()
+            }
+        return(value)
+        }
+        
     private func parseComma() throws
         {
         if self.token.isComma
@@ -1403,7 +1455,7 @@ public class Parser: CompilerPass
         let identifierToken = self.token
         if self.token.isIdentifier && self.token.isSystemClassName
             {
-            self.tokenRenderer.setKind(.type,ofToken: self.token)
+            self.tokenRenderer.setKind(.systemClass,ofToken: self.token)
             let lastPart = self.token.identifier
             name = Name("\\\\Argon\\" + lastPart)
             }
@@ -1475,8 +1527,8 @@ public class Parser: CompilerPass
             {
             if !parameters.isEmpty
                 {
-                let newType = Argon.addType(TypeClass(label: type.label,isSystem: type.isSystemClass,generics: parameters))
-                newType.module = self.currentScope.module
+                let newType = type.withGenerics(parameters)
+                newType.setModule(self.enclosingModule)
                 type = newType
                 }
             type.addReference(location)
@@ -1596,7 +1648,7 @@ public class Parser: CompilerPass
             issues.appendIssue(at: location, message: "'->' was expected in a method reference type but '\(self.token)' was found.")
             }
         try self.nextToken()
-        let type = Argon.addType(TypeFunction(label: "",types: types, returnType: try self.parseType(&issues)))
+        let type = TypeFunction(label: "FunctionType",types: types, returnType: try self.parseType(&issues))
         type.appendIssues(issues)
         return(type)
         }
@@ -1692,7 +1744,9 @@ public class Parser: CompilerPass
         let name = try self.parseLabel()
         let instance = StandardMethodInstance(label: name)
         var isGenericMethod = false
+        self.enclosingModule.addSymbol(instance)
         self.pushContext(instance)
+        instance.setModule(self.enclosingModule)
         var types: Types = []
         var issues = CompilerIssues()
         if self.token.isLeftBrocket
@@ -1702,8 +1756,11 @@ public class Parser: CompilerPass
             isGenericMethod = true
             }
         instance.parameters = try self.parseParameters()
+        for parameter in instance.parameters
+            {
+            instance.block.addParameterSlot(parameter)
+            }
         instance.returnType = ArgonModule.shared.void
-        instance.module = self.currentScope.module
         if self.token.isRightArrow
             {
             try self.nextToken()
@@ -1712,29 +1769,34 @@ public class Parser: CompilerPass
         if isGenericMethod
             {
             instance.isGenericMethod = true
-            instance.genericParameters = types
             }
         instance.addDeclaration(location)
         instance.appendIssues(issues)
-        instance.block.addParameters(instance.parameters)
-        self.popContext()
-        if let instances = self.currentScope.lookupMethodInstances(name: Name(instance.label))
+        if var instances = self.currentScope.lookupMethodInstances(name: Name(instance.label))
             {
+            instances.removeAll(where: {$0 === instance})
             for methodInstance in instances
                 {
                 if methodInstance.typeSignature == instance.typeSignature
                     {
-                    instance.appendIssue(at: location,message: "There is already a method instance with this signature defined.",isWarning: true)
+                    if methodInstance.isAutoGenerated
+                        {
+                        self.enclosingModule.removeSymbol(methodInstance)
+                        }
+                    else
+                        {
+                        instance.appendIssue(at: location,message: "There is already a method instance with this signature defined.",isWarning: true)
+                        }
                     }
                 }
             }
-        self.currentScope.addSymbol(instance)
         try self.parseBraces
             {
             self.pushContext(instance.block)
             try self.parseBlock(into: instance.block)
             self.popContext()
             }
+        self.popContext()
         if instance.returnType != ArgonModule.shared.void && !instance.block.hasInlineReturnBlock
             {
             self.cancelCompletion()
@@ -1780,79 +1842,92 @@ public class Parser: CompilerPass
         let location = self.token.location
         var lhs = try self.parseInfixExpression()
         lhs.addDeclaration(location)
-        while self.token.isRightArrow
+        while self.token.isHashStringLiteral
             {
-            try self.nextToken()
-            if !(self.token.isIdentifier || self.token.isHashStringLiteral)
+            let methodInstance = self.enclosingMethodInstance
+            if !methodInstance.isPotentialSlotReader && !methodInstance.isPotentialSlotWriter
                 {
                 self.cancelCompletion()
-                lhs.appendIssue(at: location,message:"Slot selector expected but '\(self.token)' was found.")
+                lhs.appendIssue(at: location,message:"Raw slot access using '->' is only allowed in slot readers and slot writers.")
                 }
-            else
-                {
-                let selector = self.token.isIdentifier ? self.token.identifier : self.token.hashStringLiteral
-                lhs = SlotAccessExpression(lhs,slotLabel: selector)
-                }
+            let selector = self.token.hashStringLiteral
             try self.nextToken()
-            if lhs.isEnumerationCaseExpression && lhs.enumerationCase.hasAssociatedValues && self.token.isLeftPar
+//            if let slot = lhs.lookup(label: selector.withoutHash)
+//                {
+//                }
+//            else
+//                {
+//                }
+            let accessor = SlotAccessExpression(lhs,slotLabel: selector)
+            if methodInstance.isPotentialSlotReader
                 {
-                lhs = try self.parseAssociatedTypes(in: lhs)
+                accessor.isSlotReader = true
                 }
+            else if methodInstance.isPotentialSlotWriter
+                {
+                accessor.isSlotWriter = true
+                }
+            lhs = accessor
+//            try self.nextToken()
+//            if lhs.isEnumerationCaseExpression && lhs.enumerationCase.hasAssociatedValues && self.token.isLeftPar
+//                {
+//                lhs = try self.parseAssociatedTypes(in: lhs)
+//                }
             }
         return(lhs)
         }
         
-    private func parseAssociatedTypes(in expression: Expression) throws -> Expression
-        {
-        let location = self.token.location
-        let aCase = expression.enumerationCase
-        let types = aCase.associatedTypes
-        var values = Expressions()
-        var isInducing = false
-        var variableNames = Array<String>()
-        try self.parseParentheses
-            {
-            repeat
-                {
-                try self.parseComma()
-                if self.token.isIdentifier && isInducing
-                    {
-                    variableNames.append(self.token.identifier)
-                    try self.nextToken()
-                    }
-                else if self.token.isIdentifier && self.currentScope.lookup(label: self.token.identifier).isNil
-                    {
-                    isInducing = true
-                    variableNames.append(self.token.identifier)
-                    try self.nextToken()
-                    }
-                else
-                    {
-                    values.append(try self.parseExpression())
-                    }
-                }
-            while self.token.isComma
-            }
-        if isInducing
-            {
-            let newLeft = AssociatedValueInductionExpression(expression,variableNames)
-            for slot in newLeft.slots
-                {
-                self.addSymbol(slot)
-                }
-            if newLeft.enumerationCase.associatedTypes.count != newLeft.slots.count
-                {
-                fatalError()
-                }
-            return(newLeft)
-            }
-        if values.count != types.count
-            {
-            self.cancelCompletion()
-            expression.appendIssue(at: location,message: "The enumeration case \(aCase.label) expected \(types.count) associated values be found \(values.count).")
-            }
-        return(EnumerationInstanceExpression(lhs: expression,enumerationCase: aCase,associatedValues: values))
-        }
+//    private func parseAssociatedTypes(in expression: Expression) throws -> Expression
+//        {
+//        let location = self.token.location
+//        let aCase = expression.enumerationCase
+//        let types = aCase.associatedTypes
+//        var values = Expressions()
+//        var isInducing = false
+//        var variableNames = Array<String>()
+//        try self.parseParentheses
+//            {
+//            repeat
+//                {
+//                try self.parseComma()
+//                if self.token.isIdentifier && isInducing
+//                    {
+//                    variableNames.append(self.token.identifier)
+//                    try self.nextToken()
+//                    }
+//                else if self.token.isIdentifier && self.currentScope.lookup(label: self.token.identifier).isNil
+//                    {
+//                    isInducing = true
+//                    variableNames.append(self.token.identifier)
+//                    try self.nextToken()
+//                    }
+//                else
+//                    {
+//                    values.append(try self.parseExpression())
+//                    }
+//                }
+//            while self.token.isComma
+//            }
+//        if isInducing
+//            {
+//            let newLeft = AssociatedValueInductionExpression(expression,variableNames)
+//            for slot in newLeft.slots
+//                {
+//                self.addSymbol(slot)
+//                }
+//            if newLeft.enumerationCase.associatedTypes.count != newLeft.slots.count
+//                {
+//                fatalError()
+//                }
+//            return(newLeft)
+//            }
+//        if values.count != types.count
+//            {
+//            self.cancelCompletion()
+//            expression.appendIssue(at: location,message: "The enumeration case \(aCase.label) expected \(types.count) associated values be found \(values.count).")
+//            }
+//        return(EnumerationInstanceExpression(lhs: expression,enumerationCase: aCase,associatedValues: values))
+//        }
         
 //    private func parseIncDecExpression() throws -> Expression
 //        {
@@ -1943,7 +2018,12 @@ public class Parser: CompilerPass
             let symbol = token.symbol
             try self.nextToken()
             let rhs = try self.parseMultiplicativeExpression()
-            lhs = BinaryExpression(lhs, symbol, rhs)
+            let binary = BinaryExpression(lhs, symbol, rhs)
+            if let instances = self.currentScope.lookupN(label: symbol.rawValue) as? MethodInstances
+                {
+                binary.methodInstances = instances
+                }
+            lhs = binary
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -1959,7 +2039,12 @@ public class Parser: CompilerPass
             let symbol = token.symbol
             try self.nextToken()
             let rhs = try self.parsePowerExpression()
-            lhs = BinaryExpression(lhs, symbol, rhs)
+            let binary = BinaryExpression(lhs, symbol, rhs)
+            if let instances = self.currentScope.lookupN(label: symbol.rawValue) as? MethodInstances
+                {
+                binary.methodInstances = instances
+                }
+            lhs = binary
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -1975,7 +2060,12 @@ public class Parser: CompilerPass
             let symbol = token.symbol
             try self.nextToken()
             let rhs = try self.parseBitExpression()
-            lhs = BinaryExpression(lhs, symbol, rhs)
+            let binary = BinaryExpression(lhs, symbol, rhs)
+            if let instances = self.currentScope.lookupN(label: symbol.rawValue) as? MethodInstances
+                {
+                binary.methodInstances = instances
+                }
+            lhs = binary
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -1991,7 +2081,12 @@ public class Parser: CompilerPass
             let symbol = token.symbol
             try self.nextToken()
             let rhs = try self.parseUnaryExpression()
-            lhs = BinaryExpression(lhs, symbol, rhs)
+            let binary = BinaryExpression(lhs, symbol, rhs)
+            if let instances = self.currentScope.lookupN(label: symbol.rawValue) as? MethodInstances
+                {
+                binary.methodInstances = instances
+                }
+            lhs = binary
             lhs.addDeclaration(location)
             }
         return(lhs)
@@ -2094,16 +2189,19 @@ public class Parser: CompilerPass
         var issues = CompilerIssues()
         repeat
             {
-            try self.parseComma()
-            let expression = try self.parseExpression()
-            if !expression.isLiteralExpression
+            if !self.token.isRightBracket
                 {
-                self.cancelCompletion()
-                issues.append(CompilerIssue(location: location,message: "A literal expression was expected."))
-                }
-            else
-                {
-                elements.append((expression as! LiteralExpression).literal)
+                try self.parseComma()
+                let expression = try self.parseExpression()
+                if !expression.isLiteralExpression
+                    {
+                    self.cancelCompletion()
+                    issues.append(CompilerIssue(location: location,message: "A literal expression was expected."))
+                    }
+                else
+                    {
+                    elements.append((expression as! LiteralExpression).literal)
+                    }
                 }
             }
         while self.token.isComma
@@ -2174,6 +2272,11 @@ public class Parser: CompilerPass
             cast.addDeclaration(location)
             cast.appendIssues(issues)
             return(cast)
+            }
+        else if self.token.isDateLiteral
+            {
+            try self.nextToken()
+            return(LiteralExpression(.date(self.lastToken.dateLiteral)))
             }
         else if self.token.isIntegerLiteral
             {
@@ -2422,16 +2525,12 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
+        if name.last == "Float"
+            {
+            print()
+            }
         if self.token.isLeftPar
             {
-            if name.last == "class"
-                {
-                let expression = try self.parseParentheses
-                    {
-                    try self.parseExpression()
-                    }
-                return(ClassExpression(expression: expression))
-                }
             if let methods = self.currentScope.lookupMethodInstances(name: name)
                 {
                 return(try self.parseMethodInvocation(methods: methods,name:name,nameToken:nameToken,location: location))
@@ -2469,6 +2568,58 @@ public class Parser: CompilerPass
                 return(expression)
                 }
             }
+        if let enumeration  = self.currentScope.lookupEnumeration(name: name)
+            {
+            if self.token.isHashStringLiteral
+                {
+                let symbol = self.token.hashStringLiteral
+                try self.nextToken()
+                if self.token.isLeftBracket
+                    {
+                    var slotNames = Array<String>()
+                    try self.parseBrackets
+                        {
+                        repeat
+                            {
+                            try self.parseComma()
+                            if self.token.isIdentifier
+                                {
+                                slotNames.append(self.token.identifier)
+                                try self.nextToken()
+                                }
+                            }
+                        while self.token.isComma
+                        }
+                    if !self.token.isAssign
+                        {
+                        let expression = Expression()
+                        expression.appendIssue(at: location, message: "'=' was expected after a destructuring enumeration.")
+                        return(expression)
+                        }
+                    try self.nextToken()
+                    let value = try self.parseExpression()
+                    return(EnumerationDecompositionExpression(enumeration: enumeration,caseSymbol: symbol,slotNames: slotNames,value: value))
+                    }
+                else if self.token.isLeftPar
+                    {
+                    var expressions = Expressions()
+                    try self.parseParentheses
+                        {
+                        repeat
+                            {
+                            try self.parseComma()
+                            expressions.append(try self.parseExpression())
+                            }
+                        while self.token.isComma
+                        }
+                    return(EnumerationInstanceExpression(enumeration: enumeration,caseSymbol: symbol,associatedValues: expressions))
+                    }
+                else
+                    {
+                    return(EnumerationInstanceExpression(enumeration: enumeration,caseSymbol: symbol,associatedValues: nil))
+                    }
+                }
+            }
         if let types = self.currentScope.lookupTypes(name: name)
             {
             if self.token.isLeftBrocket
@@ -2478,14 +2629,14 @@ public class Parser: CompilerPass
                     {
                     var issues = CompilerIssues()
                     let someTypes = try self.parseTypeArguments(&issues)
-                    let newType = Argon.addType(TypeClass(label: type.label,isSystem: type.isSystemClass,generics: someTypes))
+//                    let newType = Argon.addType(TypeClass(label: type.label,isSystem: type.isSystemClass,generics: someTypes))
 //                    if self.token.isLeftPar
 //                        {
 //                        return(try self.parseInstanciationTerm(ofType: newType))
 //                        }
                     if !someTypes.isEmpty
                         {
-                        let newType = Argon.addType(type.withGenerics(someTypes))
+                        let newType = type.withGenerics(someTypes)
                         return(SymbolTerm(type: newType))
                         }
                     return(SymbolTerm(type: type))
@@ -2494,7 +2645,7 @@ public class Parser: CompilerPass
                     {
                     var issues = CompilerIssues()
                     let someTypes = try self.parseTypeArguments(&issues)
-                    let newType = Argon.addType(type.withGenerics(someTypes))
+                    let newType = type.withGenerics(someTypes)
                     return(SymbolTerm(type: newType))
                     }
                 else
@@ -2596,6 +2747,7 @@ public class Parser: CompilerPass
             type = try self.parseType(&issues)
             }
         let localSlot = LocalSlot(label: name.last,type: type,value: nil)
+        self.currentScope.addLocalSlot(localSlot)
         let term = SlotExpression(slot: localSlot)
         term.appendIssues(issues)
         localSlot.addDeclaration(location)
@@ -2606,6 +2758,7 @@ public class Parser: CompilerPass
     private func parseClosureTerm() throws -> Expression
         {
         let closure = Closure(label: Argon.nextName("1_CLOSURE"))
+        closure.returnType = ArgonModule.shared.void
         let location = self.token.location
         var issues = CompilerIssues()
         try self.parseBraces
@@ -2888,11 +3041,17 @@ public class Parser: CompilerPass
         let location = self.token.location
         let expression = try self.parseExpression()
         let statement = IfBlock(condition: expression)
+        if expression is EnumerationDecompositionExpression
+            {
+            (expression as! EnumerationDecompositionExpression).block = statement
+            }
         block.addBlock(statement)
         statement.addDeclaration(location)
         try self.parseBraces
             {
+            self.pushContext(statement)
             try self.parseBlock(into: statement)
+            self.popContext()
             }
         if self.token.isElseIf
             {
@@ -2987,6 +3146,11 @@ public class Parser: CompilerPass
             }
         else if self.token.isAssign
             {
+            if lhs.isReadOnlyExpression
+                {
+                self.cancelCompletion()
+                self.dispatchError(at: location,message: "A read only slot can not be assigned to.")
+                }
             try self.nextToken()
             let rhs = try self.parseExpression()
             lhs = AssignmentExpression(lhs, rhs)
@@ -3061,7 +3225,12 @@ public class Parser: CompilerPass
         let location = self.token.location
         let value = try self.parseParentheses
             {
-            try self.parseExpression()
+            () -> Expression? in
+            if self.token.isRightPar
+                {
+                return(nil)
+                }
+            return(try self.parseExpression())
             }
         let returnBlock = ReturnBlock(expression: value)
         returnBlock.addDeclaration(location)

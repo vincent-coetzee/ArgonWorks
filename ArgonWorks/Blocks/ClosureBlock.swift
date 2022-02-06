@@ -24,17 +24,7 @@ public class ClosureBlock: Block
         self.addParameterSlot(parameter)
         }
         
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)CLOSURE")
-        for block in self.blocks
-            {
-            block.dump(depth: depth + 1)
-            }
-        }
-        
-    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
 //        var stackOffset = MemoryLayout<Word>.size
 //        for parameter in self.parameters

@@ -37,6 +37,23 @@ public struct EnglishWord
         return(selectedWords)
         }
         
+    public static func randomWordsWithDuplicates(maximum: Int) -> Array<EnglishWord>
+        {
+        var words = Self.randomWords(maximum: maximum)
+        var index = 0
+        while index < words.count
+            {
+            let count = Int.random(in: 0..<10)
+            for _ in 0..<count
+                {
+                let target = Int.random(in: 0..<words.count-1)
+                words.insert(words[index], at: target)
+                }
+            index += 5
+            }
+        return(words)
+        }
+        
     init(_ string:String)
         {
         self.string = string

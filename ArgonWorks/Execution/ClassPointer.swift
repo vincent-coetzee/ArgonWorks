@@ -7,13 +7,8 @@
 
 import Foundation
 
-public class ClassPointer: ObjectPointer
+public class ClassPointer: ClassBasedPointer
     {
-    public override class func sizeInBytes() -> Int
-        {
-        168
-        }
-        
     public var instanceObjectType: Argon.ObjectType
         {
         .custom
@@ -23,107 +18,112 @@ public class ClassPointer: ObjectPointer
         {
         get
             {
-            StringPointer(dirtyAddress: self.wordPointer[12])
+            self.stringPointer(atSlot: "name")
             }
         set
             {
-            self.wordPointer[12] = newValue.dirtyAddress
+            self.setStringPointer(newValue!,atSlot: "name")
             }
         }
         
-    public var nameAddress: Address
+    public var nameAddress: Address?
         {
         get
             {
-            self.wordPointer[12].cleanAddress
+            self.address(atSlot: "name")
             }
         set
             {
-            self.wordPointer[12] = newValue.objectAddress
+            self.setAddress(newValue,atSlot: "name")
             }
         }
         
     public var extraSizeInBytes: Int
         {
-        set
-            {
-            self.wordPointer[15] = Word(newValue)
-            }
         get
             {
-            return(Int(self.wordPointer[15]))
+            self.integer(atSlot: "extraSizeInBytes")
+            }
+        set
+            {
+            self.setInteger(newValue,atSlot: "extraSizeInBytes")
             }
         }
         
     public var classHasBytes: Bool
         {
-        set
-            {
-            self.setBoolean(newValue,atIndex: 16)
-            }
         get
             {
-            return(self.boolean(atIndex: 16))
+            self.boolean(atSlot: "hasBytes")
+            }
+        set
+            {
+            self.setBoolean(newValue,atSlot: "hasBytes")
             }
         }
         
     public var instanceSizeInBytes: Int
         {
-        set
-            {
-            self.wordPointer[17] = Word(newValue)
-            }
         get
             {
-            return(Int(self.wordPointer[17]))
+            self.integer(atSlot: "instanceSizeInBytes")
+            }
+        set
+            {
+            self.setInteger(newValue,atSlot: "instanceSizeInBytes")
             }
         }
-//
-//    public var classMagicNumber: Int
-//        {
-//        set
-//            {
-//            self.wordPointer[17] = Word(newValue)
-//            }
-//        get
-//            {
-//            return(Int(self.wordPointer[17]))
-//            }
-//        }
+
+    public var classMagicNumber: Int
+        {
+        get
+            {
+            self.integer(atSlot: "magicNumber")
+            }
+        set
+            {
+            self.setInteger(newValue,atSlot: "magicNumber")
+            }
+        }
         
     public var slotsPointer: ArrayPointer?
         {
-        set
-            {
-            self.wordPointer[20] = newValue.dirtyAddress.objectAddress
-            }
         get
             {
-            return(ArrayPointer(dirtyAddress: self.wordPointer[20]))
+            self.arrayPointer(atSlot: "slots")
+            }
+        set
+            {
+            self.setArrayPointer(newValue!,atSlot: "slots")
             }
         }
         
-    public var superclassPointer: ArrayPointer?
+    public var superclassPointer: ClassPointer?
         {
-        set
-            {
-            self.wordPointer[22] = newValue.dirtyAddress.objectAddress
-            }
         get
             {
-            return(ArrayPointer(dirtyAddress: self.wordPointer[22]))
+            ClassPointer(address: self.address(atSlot: "superclass").cleanAddress)
+            }
+        set
+            {
+            self.setAddress(newValue!.address.pointerAddress,atSlot: "superclass")
             }
         }
         
     public var subclassesPointer: ArrayPointer?
         {
-        set
-            {
-            self.wordPointer[21] = newValue.dirtyAddress.objectAddress
-            }
         get
             {
-            return(ArrayPointer(dirtyAddress: self.wordPointer[21]))
+            self.arrayPointer(atSlot: "subclasses")
             }
+        set
+            {
+            self.setArrayPointer(newValue!,atSlot: "subclasses")
+            }
+        }
+        
+    public init(address: Address)
+        {
+        super.init(address: address.cleanAddress,class: ArgonModule.shared.classType as! TypeClass)
         }
     }

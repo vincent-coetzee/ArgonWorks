@@ -7,94 +7,94 @@
 
 import Foundation
 
-public class SlotPointer: ObjectPointer
+public class SlotPointer: ClassBasedPointer
     {
-    public override class func sizeInBytes() -> Int
-        {
-        96
-        }
-        
     public var namePointer: StringPointer?
         {
         get
             {
-            StringPointer(dirtyAddress: self.wordPointer[8])
+            StringPointer(dirtyAddress: self.address(atSlot: "name")!)
             }
         set
             {
-            self.wordPointer[8] = newValue.cleanAddress.objectAddress
+            self.setAddress(newValue.isNil ? 0 : newValue!.cleanAddress.pointerAddress,atSlot: "name")
             }
         }
         
-    public var containerClassPointer: ClassPointer?
+    public var modulePointer: ClassBasedPointer?
         {
         get
             {
-            ClassPointer(dirtyAddress: self.containerClassAddress)
+            ClassBasedPointer(address: self.moduleAddress!,class: ArgonModule.shared.moduleType as! TypeClass)
             }
         set
             {
-            self.containerClassAddress = newValue.cleanAddress.objectAddress
+            self.moduleAddress = newValue!.address.pointerAddress
             }
         }
         
-    public var containerClassAddress: Address
+    public var moduleAddress: Address?
         {
         get
             {
-            self.wordPointer[7]
+            self.address(atSlot: "module")
             }
         set
             {
-            self.wordPointer[7] = newValue
+            self.setAddress(newValue,atSlot: "module")
             }
         }
         
-    public var nameAddress: Address
+    public var nameAddress: Address?
         {
         get
             {
-            self.wordPointer[8].cleanAddress
+            self.address(atSlot: "name")
             }
         set
             {
-            self.wordPointer[8] = newValue.objectAddress
+            self.setAddress(newValue,atSlot: "name")
             }
         }
         
     public var offset: Int
         {
-        set
-            {
-            self.wordPointer[9] = Word(newValue)
-            }
         get
             {
-            return(Int(self.wordPointer[9]))
+            self.integer(atSlot: "offset")
+            }
+        set
+            {
+            self.setInteger(newValue,atSlot: "offset")
             }
         }
         
-    public var typePointer: ClassPointer?
+    public var typePointer: ClassBasedPointer?
         {
         get
             {
-            ClassPointer(dirtyAddress: self.wordPointer[10])
+            ClassBasedPointer(address: self.typeAddress!,class: ArgonModule.shared.type as! TypeClass)
             }
         set
             {
-            self.wordPointer[10] = newValue.cleanAddress.objectAddress
+            self.typeAddress = newValue!.address.pointerAddress
             }
         }
         
-    public var typeAddress: Address
+    public var typeAddress: Address?
         {
         get
             {
-            self.wordPointer[10].cleanAddress
+            self.address(atSlot: "type")
             }
         set
             {
-            self.wordPointer[10] = newValue.objectAddress
+            self.setAddress(newValue,atSlot: "type")
             }
+        }
+        
+    init(address: Address)
+        {
+        super.init(address: address.cleanAddress,class: ArgonModule.shared.slot as! TypeClass)
         }
     }

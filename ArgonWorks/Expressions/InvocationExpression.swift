@@ -52,7 +52,7 @@ public class InvocationExpression: Expression
         analyzer.dispatchError(at: self.location, message: "The invocation '\(self.name)' can not be resolved, it can not be dispatched.")
         }
         
-    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
         {
         using.cancelCompletion()
         }

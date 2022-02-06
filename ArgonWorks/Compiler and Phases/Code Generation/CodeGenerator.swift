@@ -13,11 +13,13 @@ public class CodeGenerator: CompilerPass
     public let compiler: Compiler
     public var wasCancelled = false
     public let payload: VMPayload
+    public let addressAllocator: AddressAllocator
     
-    public init(_ compiler: Compiler,payload: VMPayload)
+    public init(_ compiler: Compiler,addressAllocator: AddressAllocator)
         {
         self.compiler = compiler
-        self.payload = payload
+        self.payload = addressAllocator.payload
+        self.addressAllocator = addressAllocator
         }
         
     public func cancelCompletion()
@@ -28,6 +30,15 @@ public class CodeGenerator: CompilerPass
     public func emitStaticString(_ string: String) -> Address
         {
         return(payload.staticSegment.allocateString(string))
+        }
+        
+    public func registerMethodInstanceIfNeeded(_ methodInstance: MethodInstance)
+        {
+        if methodInstance.memoryAddress == 0
+            {
+            let segment = self.payload.segment(for: methodInstance)
+            segment.allocateMemoryAddress(for: methodInstance)
+            }
         }
         
     public func processModule(_ module: Module?) -> Module?

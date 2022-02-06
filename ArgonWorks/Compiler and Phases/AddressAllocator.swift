@@ -11,16 +11,21 @@ import Foundation
     
 public class AddressAllocator: CompilerPass
     {
-    public let compiler: Compiler
     public var wasCancelled = false
     public var payload: VMPayload
     public let argonModule: ArgonModule
     
-    init(_ compiler: Compiler)
+    init()
         {
-        self.compiler = compiler
         self.payload = VMPayload()
         self.argonModule = ArgonModule.shared
+        self.allocateArgonModule()
+        }
+        
+    private func allocateArgonModule()
+        {
+        try! ArgonModule.shared.allocateAddresses(using: self)
+        ArgonModule.shared.layoutInMemory(using: self)
         }
         
     public func cancelCompletion()
@@ -28,22 +33,37 @@ public class AddressAllocator: CompilerPass
         self.wasCancelled = true
         }
         
+    @discardableResult
     public func processModule(_ module: Module?) -> Module?
         {
         guard let module = module else
             {
             return(nil)
             }
-        ArgonModule.shared.moduleWithAllocatedAddresses(using: self)
-        let newModule = module.moduleWithAllocatedAddresses(using: self)
-        guard !self.wasCancelled else
+        /// Allocate space for the class dictionary pointer
+        /// amd the method array pointer
+        ///
+        do
             {
-            return(nil)
+            try module.allocateAddresses(using: self)
+            guard !self.wasCancelled else
+                {
+                return(nil)
+                }
+            return(module)
             }
-        return(newModule)
+        catch let error as CompilerIssue
+            {
+            module.appendIssue(error)
+            }
+        catch let error
+            {
+            module.appendIssue(at: .zero, message: "Unexpected error: \(error)")
+            }
+        return(nil)
         }
         
-    public func registerSymbol(_ symbol: Argon.Symbol) -> Address
+    public func registerSymbol(_ symbol: Argon.Symbol) -> Int
         {
         self.payload.symbolRegistry.registerSymbol(symbol)
         }
@@ -52,8 +72,6 @@ public class AddressAllocator: CompilerPass
         {
         switch(segmentType)
             {
-            case .null:
-                break
             case .static:
                 return(self.payload.staticSegment)
             case .managed:
@@ -72,10 +90,16 @@ public class AddressAllocator: CompilerPass
         segment.allocateMemoryAddress(for: symbol)
         }
         
-    public func allocateAddress(for methodInstance: MethodInstance)
+    public func allocateAddress(forMethodInstance methodInstance: MethodInstance)
         {
         let segment = self.segment(for: methodInstance.segmentType)
         segment.allocateMemoryAddress(for: methodInstance)
+        }
+        
+    public func allocateAddress(forPrimitiveInstance methodInstance: PrimitiveInstance)
+        {
+        let index = methodInstance.primitiveIndex
+        methodInstance.setMemoryAddress(self.payload.address(forPrimitiveIndex: Int(index)))
         }
         
     public func allocateAddress(for aStatic: StaticObject)

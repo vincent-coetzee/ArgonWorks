@@ -18,6 +18,7 @@ public class TopModule: SystemModule
     {
     public static func resetTopModule()
         {
+        Node.resetUUIDs()
         Self.shared = nil
         Self.shared = TopModule(instanceNumber: 0)
         let argonModule = ArgonModule(instanceNumber: 0)
@@ -72,7 +73,6 @@ public class TopModule: SystemModule
     init(instanceNumber: Int)
         {
         super.init(label: "Root")
-        self.setIndex(UUID.systemUUID(0))
         }
 //
 //    init(_ array:Array<Module>)

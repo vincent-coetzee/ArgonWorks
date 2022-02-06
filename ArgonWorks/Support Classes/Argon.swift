@@ -71,22 +71,24 @@ public struct Argon
     
     public enum Tag:UInt64
         {
-        case integer =   0b000      /// an integer or uinteger value
-        case float =     0b001      /// a float value
-        case byte =      0b010      /// a byte value 0 - 255
-        case character = 0b011      /// a two byte value 0 - 65535
-        case boolean =   0b100      /// true or false
-        case header =    0b101      /// marks an object header
-        case object =    0b111      /// an object address which is followed
-        
+        case integer =   0b0000      /// an integer or uinteger value
+        case float =     0b0001      /// a float value
+        case byte =      0b0010      /// a byte value 0 - 255
+        case character = 0b0011      /// a two byte value 0 - 65535
+        case boolean =   0b0100      /// true or false
+        case inner =     0b0101      /// marks the start of an embedded object
+        case header =    0b0110      /// this is a header word
+        case pointer =   0b0111      /// copy and follow
+        case null =      0b1000      /// any value with the null bit set is null
+        ///
         public var displayString: String
             {
             switch(self)
                 {
                 case .integer:
-                    return("INTG")
+                    return("INT")
                 case .float:
-                    return("FLOT")
+                    return("FLOAT")
                 case .byte:
                     return("BYTE")
                 case .character:
@@ -95,20 +97,24 @@ public struct Argon
                     return("BOOL")
                 case .header:
                     return("HEAD")
-                case .object:
-                    return("OBJT")
+                case .pointer:
+                    return("POINTER")
+                case .null:
+                    return("NULL")
+                case .inner:
+                    return("INNER")
                 }
             }
         }
     
-    public enum Segment:UInt64
-        {
-        case none =     0b000       /// This is a raw address and has no segment
-        case managed =  0b001       /// The segment where all runtime allocations take place, this is a garbage collected segment
-        case `static` = 0b010       /// Objects such as classes, slots and certain strings go in this segment
-        case data =     0b011       /// General data area
-        case stack =    0b101       /// This segment grows from the top down and is managed in blocks, the runtime activation frames are stored here
-        }
+//    public enum Segment:UInt64
+//        {
+//        case none =     0b000       /// This is a raw address and has no segment
+//        case managed =  0b001       /// The segment where all runtime allocations take place, this is a garbage collected segment
+//        case `static` = 0b010       /// Objects such as classes, slots and certain strings go in this segment
+//        case data =     0b011       /// General data area
+//        case stack =    0b101       /// This segment grows from the top down and is managed in blocks, the runtime activation frames are stored here
+//        }
         
     ///
     /// The top bit of an address is unused because the sign bit of integers goes there,
@@ -117,20 +123,51 @@ public struct Argon
     ///
     ///
     
-    public static let kSegmentMask:Word = 0b111
-    public static let kSegmentExtendedMask:Word = Argon.kSegmentMask << Argon.kSegmentShift
-    public static let kSegmentShift: Word = 56
+//    public static let kSegmentMask:Word = 0b111
+//    public static let kSegmentExtendedMask:Word = Argon.kSegmentMask << Argon.kSegmentShift
+//    public static let kSegmentShift: Word = 56
     
-    public static let kIntegerTag = Self.Tag.integer.rawValue << 60
-    public static let kFloatTag = Self.Tag.float.rawValue << 60
-    public static let kByteTag = Self.Tag.byte.rawValue << 60
-    public static let kCharacterTag = Self.Tag.character.rawValue << 60
-    public static let kBooleanTag = Self.Tag.boolean.rawValue << 60
-    public static let kHeaderTag = Self.Tag.header.rawValue << 60
-    public static let kObjectTag = Self.Tag.object.rawValue << 60
+    public static let kIntegerTag = Self.Tag.integer.rawValue << Argon.kTagShift
+    public static let kFloatTag = Self.Tag.float.rawValue << Argon.kTagShift
+    public static let kByteTag = Self.Tag.byte.rawValue << Argon.kTagShift
+    public static let kCharacterTag = Self.Tag.character.rawValue << Argon.kTagShift
+    public static let kBooleanTag = Self.Tag.boolean.rawValue << Argon.kTagShift
+    public static let kHeaderTag = Self.Tag.header.rawValue << Argon.kTagShift
+    public static let kPointerTag = Self.Tag.pointer.rawValue << Argon.kTagShift
+    public static let kNullTag = Self.Tag.null.rawValue << Argon.kTagShift
+    public static let kInnerTag = Self.Tag.inner.rawValue << Argon.kTagShift
     
-    public static let kTagMask:Word = 0b111 << 60
-    public static let kTagShift:Word = 60
+    public static let kDateYear:Word = 0b11111111_11111111
+    public static let kDateYearShift:Word = Argon.kDateMonthShift + Word(Argon.kDateMonth.nonzeroBitCount)
+    public static let kDateMonth:Word = 0b1111
+    public static let kDateMonthShift: Word = Argon.kDateDayShift + Word(Argon.kDateDay.nonzeroBitCount)
+    public static let kDateDay:Word = 0b111111
+    public static let kDateDayShift:Word = Argon.kTimeHourShift + Word(Argon.kTimeHour.nonzeroBitCount)
+    public static let kTimeHour:Word = 0b111111
+    public static let kTimeHourShift:Word = Argon.kTimeMinuteShift + Word(Argon.kTimeMinute.nonzeroBitCount)
+    public static let kTimeMinute:Word = 0b111111
+    public static let kTimeMinuteShift:Word = Argon.kTimeSecondShift + Word(Argon.kTimeSecond.nonzeroBitCount)
+    public static let kTimeSecond:Word = 0b111111
+    public static let kTimeSecondShift:Word = Argon.kTimeMillisecondShift + Word(Argon.kTimeMillisecond.nonzeroBitCount)
+    public static let kTimeMillisecond:Word = 0b1111111111
+    public static let kTimeMillisecondShift:Word = 0
+    
+    public static let kHeaderFlipBits:Word = 0b11111111
+    public static let kHeaderFlipShift:Word = 51
+    public static let kHeaderForwardedBits: Word = 0b1
+    public static let kHeaderForwardedShift: Word = 50
+    public static let kHeaderHasBytesBits: Word = 0b1
+    public static let kHeaderHasBytesShift: Word = 49
+    public static let kHeaderTypeBits: Word = 0b11111111
+    public static let kHeaderTypeShift: Word = 41
+    public static let kHeaderPersistentBits: Word = 0b1
+    public static let kHeaderPersistentShift: Word = 40
+    public static let kHeaderSizeInWordsBits: Word =  0b11111111_11111111_11111111_11111111_11111111
+    public static let kHeaderSizeInWordsShift: Word = 0
+    
+    public static let kTagBits: Word = 0b1111
+    public static let kTagMask:Word = 0b1111 << Argon.kTagShift
+    public static let kTagShift:Word = 59
     
     public static let kWordSizeInBytes = 8
     public static let kArgumentSizeInBytes = 8
@@ -155,14 +192,14 @@ public struct Argon
         case dateTime = 7
         case enumeration = 8
         case enumerationCase = 9
-        case enumrationCaseInstance = 10
+        case enumerationCaseInstance = 10
         case tuple = 11
         case module = 12
         case slot = 13
         case function = 14
         case methodInstance = 15
         case array = 16
-        case dictionaryBucket = 17
+        case bucket = 17
         case dictionary = 18
         case set = 19
         case list = 20
@@ -200,6 +237,8 @@ public struct Argon
         case arrayBlock = 52
         case vectorBlock = 53
         case setBlock = 54
+        case instructionBlock =  55
+        case treeNode = 56
         case custom = 100
         }
         
@@ -225,22 +264,17 @@ public struct Argon
         return(staticObject)
         }
         
-    public static var typeTable = Dictionary<Int,Type>()
+    private static var typeTable = Dictionary<Int,Type>()
     
     @discardableResult
     public static func addType(_ type: Type) -> Type
         {
-//        return(type)
-        if self.typeTable.isEmpty
-            {
-            print("halt")
-            }
         if let oldType = Self.typeTable[type.argonHash]
             {
-            print("FOUND EXISTING TYPE \(type)")
+            print("FOUND OLD TYPE \(oldType)")
             return(oldType)
             }
-        print("DID NOT FIND \(type)")
+        print("ADDING NEW TYPE \(type)")
         Self.typeTable[type.argonHash] = type
         return(type)
         }
@@ -261,3 +295,51 @@ public struct Argon
         }
     }
 
+
+extension Argon.Integer
+    {
+    init(word: Word)
+        {
+        self = Int64(bitPattern: word)
+        }
+    }
+
+extension Argon.Byte
+    {
+    init(word: Word)
+        {
+        self = Argon.Byte(word)
+        }
+    }
+
+extension Argon.Character
+    {
+    init(word: Word)
+        {
+        self = Argon.Character(word)
+        }
+    }
+    
+extension Argon.Float
+    {
+    init(word: Word)
+        {
+        self = word.floatValue
+        }
+    }
+
+extension Int32
+    {
+    init(word: Word)
+        {
+        self = Int32(word)
+        }
+    }
+
+extension Int
+    {
+    init(word: Word)
+        {
+        self = Int(Int64(bitPattern: word))
+        }
+    }

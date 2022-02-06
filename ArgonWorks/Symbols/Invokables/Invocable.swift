@@ -9,9 +9,19 @@ import AppKit
 
 public class Invocable: Symbol,Scope,StackFrame
     {
-    public var isMethodInstanceScope: Bool
+    public var asContainer: Container
         {
-        false
+        fatalError()
+        }
+        
+    public override var segmentType: Segment.SegmentType
+        {
+        .code
+        }
+        
+    public var enclosingMethodInstance: MethodInstance
+        {
+        fatalError()
         }
         
     public var parentScope: Scope?
@@ -22,7 +32,12 @@ public class Invocable: Symbol,Scope,StackFrame
             }
         set
             {
-            self.module = newValue as? Module
+//            self.module = newValue as? Module
+            if newValue.isNil
+                {
+            fatalError()
+            }
+            self.setModule(newValue as! Module)
             }
         }
     
@@ -42,6 +57,20 @@ public class Invocable: Symbol,Scope,StackFrame
             }
         }
     
+    public override var argonHash: Int
+        {
+        var hash = self.module.argonHash
+        hash = hash << 13 ^ "\(Swift.type(of: self))".polynomialRollingHash
+        hash = hash << 13 ^ self.label.polynomialRollingHash
+        for parameter in self.parameters
+            {
+            hash = hash << 13 ^ parameter.type.argonHash
+            }
+        hash = hash << 13 ^ self.returnType.argonHash
+        let word = Word(bitPattern: hash) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
     public var arity: Int
         {
         self.parameters.count
@@ -66,7 +95,7 @@ public class Invocable: Symbol,Scope,StackFrame
     internal var localSymbols = Symbols()
     internal var cName: String
     internal var parameters: Parameters
-    public var returnType: Type!
+    public var returnType: Type
     private var nextLocalSlotOffset = StackSegment.kFirstTemporaryOffset
     private var nextParameterOffset = StackSegment.kFirstArgumentOffset
     internal var localCount = 0
@@ -76,7 +105,7 @@ public class Invocable: Symbol,Scope,StackFrame
         self.localSymbols = coder.decodeObject(forKey: "localSymbols") as! Symbols
         self.cName = coder.decodeString(forKey: "cName")!
         self.parameters = coder.decodeObject(forKey: "parameters") as! Parameters
-        self.returnType = coder.decodeObject(forKey: "returnType") as? Type
+        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
         self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
         super.init(coder: coder)
@@ -86,6 +115,7 @@ public class Invocable: Symbol,Scope,StackFrame
         {
         self.cName = ""
         self.parameters = Parameters()
+        self.returnType = ArgonModule.shared.void
         super.init(label: label)
         }
         
@@ -152,7 +182,7 @@ public class Invocable: Symbol,Scope,StackFrame
         {
         let copy = Self.init(label: label)
         copy.parameters = self.parameters.map{substitution.substitute($0)}
-        copy.returnType = substitution.substitute(self.returnType!)
+        copy.returnType = substitution.substitute(self.returnType)
         copy.cName = self.cName
         return(copy)
         }

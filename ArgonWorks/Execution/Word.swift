@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MachMemory
 
 public typealias Word = UInt64
 
@@ -19,6 +20,11 @@ extension Word:Identifiable
     
 extension Word
     {
+    public static var null: Word
+        {
+        Argon.kNullTag
+        }
+        
     public var bitString: String
         {
         var bitPattern = UInt64(1)
@@ -35,12 +41,12 @@ extension Word
         
     public var droppingTag: Word
         {
-        return(self & ~(Header.kTagBits << Header.kTagShift))
+        return(self & ~(Argon.kTagBits << Argon.kTagShift))
         }
         
-    public var isNil: Bool
+    public var isNull: Bool
         {
-        self == 1
+        self & Argon.kNullTag == Argon.kNullTag
         }
         
     public var isZero: Bool
@@ -55,8 +61,8 @@ extension Word
         
     public var isHeader: Bool
         {
-        let mask = Header.kTagBits << Header.kTagShift
-        return(((self & mask) >> Header.kTagShift) == Argon.Tag.header.rawValue)
+        let mask = Argon.kTagBits << Argon.kTagShift
+        return(((self & mask) >> Argon.kTagShift) == Argon.Tag.header.rawValue)
         }
         
     public func shifted(_ amount:Word) -> Word
@@ -71,7 +77,7 @@ extension Word
     ///
     public var rawBooleanValue:Bool
         {
-        return(((self & ~(Header.kTagBits << Header.kTagShift)) >> Header.kTagShift) == 1)
+        return(((self & ~(Argon.kTagBits << Argon.kTagShift)) >> Argon.kTagShift) == 1)
         }
         
     public init(bitPattern: WordPointer)
@@ -86,56 +92,87 @@ extension Word
         
     public init(boolean:Bool)
         {
-        let tag = (Argon.Tag.boolean.rawValue & Header.kTagBits) << Header.kTagShift
+        let tag = (Argon.Tag.boolean.rawValue & Argon.kTagBits) << Argon.kTagShift
         let base:Word = boolean ? 1 : 0
         self = tag | base
         }
         
     public init(integer: Int)
         {
-        self = UInt64(bitPattern: integer) & ~(Header.kTagBits << Header.kTagShift)
+        self = UInt64(bitPattern: integer) & ~(Argon.kTagBits << Argon.kTagShift)
         }
         
     public init(integer: Argon.Integer)
         {
-        self = UInt64(bitPattern: integer) & ~(Header.kTagBits << Header.kTagShift)
+        self = UInt64(bitPattern: integer) & ~(Argon.kTagBits << Argon.kTagShift)
+        }
+        
+    public init(integer: Argon.Integer32)
+        {
+        self = UInt64(bitPattern: Int(integer)) & ~(Argon.kTagBits << Argon.kTagShift)
+        }
+        
+    public init(address: Word,offset: Word)
+        {
+        let bottom = address & 17592186044415
+        let top = (offset & 0b11111111_11111111) << 44
+        self = top | bottom
         }
         
     public init(uInteger: Argon.UInteger)
         {
-        self = uInteger & ~(Header.kTagBits << Header.kTagShift)
+        self = uInteger & ~(Argon.kTagBits << Argon.kTagShift)
         }
         
     public init(character: Argon.Character)
         {
-        let tag = (Argon.Tag.character.rawValue & Header.kTagBits) << Header.kTagShift
+        let tag = (Argon.Tag.character.rawValue & Argon.kTagBits) << Argon.kTagShift
         let base = Word(character & 65535)
         self = tag | base
         }
         
     public init(byte: Argon.Byte)
         {
-        let tag = (Argon.Tag.byte.rawValue & Header.kTagBits) << Header.kTagShift
+        let tag = (Argon.Tag.byte.rawValue & Argon.kTagBits) << Argon.kTagShift
         let base = Word(byte & 255)
         self = tag | base
         }
         
     public init(float: Argon.Float)
         {
-        let pattern = float.bitPattern >> 4
+        let pattern = float.bitPattern >> 5
         let base = pattern & ~Argon.kTagMask
         self = base | Argon.kFloatTag
         }
         
-    public init(object: Word)
+    public init(symbolIndex: Int,offset:Word)
         {
-        let base = UInt64(bitPattern: Int64(object)) & ~(Header.kTagBits << Header.kTagShift)
-        self = base | (Argon.Tag.object.rawValue << Header.kTagShift)
+        let top = (Word(symbolIndex) & Word(16383)) << Word(45)
+        let bottom = (offset & Word(17592186044415))
+        self = top | bottom
         }
         
-    public var objectValue: Int
+    public var symbolValue: (Int,Word)
         {
-        Int(bitPattern: UInt(self & ~Argon.kObjectTag))
+        let top = (self >> Word(45)) & Word(16383)
+        let bottom = (self & Word(17592186044415))
+        return((Int(top),bottom))
+        }
+        
+    public init(inner: Int)
+        {
+        let tag = Argon.Tag.inner.rawValue << Argon.kTagShift
+        self = tag | Word(inner & 4294967295)
+        }
+        
+    public var innerValue: Int
+        {
+        Int(self & 4294967295)
+        }
+        
+    public var pointerValue: Address
+        {
+        Address(self & ~Argon.kPointerTag)
         }
         
     public var integerValue: Argon.Integer
@@ -143,9 +180,20 @@ extension Word
         Argon.Integer(self & ~Argon.kIntegerTag)
         }
         
+    public var intValue: Int
+        {
+        Int(bitPattern: self & ~Argon.kIntegerTag)
+        }
+        
     public var floatValue: Argon.Float
         {
         return(Argon.Float(bitPattern: self << 4))
+        }
+        
+    public init(pointer: Word)
+        {
+        let base = UInt64(bitPattern: Int64(pointer)) & ~(Argon.kTagBits << Argon.kTagShift)
+        self = base | (Argon.Tag.pointer.rawValue << Argon.kTagShift)
         }
         
     public var booleanValue: Bool
@@ -208,9 +256,9 @@ extension Word
         
     public static func testWord()
         {
-        let pointer = Word(object: 1)
-        assert(pointer == Argon.kObjectTag + 1,"A pointer of 1 should be \((Argon.kObjectTag + 1).bitString) but is \(pointer.bitString)")
-        assert(pointer.objectValue == 1,"Pointer value should be 1 but is \(pointer.objectValue)")
+        let pointer = Word(pointer: 1)
+        assert(pointer == Argon.kPointerTag + 1,"A pointer of 1 should be \((Argon.kPointerTag + 1).bitString) but is \(pointer.bitString)")
+        assert(pointer.pointerValue == 1,"Pointer value should be 1 but is \(pointer.pointerValue)")
         let float = Word(float: 2931.492781)
         print(float.bitString)
 //        assert(float.floatValue == 1,"Float value should be 2931.492781 but is \(float.floatValue)")
@@ -225,12 +273,17 @@ public typealias Address = Word
 
 extension Address
     {
+    public static var alignment: Word
+        {
+        Word(MemoryLayout<Address>.alignment)
+        }
+        
     public var tag: Argon.Tag
         {
         get
             {
-            let mask = Header.kTagBits << Header.kTagShift
-            if let tag = Argon.Tag(rawValue: (self & mask) >> Header.kTagShift)
+            let mask = Argon.kTagBits << Argon.kTagShift
+            if let tag = Argon.Tag(rawValue: (self & mask) >> Argon.kTagShift)
                 {
                 return(tag)
                 }
@@ -238,21 +291,8 @@ extension Address
             }
         set
             {
-            let value = (newValue.rawValue & Header.kTagBits) << Header.kTagShift
-            self = (self & ~(Header.kTagBits << Header.kTagShift)) | value
-            }
-        }
-        
-    public var segment: Argon.Segment
-        {
-        get
-            {
-            return(Argon.Segment(rawValue: (self & Argon.kSegmentExtendedMask) >> Header.kTagShift)!)
-            }
-        set
-            {
-            let value = (newValue.rawValue & Argon.kSegmentMask) << Argon.kSegmentShift
-            self = (self & ~Argon.kSegmentExtendedMask) | value
+            let value = (newValue.rawValue & Argon.kTagBits) << Argon.kTagShift
+            self = (self & ~(Argon.kTagBits << Argon.kTagShift)) | value
             }
         }
         
@@ -264,12 +304,22 @@ extension Address
         
     public var cleanAddress: Address
         {
-        return(self & ~(Header.kTagBits << Header.kTagShift))
+        return(self & ~(Argon.kTagBits << Argon.kTagShift))
         }
         
-    public var objectAddress: Address
+    public var pointerAddress: Address
         {
-        (self & ~Argon.kObjectTag) | Argon.kObjectTag
+        (self & ~Argon.kPointerTag) | Argon.kPointerTag
+        }
+        
+    public var isNil: Bool
+        {
+        self.cleanAddress == 0
+        }
+        
+    public var isNotNil: Bool
+        {
+        self.cleanAddress != 0
         }
     }
 

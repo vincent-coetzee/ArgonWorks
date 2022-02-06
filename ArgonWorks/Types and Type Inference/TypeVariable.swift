@@ -9,14 +9,9 @@ import Foundation
 
 public class TypeVariable: Type
     {
-    public static func ==(lhs: TypeVariable,rhs: Type) -> Bool
+    public static func ==(lhs: TypeVariable,rhs: TypeVariable) -> Bool
         {
-        if !(rhs is TypeVariable)
-            {
-            return(false)
-            }
-        let right = rhs as! TypeVariable
-        return(lhs.id == right.id)
+        return(lhs.id == rhs.id)
         }
     
     internal static var typeVariableCount = 0
@@ -106,9 +101,18 @@ public class TypeVariable: Type
     public override func freshTypeVariable(inContext context:TypeContext) -> Self
         {
 //        let variable = context.freshTypeVariable(forTypeVariable: self)
-        let variable = context.freshTypeVariable()
+        let variable = context.freshTypeVariable(forTypeVariable: self)
         self.boundType = variable
         return(variable as! Self)
+        }
+        
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? TypeVariable
+            {
+            return(self.id == second.id)
+            }
+        return(super.isEqual(object))
         }
         
 //    public override func setParent(_ parent: Parent)

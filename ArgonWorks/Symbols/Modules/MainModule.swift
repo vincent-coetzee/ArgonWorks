@@ -14,23 +14,21 @@ public class MainModule: Module
         true
         }
 
-    public override var firstMainModule: MainModule?
-        {
-        return(self)
-        }
-        
-    public override var firstMainMethod: Method?
-        {
-        return(self.mainMethod)
-        }
+//    public override var firstMainModule: MainModule?
+//        {
+//        return(self)
+//        }
+//        
+//    public override var firstMainMethod: Method?
+//        {
+//        return(self.mainMethod)
+//        }
         
     public override var typeCode:TypeCode
         {
         .mainModule
         }
         
-    public var mainMethod: Method?
-    
     public required init(label: Label)
         {
         super.init(label: label)
@@ -38,13 +36,13 @@ public class MainModule: Module
         
     public required init?(coder: NSCoder)
         {
-        self.mainMethod = coder.decodeObject(forKey: "mainMethod") as? Method
+//        self.mainMethod = coder.decodeObject(forKey: "mainMethod") as? Method
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self.mainMethod,forKey: "mainMethod")
+//        coder.encode(self.mainMethod,forKey: "mainMethod")
         super.encode(with: coder)
         }
         

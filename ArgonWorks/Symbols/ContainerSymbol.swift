@@ -162,8 +162,7 @@ public class ContainerSymbol:Symbol
         
     public override func addSymbol(_ symbol: Symbol)
         {
-        self.symbols.append(symbol)
-        symbol.setContainer(.symbol(self))
+        fatalError()
         }
         
     public override func lookup(label: Label) -> Symbol?
@@ -266,19 +265,19 @@ public class ContainerSymbol:Symbol
         return(self.module?.lookupN(name: name))
         }
         
-    public override func allocateAddresses(using allocator:AddressAllocator) throws
+    public override func allocateAddresses(using allocator:AddressAllocator)
         {
         for symbol in self.symbols
             {
-            try symbol.allocateAddresses(using: allocator)
+            symbol.allocateAddresses(using: allocator)
             }
         }
         
-    public override func install(inContext: ExecutionContext)
+    public override func install(inContext context: ExecutionContext)
         {
         for symbol in self.symbols
             {
-            symbol.install(inContext: inContext)
+            symbol.install(inContext: context)
             }
         }
         

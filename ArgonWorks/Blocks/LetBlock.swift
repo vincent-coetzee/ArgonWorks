@@ -14,8 +14,8 @@ public class LetBlock: Block
         "LET " + self.lhs.displayString + " " + self.rhs.displayString
         }
         
-    private let lhs: Tuple
-    private let rhs: Tuple
+    private var lhs: Tuple
+    private var rhs: Tuple
     private var location:Location
     
     public init(location:Location,lhs: Tuple,rhs: Tuple)
@@ -65,7 +65,34 @@ public class LetBlock: Block
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = context.voidType
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
+        self.type = self.lhs.type
+        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
+        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
+        let slotLabels = (self.lhs as! TupleExpression).slots.map{$0.label}
+        let rightTypes = (self.rhs as! TupleExpression).types
+        context.extended(with: <#T##Type#>, boundTo: <#T##Label#>)
+        }
+        
+    public override func inferType(inContext context: TypeContext)
+        {
+        self.lhs.inferType(inContext: context)
+        self.rhs.inferType(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
+        self.type = self.lhs.type
+        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
+        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
+        let slotLabels = (self.lhs as! TupleExpression).slots.map{$0.label}
+        let rightTypes = (self.rhs as! TupleExpression).types
+        var values = Array<(Label,Type)>()
+        for (label,type) in zip(slotLabels,rightTypes)
+            {
+            values.append((label,type))
+            }
+        context.extended(with: values)
+            {
+            newContext in
+            }
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -77,9 +104,11 @@ public class LetBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let block = LetBlock(location: self.location,lhs: substitution.substitute(self.lhs),rhs: substitution.substitute(self.rhs))
-        block.type = substitution.substitute(self.type)
-        return(block as! Self)
+        let newBlock = super.substitute(from: substitution)
+        newBlock.lhs = substitution.substitute(self.lhs)
+        newBlock.rhs = substitution.substitute(self.rhs)
+        newBlock.type = substitution.substitute(self.type)
+        return(newBlock)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -108,7 +137,7 @@ public class LetBlock: Block
 //            }
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         for (left,right) in zip(self.lhs.elements,self.rhs.elements)
             {

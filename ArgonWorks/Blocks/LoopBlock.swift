@@ -75,7 +75,7 @@ public class LoopBlock: Block
             expression.initializeTypeConstraints(inContext: context)
             }
         self.endExpression.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
+        context.append(TypeConstraint(left: self.endExpression.type,right: ArgonModule.shared.boolean,origin: .block(self)))
         for block in self.blocks
             {
             block.initializeTypeConstraints(inContext: context)
@@ -105,18 +105,16 @@ public class LoopBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let newStarts = self.startExpressions.map{substitution.substitute($0)}
-        let newUpdates = self.updateExpressions.map{substitution.substitute($0)}
-        let newEnd = substitution.substitute(endExpression)
-        let loop = LoopBlock(start: newStarts, end: newEnd, update: newUpdates)
+        let newBlock = super.substitute(from: substitution)
+        newBlock.startExpressions = self.startExpressions.map{substitution.substitute($0)}
+        newBlock.updateExpressions = self.updateExpressions.map{substitution.substitute($0)}
+        newBlock.endExpression = substitution.substitute(self.endExpression)
         for block in self.blocks
             {
-            let newBlock = substitution.substitute(block)
-            newBlock.type = substitution.substitute(block.type)
-            loop.addBlock(newBlock)
+            newBlock.addBlock(substitution.substitute(block))
             }
-        loop.type = substitution.substitute(self.type)
-        return(loop as! Self)
+        newBlock.type = substitution.substitute(self.type)
+        return(newBlock)
         }
         
     public override func initializeType(inContext context: TypeContext)
@@ -154,13 +152,13 @@ public class LoopBlock: Block
             }
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         for expression in self.startExpressions
             {
             try expression.emitCode(into: buffer, using: using)
             }
-        let label = buffer.nextLabel()
+        let label = buffer.nextLabel
         buffer.pendingLabel = label
         for block in self.blocks
             {
@@ -171,7 +169,7 @@ public class LoopBlock: Block
             try expression.emitCode(into: buffer,using: using)
             }
         try self.endExpression.emitCode(into: buffer,using: using)
-        buffer.append(nil,.BRAF,.none,.none,.label(label))
+        buffer.add(.BRF,self.endExpression.place,label)
         }
     }
 

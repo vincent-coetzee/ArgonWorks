@@ -28,7 +28,7 @@ public class VisualTokenizer: SemanticTokenRenderer
     
     init(lineNumberView: LineNumberTextView,reporter: Reporter)
         {
-        self.systemClassNames = ArgonModule.shared.classes.map{$0.label}
+        self.systemClassNames = ArgonModule.shared.systemClassNames
         self.lineNumberView = lineNumberView
         self.reportingContext = reporter
         self.font = NSFont(name: "Menlo",size: 12)!
@@ -57,13 +57,11 @@ public class VisualTokenizer: SemanticTokenRenderer
         
     public func update(_ string: String)
         {
-        var someTokens: Tokens = []
         let time = Timer().time
             {
             let stream = TokenStream(source: string,context: NullReporter())
             let tokens = stream.allTokens(withComments: true, context: NullReporter())
             self.processTokens(tokens)
-            someTokens = tokens
             }
         print("Time to generate and process tokens = \(time)")
         let time2 = Timer().time

@@ -12,7 +12,7 @@ public class TypeModule: Type
     init(module: Module)
         {
         super.init(label: module.label)
-        self.module = module
+        self.setModule(module)
         }
         
         required init?(coder: NSCoder) {

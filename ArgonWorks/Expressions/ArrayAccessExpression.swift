@@ -81,9 +81,26 @@ public class ArrayAccessExpression: Expression
         {
         self.array.initializeTypeConstraints(inContext: context)
         self.index.initializeTypeConstraints(inContext: context)
-        let arrayType = Argon.addType(TypeClass(label: context.arrayType.label,generics: [self.type]))
+        let arrayType = ArgonModule.shared.array.withGenerics([self.type])
         context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.index.type,right: ArgonModule.shared.integer,origin: .expression(self)))
+        }
+        
+    public override func inferType(inContext context: TypeContext)
+        {
+        self.array.inferType(inContext: context)
+        self.index.inferType(inContext: context)
+        if self.array.type.isArray
+            {
+            self.type = (self.array.type as! TypeConstructor).generics[0]
+            }
+        else
+            {
+            self.type = context.freshTypeVariable()
+            }
+        let arrayType = ArgonModule.shared.array.withGenerics([self.type])
+        context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.index.type,right: ArgonModule.shared.integer,origin: .expression(self)))
         }
 
     public override func initializeType(inContext context: TypeContext)
@@ -93,7 +110,7 @@ public class ArrayAccessExpression: Expression
         let arrayType = self.array.type
         if arrayType.isArray
             {
-            self.type = arrayType.arrayElementType
+            self.type = (arrayType as! TypeConstructor).generics[0]
             }
         else
             {
@@ -101,32 +118,32 @@ public class ArrayAccessExpression: Expression
             }
         }
         
-    public override func emitPointerCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitAddressCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        try self.array.emitPointerCode(into: buffer,using: using)
+        try self.array.emitAddressCode(into: buffer,using: using)
         try self.index.emitValueCode(into: buffer,using: using)
-        let temporary = buffer.nextTemporary()
-        buffer.append(.IMUL64,self.index.place,.integer(8),temporary)
-        buffer.append(.IADD64,temporary,self.array.place,temporary)
+        let temporary = buffer.nextTemporary
+        buffer.add(.i64,.MUL,self.index.place,.integer(8),temporary)
+        buffer.add(.i64,.ADD,temporary,self.array.place,temporary)
         self._place = temporary
         }
         
-    public override func emitValueCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        try self.array.emitPointerCode(into: buffer,using: using)
+        try self.array.emitAddressCode(into: buffer,using: using)
         try self.index.emitValueCode(into: buffer,using: using)
-        let temporary = buffer.nextTemporary()
-        buffer.append(.IMUL64,self.index.place,.integer(8),temporary)
-        buffer.append(.IADD64,temporary,self.array.place,temporary)
-        buffer.append(.LDP, temporary,.none, temporary)
+        let temporary = buffer.nextTemporary
+        buffer.add(.i64,.MUL,self.index.place,.integer(8),temporary)
+        buffer.add(.i64,.ADD,temporary,self.array.place,temporary)
+        buffer.add(.i64,.LOADP,temporary,.integer(0), temporary)
         self._place = temporary
         }
         
-    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func assign(from expression: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         try expression.emitValueCode(into: buffer,using: using)
-        try self.emitPointerCode(into: buffer,using: using)
-        buffer.append(.STP,expression.place,.none,self.place)
+        try self.emitAddressCode(into: buffer,using: using)
+        buffer.add(.i64,.STOREP,expression.place,.integer(0),self.place)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

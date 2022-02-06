@@ -10,8 +10,13 @@ import MachMemory
 
 public class ManagedSegment: Segment
     {
-    public class Space
+    public class Space: Equatable
         {
+        public static func ==(lhs: Space,rhs: Space) -> Bool
+            {
+            lhs.baseAddress == rhs.baseAddress
+            }
+            
         internal let baseAddress: Address
         internal var nextAddress: Address
         internal let lastAddress: Address
@@ -23,6 +28,27 @@ public class ManagedSegment: Segment
             self.nextAddress = baseAddress
             self.lastAddress = baseAddress + sizeInBytes
             self.sizeInBytes = sizeInBytes
+            }
+            
+        public func reset()
+            {
+            ResetMemory(self.baseAddress,self.sizeInBytes)
+            self.nextAddress = self.baseAddress
+            }
+            
+        internal func write(toStream stream: UnsafeMutablePointer<FILE>) throws
+            {
+            var address = self.baseAddress
+            fwrite(&address,MemoryLayout<Address>.size,1,stream)
+            address = self.nextAddress
+            fwrite(&address,MemoryLayout<Address>.size,1,stream)
+            address = self.lastAddress
+            fwrite(&address,MemoryLayout<Address>.size,1,stream)
+            address = self.sizeInBytes
+            fwrite(&address,MemoryLayout<Address>.size,1,stream)
+            address = self.nextAddress - self.baseAddress
+            fwrite(&address,MemoryLayout<Address>.size,1,stream)
+            fwrite(UnsafeMutableRawPointer(bitPattern: self.baseAddress),Int(address),1,stream)
             }
             
         internal func allocateSizeInBytes(_ size: Word) throws -> Address
@@ -82,6 +108,28 @@ public class ManagedSegment: Segment
         self.currentSpace = fromSpace
         }
         
+    internal override func reset()
+        {
+        self.fromSpace.reset()
+        self.toSpace.reset()
+        }
+        
+    public override func write(toStream: UnsafeMutablePointer<FILE>) throws
+        {
+        try self.fromSpace.write(toStream: toStream)
+        try self.toSpace.write(toStream: toStream)
+        if self.currentSpace == self.fromSpace
+            {
+            var value:Word = 0
+            fwrite(&value,MemoryLayout<Word>.size,1,toStream)
+            }
+        else
+            {
+            var value:Word = 1
+            fwrite(&value,MemoryLayout<Word>.size,1,toStream)
+            }
+        }
+        
     public func allocateObject(ofClass someClass: TypeClass) throws -> Address
         {
         let sizeInBytes = self.align(someClass.instanceSizeInBytes + someClass.extraSizeInBytes)
@@ -89,9 +137,66 @@ public class ManagedSegment: Segment
         let pointer = ClassBasedPointer(address: address,type: someClass)
         pointer.setClass(someClass)
         pointer.sizeInBytes = Word(sizeInBytes)
-        pointer.tag = .header
-        pointer.classAddress = someClass.memoryAddress
-        pointer.magicNumber = someClass.magicNumber
-        return(Word(object: address))
+        return(Word(pointer: address))
+        }
+        
+    public override func allocateMemoryAddress(for symbol: Symbol)
+        {
+        fatalError()
+        }
+        
+    public override func allocateWords(count:Int) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateMemoryAddress(for aStatic: StaticObject)
+        {
+        fatalError()
+        }
+        
+    public override func allocateMemoryAddress(for methodInstance: MethodInstance)
+        {
+        fatalError()
+        }
+        
+    public override func allocateInstructionBlock(for methodInstance: MethodInstance) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateObject(ofType type: Type,extraSizeInBytes: Int) -> Address
+        {
+        try! self.allocateObject(ofClass: type as! TypeClass)
+        }
+        
+    public override func allocateSymbol(_ string: String) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateBucket(nextBucketAddress: Address?,bucketValue: Address?,bucketKey: Word) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateString(_ string: String) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateArray(size: Int) -> Address
+        {
+        return(self.allocateArray(size: size,elements: [] as Array<Address>))
+        }
+        
+    public override func allocateArray(size: Int,elements: Addresses) -> Address
+        {
+        fatalError()
+        }
+        
+    public override func allocateArray(size: Int,elements: Addressables) -> Address
+        {
+        fatalError()
         }
     }

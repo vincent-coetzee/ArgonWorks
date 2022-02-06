@@ -7,13 +7,18 @@
 
 import Foundation
 
-public class ArrayPointer: ObjectPointer,Collection
+public class ArrayPointer: ClassBasedPointer,Collection,Pointer
     {
-    public override class func sizeInBytes() -> Int
+    public var cleanAddress: Address
         {
-        144
+        self.address.cleanAddress
         }
-    
+        
+    public var dirtyAddress: Address
+        {
+        self.address
+        }
+        
     public var startIndex: Int
         {
         return(0)
@@ -53,25 +58,27 @@ public class ArrayPointer: ObjectPointer,Collection
         {
         get
             {
-            Int(self.wordPointer[10])
+            self.integer(atSlot: "count")
             }
         set
             {
-            self.wordPointer[10] = Word(newValue)
+            self.setInteger(newValue,atSlot: "count")
             }
         }
         
     public var size: Int
         {
-        Int(self.wordPointer[12])
+        self.integer(atSlot: "size")
         }
         
     internal var elementPointer: WordPointer
     
     public required init?(dirtyAddress: Word)
         {
-        self.elementPointer = WordPointer(bitPattern: dirtyAddress.cleanAddress + Word(15 * MemoryLayout<Word>.size))
-        super.init(dirtyAddress: dirtyAddress)
+        self.elementPointer = WordPointer(bitPattern: 1)
+        super.init(address: dirtyAddress.cleanAddress,class: ArgonModule.shared.array as! TypeClass)
+        let offset = Word(ArgonModule.shared.array.layoutSlotCount * Argon.kWordSizeInBytesInt)
+        self.elementPointer = WordPointer(bitPattern: dirtyAddress.cleanAddress + offset)
         }
         
     public func index(after: Int) -> Int
@@ -79,7 +86,7 @@ public class ArrayPointer: ObjectPointer,Collection
         after + 1
         }
         
-    public override subscript(_ index: Int) -> Word
+    public subscript(_ index: Int) -> Word
         {
         get
             {
@@ -97,7 +104,7 @@ public class ArrayPointer: ObjectPointer,Collection
             {
             fatalError("Can not append more the \(self.size) elements.")
             }
-        self[self.count] = addressable.dirtyAddress
+        self[self.count] = Word(pointer: addressable.cleanAddress)
         self.count += 1
         }
         

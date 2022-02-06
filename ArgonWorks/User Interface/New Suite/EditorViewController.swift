@@ -203,6 +203,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             {
             self.appendIssue(issue)
             }
+        self.refreshSourceAnnotations()
         }
         
     public func cancelCompletion()

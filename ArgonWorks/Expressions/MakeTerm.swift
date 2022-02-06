@@ -24,22 +24,26 @@ import Foundation
 public class MakeTerm: Expression
     {
     private var arguments: Arguments
-
+    private let madeType: Type
+    
     required init?(coder: NSCoder)
         {
         self.arguments = coder.decodeArguments(forKey: "arguments")
+        self.madeType = coder.decodeObject(forKey: "madeType") as! Type
         super.init(coder: coder)
         }
         
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
+        coder.encode(self.madeType,forKey: "madeType")
         coder.encodeArguments(self.arguments,forKey: "arguments")
         }
 
     public init(type: Type,arguments: Arguments)
         {
         self.arguments = arguments
+        self.madeType = type
         super.init()
         self.type = type
         }
@@ -71,12 +75,15 @@ public class MakeTerm: Expression
         
     public override func initializeType(inContext context: TypeContext)
         {
+        self.madeType.initializeType(inContext: context)
         self.arguments = self.arguments.map{$0.initializeType(inContext: context)}
+        self.type = self.madeType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.arguments.forEach{$0.initializeTypeConstraints(inContext: context)}
+        context.append(TypeConstraint(left: self.type,right: self.madeType,origin: .expression(self)))
         }
         
     public override func visit(visitor: Visitor) throws
@@ -97,26 +104,38 @@ public class MakeTerm: Expression
             }
         }
 
-    public override func emitValueCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitValueCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         try self.emitCode(into: instance,using: generator)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         guard let location = self.declaration else
             {
             print("WARNING: CAN NOT FIND LOCATION FOR \(self)")
             return
             }
-        instance.append(lineNumber: location.line)
-        instance.append(.MAKE,.address(self.type.memoryAddress))
+        instance.add(lineNumber: location.line)
+        for argument in self.arguments.reversed()
+            {
+            try argument.value.emitValueCode(into: instance,using: generator)
+            instance.add(.PUSH,argument.value.place)
+            }
+        if self.type.memoryAddress == 0
+            {
+            let allocator = generator.addressAllocator
+            self.type.allocateAddresses(using: allocator)
+            self.type.layoutInMemory(using: allocator)
+            }
+        instance.add(.MAKE,.address(self.type.memoryAddress),.register(.RR))
         ///
         ///
         /// Need to add the logic for identifying and invoking the appropriate
         /// initialize method.
         ///
         ///
-        self._place = .returnValue
+        instance.add(.POPN,.integer(Argon.Integer(self.arguments.count)))
+        self._place = .register(.RR)
         }
     }

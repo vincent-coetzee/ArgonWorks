@@ -9,20 +9,20 @@ import Foundation
 
 public class Closure:Invocable
     {
-    public let block: Block
-    public let buffer: T3ABuffer
+    public var block: Block
+    public let buffer: InstructionBuffer
     
     required init(label:Label)
         {
         self.block = Block()
-        self.buffer = T3ABuffer()
+        self.buffer = InstructionBuffer()
         super.init(label: label)
         }
     
     public required init?(coder: NSCoder)
         {
         self.block = coder.decodeObject(forKey: "block") as! Block
-        self.buffer = coder.decodeObject(forKey: "buffer") as! T3ABuffer
+        self.buffer = coder.decodeObject(forKey: "buffer") as! InstructionBuffer
         super.init(coder: coder)
         }
         
@@ -47,16 +47,12 @@ public class Closure:Invocable
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let newClosure = Closure(label: self.label)
-        newClosure.localSymbols = self.localSymbols.map{$0.substitute(from: substitution)}
-        newClosure.parameters = self.parameters.map{$0.substitute(from: substitution)}
-        newClosure.returnType = substitution.substitute(self.returnType)
-        for block in self.block.blocks
-            {
-            newClosure.block.addBlock(substitution.substitute(block))
-            }
+        self.localSymbols = self.localSymbols.map{$0.substitute(from: substitution)}
+        self.parameters = self.parameters.map{$0.substitute(from: substitution)}
+        self.returnType = substitution.substitute(self.returnType)
+        self.block = substitution.substitute(self.block)
         self.type = substitution.substitute(self.type)
-        return(newClosure as! Self)
+        return(self)
         }
         
     public override func display(indent: String)
@@ -78,7 +74,7 @@ public class Closure:Invocable
             {
             block.initializeType(inContext: context)
             }
-        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType))
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -93,18 +89,13 @@ public class Closure:Invocable
             }
         }
         
-    public override func allocateAddresses(using allocator:AddressAllocator) throws
-        {
-        try super.allocateAddresses(using: allocator)
-        }
-        
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
         {
         super.analyzeSemantics(using: analyzer)
         self.block.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.block.emitCode(into: self.buffer,using: using)
         }

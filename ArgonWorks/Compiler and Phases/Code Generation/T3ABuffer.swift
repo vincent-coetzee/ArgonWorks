@@ -73,10 +73,13 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         {
         T3ALabel()
         }
-        
     
     public func append(lineNumber line: Int)
         {
+        guard line != 0 else
+            {
+            return
+            }
         self.append(.LINE,.integer(Argon.Integer(line)))
         }
         
@@ -85,7 +88,7 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         self.append(nil,opcode,operand1,operand2,result)
         }
         
-    public func append(_ label: T3ALabel? = nil,_ opcode: Opcode,_ operand1: T3AInstruction.Operand,_ operand2: T3AInstruction.Operand,_ result: T3AInstruction.Operand)
+    public func append(_ label: T3ALabel? = nil,_ opcode: Opcode,_ operand1: T3AInstruction.Operand = .none,_ operand2: T3AInstruction.Operand = .none,_ result: T3AInstruction.Operand = .none)
         {
         if opcode != .LINE
             {
@@ -114,6 +117,10 @@ public class T3ABuffer: NSObject,NSCoding,Collection
             {
             self.pendingLabel = nil
             }
+        if instruction.opcode == .FDIV64 && instruction.operandCount == 2
+            {
+            fatalError()
+            }
         }
         
     public func display(indent: String)
@@ -126,11 +133,35 @@ public class T3ABuffer: NSObject,NSCoding,Collection
         
     public func appendEntry(temporaryCount: Int)
         {
-        self.append(.ENTER,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+        if temporaryCount != 0
+            {
+            self.append(.ENTER,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+            }
         }
         
     public func appendExit(temporaryCount: Int)
         {
-        self.append(.LEAVE,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+        if temporaryCount != 0
+            {
+            self.append(.LEAVE,.integer(Argon.Integer(8*temporaryCount)),.none,.none)
+            }
+        }
+        
+    public func flattenLabels(atAddress: Address)
+        {
+        let bump = Word(T3AInstruction.sizeInBytes)
+        var address = atAddress
+        for instruction in self.instructions
+            {
+            if instruction.label.isNotNil
+                {
+                instruction.label!.address = address
+                }
+            address += bump
+            }
+        for instruction in self.instructions
+            {
+            instruction.mutateLabelsIntoAddresses()
+            }
         }
     }

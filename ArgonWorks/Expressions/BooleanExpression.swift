@@ -41,24 +41,24 @@ public class BooleanExpression: BinaryExpression
         context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        guard let methodInstance = self.selectedMethodInstance else
-            {
-            print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
-            return
-            }
+        let temporary = instance.nextTemporary
         try self.lhs.emitValueCode(into: instance, using: generator)
         try self.rhs.emitValueCode(into: instance, using: generator)
-        let temporary = instance.nextTemporary()
-        switch(self.operation.rawValue,methodInstance.returnType.label)
+        switch(self.operation.rawValue,"Boolean")
             {
             case ("&&","Boolean"):
-                instance.append(.IAND64,self.lhs.place,self.rhs.place,temporary)
+                instance.add(.AND,self.lhs.place,self.rhs.place,temporary)
             case ("||","Boolean"):
-                instance.append(.IOR64,self.lhs.place,self.rhs.place,temporary)
+                instance.add(.OR,self.lhs.place,self.rhs.place,temporary)
             default:
-                fatalError("This should not happen.")
+                let label = "#" + self.operation.rawValue
+                let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
+                instance.add(.PUSH,self.lhs.place)
+                instance.add(.PUSH,self.rhs.place)
+                instance.add(.SEND,.integer(symbol),temporary)
+                instance.add(.POPN,.integer(2))
             }
         self._place = temporary
         }

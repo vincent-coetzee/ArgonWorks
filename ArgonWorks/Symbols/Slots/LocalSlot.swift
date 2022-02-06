@@ -39,7 +39,7 @@ public class LocalSlot:Slot
         .localSlot
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator)
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator)
         {
         }
         
@@ -48,12 +48,12 @@ public class LocalSlot:Slot
         return(self.type.lookup(label: label))
         }
         
-    public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         self.place = .frameOffset(self.offset)
         }
         
-    public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         self.place = .frameOffset(self.offset)
         }

@@ -9,11 +9,11 @@ import Foundation
 
 public class TypeConstructor: Type
     {
-    public static func ==(lhs: TypeConstructor,rhs: TypeConstructor) -> Bool
-        {
-        lhs.index == rhs.index && lhs.generics == rhs.generics
-        }
-        
+//    public static func ==(lhs: TypeConstructor,rhs: TypeConstructor) -> Bool
+//        {
+//        lhs.index == rhs.index && lhs.generics == rhs.generics
+//        }
+//        
     public override var isTypeConstructor: Bool
         {
         true
@@ -91,6 +91,15 @@ public class TypeConstructor: Type
         {
         coder.encode(self.generics,forKey:"generics")
         super.encode(with: coder)
+        }
+        
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? TypeConstructor
+            {
+            return(self.label == second.label && self.generics == second.generics)
+            }
+        return(super.isEqual(object))
         }
         
     public override func contains(_ type:Type) -> Bool

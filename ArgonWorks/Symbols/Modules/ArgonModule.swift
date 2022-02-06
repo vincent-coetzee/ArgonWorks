@@ -17,6 +17,8 @@ import Foundation
 ///
 public class ArgonModule: SystemModule
     {
+    public private(set) var systemClassNames: Array<String>!
+    
     public static var shared: ArgonModule!
     
     public override var typeCode:TypeCode
@@ -29,9 +31,9 @@ public class ArgonModule: SystemModule
         return(true)
         }
         
-    public var nilClass: Type
+    public var null: Type
         {
-        return(self.lookup(label: "Nil") as! Type)
+        return(self.lookup(label: "Null") as! Type)
         }
         
     public var number: Type
@@ -99,14 +101,14 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "MethodInstance") as! Type)
         }
         
-    public var `class`: Type
+    public var classType: Type
         {
         return(self.lookup(label: "Class") as! Type)
         }
         
-    public var metatype: Type
+    public var metaclassType: Type
         {
-        return(self.lookup(label: "Metatype") as! Type)
+        return(self.lookup(label: "Metaclass") as! Type)
         }
         
     public var array: Type
@@ -164,7 +166,7 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "ListNode") as! Type)
         }
         
-    public var typeClass: Type
+    public var typeType: Type
         {
         return(self.lookup(label: "Type") as! Type)
         }
@@ -184,9 +186,9 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Address") as! Type)
         }
         
-    public var dictionaryBucket: Type
+    public var bucket: Type
         {
-        return(self.lookup(label: "DictionaryBucket") as! Type)
+        return(self.lookup(label: "Bucket") as! Type)
         }
         
     public var generic: Type
@@ -259,6 +261,16 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "Character") as! Type)
         }
         
+    public var dateComponent: Type
+        {
+        return(self.lookup(label: "DateComponent") as! Type)
+        }
+        
+    public var timeComponent: Type
+        {
+        return(self.lookup(label: "TimeComponent") as! Type)
+        }
+        
     public var variadicParameter: Type
         {
         return(self.lookup(label: "VariadicParameter") as! Type)
@@ -267,6 +279,11 @@ public class ArgonModule: SystemModule
     public var enumeration: Type
         {
         return(self.lookup(label: "Enumeration") as! Type)
+        }
+        
+    public var treeNode: Type
+        {
+        return(self.lookup(label: "TreeNode") as! Type)
         }
         
     public var literal: Type
@@ -284,6 +301,26 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "SlotType") as! Type)
         }
         
+    public var set: Type
+        {
+        return(self.lookup(label: "Set") as! Type)
+        }
+        
+    public var objectClass: Type
+        {
+        return(self.lookup(label: "ObjectClass") as! Type)
+        }
+        
+    public var instructionBlock: Type
+        {
+        return(self.lookup(label: "InstructionBlock") as! Type)
+        }
+        
+    public var enumerationCaseInstance: Type
+        {
+        return(self.lookup(label: "EnumerationCaseInstance") as! Type)
+        }
+        
 //    private var systemClassInLoadingOrder = Classes()
     private let instanceNumber: Int
         
@@ -295,14 +332,14 @@ public class ArgonModule: SystemModule
         
     public func initialize()
         {
-        UUID.resetSystemUUIDCounter()
         self.initTypes()
         self.initClasses()
         self.initBaseMethods()
         self.initSlots()
-        self.initConstants()
+        self.initVariables()
         self.layoutObjectSlots()
         self.postProcessTypes()
+        self.systemClassNames = self.symbols.compactMap{$0 as? TypeClass}.map{$0.label}
         }
     
     required init?(coder: NSCoder)
@@ -319,15 +356,14 @@ public class ArgonModule: SystemModule
 
     public func addSystemClass(_ aClass: Type)
         {
-        aClass.setIndex(UUID.systemUUID(self.instanceNumber))
         aClass.flags([.kSystemTypeFlag])
         self.addSymbol(aClass)
         }
         
     public func addSystemEnumeration(_ anEnum: Type)
         {
-        anEnum.setIndex(UUID.systemUUID(self.instanceNumber))
-        (anEnum as! TypeEnumeration)._isSystemType = true
+        anEnum.flags([.kSystemTypeFlag])
+        self.addSymbol((anEnum as! TypeEnumeration).createRawValueMethod())
         self.addSymbol(anEnum)
         }
         
@@ -339,6 +375,14 @@ public class ArgonModule: SystemModule
     private func initTypes()
         {
         self.addSystemClass(TypeClass(label: "Object").flags([.kRootTypeFlag,.kSystemTypeFlag]).mcode("o").setType(.object))
+        self.addSystemClass(TypeClass(label: "Bucket").flags([.kSystemTypeFlag]).superclass(self.object).setType(.bucket))
+        self.addSystemClass(TypeClass(label: "TreeNode").flags([.kSystemTypeFlag]).superclass(self.object).setType(.treeNode))
+        self.addSystemClass(TypeClass(label: "Type").flags([.kSystemTypeFlag]).superclass(self.object).setType(.type))
+        self.addSystemClass(TypeClass(label: "Class").flags([.kSystemTypeFlag]).superclass(self.typeType).mcode("c").setType(.class))
+        self.addSystemClass(TypeClass(label: "Enumeration").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.typeType).mcode("e").setType(.enumeration))
+        self.addSystemClass(TypeClass(label: "EnumerationCase").flags([.kSystemTypeFlag]).superclass(self.object).mcode("q").setType(.enumerationCase))
+        self.addSystemClass(TypeClass(label: "Collection").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).mcode("f").setType(.collection))
+        self.addSystemClass(TypeClass(label: "Array").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("a").setType(.array))
         self.addSystemClass(TypeClass(label: "Magnitude").flags([.kValueTypeFlag,.kSystemTypeFlag]).superclass(self.object).setType(.magnitude))
         self.addSystemClass(TypeClass(label: "Number").flags([.kValueTypeFlag,.kSystemTypeFlag]).superclass(self.magnitude).setType(.number))
         self.addSystemClass(TypeClass(label: "Integer").flags([.kPrimitiveTypeFlag,.kSystemTypeFlag]).superclass(self.number).setType(.integer))
@@ -347,10 +391,6 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "String").flags([.kSystemTypeFlag]).superclass(self.object).setType(.string))
         self.addSystemClass(TypeClass(label: "Slot").flags([.kSystemTypeFlag]).superclass(self.object).mcode("l").setType(.slot))
         self.addSystemClass(TypeClass(label: "Iterable").flags([.kSystemTypeFlag]).superclass(self.object).mcode("d"))
-        self.addSystemClass(TypeClass(label: "Collection").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).mcode("f").setType(.collection))
-        self.addSystemClass(TypeClass(label: "Array").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("a").setType(.array))
-        self.addSystemClass(TypeClass(label: "Type").flags([.kSystemTypeFlag]).superclass(self.object).setType(.type))
-        self.addSystemClass(TypeClass(label: "Class").flags([.kSystemTypeFlag]).superclass(self.typeClass).mcode("c").setType(.class))
         self.addSystemClass(TypeClass(label: "Error").flags([.kSystemTypeFlag]).superclass(self.object).setType(.error))
         self.addSystemClass(TypeClass(label: "Block").flags([.kSystemTypeFlag]).superclass(self.object).setType(.block))
         self.addSystemClass(TypeClass(label: "Index").flags([.kSystemTypeFlag]).superclass(self.object).setType(.index))
@@ -363,17 +403,14 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Address").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.uInteger).mcode("h").setType(.address))
         self.addSystemClass(TypeClass(label: "Symbol").flags([.kSystemTypeFlag]).superclass(self.string).mcode("x").setType(.symbol))
         self.addSystemClass(TypeClass(label: "Byte").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.magnitude).mcode("b").setType(.byte))
-        self.addSystemClass(TypeClass(label: "Enumeration").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.typeClass).mcode("e").setType(.enumeration))
-        self.addSystemClass(TypeClass(label: "EnumerationCase").flags([.kSystemTypeFlag]).superclass(self.object).mcode("q").setType(.enumerationCase))
-        self.addSystemClass(TypeClass(label: "Tuple").flags([.kSystemTypeFlag]).superclass(self.typeClass).mcode("p").setType(.tuple))
-        self.addSystemClass(TypeClass(label: "Module").flags([.kSystemTypeFlag]).superclass(self.typeClass).setType(.module))
+        self.addSystemClass(TypeClass(label: "Tuple").flags([.kSystemTypeFlag]).superclass(self.typeType).mcode("p").setType(.tuple))
+        self.addSystemClass(TypeClass(label: "Module").flags([.kSystemTypeFlag]).superclass(self.typeType).setType(.module))
         self.addSystemClass(TypeClass(label: "Parameter").flags([.kSystemTypeFlag]).superclass(self.slot).setType(.parameter))
-        self.addSystemClass(TypeClass(label: "Nil").flags([.kSystemTypeFlag]).superclass(self.object).mcode("a").setType(.nil))
+        self.addSystemClass(TypeClass(label: "Null").flags([.kSystemTypeFlag]).superclass(self.object).mcode("a").setType(.nil))
         self.addSystemClass(TypeClass(label: "Invokable").flags([.kSystemTypeFlag]).superclass(self.object).setType(.invokable))
         self.addSystemClass(TypeClass(label: "Function").flags([.kSystemTypeFlag]).superclass(self.invokable).mcode("f").setType(.function))
         self.addSystemClass(TypeClass(label: "MethodInstance").flags([.kSystemTypeFlag]).superclass(self.invokable).setType(.methodInstance))
         self.addSystemClass(TypeClass(label: "Instruction").flags([.kSystemTypeFlag]).superclass(self.object).setType(.instruction))
-        self.addSystemClass(TypeClass(label: "DictionaryBucket").flags([.kSystemTypeFlag]).superclass(self.object).setType(.dictionaryBucket))
         self.addSystemClass(TypeClass(label: "Dictionary").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("j").setType(.dictionary))
         self.addSystemClass(TypeClass(label: "List").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("n").setType(.list))
         self.addSystemClass(TypeClass(label: "ListNode").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("N").setType(.listNode))
@@ -381,29 +418,31 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Set").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("S").setType(.set))
         self.addSystemClass(TypeClass(label: "Vector").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("V").setType(.vector))
         self.addSystemClass(TypeClass(label: "Closure").flags([.kSystemTypeFlag]).superclass(self.invokable).mcode("C").setType(.closure))
-        self.addSystemClass(TypeClass(label: "Metatype").flags([.kSystemTypeFlag]).superclass(self.typeClass).mcode("t").setType(.metaclass))
-        self.addSystemEnumeration(TypeEnumeration(label: "Opcode").flags([.kSystemTypeFlag]).cases("#CALL","#CALLP","#STP","#LFP","#IADD","#FADD","#ISUB","#FSUB","#IMUL","#FMUL","#IDIV","#FDIV","#IMOD","#FMOD","#IPOW","#FPOW","#ILT","#ILTEQ","#IEQ","#INEQ","#IGT","#IGTEQ","#FLT","FLTEQ","#FEQ","#FNEQ","#FGT","#FGTEQ","#INEG","#FNEG","#IBITAND","#IBITOR","#IBITXOR","#NOT","#BITNOT","#IINC","#IDEC","#IINCW","#IDECW","#RET","#PUSH","#POP","#MOV"))
-        self.addSystemEnumeration(TypeEnumeration(label: "Literal").flags([.kSystemTypeFlag]).case("#integer",[self.integer]).case("float",[self.float]).case("boolean",[self.boolean]).case("byte",[self.byte]).case("character",[self.character]).case("string",[self.string]).case("address",[self.address]))
-        self.addSystemEnumeration(TypeEnumeration(label: "Operand").flags([.kSystemTypeFlag]).case("#literal",[self.literal]).case("#address",[self.address]).case("#indirect",[self.integer,self.integer]).case("#return",[]).case("#stack",[]).case("#frame",[]).case("#label",[self.integer]).case("#temporary",[self.integer]).case("#literal",[self.literal]).case("#none",[]))
-        self.addSystemEnumeration(TypeEnumeration(label: "SlotType").flags([.kSystemTypeFlag]).cases("#instanceSlot","#localSlot","#moduleSlot","#classSlot","#magicNumberSlot","#headerSlot","#virtualReadSlot","#virtualReadWriteSlot","#cocoonSlot"))
+        self.addSystemClass(TypeClass(label: "Metaclass").flags([.kSystemTypeFlag]).superclass(self.classType).mcode("t").setType(.metaclass))
+        self.addSystemClass(TypeClass(label: "InstructionBlock").flags([.kSystemTypeFlag]).superclass(self.object).mcode("i").setType(.instructionBlock))
+        self.addSystemClass(TypeClass(label: "EnumerationCaseInstance").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
+        self.addSystemEnumeration(TypeEnumeration(label: "Opcode").flags([.kSystemTypeFlag]).cases(Instruction.opcodeLabels).setType(.enumeration))
+        self.addSystemEnumeration(TypeEnumeration(label: "TimeComponent").flags([.kSystemTypeFlag]).case("#hours",[self.integer]).case("#minutes",[self.integer]).case("seconds",[self.integer]).case("#milliseconds",[self.integer]).setType(.enumeration))
+        self.addSystemEnumeration(TypeEnumeration(label: "DateComponent").flags([.kSystemTypeFlag]).case("#days",[self.integer]).case("#months",[self.integer]).case("years",[self.integer]).case("decades",[self.integer]).setType(.enumeration))
+        self.addSystemEnumeration(TypeEnumeration(label: "SlotType").flags([.kSystemTypeFlag]).cases("#instanceSlot","#localSlot","#moduleSlot","#classSlot","#magicNumberSlot","#headerSlot","#virtualReadSlot","#virtualReadWriteSlot","#cocoonSlot").setType(.enumeration))
         }
         
-    private func initConstants()
+    private func initVariables()
         {
-        self.addSymbol(SystemConstant(label:"$UserFirstName",type:self.string))
-        self.addSymbol(SystemConstant(label:"$ArgonDirectory",type:self.string))
-        self.addSymbol(SystemConstant(label:"$ArgonVersion",type:self.string))
-        self.addSymbol(SystemConstant(label:"$ArgonIsHeadless",type:self.boolean))
-        self.addSymbol(SystemConstant(label:"$UserLastName",type:self.string))
-        self.addSymbol(SystemConstant(label:"$UserName",type:self.string))
-        self.addSymbol(SystemConstant(label:"$UserEMailAddress",type:self.string))
-        self.addSymbol(SystemConstant(label:"$HostName",type:self.string))
-        self.addSymbol(SystemConstant(label:"$IPAddress",type:self.string))
-        self.addSymbol(SystemConstant(label:"$EthernetAddress",type:self.string))
-        self.addSymbol(SystemConstant(label:"$GatewayAddress",type:self.string))
-        self.addSymbol(SystemConstant(label:"$UserHomeDirectory",type:self.string))
-        self.addSymbol(SystemConstant(label:"$IPAddresses",type:self.array.of(self.string)))
-        self.addSymbol(SystemConstant(label:"$EthernetAddresses",type:self.array.of(self.string)))
+        self.addSymbol(GlobalSlot(label:"$userFirstName",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$directory",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$version",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$headless",type:self.boolean))
+        self.addSymbol(GlobalSlot(label:"$userLastName",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$userName",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$userEMailAddress",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$hostname",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$ipAddress",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$ethernetAddress",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$gatewayAddress",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$userHomeDirectory",type:self.string))
+        self.addSymbol(GlobalSlot(label:"$ipAddresses",type:self.array.of(self.string)))
+        self.addSymbol(GlobalSlot(label:"$ethernetAddresses",type:self.array.of(self.string)))
         }
         
     private func initMetatypes(forType: Type)
@@ -412,8 +451,24 @@ public class ArgonModule: SystemModule
             {
             return
             }
-        typeClass.type = Argon.addType(TypeClassClass(label: typeClass.label + "Class",isSystem: typeClass.isSystemType,generics: typeClass.generics))
-        typeClass.type.type = self.metatype
+        guard typeClass.type == nil else
+            {
+            return
+            }
+        print("CREATING METACLASS FOR \(forType.label)")
+        if typeClass.supertype.isNotNil && typeClass.supertype!.type.isNil
+            {
+            self.initMetatypes(forType: typeClass.supertype!)
+            }
+        let typeMetaclass = TypeMetaclass(label: typeClass.label + "Class",isSystem: typeClass.isSystemType,generics: typeClass.generics)
+        if typeClass.supertype.isNotNil
+            {
+            typeMetaclass.setSupertype(typeClass.supertype!.type)
+            }
+        typeMetaclass.flags([.kSystemTypeFlag,.kMetaclassFlag])
+        self.addSystemClass(typeMetaclass)
+        typeClass.type = typeMetaclass
+        typeClass.type.type = self.metaclassType
         for type in typeClass.subtypes
             {
             self.initMetatypes(forType: type)
@@ -422,7 +477,7 @@ public class ArgonModule: SystemModule
         
     private func initClasses()
         {
-        self.metatype.type = self.object
+        self.metaclassType.type = self.object
         self.initMetatypes(forType: self.object)
         }
         
@@ -434,119 +489,325 @@ public class ArgonModule: SystemModule
     ///
     private func postProcessTypes()
         {
-        self.collection.typeVar("ELEMENT")
         self.dictionary.typeVar("KEY").typeVar("VALUE")
         self.listNode.typeVar("ELEMENT")
         self.pointer.typeVar("ELEMENT")
-        for type in self.symbols.compactMap({$0 as? Type})
-            {
-            Argon.addType(type)
-            }
-        assert(Argon.typeTable[self.object.argonHash].isNotNil)
+//        assert(Argon.typeAtKey(self.object.argonHash).isNotNil)
         }
         
     private func initSlots()
         {
-        self.array.hasBytes(true).slot("elements",self.array.of(self.object))
-        self.block.slot("count",self.integer).slot("size",self.integer).slot("nextBlock",self.address).hasBytes(true).slot("bytesOffset",self.integer)
-        self.class.slot("superclass",self.class).slot("subclasses",self.array.of(self.class)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer).slot("isArchetype",self.boolean).slot("isGenericInstance",self.boolean)
-        self.closure.slot("codeSegment",self.address).slot("initialIP",self.address).slot("localCount",self.integer).slot("localSlots",self.array.of(self.slot)).slot("contextPointer",self.address).slot("parameters",self.array.of(self.parameter)).slot("returnType",self.typeClass)
-        self.collection.slot("count",self.integer).slot("size",self.integer).slot("elementType",self.typeClass)
+        self.array.setHasBytes(true).slot("elements",self.array.of(self.object))
+        self.block.slot("count",self.integer).slot("size",self.integer).slot("nextBlock",self.address).setHasBytes(true).slot("startIndex",self.integer).slot("stopIndex",self.integer)
+        self.classType.slot("superclass",self.classType).slot("subclasses",self.array.of(self.classType)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer).slot("isArchetype",self.boolean).slot("isGenericInstance",self.boolean)
+        self.bucket.slot("nextBucket?",self.bucket).slot("bucketValue",self.object).slot("bucketKey",self.integer)
+        self.closure.slot("codeSegment",self.address).slot("initialIP",self.address).slot("localCount",self.integer).slot("contextPointer",self.address)
+        self.collection.slot("count",self.integer).slot("size",self.integer).slot("elementType",self.typeType)
         self.date.slot("day",self.integer).slot("month",self.string).slot("monthIndex",self.integer).slot("year",self.integer)
-        self.dictionary.slot("hashFunction",self.closure).slot("prime",self.integer)
-        self.dictionaryBucket.slot("key",self.object).slot("value",self.object).slot("next",self.dictionaryBucket)
-        self.enumeration.slot("rawType",self.typeClass).slot("cases",self.array.of(self.enumerationCase))
-        self.enumerationCase.slot("symbol",self.symbol).slot("associatedTypes",self.array.of(self.typeClass)).slot("enumeration",self.enumeration).slot("rawType",self.integer).slot("instanceSizeInBytes",self.integer).slot("index",self.integer)
-        self.function.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("libraryPath",self.string).slot("libraryHandle",self.address).slot("librarySymbol",self.address)
-        self.list.slot("elementSize",self.integer).slot("first",self.listNode).slot("last",self.listNode)
+        self.dictionary.slot("rootNode",self.treeNode)
+        self.enumeration.slot("rawType",self.typeType).slot("cases",self.array.of(self.enumerationCase))
+        self.enumerationCase.slot("symbol",self.symbol).slot("associatedTypes",self.array.of(self.typeType)).slot("enumeration",self.enumeration).slot("rawType",self.integer).slot("instanceSizeInBytes",self.integer).slot("index",self.integer)
+        self.enumerationCaseInstance.slot("enumeration",self.enumeration).slot("caseIndex",self.integer).slot("associatedValueCount",self.integer)
+        self.function.slot("libraryPath",self.string).slot("libraryHandle",self.address).slot("librarySymbol",self.address)
+//        self.instruction.slot("opcode",self.opcode).slot("offset",self.integer).slot("operand1",self.operand).slot("operand2",self.operand).slot("result",self.operand)
+        self.instructionBlock.slot("count",self.integer).slot("size",self.integer)
+        self.invokable.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeType).slot("localSlots",self.array.of(self.slot)).slot("module",self.moduleType)
         self.listNode.slot("element",self.object).slot("next",self.listNode).slot("previous",self.listNode)
-        self.metatype.slot("baseType",self.typeClass)
-        self.methodInstance.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeClass).slot("localSlots",self.array.of(self.slot)).slot("instructions",self.array.of(self.instruction))
-        self.moduleType.slot("isSystemModule",self.boolean).slot("symbols",self.typeClass).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
+        self.methodInstance.slot("instructionCount",self.integer).slot("instructionBlock",self.instructionBlock).slot("instructionAddress",self.address)
+        self.moduleType.slot("isSystemModule",self.boolean).slot("symbols",self.typeType).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
         self.object.slot("hash",self.integer)
-        self.slot.slot("name",self.string).slot("type",self.typeClass).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeClass).slot("slotType",self.slotType)
-        self.string.slot("count",self.integer).hasBytes(true)
-        self.tuple.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.typeClass.slot("name",self.string).slot("typeCode",self.integer).slot("module",self.moduleType).slot("typeParameters",self.array.of(self.typeClass)).slot("isSystemType",self.boolean)
-        self.instruction.slot("opcode",self.opcode).slot("offset",self.integer).slot("operand1",self.operand).slot("operand2",self.operand).slot("result",self.operand)
         self.parameter.slot("tag",self.string).slot("retag",self.string).slot("tagIsShown",self.boolean).slot("isVariadic",self.boolean)
+        self.list.slot("first",self.listNode).slot("last",self.listNode)
+        self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol)
+        self.string.slot("count",self.integer).setHasBytes(true)
+        self.tuple.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
+        self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer)
+        self.typeType.slot("name",self.string).slot("module",self.moduleType).slot("typeParameters",self.array.of(self.typeType)).slot("isSystemType",self.boolean)
         self.vector.slot("block",self.block).slot("blockCount",self.integer)
         }
 
     private func initBaseMethods()
         {
-        self.addSymbol(Infix(label: "+").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "-").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "*").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "/").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "**").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "**").triple(self,.generic("number"),.generic("anotherNumber"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "%").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.number)))
+//        self.addSymbol(Infix(label: "+").triple(self.integer,self.integer,self.integer).prim(100))
+//        self.addSymbol(Infix(label: "+").triple(self.uInteger,self.uInteger,self.uInteger).prim(101))
+//        self.addSymbol(Infix(label: "+").triple(self.float,self.float,self.float).prim(102))
+//        self.addSymbol(Infix(label: "+").triple(self.byte,self.byte,self.byte).prim(103))
+//        self.addSymbol(Infix(label: "+").triple(self.character,self.character,self.character).prim(104))
+//        self.addSymbol(Infix(label: "+").triple(self.date,self.dateComponent,self.date).prim(105))
+//        self.addSymbol(Infix(label: "+").triple(self.time,self.timeComponent,self.time).prim(106))
+//        self.addSymbol(Infix(label: "+").triple(self.dateTime,self.dateComponent,self.dateTime).prim(107))
+//        self.addSymbol(Infix(label: "+").triple(self.dateTime,self.timeComponent,self.dateTime).prim(108))
+//        self.addSymbol(Infix(label: "+").triple(self.string,self.string,self.string).prim(109))
+//        
+//        self.addSymbol(Infix(label: "-").triple(self.integer,self.integer,self.integer).prim(110))
+//        self.addSymbol(Infix(label: "-").triple(self.uInteger,self.uInteger,self.uInteger).prim(111))
+//        self.addSymbol(Infix(label: "-").triple(self.float,self.float,self.float).prim(112))
+//        self.addSymbol(Infix(label: "-").triple(self.byte,self.byte,self.byte).prim(113))
+//        self.addSymbol(Infix(label: "-").triple(self.character,self.character,self.character).prim(114))
+//        self.addSymbol(Infix(label: "-").triple(self.date,self.dateComponent,self.date).prim(115))
+//        self.addSymbol(Infix(label: "-").triple(self.time,self.timeComponent,self.time).prim(116))
+//        self.addSymbol(Infix(label: "-").triple(self.dateTime,self.dateComponent,self.dateTime).prim(117))
+//        self.addSymbol(Infix(label: "-").triple(self.dateTime,self.timeComponent,self.dateTime).prim(118))
+//        
+//        self.addSymbol(Infix(label: "*").triple(self.integer,self.integer,self.integer).prim(119))
+//        self.addSymbol(Infix(label: "*").triple(self.uInteger,self.uInteger,self.uInteger).prim(120))
+//        self.addSymbol(Infix(label: "*").triple(self.float,self.float,self.float).prim(121))
+//        self.addSymbol(Infix(label: "*").triple(self.byte,self.byte,self.byte).prim(122))
+//        self.addSymbol(Infix(label: "*").triple(self.character,self.character,self.character).prim(123))
+//        
+//        self.addSymbol(Infix(label: "/").triple(self.integer,self.integer,self.integer).prim(124))
+//        self.addSymbol(Infix(label: "/").triple(self.uInteger,self.uInteger,self.uInteger).prim(125))
+//        self.addSymbol(Infix(label: "/").triple(self.float,self.float,self.float).prim(126))
+//        self.addSymbol(Infix(label: "/").triple(self.byte,self.byte,self.byte).prim(127))
+//        self.addSymbol(Infix(label: "/").triple(self.character,self.character,self.character).prim(128))
+//        
+//        self.addSymbol(Infix(label: "%").triple(self.integer,self.integer,self.integer).prim(129))
+//        self.addSymbol(Infix(label: "%").triple(self.uInteger,self.uInteger,self.uInteger).prim(130))
+//        self.addSymbol(Infix(label: "%").triple(self.float,self.float,self.float).prim(131))
+//        self.addSymbol(Infix(label: "%").triple(self.byte,self.byte,self.byte).prim(132))
+//        self.addSymbol(Infix(label: "%").triple(self.character,self.character,self.character).prim(133))
+//        
+//        self.addSymbol(Infix(label: "**").triple(self.integer,self.integer,self.integer).prim(134))
+//        self.addSymbol(Infix(label: "**").triple(self.uInteger,self.uInteger,self.uInteger).prim(135))
+//        self.addSymbol(Infix(label: "**").triple(self.float,self.float,self.float).prim(136))
+//        self.addSymbol(Infix(label: "**").triple(self.byte,self.byte,self.byte).prim(137))
+//        self.addSymbol(Infix(label: "**").triple(self.character,self.character,self.character).prim(138))
+//        
+//        self.addSymbol(Infix(label: "*=").triple(self.integer,self.integer,self.integer).prim(139))
+//        self.addSymbol(Infix(label: "*=").triple(self.uInteger,self.uInteger,self.uInteger).prim(140))
+//        self.addSymbol(Infix(label: "*=").triple(self.float,self.float,self.float).prim(141))
+//        self.addSymbol(Infix(label: "*=").triple(self.byte,self.byte,self.byte).prim(142))
+//        self.addSymbol(Infix(label: "*=").triple(self.character,self.character,self.character).prim(143))
+//        
+//        self.addSymbol(Infix(label: "+=").triple(self.integer,self.integer,self.integer).prim(144))
+//        self.addSymbol(Infix(label: "+=").triple(self.uInteger,self.uInteger,self.uInteger).prim(145))
+//        self.addSymbol(Infix(label: "+=").triple(self.float,self.float,self.float).prim(146))
+//        self.addSymbol(Infix(label: "+=").triple(self.byte,self.byte,self.byte).prim(147))
+//        self.addSymbol(Infix(label: "+=").triple(self.character,self.character,self.character).prim(148))
+//        
+//        self.addSymbol(Infix(label: "-=").triple(self.integer,self.integer,self.integer).prim(149))
+//        self.addSymbol(Infix(label: "-=").triple(self.uInteger,self.uInteger,self.uInteger).prim(150))
+//        self.addSymbol(Infix(label: "-=").triple(self.float,self.float,self.float).prim(151))
+//        self.addSymbol(Infix(label: "-=").triple(self.byte,self.byte,self.byte).prim(152))
+//        self.addSymbol(Infix(label: "-=").triple(self.character,self.character,self.character).prim(153))
+//        
+//        self.addSymbol(Infix(label: "/=").triple(self.integer,self.integer,self.integer).prim(154))
+//        self.addSymbol(Infix(label: "/=").triple(self.uInteger,self.uInteger,self.uInteger).prim(155))
+//        self.addSymbol(Infix(label: "/=").triple(self.float,self.float,self.float).prim(156))
+//        self.addSymbol(Infix(label: "/=").triple(self.byte,self.byte,self.byte).prim(157))
+//        self.addSymbol(Infix(label: "/=").triple(self.character,self.character,self.character).prim(158))
+//        
+//        self.addSymbol(Infix(label: "%=").triple(self.integer,self.integer,self.integer).prim(159))
+//        self.addSymbol(Infix(label: "%=").triple(self.uInteger,self.uInteger,self.uInteger).prim(160))
+//        self.addSymbol(Infix(label: "%=").triple(self.float,self.float,self.float).prim(161))
+//        self.addSymbol(Infix(label: "%=").triple(self.byte,self.byte,self.byte).prim(162))
+//        self.addSymbol(Infix(label: "%=").triple(self.character,self.character,self.character).prim(163))
+//        
+//        self.addSymbol(Infix(label: "|=").triple(self.integer,self.integer,self.integer).prim(165))
+//        self.addSymbol(Infix(label: "|=").triple(self.uInteger,self.uInteger,self.uInteger).prim(166))
+//        self.addSymbol(Infix(label: "|=").triple(self.float,self.float,self.float).prim(167))
+//        self.addSymbol(Infix(label: "|=").triple(self.byte,self.byte,self.byte).prim(168))
+//        self.addSymbol(Infix(label: "|=").triple(self.character,self.character,self.character).prim(169))
+//        
+//        self.addSymbol(Infix(label: "&=").triple(self.integer,self.integer,self.integer).prim(170))
+//        self.addSymbol(Infix(label: "&=").triple(self.uInteger,self.uInteger,self.uInteger).prim(171))
+//        self.addSymbol(Infix(label: "&=").triple(self.float,self.float,self.float).prim(172))
+//        self.addSymbol(Infix(label: "&=").triple(self.byte,self.byte,self.byte).prim(173))
+//        self.addSymbol(Infix(label: "&=").triple(self.character,self.character,self.character).prim(174))
+//        
+//        self.addSymbol(Infix(label: "^=").triple(self.integer,self.integer,self.integer).prim(175))
+//        self.addSymbol(Infix(label: "^=").triple(self.uInteger,self.uInteger,self.uInteger).prim(176))
+//        self.addSymbol(Infix(label: "^=").triple(self.float,self.float,self.float).prim(177))
+//        self.addSymbol(Infix(label: "^=").triple(self.byte,self.byte,self.byte).prim(178))
+//        self.addSymbol(Infix(label: "^=").triple(self.character,self.character,self.character).prim(179))
+//        
+//        self.addSymbol(Infix(label: "~=").triple(self.integer,self.integer,self.integer).prim(180))
+//        self.addSymbol(Infix(label: "~=").triple(self.uInteger,self.uInteger,self.uInteger).prim(181))
+//        self.addSymbol(Infix(label: "~=").triple(self.float,self.float,self.float).prim(182))
+//        self.addSymbol(Infix(label: "~=").triple(self.byte,self.byte,self.byte).prim(183))
+//        self.addSymbol(Infix(label: "~=").triple(self.character,self.character,self.character).prim(184))
+//        
+//        self.addSymbol(Infix(label: "&&").triple(self.boolean,self.boolean,self.boolean).prim(184))
+//        
+//        self.addSymbol(Infix(label: "+=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)).prim(108))
+//        self.addSymbol(Infix(label: "-=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)).prim(109))
+//        self.addSymbol(Infix(label: "*=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)).prim(110))
+//        self.addSymbol(Infix(label: "/=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)).prim(111))
+//        self.addSymbol(Infix(label: "%=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)).prim(112))
+//        
+//        self.addSymbol(Infix(label: "==").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(113))
+//        self.addSymbol(Infix(label: "!=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(114))
+//        self.addSymbol(Infix(label: "<=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(115))
+//        self.addSymbol(Infix(label: ">=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(116))
+//        self.addSymbol(Infix(label: ">").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(117))
+//        self.addSymbol(Infix(label: "<").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)).prim(118))
+//        
+//        self.addSymbol(Infix(label: "&&").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)).prim(119))
+//        self.addSymbol(Infix(label: "||").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)).prim(120))
+//    
+//        self.addSymbol(Infix(label: "&").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)).prim(121))
+//        self.addSymbol(Infix(label: "|").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)).prim(122))
+//        self.addSymbol(Infix(label: "^").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)).prim(123))
+//        
+//        self.addSymbol(Prefix(label: "!").double(self,.generic("number"),.generic("number"),where: ("number",self.number)).prim(124))
+//        self.addSymbol(Prefix(label: "-").double(self,.generic("number"),.generic("number"),where: ("number",self.number)).prim(125))
+//        self.addSymbol(Prefix(label: "~").double(self,.generic("number"),.generic("number"),where: ("number",self.number)).prim(126))
+//        
+//        self.addSymbol(Postfix(label: "++").double(self,.generic("number"),.void,where: ("number",self.number)).prim(127))
+//        self.addSymbol(Postfix(label: "--").double(self,.generic("number"),.void),where: ("number",self.number)).prim(128))
+//
+        self.addSymbol(Template("+").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("+").method(self.float,self.float,self.float))
+        self.addSymbol(Template("+").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("+").method(self.character,self.character,self.character))
+        self.addSymbol(Template("+").method(self.uInteger,self.uInteger,self.uInteger))
+        self.addSymbol(Template("+").method(self.string,self.string,self.string))
         
-        self.addSymbol(Infix(label: "+=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "-=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "*=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "/=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "%=").triple(self,.generic("number"),.generic("number"),.type(self.void),where: ("number",self.number)))
+        self.addSymbol(Template("-").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("-").method(self.float,self.float,self.float))
+        self.addSymbol(Template("-").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("-").method(self.character,self.character,self.character))
+        self.addSymbol(Template("-").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(Infix(label: "==").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "!=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "<=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: ">=").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: ">").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "<").triple(self,.generic("number"),.generic("number"),.type(self.boolean),where: ("number",self.number)))
+        self.addSymbol(Template("*").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("*").method(self.float,self.float,self.float))
+        self.addSymbol(Template("*").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("*").method(self.character,self.character,self.character))
+        self.addSymbol(Template("*").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(Infix(label: "&&").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
-        self.addSymbol(Infix(label: "||").triple(self,.type(self.boolean),.type(self.boolean),.type(self.boolean),where: ("number",self.number)))
-    
-        self.addSymbol(Infix(label: "&").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
-        self.addSymbol(Infix(label: "|").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
-        self.addSymbol(Infix(label: "^").triple(self,.generic("number"),.generic("number"),.generic("number"),where: ("number",self.integer),("number",self.uInteger),("number",self.byte),("number",self.character)))
+        self.addSymbol(Template("/").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("/").method(self.float,self.float,self.float))
+        self.addSymbol(Template("/").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("/").method(self.character,self.character,self.character))
+        self.addSymbol(Template("/").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(Prefix(label: "!").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Prefix(label: "-").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
-        self.addSymbol(Prefix(label: "~").double(self,.generic("number"),.generic("number"),where: ("number",self.number)))
+        self.addSymbol(Template("%").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("%").method(self.float,self.float,self.float))
+        self.addSymbol(Template("%").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("%").method(self.character,self.character,self.character))
+        self.addSymbol(Template("%").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(Postfix(label: "++").double(self,.generic("number"),.void,where: ("number",self.number)))
-        self.addSymbol(Postfix(label: "--").double(self,.generic("number"),.void,where: ("number",self.number)))
+        self.addSymbol(Template("&").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("&").method(self.float,self.float,self.float))
+        self.addSymbol(Template("&").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("&").method(self.character,self.character,self.character))
+        self.addSymbol(Template("&").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(PrimitiveMethodInstance.label("class","of",self.object,ret: self.class))
+        self.addSymbol(Template("|").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("|").method(self.float,self.float,self.float))
+        self.addSymbol(Template("|").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("|").method(self.character,self.character,self.character))
+        self.addSymbol(Template("|").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(MakerMethodInstance.from(self.string,to: self.float.type))
-        self.addSymbol(MakerMethodInstance.from(self.string,to: self.integer.type))
-        self.addSymbol(MakerMethodInstance.from(self.string,to: self.uInteger.type))
-        self.addSymbol(MakerMethodInstance.from(self.string,to: self.byte.type))
-        self.addSymbol(MakerMethodInstance.from(self.string,to: self.character.type))
+        self.addSymbol(Template("^").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("^").method(self.float,self.float,self.float))
+        self.addSymbol(Template("^").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("^").method(self.character,self.character,self.character))
+        self.addSymbol(Template("^").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(MakerMethodInstance.from(self.float,to: self.integer.type))
-        self.addSymbol(MakerMethodInstance.from(self.float,to: self.uInteger.type))
-        self.addSymbol(MakerMethodInstance.from(self.float,to: self.string.type))
-        self.addSymbol(MakerMethodInstance.from(self.float,to: self.byte.type))
-        self.addSymbol(MakerMethodInstance.from(self.float,to: self.character.type))
+        self.addSymbol(Template("**").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("**").method(self.float,self.float,self.float))
+        self.addSymbol(Template("**").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("**").method(self.character,self.character,self.character))
+        self.addSymbol(Template("**").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(MakerMethodInstance.from(self.integer,to: self.float.type))
-        self.addSymbol(MakerMethodInstance.from(self.integer,to: self.uInteger.type))
-        self.addSymbol(MakerMethodInstance.from(self.integer,to: self.string.type))
-        self.addSymbol(MakerMethodInstance.from(self.integer,to: self.byte.type))
-        self.addSymbol(MakerMethodInstance.from(self.integer,to: self.character.type))
+        self.addSymbol(Template("<<").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template("<<").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template("<<").method(self.character,self.character,self.character))
+        self.addSymbol(Template("<<").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(MakerMethodInstance.from(self.uInteger,to: self.float.type))
-        self.addSymbol(MakerMethodInstance.from(self.uInteger,to: self.integer.type))
-        self.addSymbol(MakerMethodInstance.from(self.uInteger,to: self.string.type))
-        self.addSymbol(MakerMethodInstance.from(self.uInteger,to: self.byte.type))
-        self.addSymbol(MakerMethodInstance.from(self.uInteger,to: self.character.type))
+        self.addSymbol(Template(">>").method(self.integer,self.integer,self.integer))
+        self.addSymbol(Template(">>").method(self.byte,self.byte,self.byte))
+        self.addSymbol(Template(">>").method(self.character,self.character,self.character))
+        self.addSymbol(Template(">>").method(self.uInteger,self.uInteger,self.uInteger))
         
-        self.addSymbol(MakerMethodInstance.from(self.byte,to: self.float.type))
-        self.addSymbol(MakerMethodInstance.from(self.byte,to: self.integer.type))
-        self.addSymbol(MakerMethodInstance.from(self.byte,to: self.string.type))
-        self.addSymbol(MakerMethodInstance.from(self.byte,to: self.uInteger.type))
-        self.addSymbol(MakerMethodInstance.from(self.byte,to: self.character.type))
+        self.addSymbol(Infix(label: "+=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "-=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "*=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "/=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "%=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "&=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "|=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "^=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: "<<=").double(self.integer, self.integer))
+        self.addSymbol(Infix(label: ">>=").double(self.integer, self.integer))
         
-        self.addSymbol(MakerMethodInstance.from(self.character,to: self.float.type))
-        self.addSymbol(MakerMethodInstance.from(self.character,to: self.integer.type))
-        self.addSymbol(MakerMethodInstance.from(self.character,to: self.string.type))
-        self.addSymbol(MakerMethodInstance.from(self.character,to: self.uInteger.type))
-        self.addSymbol(MakerMethodInstance.from(self.character,to: self.byte.type))
+        self.addSymbol(Infix(label: "+=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "-=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "*=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "/=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "%=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "&=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "|=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "^=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: "<<=").double(self.uInteger, self.uInteger))
+        self.addSymbol(Infix(label: ">>=").double(self.uInteger, self.uInteger))
+        
+        self.addSymbol(Infix(label: "+=").double(self.float, self.float))
+        self.addSymbol(Infix(label: "-=").double(self.float, self.float))
+        self.addSymbol(Infix(label: "*=").double(self.float, self.float))
+        self.addSymbol(Infix(label: "/=").double(self.float, self.float))
+        self.addSymbol(Infix(label: "%=").double(self.float, self.float))
+        
+        self.addSymbol(Infix(label: "+=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "-=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "*=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "/=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "%=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "&=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "|=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "^=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: "<<=").double(self.byte, self.byte))
+        self.addSymbol(Infix(label: ">>=").double(self.byte, self.byte))
+        
+        self.addSymbol(Inline("class",self.object).returns(self.classType).classMethod())
+        self.addSymbol(Inline("address",self.object).returns(self.address).addressMethod())
+        
+        self.addSymbol(Inline("Float",self.string).returns(self.float).stringToFloatMethod())
+        self.addSymbol(Inline("Character",self.string).returns(self.character).stringToCharacterMethod())
+        self.addSymbol(Inline("Byte",self.string).returns(self.byte).stringToByteMethod())
+        self.addSymbol(Inline("Integer",self.string).returns(self.integer).stringToIntegerMethod())
+        self.addSymbol(Inline("UInteger",self.string).returns(self.uInteger).stringToUIntegerMethod())
+        
+        self.addSymbol(Inline("Float",self.integer).returns(self.float).integerToFloatMethod())
+        self.addSymbol(Inline("Character",self.integer).returns(self.character).integerToCharacterMethod())
+        self.addSymbol(Inline("Byte",self.integer).returns(self.byte).integerToByteMethod())
+        self.addSymbol(Inline("String",self.integer).returns(self.integer).integerToStringMethod())
+        self.addSymbol(Inline("UInteger",self.integer).returns(self.uInteger).integerToUIntegerMethod())
+        
+        self.addSymbol(Inline("String",self.float).returns(self.string).floatToStringMethod())
+        self.addSymbol(Inline("Character",self.float).returns(self.character).floatToCharacterMethod())
+        self.addSymbol(Inline("Byte",self.float).returns(self.byte).floatToByteMethod())
+        self.addSymbol(Inline("Integer",self.float).returns(self.integer).floatToIntegerMethod())
+        self.addSymbol(Inline("UInteger",self.float).returns(self.uInteger).floatToUIntegerMethod())
+        
+        self.addSymbol(Inline("String",self.byte).returns(self.string).byteToStringMethod())
+        self.addSymbol(Inline("Character",self.byte).returns(self.character).byteToCharacterMethod())
+        self.addSymbol(Inline("Float",self.byte).returns(self.float).byteToFloatMethod())
+        self.addSymbol(Inline("Integer",self.byte).returns(self.integer).byteToIntegerMethod())
+        self.addSymbol(Inline("UInteger",self.byte).returns(self.uInteger).byteToUIntegerMethod())
+        
+        self.addSymbol(Inline("String",self.character).returns(self.string).characterToStringMethod())
+        self.addSymbol(Inline("Byte",self.character).returns(self.character).characterToByteMethod())
+        self.addSymbol(Inline("Float",self.character).returns(self.float).characterToFloatMethod())
+        self.addSymbol(Inline("Integer",self.character).returns(self.integer).characterToIntegerMethod())
+        self.addSymbol(Inline("UInteger",self.character).returns(self.uInteger).characterToUIntegerMethod())
+        
+        self.addSymbol(Inline("+",self.date,self.dateComponent).returns(self.date).addDateToDateComponent())
+        self.addSymbol(Inline("-",self.date,self.dateComponent).returns(self.date).subDateComponentFromDate())
+        self.addSymbol(Inline("+",self.time,self.timeComponent).returns(self.time).addTimeToTimeComponent())
+        self.addSymbol(Inline("-",self.time,self.timeComponent).returns(self.time).subTimeComponentFromTime())
+        self.addSymbol(Inline("+",self.dateTime,self.dateComponent).returns(self.dateTime).addDateTimeToComponent())
+        self.addSymbol(Inline("+",self.dateTime,self.timeComponent).returns(self.dateTime).addDateTimeToComponent())
+        self.addSymbol(Inline("-",self.dateTime,self.dateComponent).returns(self.dateTime).subComponentFromDateTime())
+        self.addSymbol(Inline("-",self.dateTime,self.timeComponent).returns(self.dateTime).subComponentFromDateTime())
+        self.addSymbol(Inline("-",self.date,self.date).returns(self.dateComponent).subDateFromDate())
+        self.addSymbol(Inline("-",self.time,self.time).returns(self.timeComponent).subTimeFromTime())
+        self.addSymbol(Inline("difference",("between",self.date),("and",self.date),("in",self.dateComponent)).returns(self.dateComponent).differenceBetweenDatesMethod())
+        self.addSymbol(Inline("difference",("between",self.time),("and",self.time),("in",self.timeComponent)).returns(self.timeComponent).differenceBetweenDatesMethod())
+        
+//        let typeVariable = TypeContext.freshTypeVariable(named: "ELEMENT")
+//        self.addSymbol(Inline("append",("list",self.list.of(typeVariable)),("element",typeVariable)).listAppendMethod())
         
         self.addSymbol(SlotGetter("date",on: self.dateTime).returns(self.date))
         self.addSymbol(SlotGetter("time",on: self.dateTime).returns(self.time))
@@ -568,6 +829,15 @@ public class ArgonModule: SystemModule
         self.addSymbol(SlotSetter("minute",on: self.time).value(self.integer))
         self.addSymbol(SlotSetter("second",on: self.time).value(self.integer))
         self.addSymbol(SlotSetter("millisecond",on: self.time).value(self.integer))
+        
+        self.addSymbol(PrimitiveMethodInstance.label("today","argument",self.date.type,ret: self.date).prim(200))
+        self.addSymbol(PrimitiveMethodInstance.label("now","argument",self.time.type,ret: self.time).prim(201))
+        self.addSymbol(PrimitiveMethodInstance.label("now","argument",self.dateTime.type,ret: self.dateTime).prim(202))
+        }
+        
+    public func typevar(_ label: String) -> TypeVariable
+        {
+        TypeContext.freshTypeVariable(named: label)
         }
         
     public override func lookupN(label: Label) -> Symbols?
@@ -583,7 +853,7 @@ public class ArgonModule: SystemModule
         return(found.isEmpty ? nil : found)
         }
         
-    public func lookup(index: UUID) -> Symbol?
+    public func lookup(index: IdentityKey) -> Symbol?
         {
         for symbol in self.symbols
             {

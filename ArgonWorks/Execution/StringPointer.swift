@@ -18,17 +18,17 @@ public class StringPointer: ObjectPointer
         {
         64
         }
-    
+        
     public var count: Int
         {
         get
             {
-            let count = Int(self.wordPointer[6])
+            let count = Int(self.wordPointer[7])
             return(count)
             }
         set
             {
-            self.wordPointer[6] = Word(newValue)
+            self.wordPointer[7] = Word(newValue)
             }
         }
         
@@ -44,12 +44,12 @@ public class StringPointer: ObjectPointer
             }
         }
         
-    private func storeString(_ string: String)
+    internal func storeString(_ string: String)
         {
-        let sizeInBytes = self.align(Self.sizeInBytes(),to: Self.alignment)
-        let bytesOffset = self._cleanAddress + Word(sizeInBytes)
+        let sizeInBytes = Self.sizeInBytes()
+        let bytesAddress = self._cleanAddress + Word(sizeInBytes)
         self.count = string.utf16.count
-        let charPointer = UInt16Pointer(bitPattern: bytesOffset)
+        let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
         for character in string.utf16
             {
@@ -66,13 +66,14 @@ public class StringPointer: ObjectPointer
             offset += 1
             }
         charPointer[offset] = 0
+        self.setWord(Word(integer: string.polynomialRollingHash),atIndex: 6)
         }
         
-    public func loadString() -> String
+    internal func loadString() -> String
         {
-        let sizeInBytes = self.align(Self.sizeInBytes(),to: Self.alignment)
-        let bytesOffset = self._cleanAddress + Word(sizeInBytes)
-        let charPointer = UInt16Pointer(bitPattern: bytesOffset)
+        let sizeInBytes = Self.sizeInBytes()
+        let bytesAddress = self._cleanAddress + Word(sizeInBytes)
+        let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
         var number = 0
         var array = Array<UTF16.CodeUnit>()

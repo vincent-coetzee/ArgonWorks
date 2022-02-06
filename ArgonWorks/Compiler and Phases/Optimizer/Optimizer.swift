@@ -29,7 +29,7 @@ public class Optimizer: CompilerPass
             {
             return(nil)
             }
-        guard let newModule = module.moduleWithOptimization(using: self),!self.wasCancelled else
+        guard let newModule = module.moduleWithOptimization(using: self) else
             {
             return(nil)
             }

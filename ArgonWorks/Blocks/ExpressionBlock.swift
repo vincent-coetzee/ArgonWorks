@@ -10,7 +10,7 @@ import Foundation
 public class ExpressionBlock: Block
     {
     private var expression:Expression
-    public var place: T3AInstruction.Operand = .none
+    public var place: Instruction.Operand = .none
     
     init(_ expression:Expression)
         {
@@ -57,10 +57,9 @@ public class ExpressionBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let block = ExpressionBlock(substitution.substitute(self.expression))
-        block.type = substitution.substitute(self.type)
-        block.issues = self.issues
-        return(block as! Self)
+        let newBlock = super.substitute(from: substitution)
+        newBlock.expression = substitution.substitute(self.expression)
+        return(newBlock)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -69,7 +68,7 @@ public class ExpressionBlock: Block
         self.expression.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.expression.emitCode(into: into,using: using)
         self.place = self.expression.place

@@ -138,6 +138,7 @@ public class LineNumberTextView: NSTextView
         scrollView.hasHorizontalRuler = false
         scrollView.hasVerticalRuler   = true
         scrollView.rulersVisible      = true
+        self.lineNumberGutter?.scrollView = scrollView
         self.initTabs()
         self.addObservers()
         }
@@ -194,6 +195,7 @@ public class LineNumberTextView: NSTextView
         NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSView.boundsDidChangeNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSView.frameDidChangeNotification, object: self)
         NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSText.didChangeNotification, object: self)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.drawGutter), name: NSScrollView.didLiveScrollNotification, object: self.enclosingScrollView)
     }
 
     /// Set needsDisplay of lineNumberGutter to true.

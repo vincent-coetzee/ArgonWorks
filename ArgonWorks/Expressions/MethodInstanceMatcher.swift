@@ -62,17 +62,17 @@ public class MethodInstanceMatcher
         
     private func foundSpecificInstance() -> Bool
         {
-        print("OK: ARGUMENTS TYPES: \(self.argumentTypes)")
+//        print("OK: ARGUMENTS TYPES: \(self.argumentTypes)")
         let arity = self.argumentTypes.count
-        print("OK: ARITY IS \(arity)")
+//        print("OK: ARITY IS \(arity)")
         let instances = methodInstances.filter{$0.parameters.count == arity}
         if instances.isEmpty
             {
-            print("FAIL: Could not find any instances with arity \(arity)")
+//            print("FAIL: Could not find any instances with arity \(arity)")
             return(false)
             }
-        print("OK: FOUND \(instances.count) INSTANCES WITH ARITY \(arity)")
-        print("OK: INFERRING TYPES FOR \(instances.count) INSTANCES")
+//        print("OK: FOUND \(instances.count) INSTANCES WITH ARITY \(arity)")
+//        print("OK: INFERRING TYPES FOR \(instances.count) INSTANCES")
         var readyInstances = MethodInstances()
         var mostSpecificInstance:MethodInstance?
         if readyInstances.isEmpty && instances.isEmpty
@@ -81,13 +81,13 @@ public class MethodInstanceMatcher
             }
         for instance in instances
             {
-            print("OK: TESTING INSTANCE \(instance.displayString)")
+//            print("OK: TESTING INSTANCE \(instance.displayString)")
             self.typeContext.extended(withContentsOf: [])
                 {
                 newContext in
                 instance.initializeType(inContext: newContext)
                 instance.initializeTypeConstraints(inContext: newContext)
-                print("OK: GENERATED INSTANCE \(instance.displayString)")
+//                print("OK: GENERATED INSTANCE \(instance.displayString)")
                 var offset = 0
                 for (argument,parameter) in zip(self.argumentTypes,instance.parameters)
                     {
@@ -107,43 +107,47 @@ public class MethodInstanceMatcher
                     }
                 newContext.append(TypeConstraint(left: instance.returnType,right: self.returnType,origin: self.origin))
                 newContext.append(contentsOf: self.constraints)
-                print("OK: USING \(self.constraints.count) CONSTRAINTS")
+//                print("OK: USING \(self.constraints.count) CONSTRAINTS")
+                newContext.suppressWarnings()
                 let substitution = newContext.unify()
-                print("OK: UNIFIED TYPES")
+//                print("OK: UNIFIED TYPES")
                 let newInstance = substitution.substitute(instance)
+                assert(instance.module != nil)
                 newInstance.originalMethodInstance = instance
+                newInstance.setMemoryAddress(instance.memoryAddress)
+                newInstance.setModule(instance.module)
                 let types = self.argumentTypes.map{substitution.substitute($0)}
-                print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
-                print("OK: ARGUMENTS ARE \(types)")
+//                print("OK: SUBSTITUTED INSTANCE \(newInstance.displayString)")
+//                print("OK: ARGUMENTS ARE \(types)")
                 if !newInstance.hasVariableTypes
                     {
-                    print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
+//                    print("OK: NEW INSTANCE DOES NOT HAVE ANY TYPE VARIABLES")
                     if newInstance.parameterTypesAreSupertypes(ofTypes: types)
                         {
-                        print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
+//                        print("OK: ARGUMENT TYPES \(types) ARE SUBTYPES OF NEW INSTANCE PARAMETERS \(newInstance.parameters)")
                         readyInstances.append(newInstance)
                         mostSpecificInstance = readyInstances.sorted(by: {$0.moreSpecific(than: $1, forTypes: types)}).last
-                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
+//                        print("OK: \(newInstance.displayString) TESTED FOR SPECIFICITY")
                         }
                     else
                         {
-                        print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
+//                        print("FAIL: \(newInstance.displayString) CAN NOT BE TESTED FOR SPECIFICITY BECAUSE ARGUMENTS ARE NOT SUBTYPES")
                         }
                     }
                 else
                     {
-                    print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
+//                    print("FAIL: NEW INSTANCE STILL HAS TYPE VARIABLES")
                     }
                 
                 }
             }
-        print("OK: COMPLETED TESTING OF \(readyInstances.count) INSTANCES")
+//        print("OK: COMPLETED TESTING OF \(readyInstances.count) INSTANCES")
         if mostSpecificInstance.isNil
             {
-            print("FAIL: UNABLE TO FIND MOST SPECIFIC INSTANCE - BOOM")
+//            print("FAIL: UNABLE TO FIND MOST SPECIFIC INSTANCE - BOOM")
             return(false)
             }
-        print("OK: FOUND \(mostSpecificInstance.displayString) AS MOST SPECIFIC INSTANCE")
+//        print("OK: FOUND \(mostSpecificInstance.displayString) AS MOST SPECIFIC INSTANCE")
         self.methodInstance = mostSpecificInstance
         return(true)
         }

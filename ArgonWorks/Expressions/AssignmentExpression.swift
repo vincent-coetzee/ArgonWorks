@@ -71,6 +71,13 @@ public class AssignmentExpression: Expression
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         
+    public override func inferType(inContext context: TypeContext)
+        {
+        self.lhs.inferType(inContext: context)
+        self.rhs.inferType(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        }
+        
     public override func initializeType(inContext context: TypeContext)
         {
         self.lhs.initializeType(inContext: context)
@@ -89,11 +96,11 @@ public class AssignmentExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
         try self.lhs.assign(from: self.rhs,into: instance,using: generator)
         self._place = self.lhs.place

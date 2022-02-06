@@ -8,45 +8,46 @@
 import Foundation
 import AppKit
 
+public struct SlotType: OptionSet
+    {
+    public static let kInstanceSlot = SlotType(rawValue: 1)
+    public static let kModuleSlot = SlotType(rawValue: 1 << 1)
+    public static let kSystemHeaderSlot = SlotType(rawValue: 1 << 2)
+    public static let kSystemMagicNumberSlot = SlotType(rawValue: 1 << 3)
+    public static let kLocalSlot = SlotType(rawValue: 1 << 4)
+    public static let kSystemInnerSlot = SlotType(rawValue: 1 << 5)
+    public static let kReadOnlySlot = SlotType(rawValue: 1 << 6)
+    public static let kSystemClassSlot = SlotType(rawValue: 1 << 7)
+    public static let kClassSlot = SlotType(rawValue: 1 << 8)
+    
+    public let rawValue: Int
+    
+    public init(rawValue: Int)
+        {
+        self.rawValue = rawValue
+        }
+        
+    public var isSystemSlot: Bool
+        {
+        self.contains(.kSystemHeaderSlot) || self.contains(.kSystemMagicNumberSlot) || self.contains(.kSystemClassSlot) || self.contains(.kSystemInnerSlot)
+        }
+    }
+    
 public class Slot:Symbol
     {
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
     public override var argonHash: Int
         {
         var hashValue = super.argonHash
         hashValue = hashValue << 13 ^ self.type.argonHash
-        hashValue = hashValue << 13 ^ self.slotType.symbolString.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.slotType.rawValue
         hashValue = hashValue << 13 ^ self.offset
         let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
         return(Int(bitPattern: word))
-        }
-        
-    public enum SlotType:Int
-        {
-        case module
-        case instance
-        case `class`
-        case header
-        case magicNumber
-        case local
-        
-        public var symbolString: String
-            {
-            switch(self)
-                {
-                case .module:
-                    return("#moduleSlot")
-                case .instance:
-                    return("#instanceSlot")
-                case .class:
-                    return("#classSlot")
-                case .header:
-                    return("#headerSlot")
-                case .magicNumber:
-                    return("#magicNumberSlot")
-                case .local:
-                    return("#localSlot")
-                }
-            }
         }
         
     public override var sizeInBytes: Int
@@ -135,7 +136,7 @@ public class Slot:Symbol
     public var offset = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
-    public var slotType: SlotType = .instance
+    public var slotType: SlotType = .kInstanceSlot
     
 
     init(label:Label,type:Type? = nil)
@@ -156,7 +157,7 @@ public class Slot:Symbol
         self.offset = coder.decodeInteger(forKey: "offset")
         self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
         self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
-        self.slotType = SlotType(rawValue: coder.decodeInteger(forKey: "slotType"))!
+        self.slotType = SlotType(rawValue: coder.decodeInteger(forKey: "slotType"))
         super.init(coder: coder)
 //        print("END DECODE SLOT \(self.label)")
         }
@@ -176,9 +177,35 @@ public class Slot:Symbol
         super.encode(with: coder)
         }
     
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        copy.offset = self.offset
+        copy.initialValue = self.initialValue.isNil ? nil : substitution.substitute(self.initialValue!)
+        copy.slotType = self.slotType
+        return(copy)
+        }
+        
     public override func lookup(label: Label) -> Symbol?
         {
         return(self.type.lookup(label: label))
+        }
+        
+    public func nameInClass(_ aClass: TypeClass) -> String
+        {
+        let className = aClass.label.lowercasingFirstLetter
+        if self.label == "_header"
+            {
+            return("_\(className)Header")
+            }
+        else if self.label == "_magicNumber"
+            {
+            return("_\(className)MagicNumber")
+            }
+        else
+            {
+            return("_\(className)Class")
+            }
         }
         
     public func setOffset(_ integer:Int)
@@ -186,7 +213,7 @@ public class Slot:Symbol
         self.offset = integer
         }
         
-    public override func allocateAddresses(using allocator: AddressAllocator) throws
+    public override func allocateAddresses(using allocator: AddressAllocator)
         {
         guard !self.wasAddressAllocationDone else
             {
@@ -194,7 +221,7 @@ public class Slot:Symbol
             }
         self.wasAddressAllocationDone = true
         allocator.allocateAddress(for: self)
-        try self.type.allocateAddresses(using: allocator)
+        self.type.allocateAddresses(using: allocator)
         }
         
     public override func layoutInMemory(using allocator: AddressAllocator)
@@ -212,10 +239,13 @@ public class Slot:Symbol
         slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        let slotSymbolString = "#\(self.label)"
+        let slotIndex = allocator.payload.symbolRegistry.registerSymbol(slotSymbolString)
+        slotPointer.setInteger(slotIndex,atSlot: "symbol")
         if self is InstanceSlot
             {
             let instanceSlot = self as! InstanceSlot
-            slotPointer.setAddress(instanceSlot.type.memoryAddress,atSlot: "class")
+            slotPointer.setAddress(instanceSlot.type.memoryAddress,atSlot: "type")
             }
         else if self is ModuleSlot
             {
@@ -226,19 +256,28 @@ public class Slot:Symbol
         self.type.layoutInMemory(using: allocator)
         }
         
-    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? Slot
+            {
+            return(self.label == second.label && self.type == second.type && self.slotType == second.slotType && self.offset == second.offset)
+            }
+        return(super.isEqual(object))
+        }
+        
+    public override func assign(from expression: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.emitLValue(into: buffer, using: using)
         try expression.emitValueCode(into: buffer,using: using)
-        buffer.append(.STP,expression.place,.none,self.place)
+        buffer.add(.STOREP,expression.place,self.place,.integer(0))
         }
         
-    public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been overriden in a subclass.")
         }
         
-    public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been overriden in a subclass.")
         }
@@ -251,24 +290,42 @@ public class Slot:Symbol
         {
         let slot = Self.init(label: label)
         slot.type = self.type.freshTypeVariable(inContext: context)
+        slot.offset = self.offset
+        slot.initialValue = self.initialValue.isNil ? nil : self.initialValue!.freshTypeVariable(inContext: context)
+        slot.slotType = self.slotType
         return(slot)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
-//        if self.type.isNil
-//            {
-//            if let slotType = context.lookupBinding(atLabel: self.label)
-//                {
-//                self.type = slotType
-//                }
-//            else
-//                {
-//                self.type = context.freshTypeVariable()
-//                context.bind(self.type,to: self.label)
-//                }
-//            }
-//        else
+        if self.type.isTypeVariable
+            {
+            if let slotType = context.lookupBinding(atLabel: self.label)
+                {
+                self.type = slotType
+                }
+            else
+                {
+                context.bind(self.type,to: self.label)
+                }
+            }
+        else if self.type.isClass || self.type.isEnumeration
+            {
+            context.bind(self.type,to: self.label)
+            }
+        else if self.initialValue.isNotNil
+            {
+            self.type = self.initialValue!.type
+            context.bind(self.type,to: self.label)
+            }
+        else
+            {
+            self.appendIssue(at: self.declaration!, message: "Slot \(self.label) has an invalid type.")
+            }
+        }
+        
+    public override func inferType(inContext context: TypeContext)
+        {
         if self.type.isTypeVariable
             {
             if let slotType = context.lookupBinding(atLabel: self.label)

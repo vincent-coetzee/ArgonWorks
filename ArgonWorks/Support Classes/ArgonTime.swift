@@ -7,31 +7,41 @@
 
 import Foundation
 
-public struct ArgonTime:Comparable,Hashable
+public typealias ArgonTime = Word
+
+extension ArgonTime
     {
-    public static func <(lhs:ArgonTime,rhs:ArgonTime) -> Bool
+    public var timeDisplayString: String
         {
-        return(false)
+        "\(hour):\(minute):(second):\(millisecond)"
         }
         
-    private let hour:UInt
-    private let minute:UInt
-    private let second:UInt
-    private let millisecond:UInt
-    
-    init(hour:Int,minute:Int,second:Int,millisecond:Int = 0)
+    public var hour: Int
         {
-        self.hour = UInt(hour)
-        self.minute = UInt(minute)
-        self.second = UInt(second)
-        self.millisecond = UInt(millisecond)
+        Int((self & (Argon.kTimeHour << Argon.kTimeHourShift)) >> Argon.kTimeHourShift)
         }
-    
-    init(hour:String,minute:String,second:String,millisecond:String = "0")
+        
+    public var minute: Int
         {
-        self.hour = UInt(hour)!
-        self.minute = UInt(minute)!
-        self.second = UInt(second)!
-        self.millisecond = UInt(millisecond)!
+        Int((self & (Argon.kTimeMinute << Argon.kTimeMinuteShift)) >> Argon.kTimeMinuteShift)
+        }
+        
+    public var second: Int
+        {
+        Int((self & (Argon.kTimeSecond << Argon.kTimeSecondShift)) >> Argon.kTimeSecondShift)
+        }
+        
+    public var millisecond: Int
+        {
+        Int((self & (Argon.kTimeMillisecond << Argon.kTimeMillisecondShift)) >> Argon.kTimeMillisecondShift)
+        }
+        
+    init(hour:Int,minute:Int,second:Int,millisecond:Int)
+        {
+        var word = Word(hour) << Argon.kTimeHourShift
+        word |= Word(minute) << Argon.kTimeMinuteShift
+        word |= Word(second) << Argon.kTimeSecondShift
+        word |= Word(millisecond) << Argon.kTimeMillisecondShift
+        self = word
         }
     }

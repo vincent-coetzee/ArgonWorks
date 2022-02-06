@@ -43,6 +43,17 @@ public enum TupleElement
             }
         }
         
+    public var slot: Slot
+        {
+        switch(self)
+            {
+            case .slot(let slot):
+                return(slot)
+            default:
+                fatalError()
+            }
+        }
+        
     public var isTuple: Bool
         {
         if case TupleElement.tuple = self
@@ -67,7 +78,7 @@ public enum TupleElement
             }
         else if kind == 2
             {
-            self = .slot(coder.decodeObject(forKey: forKey + "slot") as! LocalSlot)
+            self = .slot(coder.decodeObject(forKey: forKey + "slot") as! Slot)
             }
         else if kind == 3
             {
@@ -194,6 +205,21 @@ public enum TupleElement
             }
         }
         
+    public func inferType(inContext context: TypeContext)
+        {
+        switch(self)
+            {
+            case .slot(let slot):
+                slot.inferType(inContext: context)
+            case .tuple(let tuple):
+                tuple.inferType(inContext: context)
+            case .expression(let expression):
+                expression.inferType(inContext: context)
+            default:
+                break
+            }
+        }
+        
     private func slotType(slot: Slot,inContext context: TypeContext) -> Type
         {
         if slot.type.isTypeVariable
@@ -209,7 +235,7 @@ public enum TupleElement
                 return(slot.type)
                 }
             }
-        else if slot.type.isClass || slot.type.isEnumeration
+        else if slot.type.isClass || slot.type.isEnumeration || slot.type.isTypeConstructor
             {
             context.bind(slot.type,to: slot.label)
             return(slot.type)
@@ -248,7 +274,7 @@ public enum TupleElement
 //            }
 //        }
         
-    func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+    func assign(from: Expression,into: InstructionBuffer,using: CodeGenerator) throws
         {
         switch(self)
             {
@@ -269,6 +295,16 @@ public enum TupleElement
     
 public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     {
+    public var slots: Array<Slot>
+        {
+        self.elements.map{$0.slot}
+        }
+        
+    public var types: Array<Type>
+        {
+        self.elements.map{$0.type!}
+        }
+        
     public var isEmpty: Bool
         {
         self.elements.count == 0
@@ -388,7 +424,7 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         return(after + 1)
         }
         
-    public func assign(from: Expression,into: T3ABuffer,using: CodeGenerator) throws
+    public func assign(from: Expression,into: InstructionBuffer,using: CodeGenerator) throws
         {
         guard from is TupleExpression else
             {
@@ -424,8 +460,14 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         {
         self.elements.forEach{$0.initializeType(inContext: context)}
         let types = self.elements.map{$0.type!}
-        let label = types.map{$0.displayString}.joined(separator: "x")
-        self.type = Argon.addType(TypeConstructor(label: label,generics: types))
+        self.type = TypeConstructor(label: "Tuple",generics: types)
+        }
+        
+    public func inferType(inContext context: TypeContext)
+        {
+        self.elements.forEach{$0.inferType(inContext: context)}
+        let types = self.elements.map{$0.type!}
+        self.type = TypeConstructor(label: "Tuple",generics: types)
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext)

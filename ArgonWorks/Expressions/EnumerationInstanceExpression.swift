@@ -14,14 +14,14 @@ public class EnumerationInstanceExpression: Expression
         "ERROR"
         }
         
-    public let lhs: Expression
-    public let theCase: EnumerationCase
+    public let enumeration: TypeEnumeration
+    public let caseSymbol: Argon.Symbol
     public let associatedValues: Array<Expression>?
     
     required init?(coder: NSCoder)
         {
-        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
-        self.theCase = coder.decodeObject(forKey:"theCase") as! EnumerationCase
+        self.enumeration = coder.decodeObject(forKey: "enumeration") as! TypeEnumeration
+        self.caseSymbol = coder.decodeObject(forKey:"caseSymbol") as! Argon.Symbol
         self.associatedValues = coder.decodeObject(forKey:"associatedValues") as? Array<Expression>
         super.init(coder: coder)
         }
@@ -29,23 +29,23 @@ public class EnumerationInstanceExpression: Expression
     public override func encode(with coder: NSCoder)
         {
         super.encode(with: coder)
-        coder.encode(self.lhs,forKey: "lhs")
-        coder.encode(self.theCase,forKey: "theCase")
+        coder.encode(self.enumeration,forKey: "enumeration")
+        coder.encode(self.caseSymbol,forKey: "caseSymbol")
         coder.encode(self.associatedValues,forKey: "associatedValues")
         }
         
-    init(lhs: Expression,enumerationCase aCase: EnumerationCase,associatedValues: Array<Expression>?)
+    init(enumeration: TypeEnumeration,caseSymbol: Argon.Symbol,associatedValues: Array<Expression>?)
         {
-        self.lhs = lhs
-        self.theCase = aCase
+        self.enumeration = enumeration
+        self.caseSymbol = caseSymbol
         self.associatedValues = associatedValues
         super.init()
         }
         
     public override func visit(visitor: Visitor) throws
         {
-        try self.lhs.visit(visitor: visitor)
-        try self.theCase.visit(visitor: visitor)
+        try self.enumeration.visit(visitor: visitor)
+//        try self.caseSymbol.visit(visitor: visitor)
         for expression in self.associatedValues!
             {
             try expression.visit(visitor: visitor)
@@ -58,26 +58,65 @@ public class EnumerationInstanceExpression: Expression
         fatalError()
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func initializeType(inContext context: TypeContext)
+        {
+        let types = self.associatedValues.isNil ? [] : self.associatedValues!.map{$0.type}
+        self.associatedValues?.forEach{$0.initializeType(inContext: context)}
+        self.enumeration.initializeType(inContext: context)
+        self.type = self.enumeration
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        context.append(TypeConstraint(left: self.type,right: self.enumeration,origin: .expression(self)))
+        if let aCase = self.enumeration.case(forSymbol: self.caseSymbol),let values = self.associatedValues,values.count == aCase.associatedTypes.count
+            {
+            for (aType,caseType) in zip(values.map{$0.type},aCase.associatedTypes)
+                {
+                context.append(TypeConstraint(left: aType,right: caseType,origin: .expression(self)))
+                }
+            }
+        }
+        
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+        {
+        try self.emitAddressCode(into: instance,using: generator)
+        }
+        
+    public override func emitValueCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+        {
+        try self.emitAddressCode(into: instance,using: generator)
+        }
+        
+    public override func emitAddressCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         if let location = self.declaration
             {
-            instance.append(lineNumber: location.line)
+            instance.add(lineNumber: location.line)
             }
-        var count:Argon.Integer = 1
-        instance.append(.PUSH,.address(self.theCase.memoryAddress),.none,.none)
-        if self.theCase.hasAssociatedValues
+        let temp1 = instance.nextTemporary
+        instance.add(.MAKE,.address(ArgonModule.shared.enumerationCaseInstance.memoryAddress),temp1)
+        let temp2 = instance.nextTemporary
+        instance.add(.MOVE,temp1,temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "enumeration").offset)),temp2)
+        instance.add(.STOREP,temp2,.address(self.enumeration.memoryAddress),.integer(0))
+        instance.add(.MOVE,temp1,temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "caseIndex").offset)),temp2)
+        let caseIndex = self.enumeration.caseIndex(forSymbol: self.caseSymbol)!
+        instance.add(.STOREP,.integer(Argon.Integer(caseIndex)),temp2,.integer(0))
+        instance.add(.MOVE,temp1,temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "associatedValueCount").offset)),temp2)
+        instance.add(.STOREP,.integer(Argon.Integer(self.associatedValues?.count ?? 0)),temp2,.integer(0))
+        if let values = self.associatedValues
             {
-            let values = self.associatedValues!
+            instance.add(.i64,.ADD,temp1,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.instanceSizeInBytes)),temp2)
             for value in values
                 {
                 try value.emitCode(into: instance,using: generator)
-                instance.append(.PUSH,value.place,.none,.none)
-                count += 1
+                instance.add(.STOREP,temp2,value.place,.integer(0))
+                instance.add(.i64,.ADD,.integer(8),temp2,temp2)
                 }
             }
-//        instance.append("CALL",.relocatable(.address(function.memoryAddress)),.none,.none)
-//        instance.append("ADD",.stackPointer,.integer(count * 8),.stackPointer)
-        self._place = .returnValue
+        self._place = temp1
         }
     }

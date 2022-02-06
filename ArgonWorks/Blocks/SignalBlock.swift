@@ -34,9 +34,9 @@ public class SignalBlock: Block
         super.init()
         }
         
-     public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+     public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        buffer.append(.SIG,.address(self.staticSymbol.memoryAddress),.none,.none)
+        buffer.add(.SIG,.address(self.staticSymbol.memoryAddress))
         }
 
     public override func display(indent: String)

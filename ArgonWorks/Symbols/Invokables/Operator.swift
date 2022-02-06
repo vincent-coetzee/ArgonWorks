@@ -18,6 +18,16 @@ public class Infix
         self.label = label
         }
         
+    func triple(_ type1: Type,_ type2: Type,_ type3: Type) -> PrimitiveInfixOperatorInstance
+        {
+        let parameters = [Parameter(label: "n1", relabel: nil, type: type1, isVisible: false, isVariadic: false),Parameter(label: "n1", relabel: nil, type: type2, isVisible: false, isVariadic: false)]
+        let returnType = type3
+        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
+        }
+        
     func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
         {
         let random = Int.random(in: 0..<1000000)
@@ -36,6 +46,16 @@ public class Infix
         
         let parameters = [type1.parameter(random)]
         let returnType = type3.value(random,argonModule)
+        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
+        }
+        
+    public func double(_ type1:Type,_ type3:Type) -> PrimitiveInfixOperatorInstance
+        {
+        let parameters = [Parameter(label: "a", relabel: nil, type: type1, isVisible: false, isVariadic: false),Parameter(label: "b", relabel: nil, type: type3, isVisible: false, isVariadic: false)]
+        let returnType = type3
         let instance = PrimitiveInfixOperatorInstance(label: self.label)
         instance.parameters = parameters
         instance.returnType = returnType

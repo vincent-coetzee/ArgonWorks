@@ -10,36 +10,52 @@ import Foundation
     
 public protocol Scope: IssueHolder
     {
-    var isMethodInstanceScope: Bool { get }
-    var module: Module! { get }
+    var container: Container { get set }
+    var asContainer: Container { get }
+    var moduleScope: Module? { get }
     var parentScope: Scope? { get set }
+    var enclosingMethodInstance: MethodInstance { get }
     func addSymbol(_ symbol: Symbol)
     func addLocalSlot(_ localSlot: LocalSlot)
     func lookup(label: Label) -> Symbol?
     func lookup(name: Name) -> Symbol?
     func lookupN(label: Label) -> Symbols?
     func lookupN(name: Name) -> Symbols?
-    func setContainer(_ scope: Scope?)
+//    func setContainer(_ scope: Scope?) 
     }
 
 extension Scope
     {
-    public var containsMethodInstanceScope: Bool
+//    public var containsMethodInstanceScope: Bool
+//        {
+//        if self.firstMethodInstanceScope.isNotNil
+//            {
+//            return(true)
+//            }
+//        if self.parentScope.isNil
+//            {
+//            return(false)
+//            }
+//        return(self.parentScope!.containsMethodInstanceScope)
+//        }
+        
+    public func methodInstanceSet(withLabel: Label) -> MethodInstanceSet
         {
-        if self.isMethodInstanceScope
-            {
-            return(true)
-            }
-        if self.parentScope.isNil
-            {
-            return(false)
-            }
-        return(self.parentScope!.containsMethodInstanceScope)
+        MethodInstanceSet(instances: self.lookupN(label: withLabel)?.compactMap{$0 as? MethodInstance})
         }
         
     public mutating func setContainer(_ scope: Scope?)
         {
         self.parentScope = scope!
+        }
+        
+    public func lookupEnumeration(name: Name) -> TypeEnumeration?
+        {
+        if let item = self.lookup(name: name) as? TypeEnumeration
+            {
+            return(item)
+            }
+        return(nil)
         }
         
     public func lookupPrefixOperatorInstances(label: Label) -> PrefixOperatorInstances?

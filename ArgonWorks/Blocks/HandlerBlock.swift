@@ -19,23 +19,23 @@ public class HandlerBlock: ClosureBlock
             }
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         let realSymbols = self.symbols.map{generator.payload.symbolRegistry.registerSymbol($0)}
         let array = generator.payload.staticSegment.allocateArray(size: realSymbols.count)
         let arrayPointer = ArrayPointer(dirtyAddress: array)!
         for aSymbol in realSymbols
             {
-            arrayPointer.append(aSymbol)
+            arrayPointer.append(Word(integer: aSymbol))
             }
         if let declaration = self.declaration
             {
-            buffer.append(lineNumber: declaration.line)
+            buffer.add(lineNumber: declaration.line)
             }
-        let codeLabel = buffer.nextLabel()
-        buffer.append(.HAND,.address(array),.label(codeLabel),.none)
-        let label = buffer.nextLabel()
-        buffer.append(.BRA,.label(label),.none,.none)
+        let codeLabel = buffer.nextLabel
+        buffer.add(.HAND,.address(array),codeLabel)
+        let label = buffer.nextLabel
+        buffer.add(.BR,label)
         buffer.pendingLabel = codeLabel
         for block in self.blocks
             {

@@ -9,12 +9,12 @@ import Foundation
 
 public class WhenBlock: Block
     {
-    public var conditionPlace: T3AInstruction.Operand
+    public var conditionPlace: Instruction.Operand
         {
         return(self.condition.place)
         }
         
-    public let condition: Expression
+    public var condition: Expression
     
     init(condition: Expression)
         {
@@ -78,13 +78,14 @@ public class WhenBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let when = WhenBlock(condition: substitution.substitute(self.condition))
+        let newBlock = super.substitute(from: substitution)
+        newBlock.condition = substitution.substitute(self.condition)
         for block in self.blocks
             {
-            when.addBlock(substitution.substitute(block))
+            newBlock.addBlock(substitution.substitute(block))
             }
-        when.type = self.type
-        return(when as! Self)
+        newBlock.type = substitution.substitute(self.type)
+        return(newBlock)
         }
     }
     

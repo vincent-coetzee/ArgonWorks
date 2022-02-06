@@ -24,6 +24,11 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         ""
         }
         
+    public var isReadOnlyExpression: Bool
+        {
+        false
+        }
+        
     public var enumerationCaseHasAssociatedTypes: Bool
         {
         return(false)
@@ -83,6 +88,11 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(false)
         }
 
+    public var isEnumerationExpression: Bool
+        {
+        return(false)
+        }
+        
     public var isEnumerationCaseExpression: Bool
         {
         return(false)
@@ -98,13 +108,13 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         fatalError()
         }
         
-    public var place: T3AInstruction.Operand
+    public var place: Instruction.Operand
         {
         return(self._place)
         }
     
     public private(set) var locations = SourceLocations()
-    public internal(set) var _place: T3AInstruction.Operand = .none
+    public internal(set) var _place: Instruction.Operand = .none
     internal var type: Type = Type()
     public var issues = CompilerIssues()
     
@@ -116,24 +126,29 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         self.locations = coder.decodeSourceLocations(forKey: "locations")
         self.type = coder.decodeObject(forKey: "type") as! Type
+        self.issues = coder.decodeCompilerIssues(forKey: "issues")
         super.init()
         }
 
     public func encode(with coder:NSCoder)
         {
         coder.encodeSourceLocations(self.locations,forKey:"locations")
+        coder.encodeCompilerIssues(self.issues,forKey: "issues")
         coder.encode(self.type,forKey: "type")
         }
         
     public func initializeType(inContext context: TypeContext)
         {
-        print("WARNING: initializeType not implemented in \(Swift.type(of: self))")
-        self.type = context.voidType
+        self.type = ArgonModule.shared.void
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext)
         {
-        print("WARNING: initializeTypeConstraints not implemented in \(Swift.type(of: self))")
+        }
+        
+    public func inferType(inContext: TypeContext)
+        {
+        self.type = ArgonModule.shared.void
         }
         
     public func addDeclaration(_ location:Location)
@@ -176,7 +191,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(self)
         }
 
-    public func assign(from expression: Expression,into: T3ABuffer,using: CodeGenerator) throws
+    public func assign(from expression: Expression,into: InstructionBuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
@@ -188,7 +203,12 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     /// "place" of the expression.
     ///
     ///
-    public func emitPointerCode(into: T3ABuffer,using: CodeGenerator) throws
+    public func emitPointerCode(into: InstructionBuffer,using: CodeGenerator) throws
+        {
+        fatalError()
+        }
+        
+    public func emitAddressCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
@@ -199,7 +219,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     /// occur on the RHS which is why they are called RValues.
     ///
     ///
-    public func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+    public func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         fatalError()
         }
@@ -208,7 +228,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         {
         }
         
-    public func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
+    public func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
         {
 //        fatalError("This should have been implemented")
         }

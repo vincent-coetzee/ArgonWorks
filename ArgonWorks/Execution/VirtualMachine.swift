@@ -65,7 +65,7 @@ public class VirtualMachine
                 let kind = word.tag.displayString
                 let bitString = word.bitString
                 var objectString = ""
-                if word.tag == .object
+                if word.tag == .pointer
                     {
                     if let objectPointer = ObjectPointer(dirtyAddress: word)
                         {

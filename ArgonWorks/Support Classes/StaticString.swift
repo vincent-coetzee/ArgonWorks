@@ -22,7 +22,7 @@ public class StaticObject: NSObject,NSCoding
     {
     public var segmentType: Segment.SegmentType
         {
-        .managed
+        .static
         }
         
     public var sizeInBytes: Int
@@ -41,6 +41,8 @@ public class StaticObject: NSObject,NSCoding
         }
 
     internal var memoryAddress: Address = 0
+    internal var wasAddressAllocationDone = false
+    internal var wasMemoryLayoutDone = false
     
     public required init?(coder: NSCoder)
         {
@@ -64,6 +66,11 @@ public class StaticObject: NSObject,NSCoding
         
    public func allocateAddresses(using allocator: AddressAllocator) throws
         {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        self.wasAddressAllocationDone =  true
         allocator.allocateAddress(for: self)
         }
     }
@@ -326,7 +333,7 @@ public class StaticArray: StaticObject
         
     public override func type(inContext context: TypeContext) -> Type
         {
-        let elementType = self.elements.first!.type(inContext: context)!
+        let elementType = self.elements.isEmpty ? context.freshTypeVariable() : self.elements.first!.type(inContext: context)!
         return(TypeClass(label: context.arrayType.label,generics: [elementType]))
         }
     }

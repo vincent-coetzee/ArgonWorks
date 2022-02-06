@@ -23,6 +23,11 @@ public struct Argument:Displayable
         self.value = value
         }
         
+    public func freshTypeVariable(inContext: TypeContext) -> Argument
+        {
+        Argument(tag: self.tag, value: self.value.freshTypeVariable(inContext: inContext))
+        }
+        
     public func allocateAddresses(using: AddressAllocator) throws
         {
         try self.value.allocateAddresses(using: using)
@@ -49,6 +54,10 @@ public struct Argument:Displayable
     public func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.value.initializeTypeConstraints(inContext: context)
+        if let aTag = self.tag
+            {
+            context.bind(self.value.type,to: aTag)
+            }
         }
     }
 

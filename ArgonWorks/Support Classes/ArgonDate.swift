@@ -7,28 +7,35 @@
 
 import Foundation
 
-public struct ArgonDate:Comparable,Hashable
+public typealias ArgonDate = Word
+
+extension ArgonDate
     {
-    public static func <(lhs:ArgonDate,rhs:ArgonDate) -> Bool
+    public var dateDisplayString: String
         {
-        return(false)
+        "\(day)/\(month)/(year)"
         }
         
-    private let day:Int
-    private let monthIndex:Int
-    private let year:Int
-    
+    public var day: Int
+        {
+        Int((self & (Argon.kDateDay << Argon.kDateDayShift)) >> Argon.kDateDayShift)
+        }
+        
+    public var month: Int
+        {
+        Int((self & (Argon.kDateMonth << Argon.kDateMonthShift)) >> Argon.kDateMonthShift)
+        }
+        
+    public var year: Int
+        {
+        Int((self & (Argon.kDateYear << Argon.kDateYearShift)) >> Argon.kDateYearShift)
+        }
+        
     init(day:Int,month:Int,year:Int)
         {
-        self.day = Int(day)
-        self.monthIndex = Int(month)
-        self.year = Int(year)
-        }
-        
-    init(day:String,month:String,year:String)
-        {
-        self.day = Int(day)!
-        self.monthIndex = Int(month)!
-        self.year = Int(year)!
+        var word = Word(day) << Argon.kDateDayShift
+        word |= Word(month) << Argon.kDateMonthShift
+        word |= Word(year) << Argon.kDateYearShift
+        self = word
         }
     }

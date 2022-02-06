@@ -55,13 +55,13 @@ public class IfBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let ifBlock = IfBlock(condition: substitution.substitute(self.condition))
+        let newBlock = super.substitute(from: substitution)
+        newBlock.condition = substitution.substitute(self.condition)
         for block in self.blocks
             {
-            ifBlock.addBlock(substitution.substitute(block))
+            newBlock.addBlock(substitution.substitute(block))
             }
-        ifBlock.type = substitution.substitute(self.type)
-        return(ifBlock as! Self)
+        return(newBlock)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -72,6 +72,7 @@ public class IfBlock: Block
             ifBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
         ifBlock.type = self.type.freshTypeVariable(inContext: context)
+        ifBlock.elseBlock = self.elseBlock?.freshTypeVariable(inContext: context)
         return(ifBlock as! Self)
         }
         
@@ -94,7 +95,7 @@ public class IfBlock: Block
             block.initializeTypeConstraints(inContext: context)
             }
         self.elseBlock?.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
+        context.append(TypeConstraint(left: self.condition.type,right: ArgonModule.shared.boolean,origin: .block(self)))
         }
         
     public override func visit(visitor: Visitor) throws
@@ -114,11 +115,11 @@ public class IfBlock: Block
         self.elseBlock?.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        let outLabel = buffer.nextLabel()
+        let outLabel = buffer.nextLabel
         try self.condition.emitCode(into: buffer,using: using)
-        buffer.append(nil,.BRAF,self.condition.place,.none,.label(outLabel))
+        buffer.add(.BRF,self.condition.place,outLabel)
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)

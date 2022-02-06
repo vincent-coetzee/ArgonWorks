@@ -39,7 +39,7 @@ public class ModuleHolder: Module
     init(_ module: Module)
         {
         super.init(label: module.label)
-        self.module = module
+//        self.module = module
         }
         
         required init?(coder: NSCoder) {

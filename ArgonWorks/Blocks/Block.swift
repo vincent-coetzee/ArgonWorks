@@ -9,6 +9,11 @@ import Foundation
 
 public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFrame
     {
+    public var asContainer: Container
+        {
+        .block(self)
+        }
+        
     public var parentScope: Scope?
         {
         get
@@ -17,16 +22,16 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             }
         set
             {
-            self.setContainer(newValue)
+            fatalError()
             }
         }
         
-    public var isMethodInstanceScope: Bool
+    public var enclosingMethodInstance: MethodInstance
         {
-        false
+        self.container.enclosingMethodInstance
         }
         
-    public var module: Module!
+    public var moduleScope: Module?
         {
         self.container.module
         }
@@ -96,20 +101,20 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.locations.declaration.isNil ? .zero : self.locations.declaration
         }
         
-    public private(set) var container: Container = .none
+    public var container: Container = .none
     public var type: Type = Type()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
     internal var localSymbols = Symbols()
     internal var source: String?
-    public private(set) var index:UUID
+    public private(set) var index = IdentityKey.nextKey()
     public var issues: CompilerIssues = []
     private var nextLocalSlotOffset = 0
     private var nextParameterOffset = 16
-
+    public var ancestors = Blocks()
+    
     required override init()
         {
-        self.index = UUID()
         }
         
     public required init?(coder: NSCoder)
@@ -117,7 +122,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.container = coder.decodeContainer(forKey: "container")
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
         self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Symbols
-        self.index = coder.decodeObject(forKey: "index") as! UUID
+        self.index = coder.decodeObject(forKey: "index") as! IdentityKey
         self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
         self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
         self.type = coder.decodeObject(forKey: "type") as! Type
@@ -129,7 +134,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func encode(with coder: NSCoder)
         {
         print("ENCODE \(Swift.type(of: self))")
-        coder.encode(self.container,forKey: "container")
+        coder.encodeContainer(self.container,forKey: "container")
         coder.encode(self.blocks,forKey: "blocks")
         coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.index,forKey: "index")
@@ -140,15 +145,10 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         coder.encode(self.source,forKey: "source")
         }
         
-    public func setContainer(_ container: Container)
-        {
-        self.container = container
-        }
-        
-    public func setContainer(_ scope: Scope?)
-        {
-        self.container = .scope(scope!)
-        }
+//    public func setContainer(_ scope: Scope?)
+//        {
+//        self.container = .scope(scope!)
+//        }
         
     public func appendIssue(at: Location, message: String)
         {
@@ -179,12 +179,15 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let newBlock = Self.init()
+        newBlock.container = self.container
         newBlock.index = self.index
         for block in self.blocks
             {
             newBlock.addBlock(block.freshTypeVariable(inContext: context))
             }
         newBlock.type = self.type.freshTypeVariable(inContext: context)
+        newBlock.setIndex(self.index.keyByIncrementingMinor())
+        newBlock.ancestors.append(self)
         return(newBlock)
         }
         
@@ -196,7 +199,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.nextLocalSlotOffset -= 8
         }
     
-    public func setIndex(_ index: UUID)
+    public func setIndex(_ index: IdentityKey)
         {
         self.index = index
         }
@@ -349,14 +352,14 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         
     internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let newBlock = Self.init()
-        newBlock.index = self.index
+        let newBlock = Self()
+        newBlock.setIndex(self.index.keyByIncrementingMinor())
+        newBlock.type = substitution.substitute(self.type)
         for block in self.blocks
             {
             newBlock.addBlock(substitution.substitute(block))
             }
-        newBlock.type = substitution.substitute(self.type)
-        newBlock.issues = self.issues
+        newBlock.ancestors.append(self)
         return(newBlock)
         }
         
@@ -372,10 +375,10 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func addBlock(_ block:Block)
         {
         self.blocks.append(block)
-        block.setContainer(.block(self))
+        block.container = .block(self)
         }
         
-    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
+    public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         for block in self.blocks
             {
@@ -406,6 +409,17 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             {
             block.initializeType(inContext: context)
             }
+        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
+        self.type = context.voidType
+        }
+        
+    public func inferType(inContext context: TypeContext)
+        {
+        for block in self.blocks
+            {
+            block.inferType(inContext: context)
+            }
+        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
         self.type = context.voidType
         }
         

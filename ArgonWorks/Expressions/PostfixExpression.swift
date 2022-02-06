@@ -35,7 +35,10 @@ public class PostfixExpression: OperatorExpression
         {
         let expression = PostfixExpression(operatorLabel: self.operatorLabel,operators: self.operators, lhs: substitution.substitute(self.lhs))
         expression.type = substitution.substitute(self.type)
-        expression.methodInstance = self.methodInstance.isNil ? nil : substitution.substitute(self.methodInstance!)
+        let types = [expression.lhs.type]
+        let newOperators = self.operators.map{substitution.substitute($0)}
+        let sorted = newOperators.filter{$0.parameterTypesAreSupertypes(ofTypes: types)}.sorted{$0.moreSpecific(than: $1, forTypes: types)}
+        expression.methodInstance = sorted.first
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -92,19 +95,21 @@ public class PostfixExpression: OperatorExpression
         try visitor.accept(self)
         }
         
-    public override func emitCode(into buffer: T3ABuffer, using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer, using generator: CodeGenerator) throws
         {
-        try self.lhs.emitPointerCode(into: buffer, using: generator)
-        buffer.append(.PUSH,self.lhs.place)
+        try self.lhs.emitAddressCode(into: buffer, using: generator)
+        buffer.add(.PUSH,self.lhs.place)
         if let instance = self.methodInstance
             {
-            buffer.append(.CALL,.address(instance.memoryAddress))
+            assert(instance.memoryAddress != 0)
+            buffer.add(.CALL,.address(instance.memoryAddress))
             }
         else
             {
-            let address = generator.emitStaticString(self.operatorLabel)
-            buffer.append(.CALLD,.address(address))
+            let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol("#" + self.operatorLabel))
+            buffer.add(.SEND,.integer(symbol),.register(.RR))
             }
-        buffer.append(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
+        buffer.add(.POPN,.integer(Argon.Integer(Argon.kWordSizeInBytesWord)))
+        self._place = .register(.RR)
         }
     }

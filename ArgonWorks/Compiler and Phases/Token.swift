@@ -317,8 +317,6 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         {
         case none
         case main
-        case intrinsic
-        case stub
         }
         
     public class Operator:Equatable
@@ -1575,6 +1573,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .note:
                 return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isMainDirective: Bool
+        {
+        switch(self)
+            {
+            case .directive(let directive,_):
+                return(directive == "@Main")
             default:
                 return(false)
             }

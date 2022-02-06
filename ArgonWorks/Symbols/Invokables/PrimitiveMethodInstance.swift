@@ -7,9 +7,9 @@
 
 import Foundation
 
-public class PrimitiveMethodInstance: MethodInstance
+public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
     {
-    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> MethodInstance
+    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> PrimitiveMethodInstance
         {
         let instance = PrimitiveMethodInstance(label: label)
         instance.parameters = [Parameter(label: arg1, relabel: nil, type: arg1Type, isVisible: true, isVariadic: false)]
@@ -29,11 +29,32 @@ public class PrimitiveMethodInstance: MethodInstance
         self.init(label: label)
         self.parameters = parameters
         self.returnType = returnType
+        self.isPrimitiveMethodInstance = true
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator)
+        {
+        if self.primitiveIndex == 1000
+            {
+            print("halt")
+            }
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        allocator.allocateAddress(forPrimitiveInstance: self)
+        self.wasAddressAllocationDone = true
+        }
+        
+    public func prim(_ primIndex: Int) -> Self
+        {
+        self.primitiveIndex = Argon.Integer(primIndex)
+        return(self)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
-        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType))
+        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -41,25 +62,34 @@ public class PrimitiveMethodInstance: MethodInstance
         self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         self.returnType.initializeTypeConstraints(inContext: context)
         let parameterTypes = self.parameters.map{$0.type!}
-        context.append(TypeConstraint(left: self.type,right: Argon.addType(TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType)),origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
         }
  
-    public override func emitCode(into buffer: T3ABuffer, using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer, using: CodeGenerator) throws
         {
-        buffer.append(.PRIM,.integer(self.primitiveIndex),.none,.none)
+        buffer.add(.PRIM,.integer(self.primitiveIndex))
+        }
+        
+    public func emitCode(into output:InstructionBuffer,using generator:CodeGenerator,arguments: Arguments) throws
+        {
+        for argument in arguments.reversed()
+            {
+            try argument.value.emitValueCode(into: output,using: generator)
+            output.add(.PUSH,argument.value.place)
+            }
+        output.add(.PRIM,.integer(self.primitiveIndex),.register(.RR))
+        output.add(.POPN,.integer(Argon.Integer(arguments.count)))
         }
         
     public override func typeCheck() throws
         {
         }
         
-    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let instance = PrimitiveMethodInstance(label: self.label)
-        instance.primitiveIndex = self.primitiveIndex
-        instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
-        instance.returnType = substitution.substitute(self.returnType)
-        return(instance as! Self)
+        let newInstance = super.freshTypeVariable(inContext: context)
+        newInstance.primitiveIndex = self.primitiveIndex
+        return(newInstance)
         }
         
     public override func display(indent: String)
@@ -78,5 +108,24 @@ public class PrimitiveMethodInstance: MethodInstance
         {
         try self.parameters.visit(visitor: visitor)
         try visitor.accept(self)
+        }
+    }
+
+public class Template
+    {
+    private var label: Label
+    
+    init(_ label: Label)
+        {
+        self.label = label
+        }
+        
+    public func method(_ type1: Type,_ type2: Type,_ type3: Type) -> TemplateMethodInstance
+        {
+        let parameters = [Parameter(label: "a", relabel: nil, type: type1, isVisible: false, isVariadic: false),Parameter(label: "b", relabel: nil, type: type2, isVisible: false, isVariadic: false)]
+        let instance = TemplateMethodInstance(label: self.label)
+        instance.returnType = type3
+        instance.parameters = parameters
+        return(instance)
         }
     }

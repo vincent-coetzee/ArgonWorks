@@ -57,14 +57,29 @@ public class ForBlock: Block
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
+        self.inductionSlot.initializeTypeConstraints(inContext: context)
         self.elements.initializeTypeConstraints(inContext: context)
         for block in self.blocks
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        let collectionClass = ArgonModule.shared.iterable
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: Argon.addType(TypeClass(label: collectionClass.label, generics: [self.inductionSlot.type])),origin: .block(self)))
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
+        let collectionClass = ArgonModule.shared.collection
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: collectionClass.withGenerics([self.inductionSlot.type]),origin: .block(self)))
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
+        }
+        
+    public override func inferType(inContext context: TypeContext)
+        {
+        self.inductionSlot.inferType(inContext: context)
+        self.elements.inferType(inContext: context)
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
+        let collectionClass = ArgonModule.shared.collection
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: collectionClass.withGenerics([self.inductionSlot.type]),origin: .block(self)))
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
+        self.type = ArgonModule.shared.void
         }
         
     public override func display(indent: String)
@@ -78,18 +93,17 @@ public class ForBlock: Block
             }
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
         if let declaration = self.declaration
             {
-            buffer.append(lineNumber: declaration.line)
+            buffer.add(lineNumber: declaration.line)
             }
-        let label = buffer.nextLabel()
-        buffer.append(.ENTER,.integer(1),.none,.none)
+//        buffer.add(.ENTER,.integer(1),.none,.none)
         try self.elements.emitValueCode(into: buffer,using: using)
         let type = ArgonModule.shared.iterable
-        let temporary = buffer.nextTemporary()
-        buffer.append(.CAST,self.elements.place,.address(type.memoryAddress),temporary)
+        let temporary = buffer.nextTemporary
+        buffer.add(.CAST,self.elements.place,.address(type.memoryAddress),temporary)
         }
         
     public override func visit(visitor: Visitor) throws

@@ -21,14 +21,33 @@ public class TypeEnumeration: TypeConstructor
         
     public override var instanceSizeInBytes: Int
         {
-        var size = Argon.kWordSizeInBytesInt
-        self.cases.forEach{size = max(size,$0.instanceSizeInBytes)}
-        return(size)
+        if self.hasAssociatedValues
+            {
+            var count = self.cases.first!.associatedTypes.count
+            for aCase in self.cases
+                {
+                count = max(count,aCase.associatedTypes.count)
+                }
+            return((1 + count) * Argon.kWordSizeInBytesInt)
+            }
+        return(Argon.kWordSizeInBytesInt)
         }
     
     public override var isEnumeration: Bool
         {
         true
+        }
+        
+    public override var typeCode:TypeCode
+        {
+        .enumeration
+        }
+        
+    public override var magicNumber: Int
+        {
+        var genericsHash = 0
+        self.generics.forEach{ genericsHash = genericsHash << 13 | $0.magicNumber }
+        return(self.label.polynomialRollingHash << 13 | genericsHash)
         }
         
     public override var userString: String
@@ -48,16 +67,7 @@ public class TypeEnumeration: TypeConstructor
         
     public override var sizeInBytes: Int
         {
-        if self.hasAssociatedValues
-            {
-            var count = self.cases.first!.associatedTypes.count
-            for aCase in self.cases
-                {
-                count = max(count,aCase.associatedTypes.count)
-                }
-            return((1 + count) * Argon.kWordSizeInBytesInt)
-            }
-        return(Argon.kWordSizeInBytesInt)
+        120
         }
         
     public override var argonHash: Int
@@ -90,25 +100,21 @@ public class TypeEnumeration: TypeConstructor
 //            }
 //        }
         
-    public var _isSystemType: Bool
-    private var cases: EnumerationCases = []
+    public var cases: EnumerationCases = []
     public var rawType: Type?
     
     init(label: Label,isSystem: Bool = false,generics: Types = [])
         {
-        self._isSystemType = isSystem
         super.init(label: label,generics: [])
         }
         
     required init(label: Label)
         {
-        self._isSystemType = false
         super.init(label: label)
         }
         
     required init?(coder: NSCoder)
         {
-        self._isSystemType = coder.decodeBool(forKey: "isSystemType")
         self.cases = coder.decodeObject(forKey: "cases") as! EnumerationCases
         self.rawType = coder.decodeObject(forKey: "rawType") as? Type
         super.init(coder: coder)
@@ -116,7 +122,6 @@ public class TypeEnumeration: TypeConstructor
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encode(self._isSystemType,forKey: "isSystemType")
         coder.encode(self.cases,forKey: "cases")
         coder.encode(self.rawType,forKey: "rawType")
         super.encode(with: coder)
@@ -134,15 +139,53 @@ public class TypeEnumeration: TypeConstructor
         return(self.container.lookup(label: label))
         }
         
+    public func caseIndex(forSymbol: Argon.Symbol) -> Int?
+        {
+        for aCase in self.cases
+            {
+            if aCase.symbol == forSymbol
+                {
+                return(aCase.caseIndex)
+                }
+            }
+        return(nil)
+        }
+        
+    public func `case`(forSymbol: Argon.Symbol) -> EnumerationCase?
+        {
+        for aCase in self.cases
+            {
+            if aCase.symbol == forSymbol
+                {
+                return(aCase)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func isEqual(_ object: Any?) -> Bool
+        {
+        if let second = object as? TypeEnumeration
+            {
+            return(self.label == second.label && self.generics == second.generics && self.rawType == second.rawType && self.cases == second.cases)
+            }
+        return(super.isEqual(object))
+        }
+        
     public func addCase(_ aCase: EnumerationCase)
         {
         self.cases.append(aCase)
+        aCase.caseIndex = self.cases.count
         aCase.enumeration = self
         }
         
     public override func withGenerics(_ types: Types) -> Type
         {
-        let newClass = TypeEnumeration(label: self.label,isSystem: self.isSystemType,generics: self.generics + types)
+        let newClass = TypeEnumeration(label: self.label,isSystem: self.isSystemType,generics: types)
+        newClass.ancestors.append(self)
+        newClass.setModule(self.module)
+        newClass.container = self.container
+        newClass.setIndex(self.index.keyByIncrementingMinor())
         newClass.cases = self.cases
         newClass.rawType = self.rawType
         return(newClass)
@@ -152,7 +195,7 @@ public class TypeEnumeration: TypeConstructor
         {
         }
         
-   public override func allocateAddresses(using allocator: AddressAllocator) throws
+   public override func allocateAddresses(using allocator: AddressAllocator)
         {
         guard !self.wasAddressAllocationDone else
             {
@@ -162,21 +205,25 @@ public class TypeEnumeration: TypeConstructor
         allocator.allocateAddress(for: self)
         for aCase in self.cases
             {
-            try aCase.allocateAddresses(using: allocator)
+            aCase.allocateAddresses(using: allocator)
             }
         for type in self.generics
             {
-            try type.allocateAddresses(using: allocator)
+            type.allocateAddresses(using: allocator)
             }
+        }
+        
+    public func clone() -> Self
+        {
+        let new = Self.init(label: self.label)
+        new.setIndex(self.index)
+        new.rawType = self.rawType
+        new.cases = self.cases
+        return(new)
         }
         
     public override func layoutInMemory(using allocator: AddressAllocator)
         {
-//        print("ENUMERATION NEEDS TO BE LAID OUT IN MEMORY")
-//        }
-//
-//    public func layoutInMemory(atAddress: Address,isGenericInstance: Bool,using allocator: AddressAllocator)
-//        {
         guard !self.wasMemoryLayoutDone else
             {
             return
@@ -185,11 +232,12 @@ public class TypeEnumeration: TypeConstructor
         let segment = allocator.segment(for: self.segmentType)
         let enumType = ArgonModule.shared.enumeration
         let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType)
+        enumPointer.objectType = .enumeration
         enumPointer.setClass(enumType)
         enumPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
         if self.generics.isEmpty
             {
-            enumPointer.setAddress(0,atSlot: "typeParameters")
+            enumPointer.setArrayAddress(0,atSlot: "typeParameters")
             }
         else
             {
@@ -200,11 +248,10 @@ public class TypeEnumeration: TypeConstructor
                     type.layoutInMemory(using: allocator)
                     arrayPointer.append(type.memoryAddress)
                     }
-                enumPointer.setAddress(arrayPointer.cleanAddress,atSlot: "typeParameters")
+                enumPointer.setArrayAddress(arrayPointer.cleanAddress,atSlot: "typeParameters")
                 }
             }
-        enumPointer.setAddress(self.module!.memoryAddress,atSlot: "container")
-        enumPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        enumPointer.setAddress(self.module!.memoryAddress,atSlot: "module")
         enumPointer.setAddress(self.rawType?.memoryAddress,atSlot: "rawType")
         if let casePointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.cases.count))
             {
@@ -216,9 +263,24 @@ public class TypeEnumeration: TypeConstructor
             enumPointer.setArrayPointer(casePointer,atSlot: "cases")
             }
         enumPointer.setBoolean(self.isSystemType,atSlot: "isSystemType")
+//        MemoryPointer.dumpMemory(atAddress: self.memoryAddress,count: 100)
+        }
+        
+    public func createRawValueMethod() -> MethodInstance
+        {
+        let rawValueInstance = PrimitiveMethodInstance(label: "rawValue")
+        rawValueInstance.primitiveIndex = 200
+        rawValueInstance.addParameterSlot(Parameter(label: "enumeration",type: self))
+        rawValueInstance.returnType = ArgonModule.shared.symbol
+        return(rawValueInstance)
         }
         
     public func cases(_ cases:String...) -> TypeEnumeration
+        {
+        self.cases(cases)
+        }
+        
+    public func cases(_ cases:[String]) -> TypeEnumeration
         {
         var someCases = Array<EnumerationCase>()
         var caseIndex = 0

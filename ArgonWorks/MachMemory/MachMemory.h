@@ -14,6 +14,13 @@
 #import <sys/sysctl.h>
 #import <mach/mach_traps.h>
 
+typedef unsigned long long SWord;
+
 mach_vm_address_t AllocateSegment(mach_vm_address_t address,vm_size_t size);
 int DeallocateSegment(mach_vm_address_t address,vm_size_t size);
+void ResetMemory(SWord address,SWord count);
+SWord WordAtAddress(SWord address);
+void SetWordAtAddress(SWord word,SWord address);
+SWord ClassAtAddress(SWord address);
+
 #endif /* MachMemory_h */

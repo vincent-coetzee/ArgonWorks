@@ -41,41 +41,35 @@ public class StandardMethodInstance: MethodInstance
         return(myIssues)
         }
         
-    public override var instructions: Array<T3AInstruction>
-        {
-        self.codeBuffer.instructions
-        }
+//    public override var instructions: Array<Instruction>
+//        {
+//        self.codeBuffer.instructions
+//        }
 
-    internal var block: MethodInstanceBlock! = nil
-        
-    public var genericParameters = Types()
+    public var block = Block()
     
     public required init?(coder: NSCoder)
         {
-        self.block = coder.decodeObject(forKey: "block") as? MethodInstanceBlock
-        self.genericParameters = coder.decodeObject(forKey: "genericParameters") as! Types
+        self.block = coder.decodeObject(forKey: "block") as! Block
         super.init(coder: coder)
         }
 
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.block,forKey: "block")
-        coder.encode(self.genericParameters,forKey: "genericParameters")
         super.encode(with: coder)
         }
         
     required init(label:Label)
         {
         super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setContainer(.symbol(self))
+        self.block.container = .methodInstance(self)
         }
         
     public init(_ label:Label)
         {
         super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setContainer(.symbol(self))
+        self.block.container = .methodInstance(self)
         }
         
     convenience init(label: Label,parameters: Parameters,returnType:Type)
@@ -112,12 +106,12 @@ public class StandardMethodInstance: MethodInstance
         return(self.returnType == clazz)
         }
 
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        buffer.appendEntry(temporaryCount: self.localCount)
+//        buffer.appendEntry(temporaryCount: self.localCount)
         try block.emitCode(into: buffer,using: generator)
-        buffer.appendExit(temporaryCount: self.localCount)
-        buffer.append(.RET)
+//        buffer.appendExit(temporaryCount: self.localCount)
+        buffer.add(.RET)
         }
         
     public override func addDeclaration(_ location: Location)
@@ -128,37 +122,34 @@ public class StandardMethodInstance: MethodInstance
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
+        let newInstance = super.freshTypeVariable(inContext: context)
         let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
         let newReturnType = self.returnType.freshTypeVariable(inContext: context)
-        let newInstance = Self(label: self.label)
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         newInstance.block = (self.block.freshTypeVariable(inContext: context))
-        newInstance.block.setContainer(.symbol(newInstance))
+        newInstance.block.container = .methodInstance(self)
 //        newInstance.block._methodInstance = newInstance
-        newInstance.type = self.type.freshTypeVariable(inContext: context)
+        newInstance.type = self.type?.freshTypeVariable(inContext: context)
         return(newInstance)
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let instance = StandardMethodInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block) as! MethodInstanceBlock)
-        instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
-        instance.returnType = substitution.substitute(self.returnType)
-        return(instance as! Self)
+        let instance = super.substitute(from: substitution)
+        instance.block = substitution.substitute(self.block)
+        instance.block.container = .methodInstance(self)
+        return(instance)
         }
 
     public override func initializeType(inContext context: TypeContext)
         {
-        if self.label == "<"
-            {
-            print("halt")
-            }
+        
+        self.block.initializeType(inContext: context)
         self.parameters.forEach{$0.initializeType(inContext: context)}
         self.returnType.initializeType(inContext: context)
-        self.block.initializeType(inContext: context)
-        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type.freshTypeVariable(inContext: context)},returnType: self.returnType.freshTypeVariable(inContext: context)))
+//        self.type = Argon.addType(TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType))
+        self.type = self.returnType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -166,9 +157,9 @@ public class StandardMethodInstance: MethodInstance
         self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         self.returnType.initializeTypeConstraints(inContext: context)
         self.block.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.returnType,right: self.block.type,origin: .symbol(self)))
-        let parameterTypes = self.parameters.map{$0.type!}
-        context.append(TypeConstraint(left: self.type,right: Argon.addType(TypeFunction(label: self.label,types: parameterTypes, returnType: self.block.type)),origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.returnType,right: self.type,origin: .symbol(self)))
+//        let parameterTypes = self.parameters.map{$0.type!}
+//        context.append(TypeConstraint(left: self.type,right: Argon.addType(TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType)),origin: .symbol(self)))
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)

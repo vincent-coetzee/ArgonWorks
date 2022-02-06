@@ -9,6 +9,14 @@ import Foundation
 
 public typealias Label = String
 
+extension String: StringConvertible
+    {
+    public var stringValue: String
+        {
+        self
+        }
+    }
+    
 extension String
     {
     public enum Alignment
@@ -63,6 +71,15 @@ extension String
     public func withoutHash() -> String
         {
         if self.starts(with:"#")
+            {
+            return(String(self.dropFirst()))
+            }
+        return(self)
+        }
+        
+    public func withoutDollar() -> String
+        {
+        if self.starts(with:"$")
             {
             return(String(self.dropFirst()))
             }

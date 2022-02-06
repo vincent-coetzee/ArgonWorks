@@ -7,20 +7,24 @@
 
 import Foundation
 
-public struct ArgonDateTime:Comparable
+public typealias ArgonDateTime = Word
+
+extension ArgonDateTime
     {
-    public static func <(lhs:ArgonDateTime,rhs:ArgonDateTime) -> Bool
+    public var dateTimeDisplayString: String
         {
-        return(false)
+        "\(day)/\(month)/(year) \(hour):\(minute):\(second):\(millisecond)"
         }
         
-    private let date:ArgonDate
-    private let time:ArgonTime
-    
-    init(day:String="0",month:String="0",year:String="0",hour:String="0",minute:String="0",second:String="0",millisecond:String="0")
+    init(day:Int,month:Int,year:Int,hour:Int,minute:Int,second:Int,millisecond:Int)
         {
-        self.date = ArgonDate(day:day,month:month,year:year)
-        self.time = ArgonTime(hour:hour,minute:minute,second:second,millisecond:millisecond)
+        var word = Word(day) << Argon.kDateDayShift
+        word |= Word(month) << Argon.kDateMonthShift
+        word |= Word(year) << Argon.kDateYearShift
+        word |= Word(hour) << Argon.kTimeHourShift
+        word |= Word(minute) << Argon.kTimeMinuteShift
+        word |= Word(second) << Argon.kTimeSecondShift
+        word |= Word(millisecond) << Argon.kTimeMillisecondShift
+        self = word
         }
     }
-

@@ -17,7 +17,7 @@ public struct TypeSignature: Equatable
     internal static func typeSignature(for instance: MethodInstance,inContext context: TypeContext) -> TypeSignature
         {
         let types = instance.parameters.map{$0.type!}
-        return(TypeSignature(label: instance.label, types: types, returnType: instance.returnType!))
+        return(TypeSignature(label: instance.label, types: types, returnType: instance.returnType))
         }
         
     internal let label: Label
@@ -26,6 +26,6 @@ public struct TypeSignature: Equatable
     
     internal func instanciate(inContext: TypeContext) -> TypeSignature
         {
-        TypeSignature(label: self.label,types: self.types.map{$0.freshType(inContext: inContext)},returnType: self.returnType.freshType(inContext: inContext))
+        TypeSignature(label: self.label,types: self.types.map{$0.freshTypeVariable(inContext: inContext)},returnType: self.returnType.freshTypeVariable(inContext: inContext))
         }
     }

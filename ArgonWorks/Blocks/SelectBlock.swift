@@ -9,7 +9,7 @@ import Foundation
 
 public class SelectBlock: Block
     {
-    private let value:Expression
+    private var value:Expression
     private var whenBlocks:Array<WhenBlock> = []
     public var otherwiseBlock: OtherwiseBlock?
     
@@ -65,7 +65,14 @@ public class SelectBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        SelectBlock(value: substitution.substitute(self.value)) as! Self
+        let newBlock = super.substitute(from: substitution)
+        newBlock.value = substitution.substitute(self.value)
+        for block in self.whenBlocks
+            {
+            newBlock.whenBlocks.append(block.substitute(from: substitution))
+            }
+        newBlock.otherwiseBlock = self.otherwiseBlock?.substitute(from: substitution)
+        return(newBlock)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -101,32 +108,40 @@ public class SelectBlock: Block
         self.type = context.voidType
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-//        let aClass = self.value.type
-//        try self.value.emitCode(into: buffer,using: generator)
-//        var nextWhen: T3ALabel?
-//        let endLabel = buffer.nextLabel()
-//        for when in whenBlocks
-//            {
-//            if aClass.isPrimitiveClass && !aClass.isStringClass
-//                {
-//                buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,.none)
-//                }
-//            else
-//                {
-//                buffer.append(nextWhen,"CMPO",self.value.place,when.condition.place,.none)
-//                }
-//            nextWhen = buffer.nextLabel()
-//            buffer.append(nil,"BRNEQ",.none,.none,.label(nextWhen!))
-//            try when.emitCode(into: buffer,using: generator)
-//            buffer.append(nil,"BR",.none,.none,.label(endLabel))
-//            }
-//        if self.otherwiseBlock.isNotNil
-//            {
-//            buffer.pendingLabel = nextWhen
-//            try self.otherwiseBlock!.emitCode(into: buffer,using: generator)
-//            }
-//        buffer.pendingLabel = endLabel
+        let aType = self.value.type
+        try self.value.emitCode(into: buffer,using: generator)
+        var nextWhen: Instruction.Operand?
+        let endLabel = buffer.nextLabel
+        for when in whenBlocks
+            {
+            if aType.isFloatType
+                {
+                buffer.add(.f64,.NEQ,self.value.place,when.condition.place)
+                }
+            else if aType.isIntegerType
+                {
+                buffer.add(.i64,.NEQ,self.value.place,when.condition.place)
+                }
+            else if aType.isStringType
+                {
+                buffer.add(.string,.NEQ,self.value.place,when.condition.place)
+                }
+            else
+                {
+                buffer.add(.NEQ,self.value.place,when.condition.place)
+                }
+            nextWhen = buffer.nextLabel
+            buffer.add(.BRT,nextWhen!)
+            try when.emitCode(into: buffer,using: generator)
+            buffer.add(.BR,endLabel)
+            }
+        if self.otherwiseBlock.isNotNil
+            {
+            buffer.pendingLabel = nextWhen
+            try self.otherwiseBlock!.emitCode(into: buffer,using: generator)
+            }
+        buffer.pendingLabel = endLabel
         }
     }

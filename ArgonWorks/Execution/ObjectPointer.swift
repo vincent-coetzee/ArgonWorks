@@ -138,23 +138,24 @@ public class ObjectPointer: Addressable,Pointer
         {
         get
             {
-            return(ClassPointer(dirtyAddress: self.classAddress))
+            return(ClassPointer(address: self.classAddress!))
             }
         set
             {
-            self.classAddress = newValue.dirtyAddress
+            self.classAddress = newValue!.address.pointerAddress
             }
         }
         
-    public var classAddress: Address
+    public var classAddress: Address?
         {
         get
             {
-            self.wordPointer[2].cleanAddress
+            let word = self.wordPointer[2]
+            return(word.isNull ? nil : word.cleanAddress)
             }
         set
             {
-            self.wordPointer[2] = newValue.objectAddress
+            self.wordPointer[2] = newValue.isNil ? Argon.kNullTag : Word(pointer: newValue!)
             }
         }
         
@@ -181,6 +182,12 @@ public class ObjectPointer: Addressable,Pointer
         return(value + (-value & mask))
         }
         
+    internal func alignAddress(_ value: Address) -> Address
+        {
+        let mask = Int64(MemoryLayout<Address>.alignment - 1)
+        return(Address(Int64(value) + (-Int64(value) & mask)))
+        }
+        
     @inline(__always)
     public func setBoolean(_ boolean: Bool,atIndex: Int)
         {
@@ -205,6 +212,42 @@ public class ObjectPointer: Addressable,Pointer
             {
             self.wordPointer[index] = newValue
             }
+        }
+        
+    public func setInteger(_ integer:Int,atIndex: Int)
+        {
+        self.wordPointer[atIndex] = Word(integer: integer)
+        }
+        
+    public func setAddress(_ address:Address?,atIndex: Int)
+        {
+        if address.isNotNil && address! == 0
+            {
+            fatalError("SET NIL VALUE DO NOT USE 0 as NIL")
+            }
+        self.wordPointer[atIndex] = address.isNil ? Argon.kNullTag : Word(pointer: address!)
+        }
+        
+    public func address(atIndex: Int) -> Address?
+        {
+        let value = self.wordPointer[atIndex]
+        return(value.isNull ? nil : value.pointerValue)
+        }
+        
+    public func integer(atIndex: Int) -> Int
+        {
+        let value = self.wordPointer[atIndex]
+        return(Int(bitPattern: value))
+        }
+        
+    public func setWord(_ address:Word,atIndex: Int)
+        {
+        self.wordPointer[atIndex] = address
+        }
+        
+    public func word(atIndex: Int) -> Word
+        {
+        self.wordPointer[atIndex]
         }
     }
 

@@ -27,6 +27,7 @@ public class BinaryExpression: Expression
     internal let operation: Token.Symbol
     internal let rhs: Expression
     internal let lhs: Expression
+    internal var returnType: Type?
     internal var methodInstances: MethodInstances = []
     
     internal var selectedMethodInstance: MethodInstance?
@@ -79,30 +80,49 @@ public class BinaryExpression: Expression
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = context.freshTypeVariable()
-        context.extended(withContentsOf: [])
-            {
-            newContext in
-            newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
-            newContext.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
-            newContext.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
-            self.lhs.initializeTypeConstraints(inContext: newContext)
-            self.rhs.initializeTypeConstraints(inContext: newContext)
-            let substitution = newContext.unify()
-            let leftType = substitution.substitute(self.lhs.type)
-            let rightType = substitution.substitute(self.rhs.type)
-            self.type = leftType
-            self.selectedMethodInstance = MethodInstance(label: self.operation.rawValue)
-            self.selectedMethodInstance!.parameters = [Parameter(label: "left", relabel: nil, type: leftType, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rightType, isVisible: false, isVariadic: false)]
-            self.selectedMethodInstance!.returnType = leftType
-            }
+        self.type = self.rhs.type
+
+        
+//        context.extended(withContentsOf: [])
+//            {
+//            newContext in
+//            newContext.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+//            newContext.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
+//            newContext.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
+//            self.lhs.initializeTypeConstraints(inContext: newContext)
+//            self.rhs.initializeTypeConstraints(inContext: newContext)
+//            let substitution = newContext.unify()
+//            let leftType = substitution.substitute(self.lhs.type)
+//            let rightType = substitution.substitute(self.rhs.type)
+//            self.type = leftType
+//            self.selectedMethodInstance = MethodInstance(label: self.operation.rawValue)
+//            self.selectedMethodInstance!.parameters = [Parameter(label: "left", relabel: nil, type: leftType, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rightType, isVisible: false, isVariadic: false)]
+//            self.selectedMethodInstance!.returnType = leftType
+//            }
+        }
+        
+//    public func mostSpecificMethodInstance() -> MethodInstance?
+//        {
+//        let lhsType = self.lhs.type
+//        let rhsType = self.rhs.type
+//        let types = [lhsType,rhsType]
+//        let sorted = self.methodInstances.sorted{$0.moreSpecific(than: $1, forTypes: types)}
+//        return(sorted.first)
+//        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let expression = BinaryExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
-        expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
         return(expression as! Self)
         }
         
@@ -110,7 +130,12 @@ public class BinaryExpression: Expression
         {
         let expression = BinaryExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type)
-        expression.selectedMethodInstance = self.selectedMethodInstance.isNil ? nil : substitution.substitute(self.selectedMethodInstance!)
+        let leftType = self.lhs.type
+        let rightType = self.rhs.type
+        if leftType == rightType
+            {
+            expression.returnType = leftType
+            }
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -132,107 +157,63 @@ public class BinaryExpression: Expression
             }
         }
         
-    public override func emitValueCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitValueCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         try self.emitCode(into: instance,using: generator)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        guard let methodInstance = self.selectedMethodInstance else
-            {
-            print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
-            return
-            }
         try self.lhs.emitValueCode(into: instance, using: generator)
         try self.rhs.emitValueCode(into: instance, using: generator)
-        let temporary = instance.nextTemporary()
-        switch(self.operation.rawValue,methodInstance.returnType.label)
+        let temporary = instance.nextTemporary
+        let type = self.type
+//            generator.registerMethodInstanceIfNeeded(methodInstance)
+        var mode:Instruction.Mode
+        switch(type.label)
             {
-            case ("+","Integer"):
-                instance.append(.IADD64,self.lhs.place,self.rhs.place,temporary)
-            case ("+","Float"):
-                instance.append(.FADD64,self.lhs.place,self.rhs.place,temporary)
-            case ("+","UInteger"):
-                instance.append(.IADD64,self.lhs.place,self.rhs.place,temporary)
-            case ("+","String"):
-                instance.append(.SADD,self.lhs.place,self.rhs.place,temporary)
-            case ("+","Byte"):
-                instance.append(.IADD8,self.lhs.place,self.rhs.place,temporary)
-            case ("+","Character"):
-                instance.append(.IADD16,self.lhs.place,self.rhs.place,temporary)
-            case ("-","Integer"):
-                instance.append(.ISUB64,self.lhs.place,self.rhs.place,temporary)
-            case ("-","Float"):
-                instance.append(.FSUB64,self.lhs.place,self.rhs.place,temporary)
-            case ("-","UInteger"):
-                instance.append(.ISUB64,self.lhs.place,self.rhs.place,temporary)
-            case ("-","Byte"):
-                instance.append(.ISUB8,self.lhs.place,self.rhs.place,temporary)
-            case ("-","Character"):
-                instance.append(.ISUB16,self.lhs.place,self.rhs.place,temporary)
-            case ("*","Integer"):
-                instance.append(.IMUL64,self.lhs.place,self.rhs.place,temporary)
-            case ("*","Float"):
-                instance.append(.FMUL64,self.lhs.place,self.rhs.place,temporary)
-            case ("*","UInteger"):
-                instance.append(.IMUL64,self.lhs.place,self.rhs.place,temporary)
-            case ("*","Byte"):
-                instance.append(.IMUL8,self.lhs.place,self.rhs.place,temporary)
-            case ("*","Character"):
-                instance.append(.IMUL16,self.lhs.place,self.rhs.place,temporary)
-            case ("/","Integer"):
-                instance.append(.IDIV64,self.lhs.place,self.rhs.place,temporary)
-            case ("/","Float"):
-                instance.append(.FDIV64,self.lhs.place,self.rhs.place,temporary)
-            case ("/","UInteger"):
-                instance.append(.IDIV64,self.lhs.place,self.rhs.place,temporary)
-            case ("/","Byte"):
-                instance.append(.IDIV8,self.lhs.place,self.rhs.place,temporary)
-            case ("/","Character"):
-                instance.append(.IDIV16,self.lhs.place,self.rhs.place,temporary)
-            case ("%","Integer"):
-                instance.append(.IMOD64,self.lhs.place,self.rhs.place,temporary)
-            case ("%","Float"):
-                instance.append(.FMOD64,self.lhs.place,self.rhs.place,temporary)
-            case ("%","UInteger"):
-                instance.append(.IMOD64,self.lhs.place,self.rhs.place,temporary)
-            case ("%","Byte"):
-                instance.append(.IMOD8,self.lhs.place,self.rhs.place,temporary)
-            case ("%","Character"):
-                instance.append(.IMOD16,self.lhs.place,self.rhs.place,temporary)
-            case ("**","Integer"):
-                instance.append(.IPOW64,self.lhs.place,self.rhs.place,temporary)
-            case ("**","Float"):
-                instance.append(.FPOW64,self.lhs.place,self.rhs.place,temporary)
-            case ("**","UInteger"):
-                instance.append(.IPOW64,self.lhs.place,self.rhs.place,temporary)
-            case ("&","Integer"):
-                instance.append(.IAND64,self.lhs.place,self.rhs.place,temporary)
-            case ("&","UInteger"):
-                instance.append(.IAND64,self.lhs.place,self.rhs.place,temporary)
-            case ("&","Byte"):
-                instance.append(.IAND8,self.lhs.place,self.rhs.place,temporary)
-            case ("&","Character"):
-                instance.append(.IAND16,self.lhs.place,self.rhs.place,temporary)
-            case ("|","Integer"):
-                instance.append(.IOR64,self.lhs.place,self.rhs.place,temporary)
-            case ("|","UInteger"):
-                instance.append(.IOR64,self.lhs.place,self.rhs.place,temporary)
-            case ("|","Byte"):
-                instance.append(.IOR8,self.lhs.place,self.rhs.place,temporary)
-            case ("|","Character"):
-                instance.append(.IOR16,self.lhs.place,self.rhs.place,temporary)
-            case ("^","Integer"):
-                instance.append(.IXOR64,self.lhs.place,self.rhs.place,temporary)
-            case ("^","UInteger"):
-                instance.append(.IXOR64,self.lhs.place,self.rhs.place,temporary)
-            case ("^","Byte"):
-                instance.append(.IXOR8,self.lhs.place,self.rhs.place,temporary)
-            case ("^","Character"):
-                instance.append(.IXOR16,self.lhs.place,self.rhs.place,temporary)
+            case("Integer"):
+                mode = .i64
+            case("Float"):
+                mode = .f64
+            case("UInteger"):
+                mode = .iu64
+            case("String"):
+                mode = .string
+            case("Character"):
+                mode = .i16
+            case("Byte"):
+                mode = .i8
             default:
-                fatalError("This should be handled with a dynamic call.")
+                mode = .none
+            }
+        switch(self.operation.rawValue)
+            {
+            case("+"):
+                instance.add(mode,.ADD,self.lhs.place,self.rhs.place,temporary)
+            case("-"):
+                instance.add(mode,.SUB,self.lhs.place,self.rhs.place,temporary)
+            case("*"):
+                instance.add(mode,.MUL,self.lhs.place,self.rhs.place,temporary)
+            case("/"):
+                instance.add(mode,.DIV,self.lhs.place,self.rhs.place,temporary)
+            case("%"):
+                instance.add(mode,.MOD,self.lhs.place,self.rhs.place,temporary)
+            case("**"):
+                instance.add(mode,.POW,self.lhs.place,self.rhs.place,temporary)
+            case("&"):
+                instance.add(mode,.LAND,self.lhs.place,self.rhs.place,temporary)
+            case("|"):
+                instance.add(mode,.LOR,self.lhs.place,self.rhs.place,temporary)
+            case("^"):
+                instance.add(mode,.LXOR,self.lhs.place,self.rhs.place,temporary)
+            default:
+                let label = "#" + self.operation.rawValue
+                let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
+                instance.add(.PUSH,self.lhs.place)
+                instance.add(.PUSH,self.rhs.place)
+                instance.add(.SEND,.integer(symbol),temporary)
+                instance.add(.POPN,.integer(2))
             }
         self._place = temporary
         }

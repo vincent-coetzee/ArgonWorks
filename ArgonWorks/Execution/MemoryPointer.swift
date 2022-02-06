@@ -19,6 +19,29 @@ public class MemoryPointer
         self.classPointer.namePointer!.string
         }
         
+    public var hashValue: Word
+        {
+        if self.header.objectType == .string
+            {
+            return(Word(integer: StringPointer(dirtyAddress: self.address)!.string.polynomialRollingHash))
+            }
+        let start = self.slots["hash"]!.offset / 8
+        let size = self.header.sizeInWords
+        var hashValue = 0
+        for index in stride(from: start,to: size,by: 1)
+            {
+            hashValue = hashValue << 13 ^ self.integer(atIndex: index)
+            }
+        self.setInteger(hashValue,atSlotNamed: "hash")
+        return(Word(integer: hashValue))
+        }
+        
+    public var sizeInBytes: Int
+        {
+        Int(self.header.sizeInBytes)
+        }
+        
+    let header: Header
     let address: Address
     let wordPointer: WordPointer
     var classPointer: ClassPointer!
@@ -26,6 +49,7 @@ public class MemoryPointer
     
     init(address: Address)
         {
+        self.header = Header(atAddress: address.cleanAddress)
         self.address = address.cleanAddress
         self.wordPointer = WordPointer(bitPattern: address.cleanAddress)
         self.loadClass()
@@ -33,10 +57,10 @@ public class MemoryPointer
         
     private func loadClass()
         {
-        self.classPointer = ClassPointer(dirtyAddress: self.wordPointer[2])
+        self.classPointer = ClassPointer(address: self.wordPointer[2])
         if let array = self.classPointer?.slotsPointer
             {
-            for pointer in array.compactMap({SlotPointer(dirtyAddress: $0)})
+            for pointer in array.compactMap({SlotPointer(address: $0)})
                 {
                 self.slots[pointer.namePointer!.string] = pointer
                 }
@@ -79,7 +103,7 @@ public class MemoryPointer
         if let slot = self.slots[slotName]
             {
             let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = Word(object: word)
+            self.wordPointer[index] = Word(pointer: word)
             return
             }
         fatalError("Slot \(slotName) not found in object at address \(self.addressString)")
@@ -127,6 +151,16 @@ public class MemoryPointer
         fatalError("Slot not found")
         }
         
+    public func integer(atIndex: Int) -> Int
+        {
+        Int(bitPattern: self.wordPointer[atIndex])
+        }
+        
+    public func setInteger(_ integer: Int,atIndex: Int)
+        {
+        self.wordPointer[atIndex] = Word(integer: integer)
+        }
+        
     public static func string(forTaggedValue value: Word) -> String
         {
         var valueString = ""
@@ -134,6 +168,8 @@ public class MemoryPointer
             {
             case .integer:
                 valueString = "INTEGER: \(value)"
+            case .null:
+                valueString = "NULL"
             case .boolean:
                 valueString = "BOOLEAN: \(value.booleanValue)"
             case .byte:
@@ -141,9 +177,11 @@ public class MemoryPointer
             case .character:
                 valueString = "CHARACTER \(value.characterValue)"
             case .header:
-                let size = Header(word: value).sizeInBytes
-                valueString = "HEADER: BYTE SIZE: \(size)"
-            case .object:
+                let aHeader = Header(word: value)
+                let size = aHeader.sizeInBytes
+                let type = aHeader.objectType
+                valueString = "HEADER : BYTE TYPE \(type) SIZE: \(size)"
+            case .pointer:
                 let objectString = String(format: "%010X",value)
                 let className = ""
 //                if value.cleanAddress != 0
@@ -151,11 +189,39 @@ public class MemoryPointer
 //                    let otherPointer = MemoryPointer(address: value.cleanAddress)
 //                    className = otherPointer.className
 //                    }
-                valueString = "OBJECT: \(objectString) \(className)"
+                valueString = "POINTER: \(objectString) \(className)"
             case .float:
-                valueString = "FLOAT: \(value.floatValue)"
-            }
+                valueString = "FLOAT  : \(value.floatValue)"
+            case .inner:
+                let offset = value.innerValue
+                valueString = "INNER  : -\(offset)"
+        }
         return(valueString)
+        }
+        
+    public static func dumpObject(atAddress address: Address)
+        {
+//        if address == 0
+//            {
+//            let string = String(format: "%X",address)
+//            print("NULL POINTER: Can not dump object at \(string)")
+//            return
+//            }
+//        let pointer = WordPointer(bitPattern: address)
+//        let classAddress = pointer[2]
+//        if classAddress == 0
+//            {
+//            let string = String(format: "%X",address)
+//            print("INVALID CLASS POINTER iN OBJECT: can not dump object at \(string)")
+//            return
+//            }
+//        let classPointer = ClassPointer(address: classAddress)
+//        for slotAddress in classPointer.slotsPointer!
+//            {
+//            let slot = SlotPointer(address: slotAddress)
+//            let value = pointer[slot.offset / 8]
+//            let type = slot.typePointer!.word(atSlot: "typeCode")
+//            }
         }
         
     public static func dumpMemory(atAddress address: Address,count: Int)
@@ -181,7 +247,21 @@ public class MemoryPointer
                 {
                 print("----------------------------------------------------------------------------------------------------")
                 }
-            print("[\(addressString)] [\(offsetString)] \(wordBitString) \(wordString)")
+            let indexString = "[\(String(format: "%04d",index))]"
+            print("[\(addressString)] [\(offsetString)] \(wordBitString) \(indexString) \(wordString)")
+            }
+        }
+        
+    public static func dumpRawMemory(atAddress address: Address,count: Int)
+        {
+        let pointer = WordPointer(bitPattern: address.cleanAddress)
+        for index in 0..<count
+            {
+            let word = pointer[index]
+            let addressString = String(format: "%014X",address + Word(index * Argon.kWordSizeInBytesInt))
+            let wordBitString = word.bitString
+            let indexString = "[\(String(format: "%04d",index))]"
+            print("[\(addressString)] \(indexString) \(wordBitString)")
             }
         }
     }

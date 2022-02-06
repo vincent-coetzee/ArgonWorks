@@ -9,6 +9,8 @@ import Foundation
 
 public class ComparisonExpression: BinaryExpression
     {
+    internal var valueType: Type?
+    
     public override var diagnosticString: String
         {
         "\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)"
@@ -43,7 +45,12 @@ public class ComparisonExpression: BinaryExpression
         {
         let expression = ComparisonExpression(substitution.substitute(self.lhs),self.operation,substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type)
-        expression.selectedMethodInstance = self.selectedMethodInstance.isNil ? nil : substitution.substitute(self.selectedMethodInstance!)
+//        expression.selectedMethodInstance = self.selectedMethodInstance.isNil ? nil : substitution.substitute(self.selectedMethodInstance!)
+//        self.selectedMethodInstance = expression.mostSpecificMethodInstance()
+        if expression.lhs.type == expression.rhs.type
+            {
+            expression.valueType = expression.lhs.type
+            }
         expression.issues = self.issues
         return(expression as! Self)
         }
@@ -51,119 +58,87 @@ public class ComparisonExpression: BinaryExpression
     public override func initializeType(inContext context: TypeContext)
         {
         super.initializeType(inContext: context)
-        self.type = context.booleanType
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
+        self.type = ArgonModule.shared.boolean
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
-        if !self.methodInstances.isEmpty
-            {
-            let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
-            methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
-            methodMatcher.appendTypeConstraint(lhs: self.lhs.type,rhs: self.rhs.type)
-            methodMatcher.appendTypeConstraint(lhs: self.type,rhs: context.booleanType)
-            methodMatcher.appendReturnType(context.booleanType)
-            if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
-                {
-                self.selectedMethodInstance = specificInstance
-                print("FOUND MOST SPECIFIC INSTANCE = \(specificInstance.displayString)")
-                }
-            else
-                {
-                print("COULD NOT FIND MOST SPECIFIC METHOD INSTANCE")
-                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operation.rawValue)' ) can not be resolved. Try making it more specific.")
-                }
-            }
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.boolean,origin: .expression(self)))
+//        if !self.methodInstances.isEmpty
+//            {
+//            let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)
+//            methodMatcher.setOrigin(TypeConstraint.Origin.expression(self),location: self.declaration!)
+//            methodMatcher.appendTypeConstraint(lhs: self.lhs.type,rhs: self.rhs.type)
+//            methodMatcher.appendTypeConstraint(lhs: self.type,rhs: context.booleanType)
+//            methodMatcher.appendReturnType(context.booleanType)
+//            if let specificInstance = methodMatcher.findMostSpecificMethodInstance()
+//                {
+//                self.selectedMethodInstance = specificInstance
+//                }
+//            else
+//                {
+//                self.appendIssue(at: self.declaration!, message: "The most specific method for this invocation of ( '\(self.operation.rawValue)' ) can not be resolved. Try making it more specific.")
+//                }
+//            }
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        guard let methodInstance = self.selectedMethodInstance else
-            {
-            print("ERROR: Can not generate code for BinaryExpression because method instance not selected.")
-            return
-            }
         try self.lhs.emitValueCode(into: instance, using: generator)
         try self.rhs.emitValueCode(into: instance, using: generator)
-        let temporary = instance.nextTemporary()
-        switch(self.operation.rawValue,methodInstance.returnType.label)
+        let temporary = instance.nextTemporary
+        if let type = self.valueType
             {
-            case ("<","Integer"):
-                instance.append(.ILT64,self.lhs.place,self.rhs.place,temporary)
-            case ("<","Float"):
-                instance.append(.FLT64,self.lhs.place,self.rhs.place,temporary)
-            case ("<","UInteger"):
-                instance.append(.ILT64,self.lhs.place,self.rhs.place,temporary)
-            case ("<","String"):
-                instance.append(.SLT,self.lhs.place,self.rhs.place,temporary)
-            case ("<","Byte"):
-                instance.append(.ILT8,self.lhs.place,self.rhs.place,temporary)
-            case ("<","Character"):
-                instance.append(.ILT16,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","Integer"):
-                instance.append(.ILTE64,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","Float"):
-                instance.append(.FLTE64,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","UInteger"):
-                instance.append(.ILTE64,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","String"):
-                instance.append(.SLTE,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","Byte"):
-                instance.append(.ILTE8,self.lhs.place,self.rhs.place,temporary)
-            case ("<=","Character"):
-                instance.append(.ILTE16,self.lhs.place,self.rhs.place,temporary)
-            case ("==","Integer"):
-                instance.append(.IEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("==","Float"):
-                instance.append(.FEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("==","UInteger"):
-                instance.append(.IEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("==","String"):
-                instance.append(.SEQ,self.lhs.place,self.rhs.place,temporary)
-            case ("==","Byte"):
-                instance.append(.IEQ8,self.lhs.place,self.rhs.place,temporary)
-            case ("==","Character"):
-                instance.append(.IEQ16,self.lhs.place,self.rhs.place,temporary)
-            case (">=","Integer"):
-                instance.append(.IGTE64,self.lhs.place,self.rhs.place,temporary)
-            case (">=","Float"):
-                instance.append(.FGTE64,self.lhs.place,self.rhs.place,temporary)
-            case (">=","UInteger"):
-                instance.append(.IGTE64,self.lhs.place,self.rhs.place,temporary)
-            case (">=","String"):
-                instance.append(.SGTE,self.lhs.place,self.rhs.place,temporary)
-            case (">=","Byte"):
-                instance.append(.IGTE8,self.lhs.place,self.rhs.place,temporary)
-            case (">=","Character"):
-                instance.append(.IGTE16,self.lhs.place,self.rhs.place,temporary)
-            case (">","Integer"):
-                instance.append(.IGT64,self.lhs.place,self.rhs.place,temporary)
-            case (">","Float"):
-                instance.append(.FGT64,self.lhs.place,self.rhs.place,temporary)
-            case (">","UInteger"):
-                instance.append(.IGT64,self.lhs.place,self.rhs.place,temporary)
-            case (">","String"):
-                instance.append(.SGT,self.lhs.place,self.rhs.place,temporary)
-            case (">","Byte"):
-                instance.append(.IGT8,self.lhs.place,self.rhs.place,temporary)
-            case (">","Character"):
-                instance.append(.IGT16,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","Integer"):
-                instance.append(.INEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","Float"):
-                instance.append(.FNEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","UInteger"):
-                instance.append(.INEQ64,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","String"):
-                instance.append(.SNEQ,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","Byte"):
-                instance.append(.INEQ8,self.lhs.place,self.rhs.place,temporary)
-            case ("!=","Character"):
-                instance.append(.INEQ16,self.lhs.place,self.rhs.place,temporary)
-            default:
-                fatalError("This should not happen.")
+            var mode:Instruction.Mode
+            switch(type.label)
+                {
+                case("Integer"):
+                    mode = .i64
+                case("Float"):
+                    mode = .f64
+                case("UInteger"):
+                    mode = .iu64
+                case("String"):
+                    mode = .string
+                case("Character"):
+                    mode = .i16
+                case("Byte"):
+                    mode = .i8
+                default:
+                    mode = .none
+                }
+            switch(self.operation.rawValue)
+                {
+                case("<"):
+                    instance.add(mode,.LT,self.lhs.place,self.rhs.place,temporary)
+                case("<="):
+                    instance.add(mode,.LTE,self.lhs.place,self.rhs.place,temporary)
+                case("=="):
+                    instance.add(mode,.EQ,self.lhs.place,self.rhs.place,temporary)
+                case(">="):
+                    instance.add(mode,.GTE,self.lhs.place,self.rhs.place,temporary)
+                case(">"):
+                    instance.add(mode,.GT,self.lhs.place,self.rhs.place,temporary)
+                case("!="):
+                    instance.add(mode,.NEQ,self.lhs.place,self.rhs.place,temporary)
+                default:
+                    fatalError("Invalid comparison")
+                }
+//            generator.registerMethodInstanceIfNeeded(methodInstance)
+            }
+        else
+            {
+            let label = "#" + self.operation.rawValue
+            let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
+            instance.add(.PUSH,self.lhs.place)
+            instance.add(.PUSH,self.rhs.place)
+            instance.add(.SEND,.integer(symbol),temporary)
+            instance.add(.POPN,.integer(2))
             }
         self._place = temporary
         }

@@ -34,4 +34,9 @@ public class PrimitiveBlock: Block
         coder.encode(self.primitiveIndex,forKey:"primitiveIndex")
         super.encode(with: coder)
         }
+        
+    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
+        {
+        buffer.add(.PRIM,.integer(Argon.Integer(self.primitiveIndex)))
+        }
     }

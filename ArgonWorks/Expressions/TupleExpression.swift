@@ -9,6 +9,16 @@ import Foundation
 
 public class TupleExpression: Expression
     {
+    public var slots: Array<Slot>
+        {
+        self.tuple.slots
+        }
+        
+    public var types: Array<Type>
+        {
+        self.tuple.types
+        }
+        
     public override var displayString: String
         {
         let string = "(" + self.expressions.map{$0.displayString}.joined(separator: ",") + ")"
@@ -72,8 +82,8 @@ public class TupleExpression: Expression
         {
         }
         
-    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        print("TupleExpression NEEDS TO GENERATE CODE")
+        fatalError()
         }
     }

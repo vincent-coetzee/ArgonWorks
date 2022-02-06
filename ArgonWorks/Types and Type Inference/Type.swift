@@ -10,9 +10,21 @@ import FFI
 
 public class Type: Symbol,Displayable,UserDisplayable
     {
-    public static func ==(lhs: Type,rhs: Type) -> Bool
+//    public static func ==(lhs: Type,rhs: Type) -> Bool
+//        {
+//        lhs.index == rhs.index
+//        }
+
+    public override var argonHash: Int
         {
-        lhs.index == rhs.index
+        var aHash = super.argonHash
+        aHash = aHash << 13 ^ Int(self._flags.rawValue)
+        return(Int(bitPattern: Word(bitPattern: aHash) & ~Argon.kTagMask))
+        }
+        
+    public var slotCount: Int
+        {
+        0
         }
         
     public var ffiType: ffi_type
@@ -30,6 +42,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         "Type"
         }
         
+    public var layoutSlotCount: Int
+        {
+        0
+        }
+        
     public override var description: String
         {
         self.displayString
@@ -40,14 +57,14 @@ public class Type: Symbol,Displayable,UserDisplayable
         []
         }
         
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
     public var hasVariableTypes: Bool
         {
         false
-        }
-        
-    public var instanceSizeInBytes: Int
-        {
-        fatalError()
         }
         
     public var arrayElementType: Type
@@ -58,6 +75,11 @@ public class Type: Symbol,Displayable,UserDisplayable
     public var isArray: Bool
         {
         false
+        }
+        
+    public var classValue: TypeClass
+        {
+        fatalError()
         }
         
     public var isTypeVariable: Bool
@@ -125,9 +147,24 @@ public class Type: Symbol,Displayable,UserDisplayable
         self._flags.contains(.kArrayTypeFlag)
         }
         
-    public var isClassClassType: Bool
+    public var isStringType: Bool
         {
-        self._flags.contains(.kClassClassFlag)
+        self._flags.contains(.kStringTypeFlag)
+        }
+        
+    public var isFloatType: Bool
+        {
+        false
+        }
+        
+    public var isIntegerType: Bool
+        {
+        false
+        }
+        
+    public var isMetaclassType: Bool
+        {
+        self._flags.contains(.kMetaclassFlag)
         }
         
     public override var isPrimitiveType: Bool
@@ -135,14 +172,14 @@ public class Type: Symbol,Displayable,UserDisplayable
         self._flags.contains(.kPrimitiveTypeFlag)
         }
         
+    public var magicNumber: Int
+        {
+        self.label.polynomialRollingHash
+        }
+        
     public var isArcheType: Bool
         {
         self._flags.contains(.kArcheTypeFlag)
-        }
-    
-    public override var fullName: Name
-        {
-        self.module.isNil ? Name() : self.module!.fullName
         }
         
     public override var isType: Bool
@@ -188,7 +225,7 @@ public class Type: Symbol,Displayable,UserDisplayable
     public override func encode(with coder: NSCoder)
         {
         print("START ENCODE TYPE \(self.label)")
-        coder.encode(self._flags.rawValue,forKey: "flags")
+        coder.encode(Int(self._flags.rawValue),forKey: "flags")
         super.encode(with: coder)
         print("END ENCODE TYPE")
         }
@@ -197,11 +234,6 @@ public class Type: Symbol,Displayable,UserDisplayable
     public func flags(_ flag: TypeFlags) -> Self
         {
         self._flags = self._flags.union(flag)
-        return(self)
-        }
-        
-    internal func freshType(inContext: TypeContext) -> Type
-        {
         return(self)
         }
         
@@ -250,6 +282,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
+    public func addInstanceSlot(_ slot: Slot)
+        {
+        fatalError()
+        }
+        
     @discardableResult
     public func slot(_ label: Label,_ type: Type) -> Type
         {
@@ -257,7 +294,7 @@ public class Type: Symbol,Displayable,UserDisplayable
         }
         
     @discardableResult
-    public func hasBytes(_ bool:Bool) -> Type
+    public func setHasBytes(_ bool:Bool) -> Type
         {
         fatalError()
         }

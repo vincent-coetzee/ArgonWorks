@@ -25,16 +25,16 @@ extension NSCoder
             self.encode(label,forKey: forKey + "label")
         case .address(let address):
             self.encode(5,forKey: forKey + "kind")
-            self.encode(address,forKey: "address")
+            self.encode(Int(bitPattern: address),forKey: forKey + "address")
         case .frameOffset(let offset):
             self.encode(6,forKey: forKey + "kind")
-            self.encode(offset,forKey: "offset")
+            self.encode(offset,forKey: forKey + "offset")
         case .integer(let integer):
             self.encode(7,forKey: forKey + "kind")
-            self.encode(integer,forKey: "integer")
+            self.encode(integer,forKey: forKey + "integer")
         case .float(let float):
             self.encode(8,forKey: forKey + "kind")
-            self.encode(float,forKey: "float")
+            self.encode(float,forKey: forKey + "float")
             }
         }
         
@@ -112,6 +112,15 @@ extension NSCoder
             case .address(let address):
                 self.encode(15,forKey:forKey + "kind")
                 self.encode(Int(address),forKey:forKey + "address")
+            case .date(let address):
+                self.encode(16,forKey:forKey + "kind")
+                self.encode(address,forKey:forKey + "date")
+            case .time(let address):
+                self.encode(17,forKey:forKey + "kind")
+                self.encode(address,forKey:forKey + "time")
+            case .dateTime(let address):
+                self.encode(18,forKey:forKey + "kind")
+                self.encode(address,forKey:forKey + "dateTime")
             }
         }
         
@@ -150,6 +159,12 @@ extension NSCoder
                 return(.function(self.decodeObject(forKey: forKey + "function") as! Function))
             case 15:
                 return(.address(Address(self.decodeInteger(forKey: forKey + "address"))))
+            case 16:
+                return(.date(Word(bitPattern: self.decodeInteger(forKey: forKey + "date"))))
+            case 17:
+                return(.time(Word(bitPattern: self.decodeInteger(forKey: forKey + "time"))))
+            case 18:
+                return(.dateTime(Word(bitPattern: self.decodeInteger(forKey: forKey + "dateTime"))))
             default:
                 fatalError()
             }
@@ -549,24 +564,24 @@ extension NSCoder
 //            }
 //        }
         
-    public func encode(_ container: Container,forKey: String)
+    public func encodeContainer(_ container: Container,forKey: String)
         {
         switch(container)
             {
             case .none:
                 self.encode(0,forKey: forKey + "kind")
-            case .type(let type):
-                self.encode(1,forKey: forKey + "kind")
-                self.encode(type,forKey: forKey + "type")
-            case .symbol(let symbol):
+//            case .type(let type):
+//                self.encode(1,forKey: forKey + "kind")
+//                self.encode(type,forKey: forKey + "type")
+            case .module(let symbol):
                 self.encode(2,forKey: forKey + "kind")
-                self.encode(symbol,forKey: forKey + "symbol")
+                self.encode(symbol,forKey: forKey + "module")
             case .block(let block):
                 self.encode(3,forKey: forKey + "kind")
                 self.encode(block,forKey: forKey + "block")
-            case .scope(let scope):
+            case .methodInstance(let scope):
                 self.encode(4,forKey: forKey + "kind")
-                self.encode(scope,forKey: forKey + "scope")
+                self.encodeScope(scope,forKey: forKey + "methodInstance")
             }
         }
         
@@ -576,21 +591,73 @@ extension NSCoder
         switch(kind)
             {
             case 0:
-                break
-            case 1:
-                return(.type(self.decodeObject(forKey: forKey + "type") as! Type))
+                return(.none)
+//            case 1:
+//                return(.type(self.decodeObject(forKey: forKey + "type") as! Type))
             case 2:
-                return(.symbol(self.decodeObject(forKey: forKey + "symbol") as! Symbol))
+                return(.module(self.decodeObject(forKey: forKey + "module") as! Module))
             case 3:
                 return(.block(self.decodeObject(forKey: forKey + "block") as! Block))
+            case 4:
+                return(.methodInstance(self.decodeObject(forKey: forKey + "methodInstance") as! MethodInstance))
             default:
                 fatalError("This should not happen.")
             }
         fatalError("This should not happen.")
         }
         
+    public func decodeScope(forKey: String) -> Scope
+        {
+        let kind = self.decodeInteger(forKey: forKey + "kind")
+        switch(kind)
+            {
+            case 2:
+                return(self.decodeContainer(forKey: forKey + "symbol"))
+            case 3:
+                return(self.decodeObject(forKey: forKey + "module") as! Module)
+            case 4:
+                return(self.decodeObject(forKey: forKey + "block") as! Block)
+            case 5:
+                return(self.decodeObject(forKey: forKey + "invocable") as! Invocable)
+            default:
+                fatalError("This should not happen.")
+            }
+        }
+        
     public func decodeTokenSymbol(forKey: String) -> Token.Symbol
         {
         return(Token.Symbol(rawValue: self.decodeString(forKey: forKey)!)!)
+        }
+        
+    public func encodeScope(_ scope: Scope,forKey: String)
+        {
+        if scope is Container
+            {
+            let container = scope as! Container
+            self.encode(2,forKey: forKey + "kind")
+            self.encode(container,forKey: forKey + "container")
+            }
+        else if scope is Module
+            {
+            let module = scope as! Module
+            self.encode(3,forKey: forKey + "kind")
+            self.encode(module,forKey: forKey + "module")
+            }
+        else if scope is Block
+            {
+            let block = scope as! Block
+            self.encode(4,forKey: forKey + "kind")
+            self.encode(block,forKey: forKey + "block")
+            }
+        else if scope is Invocable
+            {
+            let invocable = scope as! Invocable
+            self.encode(5,forKey: forKey + "kind")
+            self.encode(invocable,forKey: forKey + "invocable")
+            }
+        else
+            {
+            fatalError()
+            }
         }
     }

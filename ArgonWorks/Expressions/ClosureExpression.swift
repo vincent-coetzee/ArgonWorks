@@ -47,7 +47,7 @@ public class ClosureExpression: Expression
         try visitor.accept(self)
         }
         
-    public override func emitPointerCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitPointerCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         guard let closure = self.closure else
             {
@@ -57,7 +57,7 @@ public class ClosureExpression: Expression
         self._place = .address(closure.memoryAddress)
         }
         
-    public override func emitValueCode(into: T3ABuffer,using: CodeGenerator) throws
+    public override func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.emitPointerCode(into: into,using: using)
         }
@@ -79,8 +79,7 @@ public class ClosureExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.closure!.initializeType(inContext: context)
-        let label = self.closure!.parameters.map{$0.type.displayString}.joined(separator: "x") + "->" + self.closure!.returnType.displayString
-        self.type = Argon.addType(TypeFunction(label: label, types: self.closure!.parameters.map{$0.type}, returnType: self.closure!.returnType))
+        self.type = TypeFunction(label: "Closure", types: self.closure!.parameters.map{$0.type}, returnType: self.closure!.returnType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -90,8 +89,8 @@ public class ClosureExpression: Expression
         
     public override func allocateAddresses(using allocator:AddressAllocator) throws
         {
-        try self.closure?.allocateAddresses(using: allocator)
-        try self.closureSlot?.allocateAddresses(using: allocator)
+        self.closure?.allocateAddresses(using: allocator)
+        self.closureSlot?.allocateAddresses(using: allocator)
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -100,7 +99,7 @@ public class ClosureExpression: Expression
         self.closureSlot?.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: T3ABuffer,using: CodeGenerator) throws
+    public override func emitCode(into instance: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.closure?.emitCode(into: instance,using: using)
         try self.closureSlot?.emitCode(into: instance,using: using)

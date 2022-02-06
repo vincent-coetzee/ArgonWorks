@@ -67,7 +67,7 @@ public class TypeApplication: Type
         {
         self.types = []
         self.returnType = Type()
-        self.function = Argon.addType(TypeFunction(label: "", types: [], returnType: Type())) as! TypeFunction
+        self.function = TypeFunction(label: "", types: [], returnType: Type())
         super.init()
         }
         

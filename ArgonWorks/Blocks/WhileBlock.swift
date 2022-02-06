@@ -9,7 +9,7 @@ import Foundation
 
 public class WhileBlock: Block
     {
-    private let condition:Expression
+    private var condition:Expression
     
     init(condition: Expression)
         {
@@ -64,7 +64,7 @@ public class WhileBlock: Block
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
+        context.append(TypeConstraint(left: self.condition.type,right: ArgonModule.shared.boolean,origin: .block(self)))
         }
         
     public override func initializeType(inContext context: TypeContext)
@@ -77,30 +77,30 @@ public class WhileBlock: Block
         self.type = context.voidType
         }
         
-    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        let startLabel = buffer.nextLabel()
-        let endLabel = buffer.nextLabel()
+        let startLabel = buffer.nextLabel
+        let endLabel = buffer.nextLabel
         buffer.pendingLabel = startLabel
         try self.condition.emitCode(into: buffer,using: generator)
-        buffer.append(nil,.BRAF,self.condition.place,.none,.label(endLabel))
+        buffer.add(.BRF,self.condition.place,endLabel)
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: generator)
             }
-        buffer.append(nil,.BRA,.none,.none,.label(startLabel))
+        buffer.add(.BR,startLabel)
         buffer.pendingLabel = endLabel
         }
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let aBlock = WhileBlock(condition: substitution.substitute(self.condition))
-        aBlock.type = substitution.substitute(self.type)
+        let newBlock = super.substitute(from: substitution)
+        newBlock.condition = substitution.substitute(self.condition)
         for block in self.blocks
             {
-            aBlock.addBlock(substitution.substitute(block))
+            newBlock.addBlock(substitution.substitute(block))
             }
-        return(aBlock as! Self)
+        return(newBlock)
         }
         
     public override func visit(visitor: Visitor) throws

@@ -55,7 +55,7 @@ public class TokenStream:Equatable, TokenSource
     private let digits = NSCharacterSet.decimalDigits
     private let whitespace = NSCharacterSet.whitespaces
     private let newline = NSCharacterSet.newlines
-    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@;")
+    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},;")
     private let hexDigits = CharacterSet(charactersIn: "avbdefABCDEF0123456789_")
     private let binaryDigits = CharacterSet(charactersIn: "01_")
     private let operatorSymbols = CharacterSet(charactersIn: "=>-+*/%!&|^~@")
@@ -335,7 +335,6 @@ public class TokenStream:Equatable, TokenSource
                 {
 //                let anIndex = self.source.index(self.source.startIndex,offsetBy: self.startIndex)
                 let endIndex = source.distance(from: source.startIndex, to: offset)
-                print("Comments are '\(source.substring(with: (startIndex-1)..<endIndex))'")
                 return(Token.comment(source.substring(with: (startIndex-1)..<endIndex),self.sourceLocation()))
                 }
             return(self.nextToken())
@@ -520,25 +519,25 @@ public class TokenStream:Equatable, TokenSource
         //
         // Is it a directive
         //
-        else if self.currentChar == "%"
-            {
-            self.nextChar()
-            if letters.contains(self.currentChar)
-                {
-                self.currentString = ""
-                while letters.contains(self.currentChar)
-                    {
-                    self.currentString += String(self.currentChar)
-                    self.nextChar()
-                    }
-                return(.directive(self.currentString,self.sourceLocation()))
-                }
-            else
-                {
-                self.rewindChar()
-                return(self.scanSymbol())
-                }
-            }
+//        else if self.currentChar == "%"
+//            {
+//            self.nextChar()
+//            if letters.contains(self.currentChar)
+//                {
+//                self.currentString = ""
+//                while letters.contains(self.currentChar)
+//                    {
+//                    self.currentString += String(self.currentChar)
+//                    self.nextChar()
+//                    }
+//                return(.directive(self.currentString,self.sourceLocation()))
+//                }
+//            else
+//                {
+//                self.rewindChar()
+//                return(self.scanSymbol())
+//                }
+//            }
         //
         // Is it a number
         //
@@ -614,70 +613,94 @@ public class TokenStream:Equatable, TokenSource
         return(.character(characterValue,self.sourceLocation()))
         }
         
+    private func scanNumericElement(maximum: Int) -> Int
+        {
+        var number = ""
+        while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
+            {
+            number += String(self.currentChar)
+            self.nextChar()
+            }
+        if let value = Int(number)
+            {
+            return(value > maximum ? maximum : value)
+            }
+        return(-1)
+        }
+        
     private func scanMagnitudeLiteral() -> Token
         {
         self.nextChar()
-        var day:String = ""
-        while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && day.count <= 2
+        var day = 0
+        var month = 0
+        var year = 0
+        var hasDate = false
+        var hasTime = false
+        var hour = 0
+        var minute = 0
+        var second = 0
+        var millisecond = 0
+        
+        if self.currentChar != "("
             {
-            day += String(self.currentChar)
-            self.nextChar()
+            self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'(' expected after '@'.")
             }
+        self.nextChar()
+        let first = self.scanNumericElement(maximum: 60)
         if self.currentChar == "/"
             {
+            day = first
             self.nextChar()
-            var month = ""
-            while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && month.count <= 2
-                {
-                month += String(self.currentChar)
-                self.nextChar()
-                }
+            month = self.scanNumericElement(maximum: 12)
             if self.currentChar != "/"
                 {
-                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'/' expected in magnitude literal.")
+                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'/' expected in date literal.")
                 }
             self.nextChar()
-            var year = ""
-            while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && year.count <= 2
-                {
-                year += String(self.currentChar)
-                self.nextChar()
-                }
-            return(.date(Argon.Date(day:day,month:month,year:year),self.sourceLocation()))
+            year = self.scanNumericElement(maximum: 65535)
+            hasDate = true
             }
-        if self.currentChar == ":"
+        if self.currentChar == ")"
             {
             self.nextChar()
-            let hour = day
-            var minute = "0"
-            var second = "0"
-            var millisecond = ""
-            while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && minute.count <= 2
-                {
-                minute += String(self.currentChar)
-                self.nextChar()
-                }
+            }
+        else
+            {
+            hasTime = true
+            hour = self.scanNumericElement(maximum: 24)
             if self.currentChar == ":"
                 {
-                while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && second.count <= 2
-                    {
-                    second += String(self.currentChar)
-                    self.nextChar()
-                    }
+                hasTime = true
+                self.nextChar()
+                minute = self.scanNumericElement(maximum: 60)
                 if self.currentChar == ":"
                     {
-                    while self.digits.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine && millisecond.count <= 2
+                    second = self.scanNumericElement(maximum: 60)
+                    if self.currentChar == ":"
                         {
-                        millisecond += String(self.currentChar)
-                        self.nextChar()
+                        millisecond = self.scanNumericElement(maximum: 1000)
                         }
                     }
-                return(.time(Argon.Time(hour:hour,minute:minute,second:second,millisecond:millisecond),self.sourceLocation()))
                 }
-            self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'/' expected in magnitude literal.")
+            else
+                {
+                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"':' expected in time literal.")
+                }
+            if self.currentChar != ")"
+                {
+                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"')' was expected after magnitude date/time literal.")
+                }
+            self.nextChar()
             }
-        self.reportingContext.dispatchError(at:self.sourceLocation(),message:"Invalid magnitude literal.")
-        return(.date(Argon.Date(day:0,month:0,year:0),self.sourceLocation()))
+        if hasDate && hasTime
+            {
+            return(.dateTime(Argon.DateTime(day: day, month: month, year: year, hour: hour, minute: minute, second: second, millisecond: millisecond),self.sourceLocation()))
+            }
+        else if hasTime
+            {
+            return(.time(Argon.Time(hour: hour, minute: minute, second: second, millisecond: millisecond),self.sourceLocation()))
+            }
+        return(.date(Argon.Date(day:day,month:month,year:year),self.sourceLocation()))
         }
         
     private func scanString() -> Token
