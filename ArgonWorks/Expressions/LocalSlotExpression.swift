@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class SlotExpression: Expression
+public class LocalSlotExpression: Expression
     {
     public override var isReadOnlyExpression: Bool
         {
@@ -57,7 +57,7 @@ public class SlotExpression: Expression
         {
         let newSlot = substitution.substitute(self.slot)
         newSlot.offset = self.slot.offset
-        let expression = SlotExpression(slot: newSlot) as! Self
+        let expression = LocalSlotExpression(slot: newSlot) as! Self
         substitution.typeContext?.bind(newSlot.type,to: newSlot.label)
         expression.issues = self.issues
         return(expression)
@@ -77,20 +77,19 @@ public class SlotExpression: Expression
     public override func assign(from expression: Expression,into: InstructionBuffer,using: CodeGenerator) throws
         {
         try expression.emitValueCode(into: into,using: using)
-        try self.emitAddressCode(into: into,using: using)
-        into.add(.STOREP,expression.place,self.place,.integer(0))
+        into.add(.STOREP,expression.place,.frameOffset(self.slot.offset))
         }
         
     public override func emitValueCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        try self.slot.emitRValue(into: buffer,using: using)
-        self._place = self.slot.place
+        self._place = .frameOffset(self.slot.offset)
         }
         
     public override func emitAddressCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
         {
-        try self.slot.emitLValue(into: buffer,using: using)
-        self._place = self.slot.place
+        let temp = buffer.nextTemporary
+        buffer.add(.i64,.ADDRESS,.frameOffset(self.slot.offset),temp)
+        self._place = temp
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
@@ -104,12 +103,6 @@ public class SlotExpression: Expression
 
     public override func emitCode(into instance: InstructionBuffer, using generator: CodeGenerator) throws
         {
-        if let location = self.declaration
-            {
-            instance.add(lineNumber: location.line)
-            }
-        let temp = instance.nextTemporary
-        instance.add(.MOVE,.frameOffset(self.slot.offset),temp)
-        self._place = temp
+        fatalError()
         }
     }
