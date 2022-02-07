@@ -137,7 +137,7 @@ public class Slot:Symbol
     public var initialValue: Expression? = nil
     public var isClassSlot = false
     public var slotType: SlotType = .kInstanceSlot
-    
+    public var slotSymbol: Int = 0
 
     init(label:Label,type:Type? = nil)
         {
@@ -239,8 +239,7 @@ public class Slot:Symbol
         slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
-        let slotSymbolString = "#\(self.label)"
-        let slotIndex = allocator.payload.symbolRegistry.registerSymbol(slotSymbolString)
+        let slotIndex = allocator.payload.symbolRegistry.registerSymbol("#" + self.label)
         slotPointer.setInteger(slotIndex,atSlot: "symbol")
         if self is InstanceSlot
             {
@@ -263,23 +262,6 @@ public class Slot:Symbol
             return(self.label == second.label && self.type == second.type && self.slotType == second.slotType && self.offset == second.offset)
             }
         return(super.isEqual(object))
-        }
-        
-    public override func assign(from expression: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws
-        {
-        try self.emitLValue(into: buffer, using: using)
-        try expression.emitValueCode(into: buffer,using: using)
-        buffer.add(.STOREP,expression.place,self.place,.integer(0))
-        }
-        
-    public override func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
-        {
-        fatalError("This should have been overriden in a subclass.")
-        }
-        
-    public override func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
-        {
-        fatalError("This should have been overriden in a subclass.")
         }
         
     public override func analyzeSemantics(using analyzer: SemanticAnalyzer)

@@ -72,6 +72,7 @@ public class VectorPointer: ClassBasedPointer
         self.blockAddress = newBlock
         self.baseAddress = newBaseAddress
         self.blockPointer = WordPointer(bitPattern: self.baseAddress)
+        self.size = newSize
         }
         
     public subscript(_ index: Int) -> Word

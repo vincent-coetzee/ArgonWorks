@@ -69,9 +69,8 @@ public class LetBlock: Block
         self.type = self.lhs.type
         context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
         context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
-        let slotLabels = (self.lhs as! TupleExpression).slots.map{$0.label}
-        let rightTypes = (self.rhs as! TupleExpression).types
-        context.extended(with: <#T##Type#>, boundTo: <#T##Label#>)
+        let slotLabels = self.lhs.slots.map{$0.label}
+        let rightTypes = self.rhs.types
         }
         
     public override func inferType(inContext context: TypeContext)

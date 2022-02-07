@@ -88,6 +88,7 @@ public class PrefixExpression: OperatorExpression
         if let instance = self.methodInstance
             {
             generator.registerMethodInstanceIfNeeded(instance)
+            assert(instance.memoryAddress != 100000000000)
             assert(instance.memoryAddress != 0)
             buffer.add(.CALL,.address(instance.memoryAddress))
             }

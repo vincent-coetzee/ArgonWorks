@@ -531,14 +531,14 @@ public class Module:ContainerSymbol,Scope
             }
         }
         
-    public override func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitValueCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary
         buffer.add(.MOVE,.address(self.memoryAddress),temporary)
         self.place = temporary
         }
         
-    public override func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitAddressCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         let temporary = buffer.nextTemporary
         buffer.add(.MOVE,.address(self.memoryAddress),temporary)

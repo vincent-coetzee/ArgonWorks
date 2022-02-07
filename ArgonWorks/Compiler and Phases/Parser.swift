@@ -2134,7 +2134,7 @@ public class Parser: CompilerPass
         expression = prefixOperators.isEmpty ? expression : PrefixExpression(operatorLabel: prefixLabel,operators: prefixOperators,rhs: expression)
         var postfixOperators = PostfixOperatorInstances()
         var postfixLabel:Label = ""
-        if self.token.isOperator,let operations = self.currentScope.lookupPostfixOperatorInstances(label: postfixLabel)
+        if self.token.isOperator,let operations = self.currentScope.lookupPostfixOperatorInstances(label: self.token.operator.name)
             {
             postfixLabel = self.token.operator.name
             postfixOperators = operations
@@ -2525,10 +2525,6 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
-        if name.last == "Float"
-            {
-            print()
-            }
         if self.token.isLeftPar
             {
             if let methods = self.currentScope.lookupMethodInstances(name: name)
@@ -2714,7 +2710,7 @@ public class Parser: CompilerPass
                         return(expression)
                         }
                     }
-                let read = SlotExpression(slot: aSymbol as! Slot)
+                let read = LocalSlotExpression(slot: aSymbol as! Slot)
                 read.addReference(location)
                 return(read)
                 }
@@ -2748,7 +2744,7 @@ public class Parser: CompilerPass
             }
         let localSlot = LocalSlot(label: name.last,type: type,value: nil)
         self.currentScope.addLocalSlot(localSlot)
-        let term = SlotExpression(slot: localSlot)
+        let term = LocalSlotExpression(slot: localSlot)
         term.appendIssues(issues)
         localSlot.addDeclaration(location)
         term.addDeclaration(location)
@@ -3350,9 +3346,9 @@ public class Parser: CompilerPass
     private func parseStartExpression() throws -> Expression
         {
         var lhs = try self.parseExpression()
-        if lhs is SlotExpression
+        if lhs is LocalSlotExpression
             {
-            if let slot = (lhs as! SlotExpression).slot as? LocalSlot
+            if let slot = (lhs as! LocalSlotExpression).slot as? LocalSlot
                 {
                 self.currentScope.addLocalSlot(slot)
                 }

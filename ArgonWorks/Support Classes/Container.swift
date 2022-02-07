@@ -299,7 +299,7 @@ public enum Container: Scope,StringConvertible
         switch(self)
             {
             case .none:
-                fatalError()
+                return(nil)
             case .module(let symbol):
                 return(symbol.lookupN(label: label))
 //            case .type:

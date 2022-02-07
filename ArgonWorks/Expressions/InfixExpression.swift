@@ -95,7 +95,7 @@ public class InfixExpression: OperatorExpression
     public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         try self.lhs.emitAddressCode(into: instance, using: generator)
-        try self.rhs.emitAddressCode(into: instance, using: generator)
+        try self.rhs.emitValueCode(into: instance, using: generator)
         instance.add(.PUSH,self.lhs.place)
         instance.add(.PUSH,self.rhs.place)
         if self.methodInstance.isNil
@@ -107,6 +107,7 @@ public class InfixExpression: OperatorExpression
         else
             {
             assert(self.methodInstance!.memoryAddress != 0)
+            assert(self.methodInstance!.memoryAddress != 100000000000)
             instance.add(.CALL,.address(self.methodInstance!.memoryAddress))
             }
         self._place = .register(.RR)

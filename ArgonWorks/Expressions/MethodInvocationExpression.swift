@@ -203,6 +203,7 @@ public class MethodInvocationExpression: Expression
                     {
                     address = AddressTable[instance.index]!
                     }
+                assert(address != 100000000000)
                 assert(address != 0)
                 print("CALLING \(address)")
                 let instruction = buffer.add(.CALL,.address(address))

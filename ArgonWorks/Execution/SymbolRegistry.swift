@@ -14,16 +14,22 @@ public class SymbolRegistry
     private var rootNodeAddress: Address
     private let context: ExecutionContext
     private var nextIndex: Int = 1
+    private var vector: Address = 0
+    private let vectorPointer: VectorPointer
     
     init(context: ExecutionContext)
         {
         self.context = context
         self.rootNodeAddress = 0
+        self.vector = context.staticSegment.allocateVector(size: 10_000)
+        self.vectorPointer = VectorPointer(address: self.vector, segment: self.context.staticSegment)
         }
         
     public func write(toStream onStream: UnsafeMutablePointer<FILE>)
         {
         var address = self.rootNodeAddress
+        fwrite(&address,MemoryLayout<Word>.size,1,onStream)
+        address = self.vector
         fwrite(&address,MemoryLayout<Word>.size,1,onStream)
         var index = Word(integer: self.nextIndex)
         fwrite(&index,MemoryLayout<Word>.size,1,onStream)
@@ -41,11 +47,13 @@ public class SymbolRegistry
             self.rootNodeAddress = self.context.staticSegment.allocateObject(ofType: ArgonModule.shared.treeNode,extraSizeInBytes: 0)
             let pointer = TreeNodePointer(dirtyAddress: self.rootNodeAddress)!
             let symbolAddress = self.context.staticSegment.allocateSymbol(cleanSymbol)
-            pointer.payload1 = Word(integer: self.nextIndex)
+            let index = self.nextIndex
+            pointer.payload1 = Word(integer: index)
             self.nextIndex += 1
             pointer.keyAddress = self.context.staticSegment.allocateString(cleanSymbol)
             pointer.valueAddress = symbolAddress
-            return(pointer.payload1.intValue)
+            self.vectorPointer[index] = symbolAddress
+            return(index)
             }
         else
             {
@@ -59,8 +67,14 @@ public class SymbolRegistry
             self.nextIndex += 1
             let pointer = root.setValue(symbolAddress, forKey: cleanSymbol,inSegment: self.context.staticSegment)
             pointer.payload1 = Word(integer: index)
+            self.vectorPointer[index] = symbolAddress
             return(index)
             }
+        }
+        
+    public func symbolAddress(atSymbol: Int) -> Address?
+        {
+        return(self.vectorPointer[atSymbol])
         }
         
     public func dump()

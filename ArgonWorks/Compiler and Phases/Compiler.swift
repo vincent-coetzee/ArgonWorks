@@ -62,42 +62,38 @@ public class Compiler
     public func compile(parseOnly: Bool = false,moduleReceiver: ModuleReceiver? = nil) -> Module?
         {
         let addressAllocator = AddressAllocator()
-        if let module = Parser(self).processModule(nil)
+        guard let parsedModule = Parser(self).processModule(nil) else
             {
-            if let module = module.typeCheckModule()
-                {
-                if let module = addressAllocator.processModule(module)
-                    {
-                    if let module = CodeGenerator(self,addressAllocator: addressAllocator).processModule(module)
-                        {
-                        moduleReceiver?.moduleUpdated(module)
-                        addressAllocator.payload.installArgonModule(ArgonModule.shared)
-                        addressAllocator.payload.installClientModule(module)
-                        addressAllocator.payload.installMainMethod(module.mainMethod)
-                        let vm = VirtualMachine(payload: addressAllocator.payload)
-                        try! vm.payload.write(toPath: "/Users/vincent/Desktop/InferenceSample.carton")
-                        module.display(indent: "")
-                        for symbol in module.symbols
-                            {
-                            print("\(symbol.label) \(Swift.type(of: symbol)) \(symbol.memoryAddress)")
-                            }
-                        if let module = Optimizer(self).processModule(module)
-                            {
-                            let visitor = TestVisitor.visit(module)
-//                            self.allIssues = visitor.allIssues
-//                            print(visitor.allIssues)
-                            let someIssues = module.issues
-//                            print(someIssues)
-                            self.reporter.pushIssues(visitor.allIssues)
-                            return(module)
-                            }
-
-                        }
-                    }
-                }
+            return(nil)
             }
-//                }
-//            }
-        return(nil)
+        guard let typeCheckedModule = parsedModule.typeCheckModule() else
+            {
+            return(parsedModule)
+            }
+        guard let addressAllocatedModule = addressAllocator.processModule(typeCheckedModule) else
+            {
+            return(typeCheckedModule)
+            }
+        guard let codeGeneratedModule = CodeGenerator(self,addressAllocator: addressAllocator).processModule(addressAllocatedModule) else
+            {
+            return(addressAllocatedModule)
+            }
+        moduleReceiver?.moduleUpdated(codeGeneratedModule)
+        addressAllocator.payload.installArgonModule(ArgonModule.shared)
+        addressAllocator.payload.installClientModule(codeGeneratedModule)
+        addressAllocator.payload.installMainMethod(codeGeneratedModule.mainMethod)
+        let vm = VirtualMachine(payload: addressAllocator.payload)
+        try! vm.payload.write(toPath: "/Users/vincent/Desktop/InferenceSample.carton")
+        codeGeneratedModule.display(indent: "")
+        guard let optimizedModule = Optimizer(self).processModule(codeGeneratedModule) else
+            {
+            return(codeGeneratedModule)
+            }
+        let visitor = TestVisitor.visit(optimizedModule)
+        print(visitor.allIssues)
+        let someIssues = optimizedModule.issues
+        print(someIssues)
+        self.reporter.pushIssues(visitor.allIssues)
+        return(optimizedModule)
         }
     }

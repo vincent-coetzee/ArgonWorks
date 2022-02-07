@@ -94,6 +94,16 @@ public class Postfix
         self.label = label
         }
         
+    public func double(_ type1:Type,_ type3:Type) -> PrimitivePostfixOperatorInstance
+        {
+        let parameters = [Parameter(label: "a", relabel: nil, type: type1, isVisible: false, isVariadic: false)]
+        let returnType = type3
+        let instance = PrimitivePostfixOperatorInstance(label: self.label)
+        instance.parameters = parameters
+        instance.returnType = returnType
+        return(instance)
+        }
+        
     public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitivePostfixOperatorInstance
         {
         let random = Int.random(in: 0..<1000000)

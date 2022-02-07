@@ -279,7 +279,8 @@ public enum TupleElement
         switch(self)
             {
             case .slot(let slot):
-                try slot.assign(from: from,into: into,using: using)
+                try from.emitValueCode(into: into,using: using)
+                into.add(.STOREP,from.place,.frameOffset(slot.offset))
             case .literal:
                 fatalError("Can not assign into a literal.")
             case .expression(let expression):

@@ -101,6 +101,7 @@ public class PostfixExpression: OperatorExpression
         buffer.add(.PUSH,self.lhs.place)
         if let instance = self.methodInstance
             {
+            assert(instance.memoryAddress != 100000000000)
             assert(instance.memoryAddress != 0)
             buffer.add(.CALL,.address(instance.memoryAddress))
             }

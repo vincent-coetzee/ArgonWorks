@@ -220,7 +220,12 @@ public class ContainerSymbol:Symbol
         
     public override func lookupN(label: Label) -> Symbols?
         {
-        self.symbols.filter{$0.label == label}.nilIfEmpty
+        let someSymbols = self.symbols.filter{$0.label == label}
+        if let topSymbols = self.container.lookupN(label: label)
+            {
+            return((someSymbols + topSymbols).nilIfEmpty)
+            }
+        return(someSymbols.nilIfEmpty)
         }
         
     public override func lookupN(name: Name) -> Symbols?

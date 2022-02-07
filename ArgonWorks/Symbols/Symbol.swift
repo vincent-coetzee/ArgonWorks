@@ -522,14 +522,14 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
         }
         
-    public func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public func emitValueCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
         fatalError("This should have been overriden in a subclass.")
         }
         
-    public func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public func emitAddressCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        fatalError("This should have been implemented in subclass \(Swift.type(of: self)).")
+        fatalError("This should have been overriden in a subclass.")
         }
         
     public func substitute(from substitution: TypeContext.Substitution) -> Self

@@ -97,7 +97,7 @@ public class ReturnBlock: Block
         
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        try self.value?.emitCode(into: buffer,using: generator)
+        try self.value?.emitValueCode(into: buffer,using: generator)
         if self.value.isNotNil
             {
             buffer.add(.MOVE,self.value!.place,.register(.RR))

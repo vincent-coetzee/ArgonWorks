@@ -47,16 +47,6 @@ public class LocalSlot:Slot
         {
         return(self.type.lookup(label: label))
         }
-        
-    public override func emitRValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
-        {
-        self.place = .frameOffset(self.offset)
-        }
-        
-    public override func emitLValue(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
-        {
-        self.place = .frameOffset(self.offset)
-        }
     }
 
 public typealias LocalSlots = Array<LocalSlot>

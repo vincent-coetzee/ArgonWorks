@@ -90,6 +90,10 @@ public class InstructionBuffer
         
     private func addInstruction(_ instruction: Instruction)
         {
+        if instruction.opcode == .CALL && instruction.operand1.addressValue == 100000000000
+            {
+            print("halt")
+            }
         instruction.index = self.nextIndex
         self.nextIndex += 1
         self.instructions.append(instruction)

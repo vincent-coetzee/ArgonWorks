@@ -760,6 +760,20 @@ public class ArgonModule: SystemModule
         self.addSymbol(Infix(label: "<<=").double(self.byte, self.byte))
         self.addSymbol(Infix(label: ">>=").double(self.byte, self.byte))
         
+        self.addSymbol(Infix(label: "+=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "-=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "*=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "/=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "%=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "&=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "|=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "^=").double(self.character, self.character))
+        self.addSymbol(Infix(label: "<<=").double(self.character, self.character))
+        self.addSymbol(Infix(label: ">>=").double(self.character, self.character))
+        
+        self.addSymbol(Postfix(label: "++").double(self.integer, self.integer))
+        self.addSymbol(Postfix(label: "--").double(self.integer, self.integer))
+        
         self.addSymbol(Inline("class",self.object).returns(self.classType).classMethod())
         self.addSymbol(Inline("address",self.object).returns(self.address).addressMethod())
         
