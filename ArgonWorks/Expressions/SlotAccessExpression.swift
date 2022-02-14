@@ -101,16 +101,18 @@ public class SlotAccessExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.receiver.initializeType(inContext: context)
-        self.type = context.freshTypeVariable()
+        self.type = TypeMemberSlot(slotLabel: self.slotLabel, base: self.receiver.type)
         }
 
     public override func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
         {
         try self.receiver.emitAddressCode(into: into,using: using)
         let temporary = into.nextTemporary
-        if let slot = self.slot
+        let receiverType = self.receiver.type
+        if let slot = self.slot,let receiverClass = receiverType as? TypeClass
             {
-            into.add(.LOADP,self.receiver.place,.integer(Argon.Integer(slot.offset)),temporary)
+            let offset = receiverClass.offsetInObject(ofSlot: slot)
+            into.add(.LOADP,self.receiver.place,.integer(Argon.Integer(offset)),temporary)
             }
         else
             {
@@ -128,10 +130,7 @@ public class SlotAccessExpression: Expression
             if let aSlot = aType.lookup(label: self.slotLabel.withoutHash()) as? Slot
                 {
                 self.slot = aSlot
-                self.type = aSlot.type
-                context.append(TypeConstraint(left: self.type,right: aSlot.type,origin: .expression(self)))
-                context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
-                context.append(TypeConstraint(left: self.slot!.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
                 }
             else
                 {
@@ -143,8 +142,6 @@ public class SlotAccessExpression: Expression
             {
             self.slot = Slot(label: self.slotLabel.withoutHash())
             context.append(TypeConstraint(left: self.type,right: self.slot!.type,origin: .expression(self)))
-            context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
-            context.append(TypeConstraint(left: self.slot!.type,right: TypeMemberSlot(slotLabel: self.slotLabel,base: self.receiver.type),origin: .expression(self)))
             let substitution = context.unify()
             let receiverType = substitution.substitute(self.receiver.type)
             guard receiverType.isClass else

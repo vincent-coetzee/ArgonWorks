@@ -40,7 +40,7 @@ public class Inline
     public init(_ label: String,_ parameters: InlineElement...)
         {
         self.label = label
-        self.object1Type = Type()
+        self.object1Type = TypeContext.freshTypeVariable()
         self.elements = parameters
         }
         
@@ -72,7 +72,7 @@ public class InlineMethodInstance: StandardMethodInstance
         true
         }
         
-    private var closure: (Arguments,CodeGenerator,InstructionBuffer) -> Void = {a,b,c in }
+    internal var closure: (Arguments,CodeGenerator,InstructionBuffer) -> Void = {a,b,c in }
     
     public func emitCode(into buffer:InstructionBuffer,using generator:CodeGenerator,arguments: Arguments)
         {

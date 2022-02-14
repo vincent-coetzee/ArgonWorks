@@ -138,6 +138,7 @@
 		BF9E8D14279729A7003C53D7 /* TypeMetaclass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9E8D13279729A7003C53D7 /* TypeMetaclass.swift */; };
 		BF9FE396276D3519003BD56A /* MachMemory.c in Sources */ = {isa = PBXBuildFile; fileRef = BF9FE395276D3519003BD56A /* MachMemory.c */; };
 		BFA00EBD27B1320F006FB28D /* PeepholeOptimizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA00EBC27B1320F006FB28D /* PeepholeOptimizer.swift */; };
+		BFA00EBF27B158E6006FB28D /* VirtualTableSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA00EBE27B158E6006FB28D /* VirtualTableSlot.swift */; };
 		BFA3ADA426CFFD9300F17CF6 /* EnglishWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */; };
 		BFA3ADA526CFFD9300F17CF6 /* words.txt in Resources */ = {isa = PBXBuildFile; fileRef = BFA3ADA326CFFD9300F17CF6 /* words.txt */; };
 		BFA3ADA826D0042300F17CF6 /* DocumentsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */; };
@@ -155,13 +156,11 @@
 		BFB7FAF82723F1CC00B8CEF0 /* NSBezierPath+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB7FAF72723F1CC00B8CEF0 /* NSBezierPath+Extensions.swift */; };
 		BFB7FAFA2724015D00B8CEF0 /* SymbolWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB7FAF92724015D00B8CEF0 /* SymbolWrapper.swift */; };
 		BFB8533627AD1D4400C63B55 /* VectorPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8533527AD1D4400C63B55 /* VectorPointer.swift */; };
-		BFB8533827AD1DCB00C63B55 /* BlockPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB8533727AD1DCB00C63B55 /* BlockPointer.swift */; };
 		BFB9F74926D2D03F0015B19F /* TupleExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB9F74826D2D03F0015B19F /* TupleExpression.swift */; };
 		BFB9F74B26D2D0F00015B19F /* Tuple.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFB9F74A26D2D0F00015B19F /* Tuple.swift */; };
 		BFBC5960276750E800C4EEF1 /* InstanceSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBC595F276750E800C4EEF1 /* InstanceSlot.swift */; };
 		BFBC5965276777FF00C4EEF1 /* ArrayPrimitives.c in Sources */ = {isa = PBXBuildFile; fileRef = BFBC5964276777FF00C4EEF1 /* ArrayPrimitives.c */; };
-		BFBD46EB277A176500FEA88A /* SlotReaderMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBD46EA277A176500FEA88A /* SlotReaderMethodInstance.swift */; };
-		BFBD46ED277A1B9F00FEA88A /* SlotWriterMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBD46EC277A1B9F00FEA88A /* SlotWriterMethodInstance.swift */; };
+		BFBD46EB277A176500FEA88A /* SlotAccessorMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBD46EA277A176500FEA88A /* SlotAccessorMethodInstance.swift */; };
 		BFBF1477270521C000C3AABF /* BasicBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBF1476270521C000C3AABF /* BasicBlock.swift */; };
 		BFBF1479270521E100C3AABF /* EntryBasicBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBF1478270521E100C3AABF /* EntryBasicBlock.swift */; };
 		BFBF147B2705220100C3AABF /* ExitBasicBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBF147A2705220100C3AABF /* ExitBasicBlock.swift */; };
@@ -301,6 +300,7 @@
 		BFEFA9D7276B680600894140 /* VirtualMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9D6276B680600894140 /* VirtualMachine.swift */; };
 		BFEFA9D9276BCC3200894140 /* ClassBasedPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9D8276BCC3200894140 /* ClassBasedPointer.swift */; };
 		BFEFA9DB276BCEA500894140 /* Int+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9DA276BCEA500894140 /* Int+Extensions.swift */; };
+		BFF1D93B27B5526900EE78EB /* BlockPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF1D93A27B5526900EE78EB /* BlockPointer.swift */; };
 		BFF3B085275ED237004BEE35 /* InfixOperatorInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF3B084275ED237004BEE35 /* InfixOperatorInstance.swift */; };
 		BFF6FE69276FFEDC00AD170F /* VMPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFF6FE68276FFEDC00AD170F /* VMPayload.swift */; };
 		BFFF07AD274EB47800F1E13F /* CompilerIssue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFF07AC274EB47800F1E13F /* CompilerIssue.swift */; };
@@ -443,6 +443,7 @@
 		BF9E8D13279729A7003C53D7 /* TypeMetaclass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeMetaclass.swift; sourceTree = "<group>"; };
 		BF9FE395276D3519003BD56A /* MachMemory.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = MachMemory.c; sourceTree = "<group>"; };
 		BFA00EBC27B1320F006FB28D /* PeepholeOptimizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeepholeOptimizer.swift; sourceTree = "<group>"; };
+		BFA00EBE27B158E6006FB28D /* VirtualTableSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualTableSlot.swift; sourceTree = "<group>"; };
 		BFA3ADA226CFFD9300F17CF6 /* EnglishWord.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnglishWord.swift; sourceTree = "<group>"; };
 		BFA3ADA326CFFD9300F17CF6 /* words.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = words.txt; sourceTree = "<group>"; };
 		BFA3ADA726D0042300F17CF6 /* DocumentsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentsController.swift; sourceTree = "<group>"; };
@@ -462,7 +463,6 @@
 		BFB7FAF72723F1CC00B8CEF0 /* NSBezierPath+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSBezierPath+Extensions.swift"; sourceTree = "<group>"; };
 		BFB7FAF92724015D00B8CEF0 /* SymbolWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolWrapper.swift; sourceTree = "<group>"; };
 		BFB8533527AD1D4400C63B55 /* VectorPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorPointer.swift; sourceTree = "<group>"; };
-		BFB8533727AD1DCB00C63B55 /* BlockPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockPointer.swift; sourceTree = "<group>"; };
 		BFB9F74826D2D03F0015B19F /* TupleExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TupleExpression.swift; sourceTree = "<group>"; };
 		BFB9F74A26D2D0F00015B19F /* Tuple.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tuple.swift; sourceTree = "<group>"; };
 		BFBC595F276750E800C4EEF1 /* InstanceSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstanceSlot.swift; sourceTree = "<group>"; };
@@ -476,8 +476,7 @@
 		BFBC59732767A16400C4EEF1 /* tramp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tramp.h; sourceTree = "<group>"; };
 		BFBC59742767A16400C4EEF1 /* ffi_cfi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffi_cfi.h; sourceTree = "<group>"; };
 		BFBC59772767E05D00C4EEF1 /* ArgonTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ArgonTypes.h; sourceTree = "<group>"; };
-		BFBD46EA277A176500FEA88A /* SlotReaderMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotReaderMethodInstance.swift; sourceTree = "<group>"; };
-		BFBD46EC277A1B9F00FEA88A /* SlotWriterMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotWriterMethodInstance.swift; sourceTree = "<group>"; };
+		BFBD46EA277A176500FEA88A /* SlotAccessorMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SlotAccessorMethodInstance.swift; sourceTree = "<group>"; };
 		BFBF1476270521C000C3AABF /* BasicBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicBlock.swift; sourceTree = "<group>"; };
 		BFBF1478270521E100C3AABF /* EntryBasicBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryBasicBlock.swift; sourceTree = "<group>"; };
 		BFBF147A2705220100C3AABF /* ExitBasicBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExitBasicBlock.swift; sourceTree = "<group>"; };
@@ -623,6 +622,7 @@
 		BFEFA9D6276B680600894140 /* VirtualMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualMachine.swift; sourceTree = "<group>"; };
 		BFEFA9D8276BCC3200894140 /* ClassBasedPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassBasedPointer.swift; sourceTree = "<group>"; };
 		BFEFA9DA276BCEA500894140 /* Int+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+Extensions.swift"; sourceTree = "<group>"; };
+		BFF1D93A27B5526900EE78EB /* BlockPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockPointer.swift; sourceTree = "<group>"; };
 		BFF3B084275ED237004BEE35 /* InfixOperatorInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfixOperatorInstance.swift; sourceTree = "<group>"; };
 		BFF6FE68276FFEDC00AD170F /* VMPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VMPayload.swift; sourceTree = "<group>"; };
 		BFFF07AC274EB47800F1E13F /* CompilerIssue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompilerIssue.swift; sourceTree = "<group>"; };
@@ -833,8 +833,8 @@
 				BFEFA9C0276B52B400894140 /* WordPointer.swift */,
 				BFD46FCA27A6732800330CF3 /* DictionaryPointer.swift */,
 				BFB8533527AD1D4400C63B55 /* VectorPointer.swift */,
-				BFB8533727AD1DCB00C63B55 /* BlockPointer.swift */,
 				BFA7A9AA27AD815F00043BC2 /* ValuePromise.swift */,
+				BFF1D93A27B5526900EE78EB /* BlockPointer.swift */,
 			);
 			path = Execution;
 			sourceTree = "<group>";
@@ -1040,8 +1040,7 @@
 				BF8E9D9827664F990075733F /* MethodSignature.swift */,
 				BFDDB06D27189DCF00786847 /* Operator.swift */,
 				BF179A1F271D829700A07626 /* PrimitiveMethodInstance.swift */,
-				BFBD46EA277A176500FEA88A /* SlotReaderMethodInstance.swift */,
-				BFBD46EC277A1B9F00FEA88A /* SlotWriterMethodInstance.swift */,
+				BFBD46EA277A176500FEA88A /* SlotAccessorMethodInstance.swift */,
 				BF1337F3274150BC006CE4C9 /* StandardMethodInstance.swift */,
 				BF7AD2D127ACC99500E446FF /* TemplateMethodInstance.swift */,
 			);
@@ -1072,6 +1071,7 @@
 				BF68B096275BB70600B8E33D /* ModuleSlot.swift */,
 				BFC1EDCC26CFFADC009B7C34 /* Slot.swift */,
 				BF08A08027AF855100B24E53 /* GlobalSlot.swift */,
+				BFA00EBE27B158E6006FB28D /* VirtualTableSlot.swift */,
 			);
 			path = Slots;
 			sourceTree = "<group>";
@@ -1269,10 +1269,10 @@
 				BFA3ADA826D0042300F17CF6 /* DocumentsController.swift in Sources */,
 				BF68B09B275BEFA800B8E33D /* PostfixExpression.swift in Sources */,
 				BF8D0969276214250093382B /* SystemRelatedExpressions.swift in Sources */,
-				BFBD46ED277A1B9F00FEA88A /* SlotWriterMethodInstance.swift in Sources */,
 				BF7AD2CE27AC885C00E446FF /* Instruction.swift in Sources */,
 				BF68B093275AA34000B8E33D /* ComparisonExpression.swift in Sources */,
 				BFC1ED3C26CFFAB1009B7C34 /* SelectBlock.swift in Sources */,
+				BFA00EBF27B158E6006FB28D /* VirtualTableSlot.swift in Sources */,
 				BFC1ECF926CFFA9F009B7C34 /* Word.swift in Sources */,
 				BFC1EE3326CFFAF6009B7C34 /* LineNumberTextView.swift in Sources */,
 				BF761B0E27A0370500142939 /* EnumerationDecompositionExpression.swift in Sources */,
@@ -1328,6 +1328,7 @@
 				BFC1ED3B26CFFAB1009B7C34 /* Block.swift in Sources */,
 				BF4937E527539A0300A9BF9F /* TestVisitor.swift in Sources */,
 				BFFF07B8274F52E100F1E13F /* AssignmentExpression.swift in Sources */,
+				BFF1D93B27B5526900EE78EB /* BlockPointer.swift in Sources */,
 				BFB7FAF62723E43600B8CEF0 /* CastExpression.swift in Sources */,
 				BFC1EDDC26CFFADC009B7C34 /* ArgumentType.swift in Sources */,
 				BF60DFC62702633D00734AC3 /* NSImage+Extensions.swift in Sources */,
@@ -1386,7 +1387,6 @@
 				BFC1EE0B26CFFADC009B7C34 /* MainModule.swift in Sources */,
 				BF122B3927248E6500B53083 /* FileItemCellView.swift in Sources */,
 				BF122B372724714B00B53083 /* Date+Extensions.swift in Sources */,
-				BFB8533827AD1DCB00C63B55 /* BlockPointer.swift in Sources */,
 				BF178A712710293D00AE2D7F /* T3AInstruction.swift in Sources */,
 				BF115A5A270E338F007112C8 /* CompilationEventRowView.swift in Sources */,
 				BF68B095275AA36D00B8E33D /* BooleanExpression.swift in Sources */,
@@ -1461,7 +1461,7 @@
 				BFC1ED8626CFFAD5009B7C34 /* Stack.swift in Sources */,
 				BF8E9D9927664F990075733F /* MethodSignature.swift in Sources */,
 				BFC1EE3126CFFAF6009B7C34 /* LineAnnotation.swift in Sources */,
-				BFBD46EB277A176500FEA88A /* SlotReaderMethodInstance.swift in Sources */,
+				BFBD46EB277A176500FEA88A /* SlotAccessorMethodInstance.swift in Sources */,
 				BFA3ADCE26D0195F00F17CF6 /* MemorySlotCellView.swift in Sources */,
 				BF0564422715F8E5005E7688 /* ImportExpression.swift in Sources */,
 				BF86721926D18ED200A12B1A /* Parent.swift in Sources */,

@@ -21,7 +21,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public var diagnosticString: String
         {
-        ""
+        self.displayString
         }
         
     public var isReadOnlyExpression: Bool
@@ -70,6 +70,10 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public var declaration: Location?
         {
+        if self.locations.declaration.isNil
+            {
+            print("halt")
+            }
         return(self.locations.declaration.isNil ? .zero : self.locations.declaration)
         }
         
@@ -113,9 +117,9 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         return(self._place)
         }
     
-    public private(set) var locations = SourceLocations()
+    public var locations = SourceLocations()
     public internal(set) var _place: Instruction.Operand = .none
-    internal var type: Type = Type()
+    internal var type: Type = ArgonModule.shared.void
     public var issues = CompilerIssues()
     
     public override init()
@@ -271,3 +275,80 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     
 
 public typealias Expressions = Array<Expression>
+
+public typealias ExpressionsList = Array<Expressions>
+
+public class CompoundExpression: Expression
+    {
+    public override var displayString: String
+        {
+        self.expressions.map{$0.displayString}.joined(separator: ",")
+        }
+        
+    internal var expressions: Expressions
+    
+    init(_ expression: Expression)
+        {
+        self.expressions = [expression]
+        super.init()
+        }
+        
+    override init()
+        {
+        self.expressions = Expressions()
+        super.init()
+        }
+        
+        public required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+    public func append(_ expression: Expression)
+        {
+        self.expressions.append(expression)
+        }
+        
+    public override func display(indent: String)
+        {
+        var dent = indent + "\t"
+        print("\(indent)EXPRESSIONS")
+        for expression in self.expressions
+            {
+            expression.display(indent:dent)
+            }
+        }
+        
+    public override func initializeType(inContext: TypeContext)
+        {
+        for expression in self.expressions
+            {
+            expression.initializeType(inContext: inContext)
+            }
+        let types = self.expressions.map{$0.type}
+        self.type = TypeConstructor(label: "CompoundExpression\(self.expressions.count)",generics: types)
+        }
+        
+    public override func initializeTypeConstraints(inContext: TypeContext)
+        {
+        for expression in self.expressions
+            {
+            expression.initializeTypeConstraints(inContext: inContext)
+            }
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = CompoundExpression()
+        expression.expressions = self.expressions.map{$0.freshTypeVariable(inContext: context)}
+        expression.type = self.type.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let expression = CompoundExpression()
+        expression.expressions = self.expressions.map{substitution.substitute($0)}
+        expression.type = substitution.substitute(self.type)
+        return(expression as! Self)
+        }
+    }

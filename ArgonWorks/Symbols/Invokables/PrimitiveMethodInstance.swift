@@ -36,7 +36,7 @@ public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
         {
         if self.primitiveIndex == 1000
             {
-            print("halt")
+//            print("halt")
             }
         guard !self.wasAddressAllocationDone else
             {
@@ -52,17 +52,18 @@ public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
         return(self)
         }
         
-    public override func initializeType(inContext context: TypeContext)
-        {
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
-        }
+//    public override func initializeType(inContext context: TypeContext)
+//        {
+//        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
+//        }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         self.returnType.initializeTypeConstraints(inContext: context)
         let parameterTypes = self.parameters.map{$0.type!}
-        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
+//        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
+        context.append(TypeConstraint(left: self.type,right: self.returnType,origin: .symbol(self)))
         }
  
     public override func emitCode(into buffer: InstructionBuffer, using: CodeGenerator) throws
@@ -89,6 +90,7 @@ public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
         {
         let newInstance = super.freshTypeVariable(inContext: context)
         newInstance.primitiveIndex = self.primitiveIndex
+        newInstance.type = self.type.freshTypeVariable(inContext: context)
         return(newInstance)
         }
         

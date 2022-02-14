@@ -399,7 +399,6 @@ public class Module:ContainerSymbol,Scope
                 {
                 symbol.initializeType(inContext: typeContext)
                 let newSymbol = symbol.freshTypeVariable(inContext: typeContext)
-                newSymbol.initializeType(inContext: typeContext)
                 newSymbol.initializeTypeConstraints(inContext: typeContext)
                 temporarySymbols.append(newSymbol)
                 }

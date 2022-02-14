@@ -83,12 +83,12 @@ public class WhileBlock: Block
         let endLabel = buffer.nextLabel
         buffer.pendingLabel = startLabel
         try self.condition.emitCode(into: buffer,using: generator)
-        buffer.add(.BRF,self.condition.place,endLabel)
+        buffer.add(.BRF,self.condition.place,endLabel.operand)
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: generator)
             }
-        buffer.add(.BR,startLabel)
+        buffer.add(.BR,startLabel.operand)
         buffer.pendingLabel = endLabel
         }
         

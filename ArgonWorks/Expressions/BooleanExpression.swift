@@ -23,6 +23,7 @@ public class BooleanExpression: BinaryExpression
         let expression = BooleanExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
         expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         
@@ -30,15 +31,16 @@ public class BooleanExpression: BinaryExpression
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = context.booleanType
+        self.type = ArgonModule.shared.boolean
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.lhs.type,right: context.booleanType,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.rhs.type,right: context.booleanType,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.lhs.type,right: ArgonModule.shared.boolean,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.rhs.type,right: ArgonModule.shared.boolean,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.rhs.type,right: self.lhs.type,origin: .expression(self)))
         }
         
     public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws

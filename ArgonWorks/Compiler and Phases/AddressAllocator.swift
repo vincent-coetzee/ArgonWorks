@@ -43,24 +43,12 @@ public class AddressAllocator: CompilerPass
         /// Allocate space for the class dictionary pointer
         /// amd the method array pointer
         ///
-        do
+        module.allocateAddresses(using: self)
+        guard !self.wasCancelled else
             {
-            try module.allocateAddresses(using: self)
-            guard !self.wasCancelled else
-                {
-                return(nil)
-                }
-            return(module)
+            return(nil)
             }
-        catch let error as CompilerIssue
-            {
-            module.appendIssue(error)
-            }
-        catch let error
-            {
-            module.appendIssue(at: .zero, message: "Unexpected error: \(error)")
-            }
-        return(nil)
+        return(module)
         }
         
     public func registerSymbol(_ symbol: Argon.Symbol) -> Int
@@ -81,7 +69,18 @@ public class AddressAllocator: CompilerPass
             case .code:
                 return(self.payload.codeSegment)
             }
-        fatalError("Can not determine segment")
+        }
+        
+    public func allocateVirtualTable(_ virtualTable: VirtualTable) -> Address
+        {
+        //
+        // 1 Word for the Class this is for
+        // 1 Word for the count of entries in the table
+        // N words for the entries in the table
+        //
+        let wordCount = virtualTable.entries.count
+        let address = self.payload.codeSegment.allocateWords(count: wordCount)
+        return(address)
         }
         
     public func allocateAddress(for symbol: Symbol)

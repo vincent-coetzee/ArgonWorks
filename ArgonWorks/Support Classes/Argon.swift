@@ -71,15 +71,14 @@ public struct Argon
     
     public enum Tag:UInt64
         {
-        case integer =   0b0000      /// an integer or uinteger value
-        case float =     0b0001      /// a float value
-        case byte =      0b0010      /// a byte value 0 - 255
-        case character = 0b0011      /// a two byte value 0 - 65535
-        case boolean =   0b0100      /// true or false
-        case inner =     0b0101      /// marks the start of an embedded object
-        case header =    0b0110      /// this is a header word
-        case pointer =   0b0111      /// copy and follow
-        case null =      0b1000      /// any value with the null bit set is null
+        case integer =   0b000      /// an integer or uinteger value
+        case float =     0b001      /// a float value
+        case byte =      0b010      /// a byte value 0 - 255
+        case character = 0b011      /// a two byte value 0 - 65535
+        case boolean =   0b100      /// true or false
+        case header =    0b101      /// this is a header word
+        case pointer =   0b110      /// copy and follow
+        case null =      0b111      /// any value with the null bit set is null
         ///
         public var displayString: String
             {
@@ -101,8 +100,6 @@ public struct Argon
                     return("POINTER")
                 case .null:
                     return("NULL")
-                case .inner:
-                    return("INNER")
                 }
             }
         }
@@ -135,7 +132,6 @@ public struct Argon
     public static let kHeaderTag = Self.Tag.header.rawValue << Argon.kTagShift
     public static let kPointerTag = Self.Tag.pointer.rawValue << Argon.kTagShift
     public static let kNullTag = Self.Tag.null.rawValue << Argon.kTagShift
-    public static let kInnerTag = Self.Tag.inner.rawValue << Argon.kTagShift
     
     public static let kDateYear:Word = 0b11111111_11111111
     public static let kDateYearShift:Word = Argon.kDateMonthShift + Word(Argon.kDateMonth.nonzeroBitCount)
@@ -165,9 +161,9 @@ public struct Argon
     public static let kHeaderSizeInWordsBits: Word =  0b11111111_11111111_11111111_11111111_11111111
     public static let kHeaderSizeInWordsShift: Word = 0
     
-    public static let kTagBits: Word = 0b1111
-    public static let kTagMask:Word = 0b1111 << Argon.kTagShift
-    public static let kTagShift:Word = 59
+    public static let kTagBits: Word = 0b111
+    public static let kTagMask:Word = 0b111 << Argon.kTagShift
+    public static let kTagShift:Word = 60
     
     public static let kWordSizeInBytes = 8
     public static let kArgumentSizeInBytes = 8

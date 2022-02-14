@@ -11,7 +11,7 @@ public class MethodSignature
     {
     public let label: Label
     public var parameters: Parameters = Parameters()
-    public var returnType: Type = Type()
+    public var returnType: Type = ArgonModule.shared.void
     public let methodInstance: MethodInstance
     
     init(label:Label,methodInstance:MethodInstance)

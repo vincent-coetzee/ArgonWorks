@@ -58,7 +58,7 @@ public class VirtualMachine
         while index < count
             {
             let header = Header(atAddress: address + Word(index))
-            print("HEADER: \(header.displayString)")
+//            print("HEADER: \(header.displayString)")
             for offset in (index + 1)..<(index + header.sizeInWords - 1)
                 {
                 let word = wordPointer[offset]

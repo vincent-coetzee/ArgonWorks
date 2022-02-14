@@ -50,14 +50,30 @@ public class UnaryExpression: Expression
         self.type = self.rhs.type
         }
         
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.rhs.initializeTypeConstraints(inContext: context)
+        }
+        
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
+   public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = UnaryExpression(Token.Symbol(rawValue: self.operationName)!,self.rhs.freshTypeVariable(inContext: context))
+        expression.locations = self.locations
+        expression.issues = self.issues
+        return(expression as! Self)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
+        let expression = UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
+        expression.locations = self.locations
+        expression.issues = self.issues
+        return(expression)
         }
         
     public override func emitValueCode(into instance: InstructionBuffer,using: CodeGenerator) throws

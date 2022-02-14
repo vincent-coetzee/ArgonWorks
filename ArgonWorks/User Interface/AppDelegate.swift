@@ -116,7 +116,25 @@ class AppDelegate: NSObject, NSApplicationDelegate
         vector.printLayout()
         let block = ArgonModule.shared.block
         block.printLayout()
+        let testClass = ArgonModule.shared.lookup(label: "ClassE") as! TypeClass
+        testClass.printLayout()
         print()
+        let payload = VMPayload()
+        array.printLayout()
+        block.printLayout()
+        string.printLayout()
+        ArrayPointer.test(inSegment: payload.staticSegment)
+        StringPointer.test(inSegment: payload.staticSegment)
+        let segment = payload.codeSegment
+        let newObject = segment.allocateObject(ofType: testClass, extraSizeInBytes: 0)
+        let pointer = ClassBasedPointer(address: newObject,type: testClass)
+        pointer.setInteger(234,atSlot: "b1")
+        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object as! TypeClass,depth:"")
+        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object.type as! TypeClass,depth:"")
+        let vulcan = ArgonModule.shared.lookup(label: "Vulcan") as! TypeClass
+        print(vulcan.precedenceList)
+        let human = ArgonModule.shared.lookup(label: "Human") as! TypeClass
+        print(human.precedenceList)
         
         let bitSet = BitSet()
         bitSet.addBitField(named: "opcode", width: 8)
@@ -170,13 +188,16 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let module1 = Module(label: "Test")
         let entity = TypeClass(label: "Entity")
         entity.setModule(module1)
-        entity.setSupertype(ArgonModule.shared.object)
+        entity.addSupertype(ArgonModule.shared.object)
         let legalEntity = TypeClass(label: "LegalEntity")
         legalEntity.setModule(module1)
-        legalEntity.setSupertype(entity)
+        legalEntity.addSupertype(entity)
         let person = TypeClass(label: "Person")
         person.setModule(module1)
-        person.setSupertype(legalEntity)
+        person.addSupertype(legalEntity)
+        let citizen = TypeClass(label: "Citizen")
+        citizen.setModule(module1)
+        citizen.addSupertype(person)
         let method1 = MethodInstance(label: "name")
         method1.setModule(module1)
         method1.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
@@ -193,7 +214,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         method3.returnType = ArgonModule.shared.void
         module1.addSymbol(method3)
         print(person.precedenceList)
-        let instanceSet = module1.methodInstanceSet(withLabel: "name")
+        var instanceSet = module1.methodInstanceSet(withLabel: "name")
         instanceSet.display()
         var types = [person,ArgonModule.shared.string]
         print(instanceSet.mostSpecificInstance(forTypes: types))
@@ -202,7 +223,24 @@ class AppDelegate: NSObject, NSApplicationDelegate
         types = [entity,ArgonModule.shared.string]
         print(instanceSet.mostSpecificInstance(forTypes: types))
         print(person.precedenceList)
-        
+        let method4 = MethodInstance(label: "setName")
+        method4.setModule(module1)
+        method4.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+        method4.returnType = ArgonModule.shared.void
+        module1.addSymbol(method4)
+        let method5 = MethodInstance(label: "setName")
+        method5.setModule(module1)
+        method5.parameters = [Parameter(label: "object", relabel: nil, type: legalEntity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+        method5.returnType = ArgonModule.shared.void
+        module1.addSymbol(method5)
+        let method6 = MethodInstance(label: "setName")
+        method6.setModule(module1)
+        method6.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+        method6.returnType = ArgonModule.shared.void
+        module1.addSymbol(method6)
+        types = [citizen,ArgonModule.shared.string]
+        instanceSet = module1.methodInstanceSet(withLabel: "setName")
+        print(instanceSet.mostSpecificInstance(forTypes: types))
 ////        let enumeration = ArgonModule.shared.enumeration
 ////        enumeration.printLayout()
 ////        let module = ArgonModule.shared.moduleType

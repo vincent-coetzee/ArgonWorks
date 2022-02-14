@@ -39,7 +39,7 @@ public class TypeMemberSlot: Type
     required init(label: Label)
         {
         self.slotLabel = label
-        self.base = Type()
+        self.base = ArgonModule.shared.void
         super.init(label: label)
         }
     

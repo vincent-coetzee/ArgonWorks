@@ -206,6 +206,7 @@ public class Type: Symbol,Displayable,UserDisplayable
         
     init()
         {
+        fatalError()
         super.init(label: "")
         }
         
@@ -237,7 +238,8 @@ public class Type: Symbol,Displayable,UserDisplayable
         return(self)
         }
         
-    public func isSubtype(of: Type) -> Bool
+    public func
+    isSubtype(of: Type) -> Bool
         {
         false
         }

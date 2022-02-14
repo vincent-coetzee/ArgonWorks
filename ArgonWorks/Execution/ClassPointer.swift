@@ -18,11 +18,11 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            self.stringPointer(atSlot: "name")
+            StringPointer(address: self.address(atSlot: "name")!)
             }
         set
             {
-            self.setStringPointer(newValue!,atSlot: "name")
+            self.setAddress(newValue!.address,atSlot: "name")
             }
         }
         
@@ -90,11 +90,11 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            self.arrayPointer(atSlot: "slots")
+            ArrayPointer(dirtyAddress: self.address(atSlot: "slots")!)
             }
         set
             {
-            self.setArrayPointer(newValue!,atSlot: "slots")
+            self.setAddress(newValue!.address,atSlot: "slots")
             }
         }
         
@@ -114,11 +114,11 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            self.arrayPointer(atSlot: "subclasses")
+            ArrayPointer(dirtyAddress: self.address(atSlot: "subclasses")!)
             }
         set
             {
-            self.setArrayPointer(newValue!,atSlot: "subclasses")
+            self.setAddress(newValue!.address,atSlot: "subclasses")
             }
         }
         

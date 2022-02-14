@@ -130,7 +130,7 @@ public class StaticString: StaticObject
         
     public override func type(inContext context: TypeContext) -> Type
         {
-        context.stringType
+        ArgonModule.shared.string
         }
     }
 
@@ -153,7 +153,7 @@ public class StaticSymbol: StaticString
         
     public override func type(inContext context: TypeContext) -> Type
         {
-        context.symbolType
+        ArgonModule.shared.symbol
         }
     }
 
@@ -334,6 +334,6 @@ public class StaticArray: StaticObject
     public override func type(inContext context: TypeContext) -> Type
         {
         let elementType = self.elements.isEmpty ? context.freshTypeVariable() : self.elements.first!.type(inContext: context)!
-        return(TypeClass(label: context.arrayType.label,generics: [elementType]))
+        return(ArgonModule.shared.array.withGenerics([elementType]))
         }
     }

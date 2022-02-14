@@ -59,7 +59,7 @@ public class TypeFunction: TypeConstructor
         
     required init(label: Label)
         {
-        self.returnType = Type()
+        self.returnType = ArgonModule.shared.void
         super.init(label: label)
         }
         

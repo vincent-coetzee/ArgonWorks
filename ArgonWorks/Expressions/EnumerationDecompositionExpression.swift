@@ -68,6 +68,7 @@ public class EnumerationDecompositionExpression: Expression
         {
         let new = EnumerationDecompositionExpression(enumeration: self.enumeration,caseSymbol: self.symbol,slotNames: self.slotNames,value: self.value.freshTypeVariable(inContext: context))
         new.slots = self.slots.map{$0.freshTypeVariable(inContext: context)}
+        new.locations = self.locations
         return(new as! Self)
         }
         
@@ -86,6 +87,7 @@ public class EnumerationDecompositionExpression: Expression
         let new = EnumerationDecompositionExpression(enumeration: substitution.substitute(self.enumeration),caseSymbol: self.symbol,slotNames: self.slotNames,value: substitution.substitute(self.value))
         new.slots = self.slots.map{substitution.substitute($0)}
         new.type = substitution.substitute(self.type)
+        new.locations = self.locations
         return(new as! Self)
         }
         
@@ -113,13 +115,13 @@ public class EnumerationDecompositionExpression: Expression
         let aClass = ArgonModule.shared.enumerationCaseInstance as! TypeClass
         let temp = instance.nextTemporary
         // LOAD VALUE OF slot.caseIndex INTO temp
-        instance.add(.LOADP,self.value.place,.integer(Argon.Integer(aClass.layoutSlot(atLabel: "caseIndex").offset)),temp)
+        instance.add(.LOADP,self.value.place,.integer(Argon.Integer(aClass.instanceSlot(atLabel: "caseIndex").offset)),temp)
         // DOES enumerationInstance.case.caseIndex == caseIndex
         instance.add(.MOVE,.integer(0),temp)
         instance.add(.i64,.EQ,temp,.integer(Argon.Integer(caseIndex)),temp)
         let label = instance.nextLabel
         // BRANCH IF FALSE TO label
-        instance.add(.BRF,temp,label)
+        instance.add(.BRF,temp,label.operand)
         instance.add(.i64,.ADD,self.value.place,.integer(Argon.Integer(aClass.instanceSizeInBytes)),temp)
         var offset:Argon.Integer = 0
         for slot in self.slots

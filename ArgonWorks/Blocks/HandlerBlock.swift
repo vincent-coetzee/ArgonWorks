@@ -33,9 +33,9 @@ public class HandlerBlock: ClosureBlock
             buffer.add(lineNumber: declaration.line)
             }
         let codeLabel = buffer.nextLabel
-        buffer.add(.HAND,.address(array),codeLabel)
+        buffer.add(.HAND,.address(array),codeLabel.operand)
         let label = buffer.nextLabel
-        buffer.add(.BR,label)
+        buffer.add(.BR,label.operand)
         buffer.pendingLabel = codeLabel
         for block in self.blocks
             {

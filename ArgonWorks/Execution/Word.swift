@@ -159,12 +159,6 @@ extension Word
         return((Int(top),bottom))
         }
         
-    public init(inner: Int)
-        {
-        let tag = Argon.Tag.inner.rawValue << Argon.kTagShift
-        self = tag | Word(inner & 4294967295)
-        }
-        
     public var innerValue: Int
         {
         Int(self & 4294967295)

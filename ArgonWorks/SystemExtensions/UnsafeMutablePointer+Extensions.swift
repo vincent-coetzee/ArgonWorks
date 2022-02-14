@@ -14,3 +14,5 @@ extension UnsafeMutablePointer
         self.init(bitPattern: UInt(bitPattern))!
         }
     }
+
+public typealias BytePointer = UnsafeMutablePointer<UInt8>

@@ -28,6 +28,8 @@ public class ForBlock: Block
             forBlock.addBlock(newBlock)
             }
         forBlock.type = self.type.freshTypeVariable(inContext: context)
+        forBlock.locations = self.locations
+        forBlock.issues = self.issues
         return(forBlock as! Self)
         }
         
@@ -41,6 +43,8 @@ public class ForBlock: Block
             forBlock.addBlock(newBlock)
             }
         forBlock.type = substitution.substitute(self.type)
+        forBlock.locations = self.locations
+        forBlock.issues = self.issues
         return(forBlock as! Self)
         }
 
@@ -52,7 +56,7 @@ public class ForBlock: Block
             {
             block.initializeType(inContext: context)
             }
-        self.type = context.voidType
+        self.type = ArgonModule.shared.void
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -63,9 +67,21 @@ public class ForBlock: Block
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        let collectionClass = ArgonModule.shared.collection
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: collectionClass.withGenerics([self.inductionSlot.type]),origin: .block(self)))
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
+        if let elementsType = self.elements.type as? TypeConstructor
+            {
+            if elementsType.generics.count > 0
+                {
+                context.append(TypeConstraint(left: elementsType.generics[0],right: self.inductionSlot.type,origin: .block(self)))
+                }
+            }
+        context.extended(withContentsOf: [])
+            {
+            newContext in
+            let sub = newContext.unify()
+            self.inductionSlot = sub.substitute(self.inductionSlot)
+            self.elements = sub.substitute(self.elements)
+            }
         }
         
     public override func inferType(inContext context: TypeContext)

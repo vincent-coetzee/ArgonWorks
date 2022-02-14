@@ -119,7 +119,7 @@ public class IfBlock: Block
         {
         let outLabel = buffer.nextLabel
         try self.condition.emitCode(into: buffer,using: using)
-        buffer.add(.BRF,self.condition.place,outLabel)
+        buffer.add(.BRF,self.condition.place,outLabel.operand)
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)

@@ -541,7 +541,13 @@ public class TokenStream:Equatable, TokenSource
         //
         // Is it a number
         //
-        else if digits.contains(self.currentChar)
+        else if self.currentChar == "-" && self.peekChar(at: 0) == ">"
+            {
+            self.nextChar()
+            self.nextChar()
+            return(.symbol(.rightArrow, self.sourceLocation()))
+            }
+        else if digits.contains(self.currentChar) || self.currentChar == "-"
             {
             return(self.scanNumber())
             }
@@ -768,7 +774,13 @@ public class TokenStream:Equatable, TokenSource
     private func scanNumber() -> Token
         {
         self.startIndex = self.characterOffset
+        var sign = 1
         var number:Int = 0
+        if self.currentChar == "-"
+            {
+            sign = -1
+            self.nextChar()
+            }
         if self.currentChar == "0"
             {
             self.nextChar()
@@ -800,11 +812,11 @@ public class TokenStream:Equatable, TokenSource
             }
         if self.currentChar == "." && self.peekChar(at:0) == "." && self.peekChar(at:1) == "."
             {
-            return(.integer(Argon.Integer(number),self.sourceLocation()))
+            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
             }
         else if self.currentChar == "." && self.peekChar(at:0) == "."
             {
-            return(.integer(Argon.Integer(number),self.sourceLocation()))
+            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
             }
         else if self.currentChar == "."
             {
@@ -824,11 +836,11 @@ public class TokenStream:Equatable, TokenSource
                     self.nextChar()
                     }
                 }
-            return(.float(Double(Double(number)+factor),self.sourceLocation()))
+            return(.float(Double(sign) * Double(Double(number)+factor),self.sourceLocation()))
             }
         else
             {
-            return(.integer(Argon.Integer(number),self.sourceLocation()))
+            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
             }
         }
     

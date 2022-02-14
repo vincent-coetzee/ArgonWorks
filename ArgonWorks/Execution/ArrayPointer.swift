@@ -66,19 +66,36 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
             }
         }
         
+    public var block: Address?
+        {
+        get
+            {
+            self.address(atSlot: "count")
+            }
+        set
+            {
+            self.setAddress(newValue,atSlot: "count")
+            let offset = newValue! + Word(ArgonModule.shared.block.instanceSizeInBytes)
+            self.elementPointer = WordPointer(bitPattern: offset)
+            }
+        }
+        
     public var size: Int
         {
         self.integer(atSlot: "size")
         }
         
-    internal var elementPointer: WordPointer
+    internal var elementPointer: WordPointer!
     
     public required init?(dirtyAddress: Word)
         {
         self.elementPointer = WordPointer(bitPattern: 1)
         super.init(address: dirtyAddress.cleanAddress,class: ArgonModule.shared.array as! TypeClass)
-        let offset = Word(ArgonModule.shared.array.layoutSlotCount * Argon.kWordSizeInBytesInt)
-        self.elementPointer = WordPointer(bitPattern: dirtyAddress.cleanAddress + offset)
+        if let blockAddress = self.address(atSlot: "block")
+            {
+            let offset = blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+            self.elementPointer = WordPointer(bitPattern: offset)
+            }
         }
         
     public func index(after: Int) -> Int
@@ -116,6 +133,23 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
             }
         self[self.count] = word
         self.count += 1
+        }
+        
+    public static func test(inSegment segment: Segment)
+        {
+        let array1 = segment.allocateArray(size: 15)
+        let pointer1 = ArrayPointer(dirtyAddress: array1)!
+        for index in 0..<15
+            {
+            pointer1[index] = Word(integer: index)
+            pointer1.count += 1
+            }
+        assert(pointer1.count == 15)
+        assert(pointer1.size == 15)
+        for index in 0..<15
+            {
+            assert(pointer1[index] == Word(index))
+            }
         }
     }
     

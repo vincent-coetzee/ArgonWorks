@@ -42,7 +42,7 @@ public class TypeVariable: Type
         {
         get
             {
-            self.boundType.isNil ? Type() : self.boundType!.type
+            self.boundType.isNil ? ArgonModule.shared.void : self.boundType!.type
             }
         set
             {

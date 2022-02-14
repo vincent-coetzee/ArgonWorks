@@ -19,12 +19,64 @@ public struct SlotType: OptionSet
     public static let kReadOnlySlot = SlotType(rawValue: 1 << 6)
     public static let kSystemClassSlot = SlotType(rawValue: 1 << 7)
     public static let kClassSlot = SlotType(rawValue: 1 << 8)
+    public static let kSystemVirtualTableSlot = SlotType(rawValue: 1 << 9)
     
     public let rawValue: Int
     
+    public var isInstanceSlot: Bool
+        {
+        self.contains(.kInstanceSlot)
+        }
+        
     public init(rawValue: Int)
         {
         self.rawValue = rawValue
+        }
+        
+    public var displayString: String
+        {
+        var names = Array<String>()
+        if self.contains(.kInstanceSlot)
+            {
+            names.append("Instance")
+            }
+        if self.contains(.kModuleSlot)
+            {
+            names.append("Module")
+            }
+        if self.contains(.kSystemHeaderSlot)
+            {
+            names.append("System Header")
+            }
+        if self.contains(.kSystemMagicNumberSlot)
+            {
+            names.append("System Magic Number")
+            }
+        if self.contains(.kLocalSlot)
+            {
+            names.append("Local")
+            }
+        if self.contains(.kSystemInnerSlot)
+            {
+            names.append("System Inner")
+            }
+        if self.contains(.kReadOnlySlot)
+            {
+            names.append("Read Only")
+            }
+        if self.contains(.kSystemClassSlot)
+            {
+            names.append("System Class")
+            }
+        if self.contains(.kClassSlot)
+            {
+            names.append("Class")
+            }
+        if self.contains(.kSystemVirtualTableSlot)
+            {
+            names.append("System Virtual Table")
+            }
+        return("["+names.joined(separator: ",")+"]")
         }
         
     public var isSystemSlot: Bool
@@ -59,6 +111,11 @@ public class Slot:Symbol
     public var isSytemSymbol: Bool
         {
         false
+        }
+        
+    public var isSystemSlot: Bool
+        {
+        self.slotType.contains(.kSystemHeaderSlot) || self.slotType.contains(.kSystemMagicNumberSlot) || self.slotType.contains(.kSystemClassSlot) || self.slotType.contains(.kSystemVirtualTableSlot)
         }
         
     public override var asLiteralExpression: LiteralExpression?
@@ -134,10 +191,12 @@ public class Slot:Symbol
         }
         
     public var offset = 0
+    public var virtualOffset = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
     public var slotType: SlotType = .kInstanceSlot
     public var slotSymbol: Int = 0
+    public weak var owningClass: TypeClass?
 
     init(label:Label,type:Type? = nil)
         {
@@ -239,6 +298,14 @@ public class Slot:Symbol
         slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        if !(self is GlobalSlot || self is ModuleSlot)
+            {
+            slotPointer.setAddress(self.owningClass!.memoryAddress,atSlot: "owningClass")
+            }
+        else
+            {
+            slotPointer.setAddress(0,atSlot: "owningClass")
+            }
         let slotIndex = allocator.payload.symbolRegistry.registerSymbol("#" + self.label)
         slotPointer.setInteger(slotIndex,atSlot: "symbol")
         if self is InstanceSlot
@@ -280,29 +347,15 @@ public class Slot:Symbol
         
     public override func initializeType(inContext context: TypeContext)
         {
-        if self.type.isTypeVariable
+        self.initialValue?.initializeType(inContext: context)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.initialValue?.initializeTypeConstraints(inContext: context)
+        if self.initialValue.isNotNil
             {
-            if let slotType = context.lookupBinding(atLabel: self.label)
-                {
-                self.type = slotType
-                }
-            else
-                {
-                context.bind(self.type,to: self.label)
-                }
-            }
-        else if self.type.isClass || self.type.isEnumeration
-            {
-            context.bind(self.type,to: self.label)
-            }
-        else if self.initialValue.isNotNil
-            {
-            self.type = self.initialValue!.type
-            context.bind(self.type,to: self.label)
-            }
-        else
-            {
-            self.appendIssue(at: self.declaration!, message: "Slot \(self.label) has an invalid type.")
+            context.append(TypeConstraint(left: self.type,right: self.initialValue!.type,origin: .symbol(self)))
             }
         }
         

@@ -9,8 +9,24 @@ import Foundation
 
 public class MethodInstanceSet
     {
+    public var hasGenericInstances: Bool
+        {
+        for instance in self.instances
+            {
+            if instance.hasVariableTypes
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
     private var instances = MethodInstances()
     
+    init()
+        {
+        }
+        
     init(instances: MethodInstances?)
         {
         if instances.isNotNil
@@ -37,9 +53,9 @@ public class MethodInstanceSet
             return(nil)
             }
         selectedInstances = selectedInstances.sorted{$0.moreSpecific(than: $1, forTypes: types)}
-        print("SORTED INSTANCES ==============================")
+//        print("SORTED INSTANCES ==============================")
         print(selectedInstances)
-        print("===============================================")
+//        print("===============================================")
         return(selectedInstances.first)
         }
         

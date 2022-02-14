@@ -80,10 +80,6 @@ public struct VMPayload: ExecutionContext
         let pointer = ArrayPointer(dirtyAddress: array)!
         for type in types
             {
-            if type.isClass
-                {
-                print("\(type.label) \((type as! TypeClass).magicNumber)")
-                }
             pointer.append(type.memoryAddress)
 //            MemoryPointer.dumpMemory(atAddress: type.memoryAddress, count: 20)
             }

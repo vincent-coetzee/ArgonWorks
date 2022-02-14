@@ -65,11 +65,21 @@ public class MakeTerm: Expression
         return("MAKE(\(self.type.displayString),\(string))")
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let term = MakeTerm(type: self.type.freshTypeVariable(inContext: context),arguments: self.arguments.map{$0.freshTypeVariable(inContext: context)})
+        term.type = self.type.freshTypeVariable(inContext: context)
+        term.issues = self.issues
+        term.locations = self.locations
+        return(term as! Self)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let term = MakeTerm(type: substitution.substitute(self.type),arguments: self.arguments.map{substitution.substitute($0)})
         term.type = substitution.substitute(self.type)
         term.issues = self.issues
+        term.locations = self.locations
         return(term as! Self)
         }
         

@@ -9,6 +9,11 @@ import Foundation
 
 public class TypeEnumeration: TypeConstructor
     {
+    public static func ==(lhs:TypeEnumeration,rhs:TypeEnumeration) -> Bool
+        {
+        lhs.fullName == rhs.fullName && lhs.generics == rhs.generics
+        }
+        
     public override var displayString: String
         {
         var names = self.generics.map{$0.displayString}.joined(separator: ",")
@@ -167,7 +172,7 @@ public class TypeEnumeration: TypeConstructor
         {
         if let second = object as? TypeEnumeration
             {
-            return(self.label == second.label && self.generics == second.generics && self.rawType == second.rawType && self.cases == second.cases)
+            return(self.fullName == second.fullName && self.generics == second.generics)
             }
         return(super.isEqual(object))
         }
@@ -234,10 +239,10 @@ public class TypeEnumeration: TypeConstructor
         let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType)
         enumPointer.objectType = .enumeration
         enumPointer.setClass(enumType)
-        enumPointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        enumPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         if self.generics.isEmpty
             {
-            enumPointer.setArrayAddress(0,atSlot: "typeParameters")
+            enumPointer.setAddress(0,atSlot: "typeParameters")
             }
         else
             {
@@ -248,7 +253,7 @@ public class TypeEnumeration: TypeConstructor
                     type.layoutInMemory(using: allocator)
                     arrayPointer.append(type.memoryAddress)
                     }
-                enumPointer.setArrayAddress(arrayPointer.cleanAddress,atSlot: "typeParameters")
+                enumPointer.setAddress(arrayPointer.cleanAddress,atSlot: "typeParameters")
                 }
             }
         enumPointer.setAddress(self.module!.memoryAddress,atSlot: "module")
@@ -260,7 +265,7 @@ public class TypeEnumeration: TypeConstructor
                 aCase.layoutInMemory(using: allocator)
                 casePointer.append(aCase.memoryAddress)
                 }
-            enumPointer.setArrayPointer(casePointer,atSlot: "cases")
+            enumPointer.setAddress(casePointer.address,atSlot: "cases")
             }
         enumPointer.setBoolean(self.isSystemType,atSlot: "isSystemType")
 //        MemoryPointer.dumpMemory(atAddress: self.memoryAddress,count: 100)

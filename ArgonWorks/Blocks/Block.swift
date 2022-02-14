@@ -102,7 +102,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         }
         
     public var container: Container = .none
-    public var type: Type = Type()
+    public var type: Type = TypeContext.freshTypeVariable()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
     internal var localSymbols = Symbols()
@@ -188,6 +188,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         newBlock.type = self.type.freshTypeVariable(inContext: context)
         newBlock.setIndex(self.index.keyByIncrementingMinor())
         newBlock.ancestors.append(self)
+        newBlock.locations = self.locations
         return(newBlock)
         }
         
@@ -232,7 +233,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         var found = Symbols()
         for symbol in self.localSymbols
             {
-            if symbol.label == label
+            if symbol.localLabel == label
                 {
                 found.append(symbol)
                 }
@@ -255,7 +256,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             var results = Symbols()
             for symbol in self.localSymbols
                 {
-                if symbol.label == name.last
+                if symbol.localLabel == name.last
                     {
                     results.append(symbol)
                     }
@@ -317,7 +318,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         {
         for symbol in self.localSymbols
             {
-            if symbol.label == label
+            if symbol.localLabel == label
                 {
                 return(symbol)
                 }

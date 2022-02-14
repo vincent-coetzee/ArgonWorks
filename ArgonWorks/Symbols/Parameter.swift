@@ -31,6 +31,11 @@ public class Parameter:LocalSlot,Displayable
         .parameter
         }
         
+    public override var localLabel: Label
+        {
+        self.relabel.isNotNil ? self.relabel! : self.label
+        }
+        
     public var valueTag: Label
         {
         return(self.label)

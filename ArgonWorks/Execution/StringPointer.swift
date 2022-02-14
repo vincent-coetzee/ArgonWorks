@@ -7,28 +7,27 @@
 
 import Foundation
 
-public class StringPointer: ObjectPointer
+public class StringPointer: ClassBasedPointer
     {
     public static func ==(lhs: StringPointer,rhs: String) -> Bool
         {
         return(lhs.string == rhs)
         }
         
-    public override class func sizeInBytes() -> Int
+    public class func sizeInBytes() -> Int
         {
-        64
+        (ArgonModule.shared.string as! TypeClass).instanceSizeInBytes
         }
         
     public var count: Int
         {
         get
             {
-            let count = Int(self.wordPointer[7])
-            return(count)
+            self.integer(atSlot: "count")
             }
         set
             {
-            self.wordPointer[7] = Word(newValue)
+            self.setInteger(newValue,atSlot: "count")
             }
         }
         
@@ -44,10 +43,14 @@ public class StringPointer: ObjectPointer
             }
         }
         
+    public init(address: Address)
+        {
+        super.init(address: address,class: ArgonModule.shared.string as! TypeClass)
+        }
+        
     internal func storeString(_ string: String)
         {
-        let sizeInBytes = Self.sizeInBytes()
-        let bytesAddress = self._cleanAddress + Word(sizeInBytes)
+        let bytesAddress = self.address(atSlot: "block").cleanAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
         self.count = string.utf16.count
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
@@ -66,13 +69,12 @@ public class StringPointer: ObjectPointer
             offset += 1
             }
         charPointer[offset] = 0
-        self.setWord(Word(integer: string.polynomialRollingHash),atIndex: 6)
+        self.setWord(Word(integer: string.polynomialRollingHash),atSlot: "hash")
         }
         
     internal func loadString() -> String
         {
-        let sizeInBytes = Self.sizeInBytes()
-        let bytesAddress = self._cleanAddress + Word(sizeInBytes)
+        let bytesAddress = self.address(atSlot: "block")! + Word(ArgonModule.shared.block.instanceSizeInBytes)
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
         var number = 0
@@ -89,6 +91,16 @@ public class StringPointer: ObjectPointer
             }
         let string = String(utf16CodeUnits: array,count: array.count)
         return(string)
+        }
+        
+    public static func test(inSegment segment: Segment)
+        {
+        let string = "This is a test string which has a few number of characters in it."
+        let stringAddress = segment.allocateString(string)
+        let stringPointer = StringPointer(address: stringAddress)
+        let count = string.count
+        assert(stringPointer.count == count)
+        assert(stringPointer.string == string)
         }
     }
 

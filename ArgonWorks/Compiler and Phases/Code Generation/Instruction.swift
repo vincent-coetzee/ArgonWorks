@@ -37,10 +37,14 @@ public class Instruction
             {
             strings.append(self.operand3.displayString)
             }
-        let string = strings.joined(separator: ",")
+        var string = strings.joined(separator: ",")
         if modeString == "none"
             {
             modeString = ""
+            }
+        if self.tail.isNotNil
+            {
+            string += " ; \(tail!)"
             }
         return("\(opString) \(modeString) \(string)")
         }
@@ -56,16 +60,6 @@ public class Instruction
         }
         
     public struct Temporary
-        {
-        public let index: Int
-        
-        init(index: Int)
-            {
-            self.index = index
-            }
-        }
-        
-    public struct Label
         {
         public let index: Int
         
@@ -153,6 +147,10 @@ public class Instruction
         case SLOTW = 58
         case COMM = 59
         case ADDRESS = 60 // ORR
+        case INCW = 61 // O
+        case LSH = 62
+        case RSH = 63
+        case DECW = 64
         }
         
     public enum Register: Word
@@ -250,7 +248,7 @@ public class Instruction
                 case .none:
                     return("")
                 case .address(let address):
-                    return(String(format: "%llX",address))
+                    return(String(format: "0x%llX",address))
                 case .register(let register):
                     return("\(register)")
                 case .temporary(let temp):
@@ -419,30 +417,37 @@ public class Instruction
             }
         }
         
-    public var labelValue: Int?
+    public var labelOperandIndex: Int
         {
         if self.operand1.isLabel
             {
             return(self.operand1.labelValue)
             }
-        if self.operand2.isLabel
+       if self.operand2.isLabel
             {
             return(self.operand2.labelValue)
             }
-        if self.operand3.isLabel
-            {
-            return(self.operand3.labelValue)
-            }
-        return(nil)
+        return(self.operand3.labelValue)
+        }
+        
+    public var hasLabelOperand: Bool
+        {
+        self.operand1.isLabel || self.operand2.isLabel || self.operand3.isLabel
+        }
+        
+    public var labelValue: InstructionBuffer.Label?
+        {
+        self.label
         }
         
     public var index: Int = 0
-    public var label: Operand?
+    public var label: InstructionBuffer.Label?
     public let opcode: Opcode
     private let mode: Mode
     public var operand1: Operand = .none
     public var operand2: Operand = .none
     public var operand3: Operand = .none
+    public var tail: String?
     
     public init(wordPointer: WordPointer)
         {

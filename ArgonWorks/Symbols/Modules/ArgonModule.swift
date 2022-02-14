@@ -354,10 +354,12 @@ public class ArgonModule: SystemModule
         super.init(label: label)
         }
 
-    public func addSystemClass(_ aClass: Type)
+    @discardableResult
+    public func addSystemClass(_ aClass: Type) -> TypeClass
         {
         aClass.flags([.kSystemTypeFlag])
         self.addSymbol(aClass)
+        return(aClass as! TypeClass)
         }
         
     public func addSystemEnumeration(_ anEnum: Type)
@@ -381,7 +383,8 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Class").flags([.kSystemTypeFlag]).superclass(self.typeType).mcode("c").setType(.class))
         self.addSystemClass(TypeClass(label: "Enumeration").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.typeType).mcode("e").setType(.enumeration))
         self.addSystemClass(TypeClass(label: "EnumerationCase").flags([.kSystemTypeFlag]).superclass(self.object).mcode("q").setType(.enumerationCase))
-        self.addSystemClass(TypeClass(label: "Collection").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).mcode("f").setType(.collection))
+        self.addSystemClass(TypeClass(label: "Iterable").flags([.kSystemTypeFlag]).superclass(self.object).mcode("d"))
+        self.addSystemClass(TypeClass(label: "Collection").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).superclass(self.iterable).mcode("f").setType(.collection))
         self.addSystemClass(TypeClass(label: "Array").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("a").setType(.array))
         self.addSystemClass(TypeClass(label: "Magnitude").flags([.kValueTypeFlag,.kSystemTypeFlag]).superclass(self.object).setType(.magnitude))
         self.addSystemClass(TypeClass(label: "Number").flags([.kValueTypeFlag,.kSystemTypeFlag]).superclass(self.magnitude).setType(.number))
@@ -390,7 +393,6 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Boolean").flags([.kPrimitiveTypeFlag,.kSystemTypeFlag]).superclass(self.object).setType(.boolean))
         self.addSystemClass(TypeClass(label: "String").flags([.kSystemTypeFlag]).superclass(self.object).setType(.string))
         self.addSystemClass(TypeClass(label: "Slot").flags([.kSystemTypeFlag]).superclass(self.object).mcode("l").setType(.slot))
-        self.addSystemClass(TypeClass(label: "Iterable").flags([.kSystemTypeFlag]).superclass(self.object).mcode("d"))
         self.addSystemClass(TypeClass(label: "Error").flags([.kSystemTypeFlag]).superclass(self.object).setType(.error))
         self.addSystemClass(TypeClass(label: "Block").flags([.kSystemTypeFlag]).superclass(self.object).setType(.block))
         self.addSystemClass(TypeClass(label: "Index").flags([.kSystemTypeFlag]).superclass(self.object).setType(.index))
@@ -413,7 +415,7 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Instruction").flags([.kSystemTypeFlag]).superclass(self.object).setType(.instruction))
         self.addSystemClass(TypeClass(label: "Dictionary").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("j").setType(.dictionary))
         self.addSystemClass(TypeClass(label: "List").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("n").setType(.list))
-        self.addSystemClass(TypeClass(label: "ListNode").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("N").setType(.listNode))
+        self.addSystemClass(TypeClass(label: "ListNode").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).mcode("N").setType(.listNode))
         self.addSystemClass(TypeClass(label: "Pointer").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).mcode("P").setType(.pointer))
         self.addSystemClass(TypeClass(label: "Set").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("S").setType(.set))
         self.addSystemClass(TypeClass(label: "Vector").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("V").setType(.vector))
@@ -421,6 +423,18 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Metaclass").flags([.kSystemTypeFlag]).superclass(self.classType).mcode("t").setType(.metaclass))
         self.addSystemClass(TypeClass(label: "InstructionBlock").flags([.kSystemTypeFlag]).superclass(self.object).mcode("i").setType(.instructionBlock))
         self.addSystemClass(TypeClass(label: "EnumerationCaseInstance").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
+        let a = self.addSystemClass(TypeClass(label: "ClassA").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
+        let b = self.addSystemClass(TypeClass(label: "ClassB").flags([.kSystemTypeFlag]).superclass(a).setType(.enumerationCaseInstance))
+        let c = self.addSystemClass(TypeClass(label: "ClassC").flags([.kSystemTypeFlag]).superclass(a).setType(.enumerationCaseInstance))
+        let d = self.addSystemClass(TypeClass(label: "ClassD").flags([.kSystemTypeFlag]).superclass(b).superclass(c).setType(.enumerationCaseInstance))
+        let lifeForm = self.addSystemClass(TypeClass(label: "LifeForm").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
+        let sentient = self.addSystemClass(TypeClass(label: "Sentient").flags([.kSystemTypeFlag]).superclass(lifeForm).setType(.enumerationCaseInstance))
+        let bipedal = self.addSystemClass(TypeClass(label: "Bipedal").flags([.kSystemTypeFlag]).superclass(lifeForm).setType(.enumerationCaseInstance))
+        let intelligent = self.addSystemClass(TypeClass(label: "Intelligent").flags([.kSystemTypeFlag]).superclass(sentient).setType(.enumerationCaseInstance))
+        let humanoid = self.addSystemClass(TypeClass(label: "Humanoid").flags([.kSystemTypeFlag]).superclass(bipedal).setType(.enumerationCaseInstance))
+        let vulcan = self.addSystemClass(TypeClass(label: "Vulcan").flags([.kSystemTypeFlag]).superclass(intelligent).superclass(humanoid).setType(.enumerationCaseInstance))
+        let human = self.addSystemClass(TypeClass(label: "Human").flags([.kSystemTypeFlag]).superclass(humanoid).superclass(intelligent).setType(.enumerationCaseInstance))
+        self.addSystemClass(TypeClass(label: "ClassE").flags([.kSystemTypeFlag]).superclass(d).setType(.enumerationCaseInstance))
         self.addSystemEnumeration(TypeEnumeration(label: "Opcode").flags([.kSystemTypeFlag]).cases(Instruction.opcodeLabels).setType(.enumeration))
         self.addSystemEnumeration(TypeEnumeration(label: "TimeComponent").flags([.kSystemTypeFlag]).case("#hours",[self.integer]).case("#minutes",[self.integer]).case("seconds",[self.integer]).case("#milliseconds",[self.integer]).setType(.enumeration))
         self.addSystemEnumeration(TypeEnumeration(label: "DateComponent").flags([.kSystemTypeFlag]).case("#days",[self.integer]).case("#months",[self.integer]).case("years",[self.integer]).case("decades",[self.integer]).setType(.enumeration))
@@ -447,6 +461,11 @@ public class ArgonModule: SystemModule
         
     private func initMetatypes(forType: Type)
         {
+        if let metaType = forType as? TypeMetaclass
+            {
+            metaType.type = self.metaclassType
+            return
+            }
         guard let typeClass = forType as? TypeClass else
             {
             return
@@ -455,29 +474,53 @@ public class ArgonModule: SystemModule
             {
             return
             }
-        print("CREATING METACLASS FOR \(forType.label)")
-        if typeClass.supertype.isNotNil && typeClass.supertype!.type.isNil
+//        for aClass in typeClass.superclasses
+//            {
+//            self.initMetatypes(forType: aClass)
+//            }
+        if let aClass = self.lookup(label: typeClass.label + "Class") as? TypeMetaclass
             {
-            self.initMetatypes(forType: typeClass.supertype!)
+            typeClass.type = aClass
+            return
             }
-        let typeMetaclass = TypeMetaclass(label: typeClass.label + "Class",isSystem: typeClass.isSystemType,generics: typeClass.generics)
-        if typeClass.supertype.isNotNil
+        else
             {
-            typeMetaclass.setSupertype(typeClass.supertype!.type)
+            print("CREATING METACLASS FOR \(forType.label)")
+            for aClass in typeClass.generics
+                {
+                self.initMetatypes(forType: aClass)
+                }
+            let typeMetaclass = TypeMetaclass(label: typeClass.label + "Class",isSystem: typeClass.isSystemType,generics: typeClass.generics.map{$0.type})
+            typeMetaclass.flags([.kSystemTypeFlag,.kMetaclassFlag])
+            self.addSystemClass(typeMetaclass)
+            typeClass.type = typeMetaclass
+            typeClass.type.type = self.metaclassType
+            for type in typeClass.subtypes
+                {
+                self.initMetatypes(forType: type)
+                if type.type == ArgonModule.shared.object
+                    {
+                    print("halt")
+                    }
+                typeMetaclass.addSubtype(type.type)
+                (type.type as! TypeClass).addSupertype(typeMetaclass)
+                }
             }
-        typeMetaclass.flags([.kSystemTypeFlag,.kMetaclassFlag])
-        self.addSystemClass(typeMetaclass)
-        typeClass.type = typeMetaclass
-        typeClass.type.type = self.metaclassType
-        for type in typeClass.subtypes
+        }
+        
+    public func printHierarchy(class aClass: TypeClass,depth:String)
+        {
+        print("\(depth)\(aClass.label) \(aClass.index)")
+        let newDepth = depth + "\t"
+        for subclass in aClass.subtypes.compactMap({$0 as? TypeClass})
             {
-            self.initMetatypes(forType: type)
+            self.printHierarchy(class: subclass,depth: newDepth)
             }
         }
         
     private func initClasses()
         {
-        self.metaclassType.type = self.object
+        self.metaclassType.type = self.metaclassType
         self.initMetatypes(forType: self.object)
         }
         
@@ -489,17 +532,24 @@ public class ArgonModule: SystemModule
     ///
     private func postProcessTypes()
         {
+        self.iterable.typeVar("ELEMENT")
         self.dictionary.typeVar("KEY").typeVar("VALUE")
         self.listNode.typeVar("ELEMENT")
         self.pointer.typeVar("ELEMENT")
 //        assert(Argon.typeAtKey(self.object.argonHash).isNotNil)
         }
         
+    private func lookupClass(label: Label) -> TypeClass
+        {
+        return(self.lookup(label: label) as! TypeClass)
+        }
+        
     private func initSlots()
         {
-        self.array.setHasBytes(true).slot("elements",self.array.of(self.object))
+        self.array.typeVar("ELEMENT")
+        self.array.slot("block",self.block)
         self.block.slot("count",self.integer).slot("size",self.integer).slot("nextBlock",self.address).setHasBytes(true).slot("startIndex",self.integer).slot("stopIndex",self.integer)
-        self.classType.slot("superclass",self.classType).slot("subclasses",self.array.of(self.classType)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer).slot("isArchetype",self.boolean).slot("isGenericInstance",self.boolean)
+        self.classType.slot("superclasses",self.classType).slot("subclasses",self.array.of(self.classType)).slot("slots",self.array.of(self.slot)).slot("extraSizeInBytes",self.integer).slot("instanceSizeInBytes",self.integer).slot("hasBytes",self.boolean).slot("isValue",self.boolean).slot("magicNumber",self.integer).slot("isArchetype",self.boolean).slot("isGenericInstance",self.boolean)
         self.bucket.slot("nextBucket?",self.bucket).slot("bucketValue",self.object).slot("bucketKey",self.integer)
         self.closure.slot("codeSegment",self.address).slot("initialIP",self.address).slot("localCount",self.integer).slot("contextPointer",self.address)
         self.collection.slot("count",self.integer).slot("size",self.integer).slot("elementType",self.typeType)
@@ -518,12 +568,17 @@ public class ArgonModule: SystemModule
         self.object.slot("hash",self.integer)
         self.parameter.slot("tag",self.string).slot("retag",self.string).slot("tagIsShown",self.boolean).slot("isVariadic",self.boolean)
         self.list.slot("first",self.listNode).slot("last",self.listNode)
-        self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol)
-        self.string.slot("count",self.integer).setHasBytes(true)
+        self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol).slot("owningClass",self.classType)
+        self.string.slot("count",self.integer).slot("block",self.block)
         self.tuple.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer)
+        self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer).slot("depth",self.integer).slot("balance",self.integer)
         self.typeType.slot("name",self.string).slot("module",self.moduleType).slot("typeParameters",self.array.of(self.typeType)).slot("isSystemType",self.boolean)
         self.vector.slot("block",self.block).slot("blockCount",self.integer)
+        self.lookupClass(label: "ClassE").slot("e1",self.integer).slot("e2",self.integer)
+        self.lookupClass(label: "ClassB").slot("b1",self.integer).slot("b2",self.integer)
+        self.lookupClass(label: "ClassC").slot("c1",self.integer).slot("c2",self.integer)
+        self.lookupClass(label: "ClassD").slot("d1",self.integer).slot("d2",self.integer)
+        self.lookupClass(label: "ClassA").slot("a1",self.integer).slot("a2",self.integer)
         }
 
     private func initBaseMethods()
@@ -818,31 +873,22 @@ public class ArgonModule: SystemModule
         self.addSymbol(Inline("-",self.date,self.date).returns(self.dateComponent).subDateFromDate())
         self.addSymbol(Inline("-",self.time,self.time).returns(self.timeComponent).subTimeFromTime())
         self.addSymbol(Inline("difference",("between",self.date),("and",self.date),("in",self.dateComponent)).returns(self.dateComponent).differenceBetweenDatesMethod())
-        self.addSymbol(Inline("difference",("between",self.time),("and",self.time),("in",self.timeComponent)).returns(self.timeComponent).differenceBetweenDatesMethod())
+        self.addSymbol(Inline("difference",("between",self.time),("and",self.time),("in",self.timeComponent)).returns(self.timeComponent).differenceBetweenTimesMethod())
         
 //        let typeVariable = TypeContext.freshTypeVariable(named: "ELEMENT")
 //        self.addSymbol(Inline("append",("list",self.list.of(typeVariable)),("element",typeVariable)).listAppendMethod())
         
         self.addSymbol(SlotGetter("date",on: self.dateTime).returns(self.date))
         self.addSymbol(SlotGetter("time",on: self.dateTime).returns(self.time))
-        self.addSymbol(SlotSetter("date",on: self.dateTime).value(self.date))
-        self.addSymbol(SlotSetter("time",on: self.dateTime).value(self.time))
         self.addSymbol(SlotGetter("characters",on: self.string).returns(self.array.of(self.character)))
         self.addSymbol(SlotGetter("day",on: self.date).returns(self.integer))
         self.addSymbol(SlotGetter("month",on: self.date).returns(self.string))
         self.addSymbol(SlotGetter("monthIndex",on: self.date).returns(self.integer))
         self.addSymbol(SlotGetter("year",on: self.date).returns(self.integer))
-        self.addSymbol(SlotSetter("day",on: self.date).value(self.integer))
-        self.addSymbol(SlotSetter("monthIndex",on: self.date).value(self.integer))
-        self.addSymbol(SlotSetter("year",on: self.date).value(self.integer))
         self.addSymbol(SlotGetter("hour",on: self.time).returns(self.integer))
         self.addSymbol(SlotGetter("minute",on: self.time).returns(self.integer))
         self.addSymbol(SlotGetter("second",on: self.time).returns(self.integer))
         self.addSymbol(SlotGetter("millisecond",on: self.time).returns(self.integer))
-        self.addSymbol(SlotSetter("hour",on: self.time).value(self.integer))
-        self.addSymbol(SlotSetter("minute",on: self.time).value(self.integer))
-        self.addSymbol(SlotSetter("second",on: self.time).value(self.integer))
-        self.addSymbol(SlotSetter("millisecond",on: self.time).value(self.integer))
         
         self.addSymbol(PrimitiveMethodInstance.label("today","argument",self.date.type,ret: self.date).prim(200))
         self.addSymbol(PrimitiveMethodInstance.label("now","argument",self.time.type,ret: self.time).prim(201))

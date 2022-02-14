@@ -123,6 +123,7 @@ public class BinaryExpression: Expression
         {
         let expression = BinaryExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         

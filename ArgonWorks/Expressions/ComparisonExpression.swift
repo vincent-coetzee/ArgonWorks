@@ -38,6 +38,7 @@ public class ComparisonExpression: BinaryExpression
         let expression = ComparisonExpression(self.lhs.freshTypeVariable(inContext: context),self.operation,self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
         expression.selectedMethodInstance = self.selectedMethodInstance?.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         

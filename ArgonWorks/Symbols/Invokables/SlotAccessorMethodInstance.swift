@@ -18,17 +18,23 @@ public class SlotGetter
         self.objectType = type
         }
         
-    public func returns(_ type: Type) -> SlotReaderMethodInstance
+    public func returns(_ type: Type) -> SlotAccessorMethodInstance
         {
-        let instance = SlotReaderMethodInstance(label: self.label)
+        let instance = SlotAccessorMethodInstance(label: self.label,classType: objectType)
         instance.parameters = [Parameter(label: "object", relabel: nil, type: self.objectType, isVisible: false, isVariadic: false)]
         instance.returnType = type
+        instance.type = type
         return(instance)
         }
     }
     
-public class SlotReaderMethodInstance: MethodInstance
+public class SlotAccessorMethodInstance: MethodInstance
     {
+    public override var isSlotAccessor: Bool
+        {
+        true
+        }
+        
     private let slot: Slot
     private let classType: Type
     
@@ -48,13 +54,17 @@ public class SlotReaderMethodInstance: MethodInstance
         super.init(coder: coder)
         }
         
-    public required init(label: Label)
+    public required init(label: Label,classType: Type)
         {
         self.slot = Slot(label: label)
-        self.classType = Type()
+        self.classType = classType
         super.init(label: label)
         }
-        
+    
+    public required init(label: Label) {
+        fatalError("init(label:) has not been implemented")
+    }
+    
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.slot,forKey: "slot")
@@ -62,13 +72,30 @@ public class SlotReaderMethodInstance: MethodInstance
         super.encode(with: coder)
         }
         
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let instance = SlotAccessorMethodInstance(slot: self.slot,classType: substitution.substitute(self.classType))
+        instance.returnType = substitution.substitute(self.returnType)
+        return(instance as! Self)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let instance = SlotAccessorMethodInstance(slot: self.slot.freshTypeVariable(inContext: context),classType: self.classType.freshTypeVariable(inContext: context))
+        instance.returnType = self.returnType.freshTypeVariable(inContext: context)
+        instance.type = self.type.freshTypeVariable(inContext: context)
+        return(instance as! Self)
+        }
+        
     public override func initializeType(inContext context: TypeContext)
         {
-        self.type = self.returnType
+        self.slot.initializeType(inContext: context)
+        self.type = self.slot.type
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
+        self.slot.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.type,right: self.slot.type,origin: .symbol(self)))
         context.append(TypeConstraint(left: self.type,right: TypeMemberSlot(slotLabel: self.slot.label, base: self.classType),origin: .symbol(self)))
         context.append(TypeConstraint(left: self.slot.type,right: TypeMemberSlot(slotLabel: self.slot.label, base: self.classType),origin: .symbol(self)))

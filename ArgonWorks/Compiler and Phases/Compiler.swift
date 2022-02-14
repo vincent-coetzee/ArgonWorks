@@ -90,7 +90,7 @@ public class Compiler
             return(codeGeneratedModule)
             }
         let visitor = TestVisitor.visit(optimizedModule)
-        print(visitor.allIssues)
+//        print(visitor.allIssues)
         let someIssues = optimizedModule.issues
         print(someIssues)
         self.reporter.pushIssues(visitor.allIssues)

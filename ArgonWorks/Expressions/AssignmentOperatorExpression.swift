@@ -56,6 +56,9 @@ public class AssignmentOperatorExpression: Expression
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .expression(self)))
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         
@@ -71,6 +74,7 @@ public class AssignmentOperatorExpression: Expression
         let expression = AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs))
         expression.issues = self.issues
         expression.type = substitution.substitute(self.type)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         

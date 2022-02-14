@@ -9,6 +9,16 @@ import Foundation
 
 public class InstructionBuffer
     {
+    public struct Label:Hashable
+        {
+        internal let index: Int
+        
+        public var operand: Instruction.Operand
+            {
+            .label(index)
+            }
+        }
+        
     public var count: Int
         {
         self.instructions.count
@@ -21,27 +31,28 @@ public class InstructionBuffer
         return(.temporary(index))
         }
         
-    public var nextLabel:Instruction.Operand
+    public var nextLabel:Label
         {
         let index = self.nextLabelIndex
         self.nextLabelIndex += 1
-        return(.label(index))
+        return(Label(index: index))
         }
         
     private var nextLabelIndex: Int = 1
     private var nextTemporaryIndex: Int = 1
     public private(set) var instructions = Array<Instruction>()
-    public var pendingLabel: Instruction.Operand?
-    private var labeledInstructions = Dictionary<Int,Instruction>()
+    public var pendingLabel: Label?
+    private var labeledInstructions = Dictionary<Label,Instruction>()
     private var nextIndex = 0
         
     @discardableResult
-    public func add(_ mode: Instruction.Mode = .i64,_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none) -> Instruction
+    public func add(_ mode: Instruction.Mode = .i64,_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none,tail: String? = nil) -> Instruction
         {
         let instruction = Instruction(mode,opcode,op1,op2,op3)
+        instruction.tail = tail
         if self.pendingLabel.isNotNil
             {
-            self.labeledInstructions[self.pendingLabel!.labelValue] = instruction
+            self.labeledInstructions[self.pendingLabel!] = instruction
             self.pendingLabel = nil
             }
         self.addInstruction(instruction)
@@ -49,12 +60,13 @@ public class InstructionBuffer
         }
         
     @discardableResult
-    public func add(_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none) -> Instruction
+    public func add(_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none,tail: String? = nil) -> Instruction
         {
         let instruction = Instruction(.none,opcode,op1,op2,op3)
+        instruction.tail = tail
         if self.pendingLabel.isNotNil
             {
-            self.labeledInstructions[self.pendingLabel!.labelValue] = instruction
+            self.labeledInstructions[self.pendingLabel!] = instruction
             self.pendingLabel = nil
             }
         self.addInstruction(instruction)
@@ -62,38 +74,52 @@ public class InstructionBuffer
         }
         
     @discardableResult
-    public func add(_ label: Instruction.Operand,_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none) -> Instruction
+    public func add(_ label: Label,_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none,tail: String? = nil) -> Instruction
         {
         let instruction = Instruction(.none,opcode,op1,op2,op3)
+        instruction.tail = tail
         instruction.label = label
-        self.labeledInstructions[label.labelValue] = instruction
+        self.labeledInstructions[label] = instruction
         self.addInstruction(instruction)
         return(instruction)
         }
         
     public func add(lineNumber: Int)
         {
+        if lineNumber == 0
+            {
+//            print("halt")
+            }
         self.addInstruction(Instruction(.i64,.LINE,.integer(Argon.Integer(lineNumber)),.none,.none))
         }
         
     public func flattenLabels(atAddress: Address)
         {
+        var indexedInstructions = Dictionary<Int,Instruction>()
         for instruction in self.instructions
             {
-            if let index = instruction.labelValue
+            if instruction.hasLabelOperand
                 {
-                let offset = atAddress + Word(index * 4 * MemoryLayout<Word>.size)
-                instruction.replaceLabel(withAddress: offset)
+                indexedInstructions[instruction.labelOperandIndex] = instruction
                 }
+            }
+        var index = 0
+        for instruction in self.instructions
+            {
+            if let labelIndex = instruction.labelValue
+                {
+                let offset = atAddress + Word(index * MemoryLayout<Word>.size)
+                if let instruction = indexedInstructions[labelIndex.index]
+                    {
+                    instruction.replaceLabel(withAddress: offset)
+                    }
+                }
+            index += 4
             }
         }
         
     private func addInstruction(_ instruction: Instruction)
         {
-        if instruction.opcode == .CALL && instruction.operand1.addressValue == 100000000000
-            {
-            print("halt")
-            }
         instruction.index = self.nextIndex
         self.nextIndex += 1
         self.instructions.append(instruction)

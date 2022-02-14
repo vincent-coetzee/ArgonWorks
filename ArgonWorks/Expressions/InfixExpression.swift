@@ -50,6 +50,7 @@ public class InfixExpression: OperatorExpression
         let expression = InfixExpression(operatorLabel: self.operatorLabel,operators: self.operators,lhs: self.lhs.freshTypeVariable(inContext: context),rhs: self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
         expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         

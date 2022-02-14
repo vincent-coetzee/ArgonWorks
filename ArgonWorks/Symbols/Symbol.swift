@@ -41,6 +41,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         return(fields)
         }
     
+    public var localLabel: Label
+        {
+        self.label
+        }
+        
     public var childOutlineItemCount: Int
         {
         1
@@ -539,12 +544,6 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         copy.type = substitution.substitute(self.type)
         copy.issues = self.issues
         return(copy)
-        }
-        
-    public func dump(depth: Int)
-        {
-        let string = String(repeating: "\t", count: depth)
-        print("\(string)\(Swift.type(of: self)) \(self.label)")
         }
         
     public func display(indent: String)

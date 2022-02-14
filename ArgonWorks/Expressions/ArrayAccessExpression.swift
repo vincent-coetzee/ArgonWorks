@@ -14,6 +14,11 @@ public class ArrayAccessExpression: Expression
 //        return(self.array.typeConstraints)
 //        }
         
+    public override var diagnosticString: String
+        {
+        "self.array<\(self.array.type)>[self.index<\(self.index.type)>]"
+        }
+        
     public override var displayString: String
         {
         return("\(self.array.displayString)[\(self.index.displayString)]")
@@ -66,6 +71,7 @@ public class ArrayAccessExpression: Expression
         {
         let expression = ArrayAccessExpression(array: self.array.freshTypeVariable(inContext: context),index: self.index.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         
@@ -84,6 +90,10 @@ public class ArrayAccessExpression: Expression
         let arrayType = ArgonModule.shared.array.withGenerics([self.type])
         context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
         context.append(TypeConstraint(left: self.index.type,right: ArgonModule.shared.integer,origin: .expression(self)))
+        if self.array.type is TypeConstructor
+            {
+            context.append(TypeConstraint(left: self.type,right: (self.array.type as! TypeConstructor).generics[0],origin: .expression(self)))
+            }
         }
         
     public override func inferType(inContext context: TypeContext)

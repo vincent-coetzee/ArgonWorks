@@ -109,67 +109,28 @@ public class MethodInstance: Function
         self
         }
         
-    public var isPotentialSlotWriter: Bool
+    public var methodBlock: Block
         {
-        if self.parameters.count != 2
+        get
             {
-            return(false)
+            Block()
             }
-        if !self.parameters[0].type.isClass
+        set
             {
-            return(false)
             }
-        let targetClass = self.parameters[0].type as! TypeClass
-        if targetClass.isSystemClass
-            {
-            return(false)
-            }
-        if !self.parameters[1].type.isClass
-            {
-            return(false)
-            }
-        let valueClass = self.parameters[1].type as! TypeClass
-        if !targetClass.layoutSlots.map({$0.label}).contains(self.label)
-            {
-            return(false)
-            }
-        let slotClass = targetClass.layoutSlot(atLabel: self.label)
-        if slotClass.type != valueClass
-            {
-            return(false)
-            }
-        return(true)
         }
         
-    public var isPotentialSlotReader: Bool
+    public var isSlotAccessor: Bool
         {
-        if self.parameters.count != 1
-            {
-            return(false)
-            }
-        if !self.parameters[0].type.isClass
-            {
-            return(false)
-            }
-        let targetClass = self.parameters[0].type as! TypeClass
-        if targetClass.isSystemClass
-            {
-            return(false)
-            }
-        if self.returnType.isVoidType
-            {
-            return(false)
-            }
-        if !targetClass.layoutSlots.map({$0.label}).contains(self.label)
-            {
-            return(false)
-            }
-        let slotClass = targetClass.layoutSlot(atLabel: self.label)
-        if slotClass.type != self.returnType
-            {
-            return(false)
-            }
-        return(true)
+        return(false)
+        }
+        
+    public var methodName: String
+        {
+        let tags = self.parameters.map{$0.isVisible ? $0.label + "::" : "_::"}
+        let tagNames = tags.joined(separator: ",")
+        let name = "\(self.label)(\(tagNames))"
+        return(name)
         }
         
     public var isInlineMethodInstance: Bool
@@ -407,7 +368,7 @@ public class MethodInstance: Function
         instancePointer.flipCount = 0
         instancePointer.hasBytes = false
         instancePointer.objectType = .methodInstance
-        instancePointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        instancePointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         if let module = self.module
             {
             instancePointer.setAddress(module.memoryAddress,atSlot: "module")
@@ -422,15 +383,15 @@ public class MethodInstance: Function
             for parm in self.parameters
                 {
                 let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofType: parameterType, extraSizeInBytes: 0),type: parameterType)
-                parmPointer.setStringAddress(segment.allocateString(parm.label),atSlot: "tag")
+                parmPointer.setAddress(segment.allocateString(parm.label),atSlot: "tag")
                 parmPointer.setBoolean(parm.isVisible,atSlot: "tagIsShown")
                 parmPointer.setBoolean(parm.isVariadic,atSlot: "isVariadic")
                 parm.type.install(inContext: context)
                 parmPointer.setAddress(parm.type.memoryAddress,atSlot: "type")
-                parmPointer.setStringAddress(parm.relabel.isNil ? 0 : segment.allocateString(parm.relabel!),atSlot: "retag")
+                parmPointer.setAddress(parm.relabel.isNil ? 0 : segment.allocateString(parm.relabel!),atSlot: "retag")
                 parmArray.append(parmPointer.address)
                 }
-            instancePointer.setArrayPointer(parmArray,atSlot: "parameters")
+            instancePointer.setAddress(parmArray.address,atSlot: "parameters")
             }
         let blockAddress = context.codeSegment.allocateInstructionBlock(for: self)
         instancePointer.setAddress(blockAddress,atSlot: "instructionBlock")
@@ -486,7 +447,34 @@ public class MethodInstance: Function
         {
         self.parameters.forEach{$0.initializeType(inContext: context)}
         self.returnType.initializeType(inContext: context)
-        self.type = TypeFunction(label: self.label, types: self.parameters.map{$0.type}, returnType: self.returnType)
+        for aBlock in self.methodBlock.blocks
+            {
+            aBlock.initializeType(inContext: context)
+            }
+        self.type = self.returnType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        context.extended(withContentsOf: [])
+            {
+            newContext in
+            self.parameters.forEach{$0.initializeTypeConstraints(inContext: newContext)}
+            self.returnType.initializeTypeConstraints(inContext: newContext)
+            for aBlock in self.methodBlock.blocks
+                {
+                aBlock.initializeTypeConstraints(inContext: newContext)
+                }
+            for aBlock in self.methodBlock.returnBlocks
+                {
+                newContext.append(TypeConstraint(left: aBlock.type,right: self.returnType,origin: .symbol(self)))
+                }
+            newContext.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType),origin: .symbol(self)))
+            let sub = newContext.unify()
+            self.parameters = self.parameters.map{sub.substitute($0)}
+            self.returnType = sub.substitute(self.returnType)
+            self.methodBlock = sub.substitute(self.methodBlock)
+            }
         }
         
     public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
@@ -564,7 +552,11 @@ public class MethodInstance: Function
                 {
                 return(false)
                 }
-            if !inType.isSubtype(of: myType)
+            else if inType.isEnumeration && myType.isEnumeration && inType != myType
+                {
+                return(false)
+                }
+            else if inType.isClass && myType.isClass && !inType.isSubtype(of: myType)
                 {
                 return(false)
                 }

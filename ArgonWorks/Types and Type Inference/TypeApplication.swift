@@ -18,10 +18,6 @@ public class TypeApplication: Type
                 return(true)
                 }
             }
-        if self.returnType.hasVariableTypes
-            {
-            return(true)
-            }
         return(false)
         }
         
@@ -29,7 +25,6 @@ public class TypeApplication: Type
         {
         var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
         hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
-        hashValue = hashValue << 13 ^ self.returnType.argonHash
         hashValue = hashValue << 13 ^ self.function.argonHash
         for type in self.types
             {
@@ -41,14 +36,12 @@ public class TypeApplication: Type
         
     internal let function: TypeFunction
     internal let types: Types
-    internal let returnType: Type
     
-    init(function: TypeFunction,types: Types,returnType: Type)
+    init(function: TypeFunction,types: Types)
         {
         self.function = function
         self.types = types
-        self.returnType = returnType
-        super.init()
+        super.init(label: "")
         }
     
     public override func typeCheck() throws
@@ -59,15 +52,13 @@ public class TypeApplication: Type
         {
         self.function = coder.decodeObject(forKey: "function") as! TypeFunction
         self.types = coder.decodeObject(forKey: "types") as! Types
-        self.returnType = coder.decodeObject(forKey: "returnType") as! Type
         super.init(coder: coder)
         }
         
     required init(label: Label)
         {
         self.types = []
-        self.returnType = Type()
-        self.function = TypeFunction(label: "", types: [], returnType: Type())
+        self.function = TypeFunction(label: "", types: [], returnType: ArgonModule.shared.void)
         super.init()
         }
         
@@ -75,7 +66,6 @@ public class TypeApplication: Type
         {
         coder.encode(self.function,forKey: "function")
         coder.encode(self.types,forKey: "types")
-        coder.encode(self.returnType,forKey: "returnType")
         super.encode(with: coder)
         }
     }

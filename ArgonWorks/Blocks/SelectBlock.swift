@@ -112,7 +112,7 @@ public class SelectBlock: Block
         {
         let aType = self.value.type
         try self.value.emitCode(into: buffer,using: generator)
-        var nextWhen: Instruction.Operand?
+        var nextWhen = buffer.nextLabel
         let endLabel = buffer.nextLabel
         for when in whenBlocks
             {
@@ -133,9 +133,9 @@ public class SelectBlock: Block
                 buffer.add(.NEQ,self.value.place,when.condition.place)
                 }
             nextWhen = buffer.nextLabel
-            buffer.add(.BRT,nextWhen!)
+            buffer.add(.BRT,nextWhen.operand)
             try when.emitCode(into: buffer,using: generator)
-            buffer.add(.BR,endLabel)
+            buffer.add(.BR,endLabel.operand)
             }
         if self.otherwiseBlock.isNotNil
             {

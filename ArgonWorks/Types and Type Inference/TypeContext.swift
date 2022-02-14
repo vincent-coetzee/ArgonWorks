@@ -20,7 +20,7 @@ public class TypeContext
     public class Substitution
         {
         public weak var typeContext: TypeContext?
-        private static var typeVariableIndex = 0
+        private var typeVariableIndex = 0
         public var supressWarnings = false
     
         private var typeVariables = Dictionary<Int,Type>()
@@ -34,6 +34,7 @@ public class TypeContext
             {
             self.typeVariables = substitution.typeVariables
             self.typeContext = substitution.typeContext
+            self.typeVariableIndex = substitution.typeVariableIndex
             }
             
         public func freshTypeVariable(forTypeVariable old: Type) -> TypeVariable
@@ -43,16 +44,16 @@ public class TypeContext
                 {
                 return(newVariable as! TypeVariable)
                 }
-            let variable = TypeVariable(index: Self.typeVariableIndex)
-            Self.typeVariableIndex += 1
+            let variable = TypeVariable(index: self.typeVariableIndex)
+            self.typeVariableIndex += 1
             self.typeVariables[variable.id] = variable
             return(variable)
             }
             
         public func freshTypeVariable() -> TypeVariable
             {
-            let variable = TypeVariable(index: Self.typeVariableIndex)
-            Self.typeVariableIndex += 1
+            let variable = TypeVariable(index: self.typeVariableIndex)
+            self.typeVariableIndex += 1
             self.typeVariables[variable.id] = variable
             return(variable)
             }
@@ -67,8 +68,8 @@ public class TypeContext
                     }
                 }
             let variable = TypeVariable(label: named)
-            variable.id = Self.typeVariableIndex
-            Self.typeVariableIndex += 1
+            variable.id = self.typeVariableIndex
+            self.typeVariableIndex += 1
             self.typeVariables[variable.id] = variable
             return(variable)
             }
@@ -185,20 +186,15 @@ public class TypeContext
                 }
             if let typeClass = type as? TypeClass
                 {
-                if typeClass.isSystemClass && typeClass.isGenericClass
-                    {
-                    let aType = TypeClass(label: typeClass.label,isSystem: true,generics: typeClass.generics.map{self.substitute($0)})
-                    return(aType)
-                    }
-                else if typeClass.isSystemClass
+                if typeClass.generics.isEmpty
                     {
                     return(typeClass)
                     }
-                else
-                    {
-                    let aType = TypeClass(label: typeClass.label,generics: typeClass.generics.map{self.substitute($0)})
-                    return(aType)
-                    }
+                let aType = TypeClass(label: typeClass.label,isSystem: true,generics: typeClass.generics.map{self.substitute($0)})
+                aType.layoutSlots = typeClass.layoutSlots.map{self.substitute($0)}
+                aType.instanceSlots = typeClass.instanceSlots.map{self.substitute($0)}
+                aType.setModule(typeClass.module)
+                return(aType)
                 }
             if let typeEnumeration = type as? TypeEnumeration
                 {
@@ -207,7 +203,7 @@ public class TypeContext
                 }
             if let application = type as? TypeApplication
                 {
-                return(TypeApplication(function: self.substitute(application.function) as! TypeFunction, types: application.types.map{self.substitute($0)}, returnType: self.substitute(application.returnType)))
+                return(TypeApplication(function: self.substitute(application.function) as! TypeFunction, types: application.types.map{self.substitute($0)}))
                 }
             if let function = type as? TypeFunction
                 {
@@ -247,6 +243,16 @@ public class TypeContext
         public func substitute(_ slot: Slot) -> Slot
             {
             let newSlot = slot.substitute(from: self)
+            newSlot.owningClass = slot.owningClass
+            newSlot.type = self.substitute(slot.type)
+            newSlot.offset = slot.offset
+            return(newSlot)
+            }
+            
+        public func substitute(_ slot: LocalSlot) -> LocalSlot
+            {
+            let newSlot = slot.substitute(from: self)
+            newSlot.owningClass = slot.owningClass
             newSlot.type = self.substitute(slot.type)
             newSlot.offset = slot.offset
             return(newSlot)
@@ -318,42 +324,42 @@ public class TypeContext
                 try self.unifySubtypes(left.base,right.base)
                 return
                 }
-            if let left = lhs as? TypeClass,let right = rhs as? TypeClass
-                {
-                if !left.isSubclass(of: right) || left.typeFlags != right.typeFlags
-                    {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unifySubtypes(leftType,rightType)
-                    }
-                return
-                }
-            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
-                {
-                if !left.isSubclass(of: right) || left.typeFlags != right.typeFlags
-                    {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unifySubtypes(leftType,rightType)
-                    }
-                return
-                }
-            if let left = lhs as? TypeEnumeration,let right = rhs as? TypeEnumeration
-                {
-                if left != right
-                    {
-                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.fullName.displayString) \(right.fullName.displayString)"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unifySubtypes(leftType,rightType)
-                    }
-                return
-                }
+//            if let left = lhs as? TypeClass,let right = rhs as? TypeClass
+//                {
+//                if !left.isSubclass(of: right) || left.typeFlags != right.typeFlags
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unifySubtypes(leftType,rightType)
+//                    }
+//                return
+//                }
+//            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
+//                {
+//                if !left.isSubclass(of: right) || left.typeFlags != right.typeFlags
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "Type mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unifySubtypes(leftType,rightType)
+//                    }
+//                return
+//                }
+//            if let left = lhs as? TypeEnumeration,let right = rhs as? TypeEnumeration
+//                {
+//                if left != right
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.fullName.displayString) \(right.fullName.displayString)"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unifySubtypes(leftType,rightType)
+//                    }
+//                return
+//                }
             if let left = lhs as? TypeFunction,let right = rhs as? TypeFunction
                 {
                 try self.unifySubtypes(left.returnType,right.returnType)
@@ -365,6 +371,13 @@ public class TypeContext
                 }
             if let left = lhs as? TypeConstructor,let right = rhs as? TypeConstructor
                 {
+                if let leftClass = left as? TypeClass,let rightClass = right as? TypeClass
+                    {
+                    if leftClass.isSubclass(of: rightClass)
+                        {
+                        return
+                        }
+                    }
                 if left.label != right.label
                     {
                     throw(CompilerIssue(location: .zero, message: "Type mismatch \(left.label) != \(right.label)"))
@@ -382,7 +395,6 @@ public class TypeContext
                     {
                     try self.unifySubtypes(leftType,rightType)
                     }
-                try self.unifySubtypes(left.returnType,right.returnType)
                 return
                 }
             if let left = lhs as? TypeVariable,let right = rhs as? TypeVariable
@@ -435,42 +447,42 @@ public class TypeContext
                 try self.unify(left.base,right.base)
                 return
                 }
-            if let left = lhs as? TypeClass,let right = rhs as? TypeClass
-                {
-                if (left != right && left != self.typeContext!.objectType && right != self.typeContext!.objectType) || (left.typeFlags != right.typeFlags)
-                    {
-                    throw(CompilerIssue(location: .zero, message: "Class mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unify(leftType,rightType)
-                    }
-                return
-                }
-            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
-                {
-                if (left != right && left != self.typeContext!.objectType && right != self.typeContext!.objectType) || (left.typeFlags != right.typeFlags)
-                    {
-                    throw(CompilerIssue(location: .zero, message: "Metaclass mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unify(leftType,rightType)
-                    }
-                return
-                }
-            if let left = lhs as? TypeEnumeration,let right = rhs as? TypeEnumeration
-                {
-                if left != right
-                    {
-                    throw(CompilerIssue(location: .zero, message: "TypeEnumeration mismatch \(left.fullName.displayString) \(right.fullName.displayString)"))
-                    }
-                for (leftType,rightType) in zip(left.generics,right.generics)
-                    {
-                    try self.unify(leftType,rightType)
-                    }
-                return
-                }
+//            if let left = lhs as? TypeClass,let right = rhs as? TypeClass
+//                {
+//                if left != right
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "Class mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unify(leftType,rightType)
+//                    }
+//                return
+//                }
+//            if let left = lhs as? TypeMetaclass,let right = rhs as? TypeMetaclass
+//                {
+//                if left != right
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "Metaclass mismatch [\(left.fullName.displayString)] \(left.displayString)-\(left.index) is not equivalent to \(right.displayString)-\(right.index) [\(right.fullName.displayString)]"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unify(leftType,rightType)
+//                    }
+//                return
+//                }
+//            if let left = lhs as? TypeEnumeration,let right = rhs as? TypeEnumeration
+//                {
+//                if left != right
+//                    {
+//                    throw(CompilerIssue(location: .zero, message: "TypeEnumeration mismatch \(left.fullName.displayString) \(right.fullName.displayString)"))
+//                    }
+//                for (leftType,rightType) in zip(left.generics,right.generics)
+//                    {
+//                    try self.unify(leftType,rightType)
+//                    }
+//                return
+//                }
             if let left = lhs as? TypeFunction,let right = rhs as? TypeFunction
                 {
                 try self.unify(left.returnType,right.returnType)
@@ -482,7 +494,7 @@ public class TypeContext
                 }
             if let left = lhs as? TypeConstructor,let right = rhs as? TypeConstructor
                 {
-                if left.label != right.label
+                if left.label != right.label || left.generics.count != right.generics.count
                     {
                     throw(CompilerIssue(location: .zero, message: "TypeConstructor mismatch \(left.label) != \(right.label)"))
                     }
@@ -503,7 +515,6 @@ public class TypeContext
                     {
                     try self.unify(leftType,rightType)
                     }
-                try self.unify(left.returnType,right.returnType)
                 return
                 }
             if let left = lhs as? TypeVariable,let right = rhs as? TypeVariable
@@ -665,8 +676,6 @@ public class TypeContext
         self.environment = [:]
         self.substitution = Self.initialSubstitution
         self.substitution.typeContext = self
-        print("FLOAT CLASS \(self.floatType)")
-        print("INDEX OF FLOAT CLASS IS \((self.floatType as! TypeClass).index)")
         }
         
     public func suppressWarnings()
@@ -762,8 +771,8 @@ public class TypeContext
     public func unify() -> Substitution
         {
         let newSubstitution = Substitution(self.substitution)
-        newSubstitution.typeContext = self
-        for constraint in self.constraints
+        let newConstraints = self.constraints
+        for constraint in newConstraints
             {
             do
                 {
@@ -780,7 +789,7 @@ public class TypeContext
                 {
                 let lineNumber = constraint.line
                 let originType = constraint.originTypeString
-                let newMessage = compilerIssue.message + " in " + originType
+                let newMessage = compilerIssue.message + " in " + originType + constraint.origin.diagnosticString
                 constraint.origin.appendIssue(CompilerIssue(location: Location(line: lineNumber, lineStart: 0, lineStop: 0, tokenStart: 0, tokenStop: 0),message: newMessage))
                 }
             catch let error

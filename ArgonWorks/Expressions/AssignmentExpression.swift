@@ -45,6 +45,7 @@ public class AssignmentExpression: Expression
         let expression = AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs))
         expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
+        expression.locations = self.locations
         return(expression as! Self)
         }
         
@@ -52,6 +53,7 @@ public class AssignmentExpression: Expression
         {
         let expression = AssignmentExpression(self.lhs.freshTypeVariable(inContext: context),self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         
@@ -82,7 +84,7 @@ public class AssignmentExpression: Expression
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = context.voidType
+        self.type = ArgonModule.shared.void
         }
 
     public override var displayString: String

@@ -23,10 +23,8 @@ public class ClassBasedPointer
         let address = self.address(atSlot: "name")
         if address.isNotNil
             {
-            if let stringPointer = StringPointer(dirtyAddress: address!)
-                {
-                return(stringPointer.string == "Class")
-                }
+            let stringPointer = StringPointer(address: address!)
+            return(stringPointer.string == "Class")
             }
         return(false)
         }
@@ -177,7 +175,7 @@ public class ClassBasedPointer
         return(hashValue)
         }
         
-    private let someAddress: Address
+    internal let someAddress: Address
     internal let someClass: TypeClass
     private var someSlots: Dictionary<Label,Slot>
     internal let wordPointer: WordPointer
@@ -200,10 +198,14 @@ public class ClassBasedPointer
         
     private func initSlots()
         {
-        for slot in self.someClass.layoutSlots
+        for slot in self.someClass.allInstanceSlots
             {
             self.someSlots[slot.label] = slot
             }
+//        for slot in self.someSlots.values
+//            {
+//            print("SLOT: \(slot.label) OFFSET: \(slot.offset) OWNER: \(slot.owningClass!.label)")
+//            }
         }
         
     public func setClass(_ type: Type)
@@ -212,235 +214,66 @@ public class ClassBasedPointer
         self.setClass(theClass)
         }
         
-    private func setLocalSlotValues(forClass aClass: TypeClass,inClass: TypeClass)
-        {
-        for slot in aClass.localSystemSlots
-            {
-            let slotName = slot.nameInClass(aClass)
-            if slot.slotType.contains(.kSystemClassSlot)
-                {
-                self.setClassAddress(aClass.memoryAddress,atSlot: slotName)
-                }
-            else if slot.slotType.contains(.kSystemHeaderSlot) || slot.slotType.contains(.kSystemInnerSlot)
-                {
-                let actualSlot = inClass.layoutSlot(atLabel: slotName)
-                self.setWord(Word(inner: actualSlot.offset),atSlot: slotName)
-                }
-            else if slot.slotType.contains(.kSystemMagicNumberSlot)
-                {
-                self.setInteger(aClass.magicNumber,atSlot: slotName)
-                }
-
-            }
-        if aClass.supertype.isNotNil
-            {
-            self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass),inClass: inClass)
-            }
-        }
-        
     public func setClass(_ aClass: TypeClass)
         {
         self.header.tag = .header
         self.header.hasBytes = aClass.hasBytes
-        self.magicNumber = aClass.magicNumber
-        self.classAddress = aClass.memoryAddress
-        self.setLocalSlotValues(forClass: (aClass.supertype as! TypeClass),inClass: aClass)
+        aClass.layoutObject(atAddress: self.address)
         }
     
+    private func index(ofSlot: String) -> Int
+        {
+        if let slot = self.someSlots[ofSlot]
+            {
+            let index = self.someClass.offsetInObject(ofSlot: slot) / Argon.kWordSizeInBytesInt
+            return(index)
+            }
+        fatalError("Invalid slot \(ofSlot) in class \(someClass.label)")
+        }
+        
     public func integer(atSlot: String) -> Int
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(Int(bitPattern: self.wordPointer[index]))
-            }
-        fatalError("Slot not found")
+        return(Int(bitPattern: self.wordPointer[self.index(ofSlot: atSlot)]))
         }
         
     public func setInteger(_ integer: Int,atSlot: Label)
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = Word(integer: integer)
-            return
-            }
-        fatalError("Slot not found")
+        self.wordPointer[self.index(ofSlot: atSlot)] = Word(integer: integer)
         }
         
     public func boolean(atSlot: String) -> Bool
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return((self.wordPointer[index] & 1) == 1)
-            }
-        fatalError("Slot not found")
+        return((self.wordPointer[self.index(ofSlot: atSlot)] & 1) == 1)
         }
         
     public func setBoolean(_ boolean: Bool,atSlot: Label)
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = Word(boolean: boolean)
-            return
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func object(atSlot: String) -> Address
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(self.wordPointer[index].cleanAddress)
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setObject(_ address: Address,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = address.pointerAddress
-            return
-            }
-        fatalError("Slot not found")
+        self.wordPointer[self.index(ofSlot: atSlot)] = Word(boolean: boolean)
         }
         
     public func word(atSlot: String) -> Word
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(self.wordPointer[index])
-            }
-        fatalError("Slot not found")
+        return(self.wordPointer[self.index(ofSlot: atSlot)])
         }
         
     public func setWord(_ word: Word,atSlot: Label)
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = word
-            return
-            }
-        fatalError("Slot not found")
+        self.wordPointer[self.index(ofSlot: atSlot)] = word
         }
         
     public func address(atSlot: String) -> Address?
         {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(self.wordPointer[index].isNull ? nil : self.wordPointer[index].cleanAddress)
-            }
-        fatalError("Slot not found")
+        let index = self.index(ofSlot: atSlot)
+        return(self.wordPointer[index].isNull ? nil : self.wordPointer[index].cleanAddress)
         }
         
     public func setAddress(_ address: Address?,atSlot: Label)
         {
-        if let slot = self.someSlots[atSlot]
+        let index = self.index(ofSlot: atSlot)
+        if address.isNotNil && address! == 0
             {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            if address.isNotNil && address! == 0
-                {
-                print("halt")
-                }
-            self.wordPointer[index] = address.isNil ? Argon.kNullTag: Word(pointer: address!.cleanAddress)
-            return
+            print("halt")
             }
-        fatalError("Slot not found")
-        }
-        
-    public func setArrayAddress(_ address: Address?,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = address.isNil ? Argon.kNullTag : Word(pointer: address.cleanAddress)
-            return
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func arrayPointer(atSlot: String) -> ArrayPointer?
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(ArrayPointer(dirtyAddress: self.wordPointer[index]))
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setArrayPointer(_ array: ArrayPointer?,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = (array.isNil || (array.isNotNil && array!.cleanAddress == 0)) ? Argon.kNullTag : Word(pointer: array!.cleanAddress)
-            return
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func stringPointer(atSlot: String) -> StringPointer?
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(StringPointer(dirtyAddress: self.wordPointer[index]))
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setStringPointer(_ string: StringPointer,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = Word(pointer: string.cleanAddress)
-            return
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func stringAddress(atSlot: String) -> Address
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            return(self.wordPointer[index].cleanAddress)
-            }
-        fatalError("Slot not found")
-        }
-        
-    public func setStringAddress(_ string: Address?,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = (string.isNil || (string.isNotNil && string!.cleanAddress == 0)) ? Argon.kNullTag : Word(pointer: string!.cleanAddress)
-            return
-            }
-        fatalError("Slot not found")
-        }
-    public func setClassAddress(_ string: Address?,atSlot: Label)
-        {
-        if let slot = self.someSlots[atSlot]
-            {
-            if string.isNotNil && string! == 0
-                {
-                fatalError()
-                }
-            let index = slot.offset / Argon.kWordSizeInBytesInt
-            self.wordPointer[index] = string.isNil ? Argon.kNullTag : Word(pointer: string!.cleanAddress)
-            return
-            }
-        fatalError("Slot not found")
+        self.wordPointer[index] = address.isNil ? Argon.kNullTag: Word(pointer: address!.cleanAddress)
         }
     }

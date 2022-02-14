@@ -98,14 +98,14 @@ public class EnumerationInstanceExpression: Expression
         instance.add(.MAKE,.address(ArgonModule.shared.enumerationCaseInstance.memoryAddress),temp1)
         let temp2 = instance.nextTemporary
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "enumeration").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "enumeration").offset)),temp2)
         instance.add(.STOREP,temp2,.address(self.enumeration.memoryAddress),.integer(0))
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "caseIndex").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "caseIndex").offset)),temp2)
         let caseIndex = self.enumeration.caseIndex(forSymbol: self.caseSymbol)!
         instance.add(.STOREP,.integer(Argon.Integer(caseIndex)),temp2,.integer(0))
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.layoutSlot(atLabel: "associatedValueCount").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "associatedValueCount").offset)),temp2)
         instance.add(.STOREP,.integer(Argon.Integer(self.associatedValues?.count ?? 0)),temp2,.integer(0))
         if let values = self.associatedValues
             {

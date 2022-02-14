@@ -45,7 +45,7 @@ public class SymbolRegistry
         if self.rootNodeAddress.isNil
             {
             self.rootNodeAddress = self.context.staticSegment.allocateObject(ofType: ArgonModule.shared.treeNode,extraSizeInBytes: 0)
-            let pointer = TreeNodePointer(dirtyAddress: self.rootNodeAddress)!
+            let pointer = TreeNodePointer(dirtyAddress: self.rootNodeAddress)
             let symbolAddress = self.context.staticSegment.allocateSymbol(cleanSymbol)
             let index = self.nextIndex
             pointer.payload1 = Word(integer: index)
@@ -57,7 +57,7 @@ public class SymbolRegistry
             }
         else
             {
-            let root = TreeNodePointer(dirtyAddress: self.rootNodeAddress)!
+            let root = TreeNodePointer(dirtyAddress: self.rootNodeAddress)
             if let node = root.nodeAtKey(cleanSymbol)
                 {
                 return(node.payload1.intValue)
@@ -83,7 +83,7 @@ public class SymbolRegistry
             {
             return
             }
-        let root = TreeNodePointer(dirtyAddress: self.rootNodeAddress)!
+        let root = TreeNodePointer(dirtyAddress: self.rootNodeAddress)
         root.printNode()
         }
     }

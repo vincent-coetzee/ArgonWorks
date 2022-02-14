@@ -53,12 +53,22 @@ public class LocalSlotExpression: Expression
         try visitor.accept(self)
         }
         
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let newSlot = self.slot.freshTypeVariable(inContext: context)
+        newSlot.offset = self.slot.offset
+        let expression = LocalSlotExpression(slot: newSlot) as! Self
+        expression.type = self.type
+        expression.issues = self.issues
+        expression.locations = self.locations
+        return(expression)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let newSlot = substitution.substitute(self.slot)
         newSlot.offset = self.slot.offset
         let expression = LocalSlotExpression(slot: newSlot) as! Self
-        substitution.typeContext?.bind(newSlot.type,to: newSlot.label)
         expression.issues = self.issues
         return(expression)
         }
@@ -72,6 +82,12 @@ public class LocalSlotExpression: Expression
         {
         self.slot.initializeType(inContext: context)
         self.type = self.slot.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.slot.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.type,right: self.slot.type,origin: .expression(self)))
         }
         
     public override func assign(from expression: Expression,into: InstructionBuffer,using: CodeGenerator) throws
@@ -103,6 +119,6 @@ public class LocalSlotExpression: Expression
 
     public override func emitCode(into instance: InstructionBuffer, using generator: CodeGenerator) throws
         {
-        fatalError()
+        self._place = .frameOffset(self.slot.offset)
         }
     }

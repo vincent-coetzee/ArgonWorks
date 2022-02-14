@@ -28,37 +28,38 @@ public class Infix
         return(instance)
         }
         
-    func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
-        {
-        let random = Int.random(in: 0..<1000000)
+//    func triple(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type2:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
+//        {
+//        let random = Int.random(in: 0..<1000000)
+//        
+//        let parameters = [type1.parameter(random),type2.parameter(random)]
+//        let returnType = type3.value(random,argonModule)
+//        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+//        instance.parameters = parameters
+//        instance.returnType = returnType
+//        return(instance)
+//        }
         
-        let parameters = [type1.parameter(random),type2.parameter(random)]
-        let returnType = type3.value(random,argonModule)
-        let instance = PrimitiveInfixOperatorInstance(label: self.label)
-        instance.parameters = parameters
-        instance.returnType = returnType
-        return(instance)
-        }
+//    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
+//        {
+//        let random = Int.random(in: 0..<1000000)
+//
+//        let parameters = [type1.parameter(random)]
+//        let returnType = type3.value(random,argonModule)
+//        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+//        instance.parameters = parameters
+//        instance.returnType = returnType
+//        return(instance)
+//        }
         
-    public func double(_ argonModule: ArgonModule,_ type1:ArgumentType,_ type3:ArgumentType,where constraints: (String,Type)...) -> PrimitiveInfixOperatorInstance
-        {
-        let random = Int.random(in: 0..<1000000)
-        
-        let parameters = [type1.parameter(random)]
-        let returnType = type3.value(random,argonModule)
-        let instance = PrimitiveInfixOperatorInstance(label: self.label)
-        instance.parameters = parameters
-        instance.returnType = returnType
-        return(instance)
-        }
-        
-    public func double(_ type1:Type,_ type3:Type) -> PrimitiveInfixOperatorInstance
+    public func double(_ type1:Type,_ type3:Type) -> InfixInlineMethodInstance
         {
         let parameters = [Parameter(label: "a", relabel: nil, type: type1, isVisible: false, isVariadic: false),Parameter(label: "b", relabel: nil, type: type3, isVisible: false, isVariadic: false)]
         let returnType = type3
-        let instance = PrimitiveInfixOperatorInstance(label: self.label)
+        let instance = InfixInlineMethodInstance(label: self.label)
         instance.parameters = parameters
         instance.returnType = returnType
+        instance.initClosure()
         return(instance)
         }
     }
@@ -94,13 +95,14 @@ public class Postfix
         self.label = label
         }
         
-    public func double(_ type1:Type,_ type3:Type) -> PrimitivePostfixOperatorInstance
+    public func double(_ type1:Type,_ type3:Type) -> PostfixInlineMethodInstance
         {
         let parameters = [Parameter(label: "a", relabel: nil, type: type1, isVisible: false, isVariadic: false)]
         let returnType = type3
-        let instance = PrimitivePostfixOperatorInstance(label: self.label)
+        let instance = PostfixInlineMethodInstance(label: self.label)
         instance.parameters = parameters
         instance.returnType = returnType
+        instance.initClosure()
         return(instance)
         }
         

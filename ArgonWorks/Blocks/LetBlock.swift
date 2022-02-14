@@ -14,32 +14,30 @@ public class LetBlock: Block
         "LET " + self.lhs.displayString + " " + self.rhs.displayString
         }
         
-    private var lhs: Tuple
-    private var rhs: Tuple
+    private var lhs: Expression
+    private var rhs: Expression
     private var location:Location
     
-    public init(location:Location,lhs: Tuple,rhs: Tuple)
+    public init(location:Location,lhs: Expression,rhs: Expression)
         {
         self.location = location
         self.lhs = lhs
         self.rhs = rhs
         super.init()
-        assert(!self.lhs.isEmpty)
-        assert(!self.rhs.isEmpty)
         }
         
     public required init?(coder: NSCoder)
         {
         self.location = coder.decodeLocation(forKey: "location")
-        self.lhs = coder.decodeObject(forKey: "lhs") as! Tuple
-        self.rhs = coder.decodeObject(forKey: "rhs") as! Tuple
+        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
         super.init(coder: coder)
         }
         
     public required init()
         {
-        self.lhs = Tuple()
-        self.rhs = Tuple()
+        self.lhs = Expression()
+        self.rhs = Expression()
         self.location = .zero
         super.init()
         }
@@ -57,41 +55,39 @@ public class LetBlock: Block
         print("\(indent)\(Swift.type(of: self))")
         self.lhs.display(indent: indent + "\t")
         self.rhs.display(indent: indent + "\t")
-        assert(!self.lhs.isEmpty)
-        assert(!self.rhs.isEmpty)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
-        self.type = self.lhs.type
-        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
-        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
-        let slotLabels = self.lhs.slots.map{$0.label}
-        let rightTypes = self.rhs.types
+//        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
+        self.type = self.rhs.type
+//        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
+//        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
+//        let slotLabels = self.lhs.slots.map{$0.label}
+//        let rightTypes = self.rhs.types
         }
         
     public override func inferType(inContext context: TypeContext)
         {
-        self.lhs.inferType(inContext: context)
-        self.rhs.inferType(inContext: context)
-        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
-        self.type = self.lhs.type
-        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
-        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
-        let slotLabels = (self.lhs as! TupleExpression).slots.map{$0.label}
-        let rightTypes = (self.rhs as! TupleExpression).types
-        var values = Array<(Label,Type)>()
-        for (label,type) in zip(slotLabels,rightTypes)
-            {
-            values.append((label,type))
-            }
-        context.extended(with: values)
-            {
-            newContext in
-            }
+//        self.lhs.inferType(inContext: context)
+//        self.rhs.inferType(inContext: context)
+//        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
+//        self.type = self.lhs.type
+//        context.append(TypeConstraint(left: self.type,right: self.lhs.type,origin: .block(self)))
+//        context.append(TypeConstraint(left: self.type,right: self.rhs.type,origin: .block(self)))
+//        let slotLabels = (self.lhs as! TupleExpression).slots.map{$0.label}
+//        let rightTypes = (self.rhs as! TupleExpression).types
+//        var values = Array<(Label,Type)>()
+//        for (label,type) in zip(slotLabels,rightTypes)
+//            {
+//            values.append((label,type))
+//            }
+//        context.extended(with: values)
+//            {
+//            newContext in
+//            }
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
@@ -107,6 +103,8 @@ public class LetBlock: Block
         newBlock.lhs = substitution.substitute(self.lhs)
         newBlock.rhs = substitution.substitute(self.rhs)
         newBlock.type = substitution.substitute(self.type)
+        newBlock.locations = self.locations
+        newBlock.issues = self.issues
         return(newBlock)
         }
         
@@ -114,10 +112,15 @@ public class LetBlock: Block
         {
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
-        for (left,right) in zip(self.lhs.elements,self.rhs.elements)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .block(self)))
+        for (left,right) in zip((self.lhs as! CompoundExpression).expressions,(self.rhs as! CompoundExpression).expressions)
             {
             context.append(TypeConstraint(left: left.type,right: right.type,origin: .block(self)))
             }
+//        for (left,right) in zip(self.lhs.elements,self.rhs.elements)
+//            {
+//            context.append(TypeConstraint(left: left.type,right: right.type,origin: .block(self)))
+//            }
         }
         
     public override func visit(visitor: Visitor) throws
@@ -138,16 +141,9 @@ public class LetBlock: Block
         
     public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
         {
-        for (left,right) in zip(self.lhs.elements,self.rhs.elements)
+        for (left,right) in zip((self.lhs as! CompoundExpression).expressions,(self.rhs as! CompoundExpression).expressions)
             {
-            if case let TupleElement.expression(expression) = right
-                {
-                try left.assign(from: expression,into: buffer,using: generator)
-                }
-            else
-                {
-                fatalError("Can not assign to a tuple from anything other than an expression.")
-                }
+            try left.assign(from: right,into: buffer,using: generator)
             }
         }
     }

@@ -60,7 +60,7 @@ public class CastExpression: Expression
         {
         self.expression.initializeTypeConstraints(inContext: context)
         self.type.initializeTypeConstraints(inContext: context)
-        context.append(SubTypeConstraint(subtype: self.expression.type,supertype: self.type,origin:.expression(self)))
+        context.append(TypeConstraint(left: self.expression.type,right: self.type,origin:.expression(self)))
         if !self.expression.type.isSubtype(of: self.type)
             {
             self.appendIssue(at: self.declaration!, message: "'\(self.expression.type.userString)' does not inherit from '\(self.type.userString)' so the cast will fail.")

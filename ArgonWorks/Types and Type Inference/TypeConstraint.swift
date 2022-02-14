@@ -23,6 +23,8 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                 return(expression.declaration!.line)
             case .block(let block):
                 return(block.declaration.isNil ? 0 : block.declaration!.line)
+            case .tuple:
+                return(0)
             }
         }
         
@@ -36,6 +38,8 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                 return("\(Swift.type(of: expression)) \(expression.diagnosticString)")
             case .block(let block):
                 return("\(Swift.type(of: block))")
+            case .tuple(let tuple):
+                return("\(tuple)")
             }
         }
         
@@ -51,9 +55,25 @@ public class TypeConstraint: Displayable,CustomStringConvertible
         
     internal enum Origin
         {
+        public var diagnosticString: String
+            {
+            switch(self)
+                {
+                case .symbol(let symbol):
+                    return(symbol.displayString)
+                case .expression(let expression):
+                    return(expression.diagnosticString)
+                case .block(let block):
+                    return(block.displayString)
+                default:
+                    return("")
+                }
+            }
+            
         case symbol(Symbol)
         case expression(Expression)
         case block(Block)
+        case tuple(Tuple)
         
         public func appendIssue(_ issue: CompilerIssue)
             {
@@ -65,6 +85,8 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                     expression.appendIssue(issue)
                 case .block(let block):
                     block.appendIssue(issue)
+                default:
+                    break
                 }
             }
         }

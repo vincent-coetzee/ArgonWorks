@@ -7,17 +7,17 @@
 
 import Foundation
 
-public class BucketPointer: ObjectPointer
+public class BucketPointer: ClassBasedPointer
     {
     public var nextBucketAddress: Address?
         {
         get
             {
-            self.address(atIndex: 7)
+            self.address(atSlot: "nextBucket")
             }
         set
             {
-            self.setAddress(newValue,atIndex: 7)
+            self.setAddress(newValue,atSlot: "nextBucket")
             }
         }
         
@@ -25,11 +25,11 @@ public class BucketPointer: ObjectPointer
         {
         get
             {
-            self.address(atIndex: 8)
+            self.address(atSlot: "bucketValue")
             }
         set
             {
-            self.setAddress(newValue,atIndex: 8)
+            self.setAddress(newValue,atSlot: "bucketValue")
             }
         }
         
@@ -37,11 +37,16 @@ public class BucketPointer: ObjectPointer
         {
         get
             {
-            self.word(atIndex: 9)
+            self.word(atSlot: "bucketKey")
             }
         set
             {
-            self.setWord(newValue,atIndex: 9)
+            self.setWord(newValue,atSlot: "bucketKey")
             }
+        }
+        
+    public init(address: Address)
+        {
+        super.init(address: address, class: ArgonModule.shared.bucket as! TypeClass)
         }
     }

@@ -23,7 +23,7 @@ public class MemoryPointer
         {
         if self.header.objectType == .string
             {
-            return(Word(integer: StringPointer(dirtyAddress: self.address)!.string.polynomialRollingHash))
+            return(Word(integer: StringPointer(address: self.address).string.polynomialRollingHash))
             }
         let start = self.slots["hash"]!.offset / 8
         let size = self.header.sizeInWords
@@ -192,9 +192,6 @@ public class MemoryPointer
                 valueString = "POINTER: \(objectString) \(className)"
             case .float:
                 valueString = "FLOAT  : \(value.floatValue)"
-            case .inner:
-                let offset = value.innerValue
-                valueString = "INNER  : -\(offset)"
         }
         return(valueString)
         }

@@ -13,11 +13,11 @@ public class SlotPointer: ClassBasedPointer
         {
         get
             {
-            StringPointer(dirtyAddress: self.address(atSlot: "name")!)
+            StringPointer(address: self.address(atSlot: "name")!)
             }
         set
             {
-            self.setAddress(newValue.isNil ? 0 : newValue!.cleanAddress.pointerAddress,atSlot: "name")
+            self.setAddress(newValue.isNil ? 0 : newValue!.address.pointerAddress,atSlot: "name")
             }
         }
         

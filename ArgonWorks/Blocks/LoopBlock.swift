@@ -169,7 +169,7 @@ public class LoopBlock: Block
             try expression.emitCode(into: buffer,using: using)
             }
         try self.endExpression.emitCode(into: buffer,using: using)
-        buffer.add(.BRF,self.endExpression.place,label)
+        buffer.add(.BRF,self.endExpression.place,label.operand)
         }
     }
 

@@ -43,6 +43,7 @@ public class PrefixExpression: OperatorExpression
         let expression = PrefixExpression(operatorLabel: self.operatorLabel,operators: self.operators,rhs: self.rhs.freshTypeVariable(inContext: context))
         expression.type = self.type.freshTypeVariable(inContext: context)
         expression.methodInstance = self.methodInstance?.freshTypeVariable(inContext: context)
+        expression.locations = self.locations
         return(expression as! Self)
         }
         

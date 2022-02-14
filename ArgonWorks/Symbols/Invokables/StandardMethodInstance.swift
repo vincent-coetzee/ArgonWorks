@@ -46,6 +46,18 @@ public class StandardMethodInstance: MethodInstance
 //        self.codeBuffer.instructions
 //        }
 
+    public override var methodBlock: Block
+        {
+        get
+            {
+            self.block
+            }
+        set
+            {
+            self.block = newValue
+            }
+        }
+        
     public var block = Block()
     
     public required init?(coder: NSCoder)
@@ -144,7 +156,6 @@ public class StandardMethodInstance: MethodInstance
 
     public override func initializeType(inContext context: TypeContext)
         {
-        
         self.block.initializeType(inContext: context)
         self.parameters.forEach{$0.initializeType(inContext: context)}
         self.returnType.initializeType(inContext: context)

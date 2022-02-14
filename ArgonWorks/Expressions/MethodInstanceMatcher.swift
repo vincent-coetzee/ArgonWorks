@@ -188,6 +188,8 @@ public class MethodInstanceMatcher
                     block.appendIssue(issue)
                 case .none:
                     break
+                case .tuple:
+                    break
                 }
             }
         }

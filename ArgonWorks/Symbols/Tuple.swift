@@ -328,7 +328,7 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         }
         
     internal private(set) var elements = Array<TupleElement>()
-    internal var type: Type = Type()
+    internal var type: Type = ArgonModule.shared.void
 //    internal var parent: Parent = .none
 //        {
 //        didSet
@@ -474,6 +474,7 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
     public func initializeTypeConstraints(inContext context: TypeContext)
         {
         self.elements.forEach{$0.initializeTypeConstraints(inContext: context)}
+        context.append(TypeConstraint(left: self.type,right: TypeConstructor(label: "Tuple",generics: self.elements.map{$0.type!}),origin: .tuple(self)))
         }
         
     public func visit(visitor: Visitor) throws
