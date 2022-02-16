@@ -68,6 +68,7 @@ public class SymbolRegistry
             let pointer = root.setValue(symbolAddress, forKey: cleanSymbol,inSegment: self.context.staticSegment)
             pointer.payload1 = Word(integer: index)
             self.vectorPointer[index] = symbolAddress
+            self.rootNodeAddress = root.rebalance().address
             return(index)
             }
         }

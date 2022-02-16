@@ -7,93 +7,127 @@
 
 import Foundation
     
-public class DictionaryPointer: ObjectPointer
+public class DictionaryPointer: ClassBasedPointer
     {
-//    private static let sizeInBytes = 112
-//        
-//    private static let primes = [1223,4391,7879,11587,21269,41893,81353,160553,331249]
-//    
-//    private var prime: Word
-//        {
-//        self.word(atIndex: 13)
-//        }
-//        
-//    public var count: Int
-//        {
-//        get
-//            {
-//            self.integer(atIndex: 10)
-//            }
-//        set
-//            {
-//            self.setInteger(newValue,atIndex: 10)
-//            }
-//        }
-//        
-//    public var size: Int
-//        {
-//        get
-//            {
-//            self.integer(atIndex: 11)
-//            }
-//        set
-//            {
-//            self.setInteger(newValue,atIndex: 11)
-//            }
-//        }
-//        
-//    private let segment: Segment
-//        
-//    public convenience init?(inSegment: Segment)
-//        {
-//        let address = inSegment.allocateObject(ofType: ArgonModule.shared.dictionary,extraSizeInBytes: 0)
-//        self.init(dirtyAddress: address,inSegment: inSegment)
-//        }
-//        
-//    public init?(dirtyAddress: Address,inSegment: Segment)
-//        {
-//        self.segment = inSegment
-//        super.init(dirtyAddress: dirtyAddress)
-//        }
-//        
-//    public required init?(dirtyAddress: Address)
-//        {
-//        fatalError()
-//        }
-//        
-//    public func value(forKey string: String) -> TreeNodePointer?
-//        {
-//        if let address = self.address(atIndex: 13)
-//            {
-//            let rootNode = TreeNodePointer(dirtyAddress: address)!
-//            if let address = rootNode.value(forKey: string)
-//                {
-//                return(TreeNodePointer(dirtyAddress: address))
-//                }
-//            return(nil)
-//            }
-//        else
-//            {
-//            return(nil)
-//            }
-//        }
+    public var count: Int
+        {
+        self.countNodes()
+        }
         
-//    public func setValue(_ value: Address,forKey: String)
-//        {
-//        if let address = self.address(atIndex: 13)
-//            {
-//            let rootNode = TreeNodePointer(dirtyAddress: address)!
-//            rootNode.setValue(value,forKey: forKey,inSegment: self.segment)
-//            }
-//        else
-//            {
-//            let rootAddress = self.segment.allocateObject(ofType: ArgonModule.shared.treeNode, extraSizeInBytes: 0)
-//            let rootNode = TreeNodePointer(dirtyAddress: rootAddress)!
-//            rootNode.leftNodeAddress = 0
-//            rootNode.rightNodeAddress = 0
-//            rootNode.keyAddress = self.segment.allocateString(forKey)
-//            rootNode.valueAddress = value
-//            self.setAddress(rootAddress,atIndex: 13)
-//            }
-//        }
+    public var rootAddress: Address?
+        {
+        get
+            {
+            self.address(atSlot: "rootNode")
+            }
+        set
+            {
+            self.setAddress(newValue,atSlot: "rootNode")
+            }
+        }
+        
+    private var rootNode: TreeNodePointer?
+    private let segment: Segment
+    private var _count: Int = 0
+    
+    public init(address: Address,inSegment segment: Segment)
+        {
+        self.segment = segment
+        super.init(address: address.cleanAddress,class: ArgonModule.shared.dictionary as! TypeClass)
+        self.rootNode = self.rootAddress.isNil ? nil : TreeNodePointer(address: self.rootAddress!)
+        }
+        
+    public func setValue(_ value: Address,forKey: String)
+        {
+        if self.rootNode.isNil
+            {
+            self.rootAddress = self.segment.allocateObject(ofType: ArgonModule.shared.treeNode)
+            self.rootNode = TreeNodePointer(address: self.rootAddress!)
+            self.rootNode?.valueAddress = value
+            self.rootNode?.keyAddress = self.segment.allocateString(forKey)
+            self.rootNode?.height = 1
+            }
+        else
+            {
+            self.rootNode?.setValue(value,forKey: forKey,inSegment: self.segment)
+            self.rootAddress = self.rootNode!.rebalance().address
+            self.rootNode = TreeNodePointer(address: self.rootAddress!)
+            }
+        }
+        
+    public func printBalance()
+        {
+        print("LEFT HEIGHT = \(self.rootNode!.leftNodePointer!.height)")
+        print("RIGHT HEIGHT = \(self.rootNode!.rightNodePointer!.height)")
+        print("LEFT NODE HEIGHT = \(self.rootNode!.leftNodePointer!.nodeHeight)")
+        print("RIGHT NODE HEIGHT = \(self.rootNode!.rightNodePointer!.nodeHeight)")
+        print("BALANCE = \(self.rootNode!.balance)")
+        }
+        
+    public func audit()
+        {
+        self.rootNode?.audit(indent: "")
+        }
+        
+    private func setRootAddress(_ address: Address?)
+        {
+        self.rootAddress = address
+        if address.isNil
+            {
+            self.rootNode = nil
+            }
+        else
+            {
+            self.rootNode = TreeNodePointer(address: address!)
+            }
+        }
+        
+    public func value(forKey: String) -> Address?
+        {
+        return(self.rootNode?.value(forKey: forKey))
+        }
+        
+    private func countNodes() -> Int
+        {
+        var total = 0
+        self.rootNode?.count(total: &total)
+        return(total)
+        }
+        
+    public func deleteNode(forKey: String)
+        {
+        guard self.rootNode.isNotNil else
+            {
+            return
+            }
+        let rootKey = self.rootNode!.stringKey
+        if forKey == rootKey
+            {
+            if self.rootNode!.leftNodeAddress.isNil
+                {
+                self.setRootAddress(self.rootNode!.rightNodeAddress)
+                }
+            else if rootNode!.rightNodeAddress.isNil
+                {
+                self.setRootAddress(self.rootNode!.leftNodeAddress)
+                }
+            else
+                {
+                self.setRootAddress(nil)
+                }
+            }
+        else if forKey < rootKey
+            {
+            self.rootNode!.leftNodeAddress = self.rootNode!.leftNodePointer?.deleteNode(forKey: forKey)
+            }
+        else
+            {
+            self.rootNode!.rightNodeAddress = self.rootNode!.rightNodePointer?.deleteNode(forKey: forKey)
+            }
+        }
+        
+    public func dump()
+        {
+        self.rootNode?.printNode()
+        }
     }

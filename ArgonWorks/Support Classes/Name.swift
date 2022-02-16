@@ -16,7 +16,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
     {
     public static func ==(lhs:Name,rhs:Name) -> Bool
         {
-        return(lhs.description == rhs.description)
+        return(lhs.components == rhs.components)
         }
         
     public static func <(lhs:Name,rhs:Name) -> Bool
@@ -70,7 +70,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
             }
         }
         
-    private enum Component
+    private enum Component: Equatable
         {
         case root
         case piece(String)

@@ -204,7 +204,7 @@ public class Segment
         header.sizeInBytes = size
         print(header.sizeInBytes)
         methodInstance.setMemoryAddress(address)
-        let addressString = String(format: "%16X",address)
+//        let addressString = String(format: "%16X",address)
 //        print("STARTING DUMP OF METHOD INSTANCE AT ADDRESS \(addressString)")
 //        MemoryPointer.dumpRawMemory(atAddress: address,count: 200)
 //        MemoryPointer.dumpMemory(atAddress: address,count: 200)
@@ -235,6 +235,8 @@ public class Segment
         blockPointer.setAddress(nil,atSlot: "nextBlock")
         blockPointer.setInteger(0,atSlot: "startIndex")
         blockPointer.setInteger(newSize,atSlot: "stopIndex")
+        let blockAfter = blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        memset(UnsafeMutableRawPointer(bitPattern: blockAfter),0,Int(extraSizeInBytes))
         return(blockAddress)
         }
         

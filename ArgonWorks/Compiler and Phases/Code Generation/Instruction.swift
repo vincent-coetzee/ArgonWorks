@@ -430,9 +430,19 @@ public class Instruction
         return(self.operand3.labelValue)
         }
         
+    public var hasLabel: Bool
+        {
+        self.label.isNotNil
+        }
+        
     public var hasLabelOperand: Bool
         {
         self.operand1.isLabel || self.operand2.isLabel || self.operand3.isLabel
+        }
+        
+    public var labelIndex: Int
+        {
+        self.label!.index
         }
         
     public var labelValue: InstructionBuffer.Label?

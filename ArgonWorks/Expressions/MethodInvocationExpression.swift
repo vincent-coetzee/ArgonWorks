@@ -104,7 +104,7 @@ public class MethodInvocationExpression: Expression
             }
         if let instance = self.methodInstance
             {
-            print("\(indent)\tSELECTED METHOD INSTANCE: \(instance.displayString)")
+            print("\(indent)\tSELECTED METHOD INSTANCE: \(instance.index) \(instance.displayString)")
             }
         else
             {

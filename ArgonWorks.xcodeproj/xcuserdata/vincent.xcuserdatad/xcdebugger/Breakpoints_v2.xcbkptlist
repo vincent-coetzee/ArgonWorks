@@ -772,22 +772,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "0CCE4F79-693C-4589-87E9-F9E8A6569532"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/User Interface/AppDelegate.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "126"
-            endingLineNumber = "126"
-            landmarkName = "applicationDidFinishLaunching(_:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "C832D02B-57ED-4778-9076-F4FEFC931269"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -859,8 +843,8 @@
             filePath = "ArgonWorks/User Interface/AppDelegate.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "162"
-            endingLineNumber = "162"
+            startingLineNumber = "210"
+            endingLineNumber = "210"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -955,8 +939,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Code Generation/Instruction.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "501"
-            endingLineNumber = "501"
+            startingLineNumber = "511"
+            endingLineNumber = "511"
             landmarkName = "init(_:address:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -971,8 +955,8 @@
             filePath = "ArgonWorks/Types and Type Inference/TypeClass.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1062"
-            endingLineNumber = "1062"
+            startingLineNumber = "1145"
+            endingLineNumber = "1145"
             landmarkName = "unknown"
             landmarkType = "0">
          </BreakpointContent>
@@ -1019,8 +1003,8 @@
             filePath = "ArgonWorks/User Interface/AppDelegate.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "139"
-            endingLineNumber = "139"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1051,8 +1035,8 @@
             filePath = "ArgonWorks/User Interface/AppDelegate.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "217"
-            endingLineNumber = "217"
+            startingLineNumber = "265"
+            endingLineNumber = "265"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1067,8 +1051,8 @@
             filePath = "ArgonWorks/User Interface/AppDelegate.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "243"
-            endingLineNumber = "243"
+            startingLineNumber = "291"
+            endingLineNumber = "291"
             landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -1188,22 +1172,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3D73A4F0-D285-4405-A9C3-F4CF0180B8E8"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/Blocks/ForBlock.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "78"
-            endingLineNumber = "78"
-            landmarkName = "initializeTypeConstraints(inContext:)"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "C04CF5F6-369B-42BB-B463-9F0A6BD71483"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -1230,6 +1198,54 @@
             startingLineNumber = "2533"
             endingLineNumber = "2533"
             landmarkName = "parseMethodInvocation(methods:name:nameToken:location:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "14D06495-6654-48CD-8957-C7D4E09B562E"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ArgonWorks/User Interface/AppDelegate.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
+            landmarkName = "applicationDidFinishLaunching(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "53CB760C-9AD5-48DF-9FB8-D9D508E2FAE2"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ArgonWorks/User Interface/AppDelegate.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "195"
+            endingLineNumber = "195"
+            landmarkName = "applicationDidFinishLaunching(_:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0E767676-5CDD-47EC-8CCE-452D6A21329C"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ArgonWorks/User Interface/AppDelegate.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "135"
+            endingLineNumber = "135"
+            landmarkName = "applicationDidFinishLaunching(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

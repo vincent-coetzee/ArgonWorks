@@ -86,7 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         aClass.printLayout()
         let string = ArgonModule.shared.string
         string.printLayout()
-        let slot = ArgonModule.shared.slot
+        let slot = ArgonModule.shared.slot as! TypeClass
         slot.printLayout()
         let symbol = ArgonModule.shared.symbol
         symbol.printLayout()
@@ -119,6 +119,19 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let testClass = ArgonModule.shared.lookup(label: "ClassE") as! TypeClass
         testClass.printLayout()
         print()
+        let classes = [ArgonModule.shared.array,ArgonModule.shared.slot,ArgonModule.shared.string,ArgonModule.shared.classType,ArgonModule.shared.treeNode].map{$0 as! TypeClass}
+        for someClass in classes
+            {
+            someClass.cacheIndices()
+            print("==============================================")
+            print("\(someClass.label)\nSIZE: \(someClass.instanceSizeInBytes)\n")
+            for (someLabel,someIndex) in someClass.slotIndexCache.sorted{$0.0 < $1.0}
+                {
+                let someString = String(format: "%6d",someIndex)
+                print("\(someString) \(someLabel)")
+                }
+            print("==============================================")
+            }
         let payload = VMPayload()
         array.printLayout()
         block.printLayout()
@@ -132,9 +145,9 @@ class AppDelegate: NSObject, NSApplicationDelegate
         ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object as! TypeClass,depth:"")
         ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object.type as! TypeClass,depth:"")
         let vulcan = ArgonModule.shared.lookup(label: "Vulcan") as! TypeClass
-        print(vulcan.precedenceList)
+        print(vulcan.topologicalSort())
         let human = ArgonModule.shared.lookup(label: "Human") as! TypeClass
-        print(human.precedenceList)
+        print(human.topologicalSort())
         
         let bitSet = BitSet()
         bitSet.addBitField(named: "opcode", width: 8)
@@ -146,7 +159,42 @@ class AppDelegate: NSObject, NSApplicationDelegate
         bitSet.addBitField(named: "operand2Value",width: 64)
         bitSet.addBitField(named: "resultValue",width: 64)
         print("NUMBER OF BITS USED = \(bitSet.maximumFieldOffset)")
-        
+        let timer = Timer()
+        let dictionaryAddress = payload.staticSegment.allocateObject(ofType: ArgonModule.shared.dictionary)
+        let dict = DictionaryPointer(address: dictionaryAddress, inSegment: payload.staticSegment)
+        let words = EnglishWord.randomWords(maximum: 20000)
+        print("ADDING \(words.count) WORDS")
+        var ticker = 0
+        for word in words
+            {
+            ticker += 1
+            let wordAddress = payload.staticSegment.allocateString(word.word)
+            dict.setValue(wordAddress,forKey: word.word)
+            if ticker % 25 == 0
+                {
+                print(".",terminator: "")
+                }
+            }
+        print()
+        let milliseconds = timer.stop()
+        let average = milliseconds / words.count
+        dict.dump()
+        print("CURRENT TOTAL: \(dict.count)")
+        print("AVERAGE \(average) MS TO INSERT VALUE")
+        dict.printBalance()
+        let word1 = words[4]
+        dict.deleteNode(forKey: word1.word)
+        let word2 = words[7]
+        dict.deleteNode(forKey: word2.word)
+        print("TOTAL AFTER 2 DELETIONS: \(dict.count)")
+        let value1 = dict.value(forKey: word1.word)
+        dict.setValue(400,forKey: "supercalifragilisticexpealadocius")
+        let timer1 = Timer()
+        let value2 = dict.value(forKey: "supercalifragilisticexpealadocius")
+        let time = timer1.stop()
+        print("TIME TO LOOKUP \(time)")
+        print(value1)
+        print(value2)
 //        let payload = VMPayload()
 //        ArgonModule.shared.dictionary.layoutObjectSlots()
 //        let dPointer = DictionaryPointer(inSegment: payload.managedSegment)!

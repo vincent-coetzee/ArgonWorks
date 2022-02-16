@@ -16,10 +16,6 @@ public class ClassBasedPointer
         
     public var isClass: Bool
         {
-        guard self.someSlots["name"].isNotNil else
-            {
-            return(false)
-            }
         let address = self.address(atSlot: "name")
         if address.isNotNil
             {
@@ -162,22 +158,8 @@ public class ClassBasedPointer
             }
         }
         
-    public var hash: Int
-        {
-        let offset = self.someSlots["hash"]!.offset
-        let size = Int(self.sizeInBytes)
-        var hashValue:Int = 0
-        for index in (offset/8)..<(size/8)
-            {
-            hashValue = hashValue << 13 ^ Int(bitPattern: self.wordPointer[index])
-            }
-        self.setInteger(hashValue,atSlot: "hash")
-        return(hashValue)
-        }
-        
     internal let someAddress: Address
     internal let someClass: TypeClass
-    private var someSlots: Dictionary<Label,Slot>
     internal let wordPointer: WordPointer
     private let header: Header
     
@@ -190,22 +172,9 @@ public class ClassBasedPointer
         {
         self.someClass = aClass
         self.someAddress = address.cleanAddress
-        self.someSlots = Dictionary<Label,Slot>()
         self.wordPointer = WordPointer(bitPattern: address.cleanAddress)
         self.header = Header(atAddress: address.cleanAddress)
-        self.initSlots()
-        }
-        
-    private func initSlots()
-        {
-        for slot in self.someClass.allInstanceSlots
-            {
-            self.someSlots[slot.label] = slot
-            }
-//        for slot in self.someSlots.values
-//            {
-//            print("SLOT: \(slot.label) OFFSET: \(slot.offset) OWNER: \(slot.owningClass!.label)")
-//            }
+        self.someClass.cacheIndices()
         }
         
     public func setClass(_ type: Type)
@@ -223,12 +192,7 @@ public class ClassBasedPointer
     
     private func index(ofSlot: String) -> Int
         {
-        if let slot = self.someSlots[ofSlot]
-            {
-            let index = self.someClass.offsetInObject(ofSlot: slot) / Argon.kWordSizeInBytesInt
-            return(index)
-            }
-        fatalError("Invalid slot \(ofSlot) in class \(someClass.label)")
+        return(self.someClass.slotIndexCache[ofSlot]!)
         }
         
     public func integer(atSlot: String) -> Int
@@ -239,6 +203,16 @@ public class ClassBasedPointer
     public func setInteger(_ integer: Int,atSlot: Label)
         {
         self.wordPointer[self.index(ofSlot: atSlot)] = Word(integer: integer)
+        }
+        
+    public func integer(atIndex: Int) -> Int
+        {
+        return(Int(bitPattern: self.wordPointer[atIndex]))
+        }
+        
+    public func setInteger(_ integer: Int,atIndex: Int)
+        {
+        self.wordPointer[atIndex] = Word(integer: integer)
         }
         
     public func boolean(atSlot: String) -> Bool
@@ -261,10 +235,25 @@ public class ClassBasedPointer
         self.wordPointer[self.index(ofSlot: atSlot)] = word
         }
         
+    public func word(atIndex: Int) -> Word
+        {
+        return(self.wordPointer[atIndex])
+        }
+        
+    public func setWord(_ word: Word,atIndex: Int)
+        {
+        self.wordPointer[atIndex] = word
+        }
+        
     public func address(atSlot: String) -> Address?
         {
         let index = self.index(ofSlot: atSlot)
         return(self.wordPointer[index].isNull ? nil : self.wordPointer[index].cleanAddress)
+        }
+        
+    public func address(atIndex: Int) -> Address?
+        {
+        return(self.wordPointer[atIndex].isNull ? nil : self.wordPointer[atIndex].cleanAddress)
         }
         
     public func setAddress(_ address: Address?,atSlot: Label)
@@ -275,5 +264,14 @@ public class ClassBasedPointer
             print("halt")
             }
         self.wordPointer[index] = address.isNil ? Argon.kNullTag: Word(pointer: address!.cleanAddress)
+        }
+        
+    public func setAddress(_ address: Address?,atIndex: Int)
+        {
+        if address.isNotNil && address! == 0
+            {
+            print("halt")
+            }
+        self.wordPointer[atIndex] = address.isNil ? Argon.kNullTag: Word(pointer: address!.cleanAddress)
         }
     }

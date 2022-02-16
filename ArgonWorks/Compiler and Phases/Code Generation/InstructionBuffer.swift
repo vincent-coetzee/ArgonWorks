@@ -42,7 +42,7 @@ public class InstructionBuffer
     private var nextTemporaryIndex: Int = 1
     public private(set) var instructions = Array<Instruction>()
     public var pendingLabel: Label?
-    private var labeledInstructions = Dictionary<Label,Instruction>()
+    private var indexedInstructions = Dictionary<Int,Instruction>()
     private var nextIndex = 0
         
     @discardableResult
@@ -52,7 +52,7 @@ public class InstructionBuffer
         instruction.tail = tail
         if self.pendingLabel.isNotNil
             {
-            self.labeledInstructions[self.pendingLabel!] = instruction
+            self.indexedInstructions[self.pendingLabel!.index] = instruction
             self.pendingLabel = nil
             }
         self.addInstruction(instruction)
@@ -66,7 +66,7 @@ public class InstructionBuffer
         instruction.tail = tail
         if self.pendingLabel.isNotNil
             {
-            self.labeledInstructions[self.pendingLabel!] = instruction
+            self.indexedInstructions[self.pendingLabel!.index] = instruction
             self.pendingLabel = nil
             }
         self.addInstruction(instruction)
@@ -79,7 +79,7 @@ public class InstructionBuffer
         let instruction = Instruction(.none,opcode,op1,op2,op3)
         instruction.tail = tail
         instruction.label = label
-        self.labeledInstructions[label] = instruction
+        self.indexedInstructions[label.index] = instruction
         self.addInstruction(instruction)
         return(instruction)
         }
@@ -95,26 +95,16 @@ public class InstructionBuffer
         
     public func flattenLabels(atAddress: Address)
         {
-        var indexedInstructions = Dictionary<Int,Instruction>()
         for instruction in self.instructions
             {
             if instruction.hasLabelOperand
                 {
-                indexedInstructions[instruction.labelOperandIndex] = instruction
+                let targetIndex = instruction.labelOperandIndex
+                let targetInstruction = indexedInstructions[targetIndex]!
+                let instructionIndex = targetInstruction.index
+                let address = atAddress + Word(instructionIndex * MemoryLayout<Word>.size)
+                instruction.replaceLabel(withAddress: address)
                 }
-            }
-        var index = 0
-        for instruction in self.instructions
-            {
-            if let labelIndex = instruction.labelValue
-                {
-                let offset = atAddress + Word(index * MemoryLayout<Word>.size)
-                if let instruction = indexedInstructions[labelIndex.index]
-                    {
-                    instruction.replaceLabel(withAddress: offset)
-                    }
-                }
-            index += 4
             }
         }
         

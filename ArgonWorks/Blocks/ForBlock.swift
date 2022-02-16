@@ -35,7 +35,7 @@ public class ForBlock: Block
         
     internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let forBlock = ForBlock(inductionSlot: substitution.substitute(self.inductionSlot) as! LocalSlot, elements: substitution.substitute(self.elements))
+        let forBlock = ForBlock(inductionSlot: substitution.substitute(self.inductionSlot), elements: substitution.substitute(self.elements))
         for block in self.blocks
             {
             let newBlock = substitution.substitute(block)
@@ -68,6 +68,8 @@ public class ForBlock: Block
             block.initializeTypeConstraints(inContext: context)
             }
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
+        let iterable = ArgonModule.shared.iterable.withGenerics([self.inductionSlot.type])
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: iterable,origin: .block(self)))
         if let elementsType = self.elements.type as? TypeConstructor
             {
             if elementsType.generics.count > 0

@@ -801,10 +801,12 @@
 			children = (
 				BFD625012769F5E40089B901 /* Addressable.swift */,
 				BFEFA9D0276B562B00894140 /* ArrayPointer.swift */,
+				BFF1D93A27B5526900EE78EB /* BlockPointer.swift */,
 				BFC3835F279C41250091FB39 /* BucketPointer.swift */,
 				BFEFA9D8276BCC3200894140 /* ClassBasedPointer.swift */,
 				BFEFA9CC276B546F00894140 /* ClassPointer.swift */,
 				BF9685DA276D692C000C77CE /* CodeSegment.swift */,
+				BFD46FCA27A6732800330CF3 /* DictionaryPointer.swift */,
 				BFC1ECCC26CFFA9F009B7C34 /* DynamicLibrary.swift */,
 				BFEFA9CA276B533F00894140 /* EmptySegment.swift */,
 				BFC1ECC326CFFA9F009B7C34 /* Header.swift */,
@@ -827,14 +829,12 @@
 				BF570F19279ED2E90010DF39 /* TreeNodePointer.swift */,
 				BFEFA9BE276B529800894140 /* UInt16Pointer.swift */,
 				BFC1ECB526CFFA9F009B7C34 /* ValueHolder.swift */,
+				BFA7A9AA27AD815F00043BC2 /* ValuePromise.swift */,
+				BFB8533527AD1D4400C63B55 /* VectorPointer.swift */,
 				BFEFA9D6276B680600894140 /* VirtualMachine.swift */,
 				BFF6FE68276FFEDC00AD170F /* VMPayload.swift */,
 				BFC1ECC926CFFA9F009B7C34 /* Word.swift */,
 				BFEFA9C0276B52B400894140 /* WordPointer.swift */,
-				BFD46FCA27A6732800330CF3 /* DictionaryPointer.swift */,
-				BFB8533527AD1D4400C63B55 /* VectorPointer.swift */,
-				BFA7A9AA27AD815F00043BC2 /* ValuePromise.swift */,
-				BFF1D93A27B5526900EE78EB /* BlockPointer.swift */,
 			);
 			path = Execution;
 			sourceTree = "<group>";

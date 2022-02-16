@@ -30,17 +30,17 @@ public class Compiler
         self.reporter = reportingContext
         }
 
-    init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
-        {
-        Argon.resetStatics()
-        Argon.resetTypes()
-        TopModule.resetTopModule()
-        self.currentPass = nil
-        self.source = ""
-        self.tokenRenderer = tokenRenderer
-        self.reporter = reportingContext
-//        let cleanTokens = tokens.filter{!$0.isWhitespace}
-        }
+//    init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
+//        {
+//        Argon.resetStatics()
+//        Argon.resetTypes()
+//        TopModule.resetTopModule()
+//        self.currentPass = nil
+//        self.source = ""
+//        self.tokenRenderer = tokenRenderer
+//        self.reporter = reportingContext
+////        let cleanTokens = tokens.filter{!$0.isWhitespace}
+//        }
 
     public func cancelCompletion()
         {

@@ -571,7 +571,7 @@ public class ArgonModule: SystemModule
         self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol).slot("owningClass",self.classType)
         self.string.slot("count",self.integer).slot("block",self.block)
         self.tuple.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
-        self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer).slot("depth",self.integer).slot("balance",self.integer)
+        self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer).slot("height",self.integer)
         self.typeType.slot("name",self.string).slot("module",self.moduleType).slot("typeParameters",self.array.of(self.typeType)).slot("isSystemType",self.boolean)
         self.vector.slot("block",self.block).slot("blockCount",self.integer)
         self.lookupClass(label: "ClassE").slot("e1",self.integer).slot("e2",self.integer)

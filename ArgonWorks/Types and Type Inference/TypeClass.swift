@@ -167,6 +167,74 @@ public class TypeClass: TypeConstructor
 //            }
 //        }
         
+    private class ClassNode
+        {
+        internal static var classNodes = Dictionary<TypeClass,ClassNode>()
+        
+        internal static func classNode(forClass: TypeClass) -> ClassNode
+            {
+            if let node = self.classNodes[forClass]
+                {
+                return(node)
+                }
+            let node = ClassNode(class: forClass)
+            self.classNodes[forClass] = node
+            return(node)
+            }
+            
+        internal var adjacents: Array<ClassNode>
+            {
+            return(self.theClass.superclasses.map{ClassNode.classNode(forClass: $0)})
+            }
+            
+        internal let theClass: TypeClass
+        internal var number: Int = 0
+        internal var label: Int = 0
+        
+        init(class aClass: TypeClass)
+            {
+            self.theClass = aClass
+            }
+        }
+        
+    public func topologicalSort() -> TypeClasses
+        {
+        var nodes = Array<ClassNode>()
+        for type in self.allSupertypes
+            {
+            nodes.append(ClassNode.classNode(forClass: type))
+            }
+        var j = nodes.count + 1
+        var i = 0
+        for node in nodes
+            {
+            if node.number == 0
+                {
+                self.topSort(node,i: &i,j: &j)
+                }
+            }
+        return(nodes.sorted{$0.label < $1.label}.map{$0.theClass})
+        }
+        
+    private func topSort(_ node: ClassNode,i:inout Int,j:inout Int)
+        {
+        i = i + 1
+        node.number = i
+        for vertex in node.adjacents
+            {
+            if vertex.number == 0
+                {
+                self.topSort(vertex,i:&i,j: &j)
+                }
+            else if vertex.label == 0
+                {
+                fatalError("Circular class hierarchy")
+                }
+            j = j - 1
+            node.label = j
+            }
+        }
+        
     public override var displayString: String
         {
         var names = self.generics.map{$0.displayString}.joined(separator: ",")
@@ -310,6 +378,7 @@ public class TypeClass: TypeConstructor
     public var layoutSlots = Slots()
     public private(set) var hasBytes: Bool = false
     private var classLayoutOffsets = Dictionary<TypeClass,Int>()
+    public private(set) var slotIndexCache = Dictionary<Label,Int>()
     
     required init(label: Label,isSystem: Bool = false,generics: Types = [])
         {
@@ -402,11 +471,24 @@ public class TypeClass: TypeConstructor
 //        return(self)
 //        }
         
+    public func cacheIndices()
+        {
+        guard self.slotIndexCache.isEmpty else
+            {
+            return
+            }
+        for slot in self.allInstanceSlots
+            {
+            let index = self.offsetInObject(ofSlot: slot) / Argon.kWordSizeInBytesInt
+            self.slotIndexCache[slot.label] = index
+            }
+        }
+        
     public override func isEqual(_ object: Any?) -> Bool
         {
         if let second = object as? TypeClass
             {
-            return(self.fullName == second.fullName && self.generics == second.generics)
+            return(self.fullName == second.fullName && self.generics.count == second.generics.count && self.generics == second.generics)
             }
         return(super.isEqual(object))
         }
@@ -504,6 +586,7 @@ public class TypeClass: TypeConstructor
         if writeInnerHeader
             {
             let header = Header(word: 0)
+            header.tag = .header
             header.sizeInBytes = Word(self.instanceSizeInBytes)
             header.hasBytes = false
             header.isForwarded = false
