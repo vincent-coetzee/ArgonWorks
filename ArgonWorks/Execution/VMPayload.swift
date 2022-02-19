@@ -84,6 +84,8 @@ public struct VMPayload: ExecutionContext
 //            MemoryPointer.dumpMemory(atAddress: type.memoryAddress, count: 20)
             }
         self.argonTypes = array
+        print(array)
+        MemoryPointer.dumpMemory(atAddress: array, count: 50)
         }
         
     public mutating func installClientModule(_ module: Module)
@@ -140,6 +142,8 @@ public struct VMPayload: ExecutionContext
             fwrite(&allocated,MemoryLayout<Word>.size,1,fileStream)
             fwrite(&address,MemoryLayout<Word>.size,1,fileStream)
             }
+        count = 0xD00D_AAA
+        fwrite(&count,MemoryLayout<Word>.size,1,fileStream)
         var addressValue = self.argonTypes
         fwrite(&addressValue,MemoryLayout<Word>.size,1,fileStream)
         addressValue = self.clientModuleTypes
@@ -149,11 +153,19 @@ public struct VMPayload: ExecutionContext
         addressValue = self.mainMethod
         fwrite(&addressValue,MemoryLayout<Word>.size,1,fileStream)
         self.symbolRegistry.write(toStream: fileStream)
+        count = 0xD00D_BBB
+        fwrite(&count,MemoryLayout<Word>.size,1,fileStream)
         self.primitiveTable.write(toStream: fileStream)
+        count = 0xD00D_CCC
+        fwrite(&count,MemoryLayout<Word>.size,1,fileStream)
         for segment in segments
             {
             try segment.write(toStream: fileStream)
+            count = 0xDED_BED
+            fwrite(&count,MemoryLayout<Word>.size,1,fileStream)
             }
+        addressValue = 0xD00D_DDD
+        fwrite(&addressValue,MemoryLayout<Word>.size,1,fileStream)
         fflush(fileStream)
         fclose(fileStream)
         }

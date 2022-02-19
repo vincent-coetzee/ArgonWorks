@@ -243,7 +243,7 @@ public class TreeNodePointer: ClassBasedPointer
         
     private func rotateLeftRight() -> TreeNodePointer
         {
-        self.leftNodeAddress = self.leftNodePointer!.rotateRight().address
+        self.leftNodeAddress = self.leftNodePointer!.rotateLeft().address
         let n = self.rotateRight()
         n.height = max(n.leftNodePointer?.height ?? 0,n.rightNodePointer?.height ?? 0) + 1
         return(n)

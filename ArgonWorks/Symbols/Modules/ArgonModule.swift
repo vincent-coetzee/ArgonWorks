@@ -321,6 +321,42 @@ public class ArgonModule: SystemModule
         return(self.lookup(label: "EnumerationCaseInstance") as! Type)
         }
         
+    public var virtualMachine: TypeClass
+        {
+        return(self.lookup(label: "VirtualMachine") as! TypeClass)
+        }
+        
+    public var segment: TypeClass
+        {
+        return(self.lookup(label: "Segment") as! TypeClass)
+        }
+        
+    public var staticSegment: TypeClass
+        {
+        return(self.lookup(label: "StaticSegment") as! TypeClass)
+        }
+        
+    public var codeSegment: TypeClass
+        {
+        return(self.lookup(label: "CodeSegment") as! TypeClass)
+        }
+        
+    public var managedSegment: TypeClass
+        {
+        return(self.lookup(label: "ManagedSegment") as! TypeClass)
+        }
+        
+    public var stackSegment: TypeClass
+        {
+        return(self.lookup(label: "StackSegment") as! TypeClass)
+        }
+        
+    public var register: TypeClass
+        {
+        return(self.lookup(label: "Register") as! TypeClass)
+        }
+
+        
 //    private var systemClassInLoadingOrder = Classes()
     private let instanceNumber: Int
         
@@ -333,7 +369,7 @@ public class ArgonModule: SystemModule
     public func initialize()
         {
         self.initTypes()
-        self.initClasses()
+        self.initMetaclasses()
         self.initBaseMethods()
         self.initSlots()
         self.initVariables()
@@ -383,7 +419,7 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Class").flags([.kSystemTypeFlag]).superclass(self.typeType).mcode("c").setType(.class))
         self.addSystemClass(TypeClass(label: "Enumeration").flags([.kSystemTypeFlag,.kPrimitiveTypeFlag]).superclass(self.typeType).mcode("e").setType(.enumeration))
         self.addSystemClass(TypeClass(label: "EnumerationCase").flags([.kSystemTypeFlag]).superclass(self.object).mcode("q").setType(.enumerationCase))
-        self.addSystemClass(TypeClass(label: "Iterable").flags([.kSystemTypeFlag]).superclass(self.object).mcode("d"))
+        self.addSystemClass(TypeClass(label: "Iterable").flags([.kSystemTypeFlag]).superclass(self.object).mcode("d").setType(.iterable))
         self.addSystemClass(TypeClass(label: "Collection").flags([.kSystemTypeFlag,.kArcheTypeFlag]).superclass(self.object).superclass(self.iterable).mcode("f").setType(.collection))
         self.addSystemClass(TypeClass(label: "Array").flags([.kSystemTypeFlag,.kArrayTypeFlag,.kArcheTypeFlag]).superclass(self.collection).mcode("a").setType(.array))
         self.addSystemClass(TypeClass(label: "Magnitude").flags([.kValueTypeFlag,.kSystemTypeFlag]).superclass(self.object).setType(.magnitude))
@@ -423,6 +459,13 @@ public class ArgonModule: SystemModule
         self.addSystemClass(TypeClass(label: "Metaclass").flags([.kSystemTypeFlag]).superclass(self.classType).mcode("t").setType(.metaclass))
         self.addSystemClass(TypeClass(label: "InstructionBlock").flags([.kSystemTypeFlag]).superclass(self.object).mcode("i").setType(.instructionBlock))
         self.addSystemClass(TypeClass(label: "EnumerationCaseInstance").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
+        self.addSystemClass(TypeClass(label: "VirtualMachine").flags([.kSystemTypeFlag]).superclass(self.object))
+        self.addSystemClass(TypeClass(label: "Segment").flags([.kSystemTypeFlag]).superclass(self.object))
+        self.addSystemClass(TypeClass(label: "ManagedSegment").flags([.kSystemTypeFlag]).superclass(self.lookupClass(label: "Segment")))
+        self.addSystemClass(TypeClass(label: "StackSegment").flags([.kSystemTypeFlag]).superclass(self.lookupClass(label: "Segment")))
+        self.addSystemClass(TypeClass(label: "StaticSegment").flags([.kSystemTypeFlag]).superclass(self.lookupClass(label: "Segment")))
+        self.addSystemClass(TypeClass(label: "CodeSegment").flags([.kSystemTypeFlag]).superclass(self.lookupClass(label: "Segment")))
+        self.addSystemClass(TypeClass(label: "Register").flags([.kSystemTypeFlag]).superclass(self.object))
         let a = self.addSystemClass(TypeClass(label: "ClassA").flags([.kSystemTypeFlag]).superclass(self.object).setType(.enumerationCaseInstance))
         let b = self.addSystemClass(TypeClass(label: "ClassB").flags([.kSystemTypeFlag]).superclass(a).setType(.enumerationCaseInstance))
         let c = self.addSystemClass(TypeClass(label: "ClassC").flags([.kSystemTypeFlag]).superclass(a).setType(.enumerationCaseInstance))
@@ -459,52 +502,17 @@ public class ArgonModule: SystemModule
         self.addSymbol(GlobalSlot(label:"$ethernetAddresses",type:self.array.of(self.string)))
         }
         
-    private func initMetatypes(forType: Type)
+    private func initMetaclasses()
         {
-        if let metaType = forType as? TypeMetaclass
+        let list = self.classes
+        for aClass in list
             {
-            metaType.type = self.metaclassType
-            return
+            let metaclass = aClass.makeMetaclass()
+            self.addSymbol(metaclass)
             }
-        guard let typeClass = forType as? TypeClass else
+        for aClass in list
             {
-            return
-            }
-        guard typeClass.type == nil else
-            {
-            return
-            }
-//        for aClass in typeClass.superclasses
-//            {
-//            self.initMetatypes(forType: aClass)
-//            }
-        if let aClass = self.lookup(label: typeClass.label + "Class") as? TypeMetaclass
-            {
-            typeClass.type = aClass
-            return
-            }
-        else
-            {
-            print("CREATING METACLASS FOR \(forType.label)")
-            for aClass in typeClass.generics
-                {
-                self.initMetatypes(forType: aClass)
-                }
-            let typeMetaclass = TypeMetaclass(label: typeClass.label + "Class",isSystem: typeClass.isSystemType,generics: typeClass.generics.map{$0.type})
-            typeMetaclass.flags([.kSystemTypeFlag,.kMetaclassFlag])
-            self.addSystemClass(typeMetaclass)
-            typeClass.type = typeMetaclass
-            typeClass.type.type = self.metaclassType
-            for type in typeClass.subtypes
-                {
-                self.initMetatypes(forType: type)
-                if type.type == ArgonModule.shared.object
-                    {
-                    print("halt")
-                    }
-                typeMetaclass.addSubtype(type.type)
-                (type.type as! TypeClass).addSupertype(typeMetaclass)
-                }
+            aClass.configureMetaclass()
             }
         }
         
@@ -518,12 +526,6 @@ public class ArgonModule: SystemModule
             }
         }
         
-    private func initClasses()
-        {
-        self.metaclassType.type = self.metaclassType
-        self.initMetatypes(forType: self.object)
-        }
-        
     ///
     /// For some types their argonHash will change from when they are first created without slots
     /// until they have their slots added because slots form part of the hash calculation.
@@ -533,8 +535,8 @@ public class ArgonModule: SystemModule
     private func postProcessTypes()
         {
         self.iterable.typeVar("ELEMENT")
-        self.dictionary.typeVar("KEY").typeVar("VALUE")
-        self.listNode.typeVar("ELEMENT")
+        self.dictionary.typeVar("KEY")
+        self.dictionary.typeVar("VALUE")
         self.pointer.typeVar("ELEMENT")
 //        assert(Argon.typeAtKey(self.object.argonHash).isNotNil)
         }
@@ -562,19 +564,23 @@ public class ArgonModule: SystemModule
 //        self.instruction.slot("opcode",self.opcode).slot("offset",self.integer).slot("operand1",self.operand).slot("operand2",self.operand).slot("result",self.operand)
         self.instructionBlock.slot("count",self.integer).slot("size",self.integer)
         self.invokable.slot("name",self.string).slot("parameters",self.array.of(self.parameter)).slot("resultType",self.typeType).slot("localSlots",self.array.of(self.slot)).slot("module",self.moduleType)
-        self.listNode.slot("element",self.object).slot("next",self.listNode).slot("previous",self.listNode)
+        let element = self.list.typeVar("ELEMENT")
+        self.list.slot("firstNode",self.listNode).slot("lastNode",self.listNode)
+        self.listNode.typeVar(element)
+        self.listNode.slot("element",element).slot("nextNode",self.listNode).slot("previousNode",self.listNode)
         self.methodInstance.slot("instructionCount",self.integer).slot("instructionBlock",self.instructionBlock).slot("instructionAddress",self.address)
         self.moduleType.slot("isSystemModule",self.boolean).slot("symbols",self.typeType).slot("isArgonModule",self.boolean).slot("isTopModule",self.boolean).slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
         self.object.slot("hash",self.integer)
         self.parameter.slot("tag",self.string).slot("retag",self.string).slot("tagIsShown",self.boolean).slot("isVariadic",self.boolean)
         self.list.slot("first",self.listNode).slot("last",self.listNode)
-        self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol).slot("owningClass",self.classType)
+        self.slot.slot("name",self.string).slot("type",self.typeType).slot("offset",self.integer).slot("typeCode",self.integer).slot("container",self.typeType).slot("slotType",self.slotType).slot("symbol",self.symbol).slot("owningClass",self.classType).slot("vtIndex",self.integer)
         self.string.slot("count",self.integer).slot("block",self.block)
         self.tuple.slot("slots",self.array.of(self.slot)).slot("instanceSizeInBytes",self.integer)
         self.treeNode.slot("key",self.string).slot("value",self.object).slot("leftNode",self.treeNode).slot("rightNode",self.treeNode).slot("payload1",self.integer).slot("payload2",self.integer).slot("payload3",self.integer).slot("height",self.integer)
         self.typeType.slot("name",self.string).slot("module",self.moduleType).slot("typeParameters",self.array.of(self.typeType)).slot("isSystemType",self.boolean)
-        self.vector.slot("block",self.block).slot("blockCount",self.integer)
-        self.lookupClass(label: "ClassE").slot("e1",self.integer).slot("e2",self.integer)
+        self.vector.slot("block",self.block)
+        self.virtualMachine.slot("managedSegment",self.managedSegment).slot("staticSegment",self.staticSegment).slot("codeSegment",self.codeSegment).slot("stackSegment",self.stackSegment).slot("registers",self.array.of(self.register))
+//        self.lookupClass(label: "ClassE").slot("e1",self.integer).slot("e2",self.integer)
         self.lookupClass(label: "ClassB").slot("b1",self.integer).slot("b2",self.integer)
         self.lookupClass(label: "ClassC").slot("c1",self.integer).slot("c2",self.integer)
         self.lookupClass(label: "ClassD").slot("d1",self.integer).slot("d2",self.integer)

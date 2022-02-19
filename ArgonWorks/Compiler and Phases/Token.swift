@@ -213,6 +213,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case other
         case cast = "to"
         case backslash = "\\"
+        case tester = "??"
+        case ternary = "?"
 
         public var isOperator: Bool
             {
@@ -1280,6 +1282,28 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .symbol(let value,_):
                 return(value == .colon)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isTester:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .tester)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isTernary:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .ternary)
             default:
                 return(false)
             }

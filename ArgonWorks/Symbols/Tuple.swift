@@ -109,7 +109,8 @@ public enum TupleElement
             case .expression(let expression):
                 return(.expression(substitution.substitute(expression)))
             case .tuple(let tuple):
-                return(.tuple(substitution.substitute(tuple)))
+//                return(.tuple(substitution.substitute(tuple)))
+                fatalError()
             case .type(let type):
                 return(.type(substitution.substitute(type)))
             }
@@ -454,7 +455,8 @@ public class Tuple: NSObject,Collection,VisitorReceiver,NSCoding
         
     internal func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        Tuple(elements: self.elements.map{substitution.substitute($0)}) as! Self
+//        Tuple(elements: self.elements.map{substitution.substitute($0)}) as! Self
+        fatalError()
         }
         
     public func initializeType(inContext context: TypeContext)

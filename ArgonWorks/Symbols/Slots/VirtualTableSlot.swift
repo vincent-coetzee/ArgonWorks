@@ -39,6 +39,7 @@ public class VirtualTable
     public func layoutInMemory()
         {
         var address = self.memoryAddress
+        address += Argon.kWordSizeInBytesWord
         for entry in self.entries
             {
             SetWordAtAddress(Word(integer: entry.offset),address)
@@ -51,9 +52,23 @@ public class VirtualTableSlot: Slot
     {
     public var virtualTable: VirtualTable!
     
+    public override var cloned:Self
+        {
+        let clone = super.cloned 
+        clone.virtualTable = self.virtualTable
+        return(clone)
+        }
+        
     public override func layoutInMemory(using allocator: AddressAllocator)
         {
         super.layoutInMemory(using: allocator)
         self.virtualTable.layoutInMemory()
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let copy = super.substitute(from: substitution)
+        copy.virtualTable = self.virtualTable
+        return(copy)
         }
     }

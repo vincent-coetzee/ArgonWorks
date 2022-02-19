@@ -132,3 +132,5 @@ extension String
         return(self.prefix(1).lowercased() + self.dropFirst())
         }
     }
+
+public typealias Strings = Array<String>

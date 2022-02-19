@@ -21,7 +21,8 @@ public class TypeEnumeration: TypeConstructor
             {
             names = "<" + names + ">"
             }
-        return("TypeEnumeration(\(self.label)\(names))")
+        let caseStrings = self.cases.map{$0.displayString}.joined(separator: ",")
+        return("TypeEnumeration(\(self.label)\(names),\(caseStrings))")
         }
         
     public override var instanceSizeInBytes: Int
@@ -166,6 +167,41 @@ public class TypeEnumeration: TypeConstructor
                 }
             }
         return(nil)
+        }
+        
+    public override func isEquivalent(_ type: Type) -> Bool
+        {
+        if self.label != type.label
+            {
+            return(false)
+            }
+        if let rhs = type as? TypeEnumeration
+            {
+            if self.cases.count != rhs.cases.count
+                {
+                return(false)
+                }
+            for (left,right) in zip(self.cases,rhs.cases)
+                {
+                if !left.isEquivalent(right)
+                    {
+                    return(false)
+                    }
+                }
+            if self.generics.count != rhs.generics.count
+                {
+                return(false)
+                }
+            for (left,right) in zip(self.generics,rhs.generics)
+                {
+                if !left.isEquivalent(right)
+                    {
+                    return(false)
+                    }
+                }
+            return(true)
+            }
+        return(false)
         }
         
     public override func isEqual(_ object: Any?) -> Bool

@@ -24,6 +24,7 @@ public class Instruction
         {
         let opString = "\(self.opcode)"
         var modeString = "\(self.mode)"
+        let labelString = self.addressLabel.isNil ? "            " : "\(String(format: "%08llX:",self.addressLabel!))"
         var strings = Array<String>()
         if self.operand1.isNotNone
             {
@@ -46,7 +47,7 @@ public class Instruction
             {
             string += " ; \(tail!)"
             }
-        return("\(opString) \(modeString) \(string)")
+        return("\(labelString)\(opString) \(modeString) \(string)")
         }
         
     public var sizeInWords: Int
@@ -151,6 +152,8 @@ public class Instruction
         case LSH = 62
         case RSH = 63
         case DECW = 64
+        case RAW = 65
+        case MKENUM = 66
         }
         
     public enum Register: Word
@@ -201,6 +204,11 @@ public class Instruction
         
     public enum Operand
         {
+        public static func integer(_ integer: Int) -> Operand
+            {
+            .integer(Argon.Integer(integer))
+            }
+            
         public static func ==(lhs:Operand,rhs:OperandKind) -> Bool
             {
             switch(lhs)
@@ -458,6 +466,7 @@ public class Instruction
     public var operand2: Operand = .none
     public var operand3: Operand = .none
     public var tail: String?
+    public var addressLabel: Address?
     
     public init(wordPointer: WordPointer)
         {

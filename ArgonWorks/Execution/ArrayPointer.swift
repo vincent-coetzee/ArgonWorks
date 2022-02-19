@@ -70,12 +70,12 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
         {
         get
             {
-            self.address(atSlot: "count")
+            self.address(atSlot: "block")
             }
         set
             {
-            self.setAddress(newValue,atSlot: "count")
-            let offset = newValue! + Word(ArgonModule.shared.block.instanceSizeInBytes)
+            self.setAddress(newValue,atSlot: "block")
+            let offset = newValue!.cleanAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
             self.elementPointer = WordPointer(bitPattern: offset)
             }
         }

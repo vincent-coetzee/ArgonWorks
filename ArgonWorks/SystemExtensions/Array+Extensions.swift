@@ -29,4 +29,9 @@ extension Array
         newArray.append(element)
         return(newArray)
         }
+        
+    public var isNotEmpty: Bool
+        {
+        !self.isEmpty
+        }
     }

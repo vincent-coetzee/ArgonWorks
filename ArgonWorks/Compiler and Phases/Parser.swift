@@ -676,7 +676,7 @@ public class Parser: CompilerPass
             {
             for methodInstance in instances
                 {
-                if methodInstance.typeSignature == instance.typeSignature
+                if methodInstance.methodSignature == instance.methodSignature
                     {
                     instance.appendIssue(at: location,message: "There is already a operator instance with this signature defined.",isWarning: true)
                     }
@@ -708,22 +708,25 @@ public class Parser: CompilerPass
             }
         self.tokenRenderer.setKind(.method,ofToken: self.token)
         let name = try self.parseLabel()
+        let instance = PrimitiveMethodInstance(label: name)
+        self.addSymbol(instance)
+        self.pushContext(instance)
 //        let existingMethod = self.currentScope.lookup(label: name) as? Method
         var isGenericMethod = false
         var types: Types = []
         if self.token.isLeftBrocket
             {
             types = try self.parseMethodGenericParameters()
+            instance.addTemporaries(types)
             isGenericMethod = true
             }
-        let list = try self.parseParameters()
-        var returnType: Type = ArgonModule.shared.void
+        instance.parameters = try self.parseParameters()
+        instance.returnType = ArgonModule.shared.void
         if self.token.isRightArrow
             {
             try self.nextToken()
-            returnType = try self.parseType(&issues)
+            instance.returnType = try self.parseType(&issues)
             }
-        let instance = PrimitiveMethodInstance(label: name,parameters: list,returnType: returnType)
         instance.primitiveIndex = index
         instance.isGenericMethod = isGenericMethod
         instance.addDeclaration(location)
@@ -731,13 +734,13 @@ public class Parser: CompilerPass
             {
             for methodInstance in instances
                 {
-                if methodInstance.typeSignature == instance.typeSignature
+                if methodInstance.methodSignature == instance.methodSignature
                     {
                     instance.appendIssue(at: location,message: "There is already a primitive instance with this signature defined.",isWarning: true)
                     }
                 }
             }
-        self.currentScope.addSymbol(instance)
+        self.popContext()
         instance.appendIssues(issues)
         }
         
@@ -870,12 +873,12 @@ public class Parser: CompilerPass
         type.appendIssues(issues)
 //        self.stopClip(into:enumeration)
         let parms = [Parameter(label: "symbol", type: ArgonModule.shared.symbol, isVisible: false, isVariadic: false)]
-        let methodInstance = EnumerationCaseMethodInstance(label: "_\(label)",parameters: parms,returnType: type)
+        let methodLabel = label.lowercasingFirstLetter
+        let methodInstance = InlineMethodInstance(label: methodLabel,parameters: parms,returnType: type).makeEnumerationMethod()
         methodInstance.addDeclaration(location)
-        let rawValueInstance = PrimitiveMethodInstance(label: "rawValue")
-        rawValueInstance.primitiveIndex = 200
-        rawValueInstance.addParameterSlot(Parameter(label: "enumeration",type: type))
-        rawValueInstance.returnType = ArgonModule.shared.symbol
+        let rawParms = [Parameter(label: "enum", relabel: nil, type: type, isVisible: false, isVariadic: false)]
+        let rawValueInstance = InlineMethodInstance(label: "rawValue",parameters: rawParms,returnType: ArgonModule.shared.symbol).rawValueMethod()
+        rawValueInstance.addDeclaration(location)
         self.addSymbol(rawValueInstance)
 //        let method = Method(label: "_\(label)")
 //        method.addDeclaration(location)
@@ -1248,6 +1251,8 @@ public class Parser: CompilerPass
         if !classExists
             {
             self.addSymbol(aClass!)
+            aClass!.makeMetaclass()
+            aClass!.configureMetaclass()
             }
         for parameter in typeParameters
             {
@@ -1315,6 +1320,8 @@ public class Parser: CompilerPass
                             }
                         else
                             {
+                            // these are class slots but class slots are actually instance slots on
+                            // the metaclass ( i.e. the class of this class ).
                             someType.addInstanceSlot(slot)
                             }
                         }
@@ -1329,8 +1336,10 @@ public class Parser: CompilerPass
                     }
                 }
             }
-        aClass!.initMetatype(inModule: aClass!.module)
+
+        self.addSymbol(aClass!.metaclass)
         aClass!.layoutObjectSlots()
+        aClass!.metaclass.layoutObjectSlots()
         return(aClass!)
         }
         
@@ -1529,6 +1538,7 @@ public class Parser: CompilerPass
         if type.isTypeAlias
             {
             self.tokenRenderer.setKind(.typeAlias,ofToken: identifierToken)
+            return(self.currentScope.moduleScope!.matchingTypeOrType(type))
             return(type)
             }
         else if type.isTypeVariable
@@ -1546,7 +1556,7 @@ public class Parser: CompilerPass
         if type.isEnumeration
             {
             self.tokenRenderer.setKind(.enumeration,ofToken: identifierToken)
-            return(type)
+            return(self.currentScope.moduleScope!.matchingTypeOrType(type))
             }
         if type.isClass
             {
@@ -1564,7 +1574,12 @@ public class Parser: CompilerPass
                 newType.setModule(self.enclosingModule)
                 type = newType
                 }
+            type = self.currentScope.moduleScope!.matchingTypeOrType(type)
             type.addReference(location)
+            if type.isSystemType
+                {
+                self.currentScope.moduleScope!.createSystemMethods(for: type)
+                }
             return(type)
             }
         else
@@ -1810,7 +1825,7 @@ public class Parser: CompilerPass
             instances.removeAll(where: {$0 === instance})
             for methodInstance in instances
                 {
-                if methodInstance.typeSignature == instance.typeSignature
+                if methodInstance.methodSignature == instance.methodSignature
                     {
                     if methodInstance.isAutoGenerated
                         {
@@ -2181,7 +2196,7 @@ public class Parser: CompilerPass
     private func parseIndexedExpression() throws -> Expression
         {
         let location = self.token.location
-        var lhs = try self.parsePrimary()
+        var lhs = try self.parseTernaryExpression()
         lhs.addDeclaration(location)
         while self.token.isLeftBracket
             {
@@ -2193,6 +2208,25 @@ public class Parser: CompilerPass
                 }
             try self.nextToken()
             lhs = ArrayAccessExpression(array: lhs,index: rhs)
+            }
+        return(lhs)
+        }
+        
+    private func parseTernaryExpression() throws -> Expression
+        {
+        let location = self.token.location
+        var lhs = try self.parsePrimaryExpression()
+        lhs.addDeclaration(location)
+        if self.token.isTernary
+            {
+            try self.nextToken()
+            let mhs = try self.parseExpression()
+            if self.token.isColon
+                {
+                try self.nextToken()
+                let rhs = try self.parseExpression()
+                lhs = TernaryExpression(lhs: lhs,mhs: mhs,rhs: rhs)
+                }
             }
         return(lhs)
         }
@@ -2247,7 +2281,7 @@ public class Parser: CompilerPass
         return(LiteralExpression(.array(Argon.addStatic(StaticArray(elements)))).appendIssues(issues))
         }
         
-    private func parsePrimary() throws -> Expression
+    private func parsePrimaryExpression() throws -> Expression
         {
         if self.token.isMake
             {
@@ -2570,6 +2604,10 @@ public class Parser: CompilerPass
         let location = self.token.location
         let nameToken = self.token
         let name = try self.parseName()
+        if name.last == "name"
+            {
+            print("HALT")
+            }
         if self.token.isLeftPar
             {
             if let methods = self.currentScope.lookupMethodInstances(name: name)
@@ -2678,16 +2716,16 @@ public class Parser: CompilerPass
                     if !someTypes.isEmpty
                         {
                         let newType = type.withGenerics(someTypes)
-                        return(SymbolTerm(type: newType))
+                        return(LiteralExpression(.class(newType as! TypeClass)))
                         }
-                    return(SymbolTerm(type: type))
+                    return(LiteralExpression(.class(type as! TypeClass)))
                     }
                 else if type.isEnumeration
                     {
                     var issues = CompilerIssues()
                     let someTypes = try self.parseTypeArguments(&issues)
                     let newType = type.withGenerics(someTypes)
-                    return(SymbolTerm(type: newType))
+                    return(LiteralExpression(.enumeration(newType as! TypeEnumeration)))
                     }
                 else
                     {
@@ -2701,11 +2739,11 @@ public class Parser: CompilerPass
                 let type = types.first!
                 if type.isClass
                     {
-                    return(SymbolTerm(type: type))
+                    return(LiteralExpression(.class(type as! TypeClass)))
                     }
                 else if type.isEnumeration
                     {
-                    return(SymbolTerm(type: type))
+                    return(LiteralExpression(.enumeration(type as! TypeEnumeration)))
                     }
                 else
                     {
@@ -2722,7 +2760,7 @@ public class Parser: CompilerPass
             ///
             if let symbol = aSymbol as? Module
                 {
-                let term = SymbolTerm(module: symbol)
+                let term = LiteralExpression(.module(symbol))
                 term.addDeclaration(location)
                 return(term)
                 }
@@ -2731,7 +2769,7 @@ public class Parser: CompilerPass
             ///
             else if let symbol = aSymbol as? Constant
                 {
-                return(SymbolTerm(constant: symbol))
+                return(LiteralExpression(.constant(symbol)))
                 }
             ///
             /// Or a slot, Parameter or Closure containing Slot

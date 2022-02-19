@@ -162,6 +162,7 @@ public class ClassBasedPointer
     internal let someClass: TypeClass
     internal let wordPointer: WordPointer
     private let header: Header
+    private var indexCache: Dictionary<Label,Int> = [:]
     
     convenience init(address: Address,type: Type)
         {
@@ -174,7 +175,7 @@ public class ClassBasedPointer
         self.someAddress = address.cleanAddress
         self.wordPointer = WordPointer(bitPattern: address.cleanAddress)
         self.header = Header(atAddress: address.cleanAddress)
-        self.someClass.cacheIndices()
+        self.indexCache = self.someClass.slotIndexCache
         }
         
     public func setClass(_ type: Type)
@@ -197,12 +198,12 @@ public class ClassBasedPointer
         
     public func integer(atSlot: String) -> Int
         {
-        return(Int(bitPattern: self.wordPointer[self.index(ofSlot: atSlot)]))
+        return(Int(bitPattern: self.wordPointer[self.indexCache[atSlot]!]))
         }
         
     public func setInteger(_ integer: Int,atSlot: Label)
         {
-        self.wordPointer[self.index(ofSlot: atSlot)] = Word(integer: integer)
+        self.wordPointer[self.indexCache[atSlot]!] = Word(integer: integer)
         }
         
     public func integer(atIndex: Int) -> Int
@@ -217,22 +218,22 @@ public class ClassBasedPointer
         
     public func boolean(atSlot: String) -> Bool
         {
-        return((self.wordPointer[self.index(ofSlot: atSlot)] & 1) == 1)
+        return((self.wordPointer[self.indexCache[atSlot]!] & 1) == 1)
         }
         
     public func setBoolean(_ boolean: Bool,atSlot: Label)
         {
-        self.wordPointer[self.index(ofSlot: atSlot)] = Word(boolean: boolean)
+        self.wordPointer[self.indexCache[atSlot]!] = Word(boolean: boolean)
         }
         
     public func word(atSlot: String) -> Word
         {
-        return(self.wordPointer[self.index(ofSlot: atSlot)])
+        return(self.wordPointer[self.indexCache[atSlot]!])
         }
         
     public func setWord(_ word: Word,atSlot: Label)
         {
-        self.wordPointer[self.index(ofSlot: atSlot)] = word
+        self.wordPointer[self.indexCache[atSlot]!] = word
         }
         
     public func word(atIndex: Int) -> Word
@@ -247,7 +248,7 @@ public class ClassBasedPointer
         
     public func address(atSlot: String) -> Address?
         {
-        let index = self.index(ofSlot: atSlot)
+        let index = self.indexCache[atSlot]!
         return(self.wordPointer[index].isNull ? nil : self.wordPointer[index].cleanAddress)
         }
         
@@ -258,7 +259,7 @@ public class ClassBasedPointer
         
     public func setAddress(_ address: Address?,atSlot: Label)
         {
-        let index = self.index(ofSlot: atSlot)
+        let index = self.indexCache[atSlot]!
         if address.isNotNil && address! == 0
             {
             print("halt")

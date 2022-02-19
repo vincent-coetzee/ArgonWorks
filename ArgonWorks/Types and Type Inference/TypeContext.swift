@@ -22,7 +22,8 @@ public class TypeContext
         public weak var typeContext: TypeContext?
         private var typeVariableIndex = 0
         public var supressWarnings = false
-    
+        public var symbols = Dictionary<Int,Symbol>()
+        
         private var typeVariables = Dictionary<Int,Type>()
         
         init(typeContext: TypeContext?)
@@ -35,6 +36,7 @@ public class TypeContext
             self.typeVariables = substitution.typeVariables
             self.typeContext = substitution.typeContext
             self.typeVariableIndex = substitution.typeVariableIndex
+            self.symbols = substitution.symbols
             }
             
         public func freshTypeVariable(forTypeVariable old: Type) -> TypeVariable
@@ -60,13 +62,6 @@ public class TypeContext
             
         public func freshTypeVariable(named: String) -> TypeVariable
             {
-            for variable in self.typeVariables.values
-                {
-                if variable.label == named
-                    {
-                    return(variable as! TypeVariable)
-                    }
-                }
             let variable = TypeVariable(label: named)
             variable.id = self.typeVariableIndex
             self.typeVariableIndex += 1
@@ -146,22 +141,22 @@ public class TypeContext
             return(new)
             }
             
-        public func substitute(_ element: TupleElement) -> TupleElement
-            {
-            switch(element)
-                {
-                case .literal(let literal):
-                    return(.literal(self.substitute(literal)))
-                case .slot(let slot):
-                    return(.slot(self.substitute(slot)))
-                case .tuple(let tuple):
-                    return(.tuple(self.substitute(tuple)))
-                case .expression(let expression):
-                    return(.expression(self.substitute(expression)))
-                case .type(let type):
-                    return(.type(self.substitute(type)))
-                }
-            }
+//        public func substitute(_ element: TupleElement) -> TupleElement
+//            {
+//            switch(element)
+//                {
+//                case .literal(let literal):
+//                    return(.literal(self.substitute(literal)))
+//                case .slot(let slot):
+//                    return(.slot(self.substitute(slot)))
+//                case .tuple(let tuple):
+//                    return(.tuple(self.substitute(tuple)))
+//                case .expression(let expression):
+//                    return(.expression(self.substitute(expression)))
+//                case .type(let type):
+//                    return(.type(self.substitute(type)))
+//                }
+//            }
             
         public func substitute(_ parameter: Parameter) -> Parameter
             {
@@ -179,9 +174,18 @@ public class TypeContext
                 return(type)
 //                return(self.typeContext!.objectType)
                 }
+            if let symbol = self.symbols[type.argonHash] as? Type
+                {
+                return(symbol)
+                }
             if let typeClass = type as? TypeMetaclass
                 {
-                let aType = TypeMetaclass(label: typeClass.label,generics: typeClass.generics.map{self.substitute($0)})
+                if typeClass.generics.isEmpty
+                    {
+                    return(typeClass)
+                    }
+                let aType = typeClass.substitute(substitution: self)
+                self.symbols[typeClass.argonHash] = aType
                 return(aType)
                 }
             if let typeClass = type as? TypeClass
@@ -190,15 +194,14 @@ public class TypeContext
                     {
                     return(typeClass)
                     }
-                let aType = TypeClass(label: typeClass.label,isSystem: true,generics: typeClass.generics.map{self.substitute($0)})
-                aType.layoutSlots = typeClass.layoutSlots.map{self.substitute($0)}
-                aType.instanceSlots = typeClass.instanceSlots.map{self.substitute($0)}
-                aType.setModule(typeClass.module)
+                let aType = typeClass.substitute(substitution: self)
+                self.symbols[aType.argonHash] = aType
                 return(aType)
                 }
             if let typeEnumeration = type as? TypeEnumeration
                 {
                 let anEnum = TypeEnumeration(label: typeEnumeration.label,generics: typeEnumeration.generics.map{self.substitute($0)})
+                self.symbols[typeEnumeration.argonHash] = anEnum
                 return(anEnum)
                 }
             if let application = type as? TypeApplication
@@ -221,40 +224,55 @@ public class TypeContext
             literal.substitute(from: self)
             }
             
-        public func substitute(_ tuple: Tuple) -> Tuple
-            {
-            assert(!tuple.isEmpty)
-            let newTuple = Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
-            assert(!newTuple.isEmpty)
-            return(newTuple)
-            }
+//        public func substitute(_ tuple: Tuple) -> Tuple
+//            {
+//            assert(!tuple.isEmpty)
+//            let newTuple = Tuple(elements: tuple.elements.map{$0.substitute(from: self)})
+//            assert(!newTuple.isEmpty)
+//            return(newTuple)
+//            }
             
         public func substitute(_ symbol: Symbol) -> Symbol
             {
+            if let newSymbol = self.symbols[symbol.argonHash]
+                {
+                return(newSymbol)
+                }
             let newSymbol = symbol.substitute(from: self)
             newSymbol.setMemoryAddress(symbol.memoryAddress)
             newSymbol.wasMemoryLayoutDone = symbol.wasMemoryLayoutDone
             newSymbol.wasSlotLayoutDone = symbol.wasSlotLayoutDone
             newSymbol.wasAddressAllocationDone = symbol.wasAddressAllocationDone
             newSymbol.type = symbol.type.isNil ? nil : self.substitute(symbol.type)
+            self.symbols[symbol.argonHash] = newSymbol
             return(newSymbol)
             }
             
         public func substitute(_ slot: Slot) -> Slot
             {
+            if let newSymbol = self.symbols[slot.argonHash] as? Slot
+                {
+                return(newSymbol)
+                }
             let newSlot = slot.substitute(from: self)
             newSlot.owningClass = slot.owningClass
             newSlot.type = self.substitute(slot.type)
             newSlot.offset = slot.offset
+            self.symbols[slot.argonHash] = newSlot
             return(newSlot)
             }
             
         public func substitute(_ slot: LocalSlot) -> LocalSlot
             {
+            if let newSymbol = self.symbols[slot.argonHash] as? LocalSlot
+                {
+                return(newSymbol)
+                }
             let newSlot = slot.substitute(from: self)
             newSlot.owningClass = slot.owningClass
             newSlot.type = self.substitute(slot.type)
             newSlot.offset = slot.offset
+            self.symbols[slot.argonHash] = newSlot
             return(newSlot)
             }
             
@@ -284,7 +302,12 @@ public class TypeContext
             
         public func substitute(_ container: ContainerSymbol) -> ContainerSymbol
             {
+            if let newSymbol = self.symbols[container.argonHash] as? ContainerSymbol
+                {
+                return(newSymbol)
+                }
             let newModule = container.substitute(from: self)
+            self.symbols[container.argonHash] = newModule
             for symbol in container.symbols
                 {
                 let newSymbol = self.substitute(symbol)
@@ -301,6 +324,10 @@ public class TypeContext
             
         public func substitute(_ methodInstance: MethodInstance) -> MethodInstance
             {
+            if let symbol = self.symbols[methodInstance.argonHash] as? MethodInstance
+                {
+                return(symbol)
+                }
             let newReturnType = self.substitute(methodInstance.returnType as! Type)
             let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
             let newInstance = methodInstance.substitute(from: self)
@@ -310,6 +337,7 @@ public class TypeContext
             newInstance.parameters = newParameters
             newInstance.returnType = newReturnType
             newInstance.setMemoryAddress(methodInstance.memoryAddress)
+            self.symbols[methodInstance.argonHash] = newInstance
             return(newInstance)
             }
             
@@ -562,7 +590,7 @@ public class TypeContext
         
     internal typealias Environment = Dictionary<Label,Type>
     
-    private static let initialSubstitution = Substitution(typeContext: nil)
+    public static let initialSubstitution = Substitution(typeContext: nil)
     
     public static func freshTypeVariable() -> TypeVariable
         {

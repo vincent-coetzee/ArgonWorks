@@ -176,7 +176,11 @@ public class MethodInvocationExpression: Expression
 //                context.append(TypeConstraint(left: argument.value.type,right: parameter.type,origin: .expression(self)))
 //                }
 //            }
-        if let first = self.methodInstances.first
+        if let method = self.methodInstance
+            {
+            context.append(TypeConstraint(left: self.type,right: method.returnType,origin: .expression(self)))
+            }
+        else if let first = self.methodInstances.first
             {
             context.append(TypeConstraint(left: self.type,right: first.returnType,origin: .expression(self)))
             }
@@ -291,7 +295,7 @@ public class MethodInvocationExpression: Expression
                 generator.payload.symbolRegistry.dump()
                 buffer.add(.SEND,.integer(Argon.Integer(labelSymbol)),.register(.RR),tail: label)
                 }
-            buffer.add(.POPN,.integer(Argon.Integer(self.arguments.count * Argon.kArgumentSizeInBytes)))
+            buffer.add(.POPN,.integer(Argon.Integer(self.arguments.count * Argon.kWordSizeInBytesInt)))
             self._place = .register(.RR)
             }
         }

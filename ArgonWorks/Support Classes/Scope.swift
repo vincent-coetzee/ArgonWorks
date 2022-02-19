@@ -127,4 +127,9 @@ extension Scope
             }
         return(nil)
         }
+        
+    public func hasMethod(withSignature signature: MethodSignature) -> Bool
+        {
+        self.methodInstanceSet(withLabel: signature.label).instancesMatching(signature).isNotEmpty
+        }
     }

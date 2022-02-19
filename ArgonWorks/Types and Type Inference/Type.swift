@@ -17,14 +17,37 @@ public class Type: Symbol,Displayable,UserDisplayable
 
     public override var argonHash: Int
         {
-        var aHash = super.argonHash
-        aHash = aHash << 13 ^ Int(self._flags.rawValue)
-        return(Int(bitPattern: Word(bitPattern: aHash) & ~Argon.kTagMask))
+        self.displayString.polynomialRollingHash
         }
         
     public var slotCount: Int
         {
         0
+        }
+        
+    public var isSetClass: Bool
+        {
+        false
+        }
+        
+    public var isArrayClass: Bool
+        {
+        false
+        }
+        
+    public var isListClass: Bool
+        {
+        false
+        }
+        
+    public var isDictionaryClass: Bool
+        {
+        false
+        }
+        
+    public var isBitSetClass: Bool
+        {
+        false
         }
         
     public var ffiType: ffi_type
@@ -244,6 +267,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         false
         }
         
+    public func isEquivalent(_ rhs: Type) -> Bool
+        {
+        return(true)
+        }
+        
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         substitution.substitute(self) as! Self
@@ -289,6 +317,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
+    public func addClassSlot(_ slot: Slot)
+        {
+        fatalError()
+        }
+        
     @discardableResult
     public func slot(_ label: Label,_ type: Type) -> Type
         {
@@ -305,15 +338,30 @@ public class Type: Symbol,Displayable,UserDisplayable
         {
         }
         
+    public func initNonHierarchyMetaclass(inModule: Module)
+        {
+        }
+        
     public func addSubtype(_ type: Type)
         {
         fatalError()
         }
         
     @discardableResult
-    public func typeVar(_ label: Label) -> Type
+    public func typeVar(_ label: Label) -> TypeVariable
         {
         fatalError()
+        }
+        
+    @discardableResult
+    public func typeVar(_ typeVar: TypeVariable) -> Type
+        {
+        fatalError()
+        }
+        
+    public func typeVar(atId: Int) -> TypeVariable?
+        {
+        nil
         }
         
 //    public override func setParent(_ parent: Parent)

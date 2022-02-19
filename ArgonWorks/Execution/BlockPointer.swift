@@ -62,7 +62,7 @@ public class BlockPointer: ClassBasedPointer
             }
         }
         
-    public var nextBlock: Address?
+    public var nextBlockAddress: Address?
         {
         get
             {

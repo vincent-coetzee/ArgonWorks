@@ -88,7 +88,13 @@ public class SlotAccessExpression: Expression
         let temporary = buffer.nextTemporary
         if let slot = self.slot
             {
-            buffer.add(.STOREP,expression.place,self.receiver.place,.integer(Argon.Integer(slot.offset)))
+            let owningClass = slot.owningClass
+            let index = owningClass!.slotIndexCache[slot.label]!
+            buffer.add(.i64,.ADD,receiver.place,.integer(3 * Argon.kWordSizeInBytesInt),temporary)
+            buffer.add(.LOADP,temporary,.integer(0),temporary)
+            buffer.add(.LOADP,temporary,.integer(index * Argon.kWordSizeInBytesInt),temporary)
+            buffer.add(.i64,.ADD,self.receiver.place,temporary,temporary)
+            buffer.add(.STOREP,expression.place,temporary,.integer(0))
             }
         else
             {

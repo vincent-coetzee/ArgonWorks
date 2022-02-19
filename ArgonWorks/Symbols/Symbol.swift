@@ -292,7 +292,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         
     public var displayString: String
         {
-        self.label
+        "Module(\(self.label))"
         }
         
     public override var description: String
@@ -332,7 +332,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         
     public var moduleScope: Module?
         {
-        nil
+        self.module
         }
         
     public var typeCode:TypeCode

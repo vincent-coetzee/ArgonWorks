@@ -59,16 +59,7 @@ public class Invocable: Symbol,Scope,StackFrame
     
     public override var argonHash: Int
         {
-        var hash = self.module.argonHash
-        hash = hash << 13 ^ "\(Swift.type(of: self))".polynomialRollingHash
-        hash = hash << 13 ^ self.label.polynomialRollingHash
-        for parameter in self.parameters
-            {
-            hash = hash << 13 ^ parameter.type.argonHash
-            }
-        hash = hash << 13 ^ self.returnType.argonHash
-        let word = Word(bitPattern: hash) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        self.displayString.polynomialRollingHash
         }
         
     public var arity: Int

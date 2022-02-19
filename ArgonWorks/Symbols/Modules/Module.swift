@@ -95,11 +95,7 @@ public class Module:ContainerSymbol,Scope
         
     public override var argonHash: Int
         {
-        var hash = self.module.argonHash
-        hash = hash << 13 ^ "\(Swift.type(of: self))".polynomialRollingHash
-        hash = hash << 13 ^ self.label.polynomialRollingHash
-        let word = Word(bitPattern: hash) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        self.displayString.polynomialRollingHash
         }
         
     public var everyMethodInstance: MethodInstances
@@ -395,6 +391,9 @@ public class Module:ContainerSymbol,Scope
         {
             let typeContext = TypeContext()
             var temporarySymbols = Symbols()
+            let newModule = Self(label: self.label)
+            TypeContext.initialSubstitution.symbols[newModule.argonHash] = newModule
+            TypeContext.initialSubstitution.symbols[ArgonModule.shared.argonHash] = ArgonModule.shared
             for symbol in self.symbols
                 {
                 symbol.initializeType(inContext: typeContext)
@@ -403,7 +402,6 @@ public class Module:ContainerSymbol,Scope
                 temporarySymbols.append(newSymbol)
                 }
             let substitution = typeContext.unify()
-            let newModule = Self(label: self.label)
             for symbol in temporarySymbols
                 {
                 newModule.addSymbol(substitution.substitute(symbol))
@@ -474,7 +472,6 @@ public class Module:ContainerSymbol,Scope
         allocator.allocateAddress(for: self)
         do
             {
-            self.layoutObjectSlots()
             for symbol in self.symbols
                 {
                 symbol.allocateAddresses(using: allocator)
@@ -494,6 +491,181 @@ public class Module:ContainerSymbol,Scope
             {
             self.appendIssue(at: .zero, message: "Unexpected error: \(error)")
             }
+        }
+        
+    public func createSystemMethods(for type: Type)
+        {
+        if type.isSetClass
+            {
+            self.createSetMethods(for: type)
+            }
+        else if type.isListClass
+            {
+            self.createListMethods(for: type)
+            }
+        else if type.isArrayClass
+            {
+            self.createArrayMethods(for: type)
+            }
+        else if type.isDictionaryClass
+            {
+            self.createDictionaryMethods(for: type)
+            }
+        else if type.isBitSetClass
+            {
+            self.createBitSetMethods(for: type)
+            }
+        }
+        
+    private func createListMethods(for type: Type)
+        {
+        let listClass = type as! TypeClass
+        guard listClass.generics.count > 0 else
+            {
+            return
+            }
+        let elementType = listClass.generics[0]
+        let listNodeClass = self.lookup(label: "ListNode") as! TypeClass
+        let thisNodeClass = listNodeClass.withGenerics([elementType])
+        let slot = ClassSlot(label: "ListNodeClass",type: listNodeClass)
+        slot.value = .type(thisNodeClass)
+        listClass.addClassSlot(slot)
+        var method = InlineMethodInstance(label: "append",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "to", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: ArgonModule.shared.void).listInsertMethod()
+        var signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "remove",parameters: [Parameter(label: "element", relabel: nil, type: listClass, isVisible: false, isVariadic: false),Parameter(label: "from", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: elementType).listRemoveMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "contains",parameters: [Parameter(label: "list", relabel: nil, type: listClass, isVisible: false, isVariadic: false),Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false)],returnType: ArgonModule.shared.boolean).listContainsMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "insert",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "after", relabel: nil, type: elementType, isVisible: true, isVariadic: false),Parameter(label: "in", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: elementType).listInsertAfterMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "insert",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "before", relabel: nil, type: elementType, isVisible: true, isVariadic: false),Parameter(label: "in", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: elementType).listInsertBeforeMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "insert",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "in", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: elementType).listInsertMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        }
+        
+    private func createArrayMethods(for type: Type)
+        {
+        let arrayClass = type as! TypeClass
+        guard arrayClass.generics.count > 0 else
+            {
+            return
+            }
+        let elementType = arrayClass.generics[0]
+        var method = InlineMethodInstance(label: "insert",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "at", relabel: nil, type: ArgonModule.shared.integer, isVisible: true, isVariadic: false),Parameter(label: "in", relabel: nil, type: arrayClass, isVisible: true, isVariadic: false)],returnType: ArgonModule.shared.void).arrayInsertMethod()
+        var signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "append",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "to", relabel: nil, type: arrayClass, isVisible: true, isVariadic: false)],returnType: ArgonModule.shared.void).arrayAppendMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "remove",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "from", relabel: nil, type: arrayClass, isVisible: true, isVariadic: false)],returnType: ArgonModule.shared.void).arrayRemoveMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "contains",parameters: [Parameter(label: "array", relabel: nil, type: arrayClass, isVisible: false, isVariadic: false),Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false)],returnType: ArgonModule.shared.boolean).arrayContainsMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "append",parameters: [Parameter(label: "array1", relabel: nil, type: arrayClass, isVisible: false, isVariadic: false),Parameter(label: "array2", relabel: nil, type: arrayClass, isVisible: false, isVariadic: false)],returnType: arrayClass).arrayAppendArrayMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        }
+        
+    private func createDictionaryMethods(for type: Type)
+        {
+        }
+        
+    private func createBitSetMethods(for type: Type)
+        {
+        }
+        
+    private func createSetMethods(for type: Type)
+        {
+        let setClass = type as! TypeClass
+        guard setClass.generics.count > 0 else
+            {
+            return
+            }
+        let elementType = setClass.generics[0]
+        var method = InlineMethodInstance(label: "insert",parameters: [Parameter(label: "set", relabel: nil, type: setClass, isVisible: false, isVariadic: false),Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false)],returnType: ArgonModule.shared.void).setInsertMethod()
+        var signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "remove",parameters: [Parameter(label: "set", relabel: nil, type: setClass, isVisible: false, isVariadic: false),Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false)],returnType: elementType).setRemoveMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "contains",parameters: [Parameter(label: "set", relabel: nil, type: setClass, isVisible: false, isVariadic: false),Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false)],returnType: ArgonModule.shared.boolean).setContainsMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "union",parameters: [Parameter(label: "set1", relabel: nil, type: setClass, isVisible: false, isVariadic: false),Parameter(label: "set2", relabel: nil, type: setClass, isVisible: false, isVariadic: false)],returnType: setClass).setUnionMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        method = InlineMethodInstance(label: "intersection",parameters: [Parameter(label: "set1", relabel: nil, type: setClass, isVisible: false, isVariadic: false),Parameter(label: "set2", relabel: nil, type: setClass, isVisible: false, isVariadic: false)],returnType: setClass).setIntersectionMethod()
+        signature = method.methodSignature
+        if !self.hasMethod(withSignature: signature)
+            {
+            self.addSymbol(method)
+            }
+        }
+        
+    public func matchingTypeOrType(_ type: Type) -> Type
+        {
+        for typeSymbol in self.symbols.compactMap({$0 as? Type})
+            {
+            if type.isEqual(typeSymbol)
+                {
+                return(typeSymbol)
+                }
+            }
+        return(type)
         }
         
     public override func layoutInMemory(using allocator: AddressAllocator)

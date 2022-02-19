@@ -2,72 +2,99 @@
 //  MethodSignature.swift
 //  ArgonWorks
 //
-//  Created by Vincent Coetzee on 12/12/21.
+//  Created by Vincent Coetzee on 19/2/22.
 //
 
 import Foundation
 
-public class MethodSignature
+public struct MethodSignature: Equatable
     {
-    public let label: Label
-    public var parameters: Parameters = Parameters()
-    public var returnType: Type = ArgonModule.shared.void
-    public let methodInstance: MethodInstance
+    public static func ==(lhs: MethodSignature,rhs: MethodSignature) -> Bool
+        {
+        if lhs.label != rhs.label
+            {
+            return(false)
+            }
+        if lhs.tags.count != rhs.tags.count
+            {
+            return(false)
+            }
+        if lhs.tags != rhs.tags
+            {
+            return(false)
+            }
+        if lhs.returnType != rhs.returnType
+            {
+            return(false)
+            }
+        return(true)
+        }
+        
+    public typealias ParameterTuple = (Label?,Type)
     
-    init(label:Label,methodInstance:MethodInstance)
+    public enum ParameterTag: Equatable
+        {
+        case tag(String,Type)
+        case hidden(Type)
+        
+        public func isEquivalent(_ rhs: ParameterTag) -> Bool
+            {
+            switch(self,rhs)
+                {
+                case(.tag(let label1,let type1),.tag(let label2,let type2)):
+                    return(label1 == label2 && type1.isEquivalent(type2))
+                case(.hidden(let type1),.hidden(let type2)):
+                    return(type1.isEquivalent(type2))
+                default:
+                    return(false)
+                }
+            }
+        }
+        
+    public typealias ParameterTags = Array<ParameterTag>
+        
+    public let label: String
+    private var tags: ParameterTags
+    private let returnType: Type
+    
+    init(methodInstance: MethodInstance)
+        {
+        self.label = methodInstance.label
+        self.tags = methodInstance.parameters.map{$0.isHidden ? .hidden($0.type) : .tag($0.tag!,$0.type)}
+        self.returnType = methodInstance.returnType
+        }
+        
+    init(label: Label,parameters: Array<ParameterTuple>,returnType: Type = ArgonModule.shared.void)
         {
         self.label = label
-        self.methodInstance = methodInstance
+        self.tags = parameters.map{$0.0.isNil ? .hidden($0.1) : .tag($0.0!,$0.1)}
+        self.returnType = returnType
         }
         
-    public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
+    init(label: Label,parameters: ParameterTuple...,returnType: Type = ArgonModule.shared.void)
         {
-        var orderings = Array<SpecificOrdering>()
-        for index in 0..<types.count
-            {
-            let argumentType = types[index]
-            let typeA = self.parameters[index].type!
-            let typeB = instance.parameters[index].type!
-            if typeA.isSubtype(of: typeB)
-                {
-                orderings.append(.more)
-                }
-            else if typeA.isClass && typeB.isClass && argumentType.isClass
-                {
-                let argumentClassList = (argumentType as! TypeClass).precedenceList
-                if let typeAIndex = argumentClassList.firstIndex(of: (typeA as! TypeClass)),let typeBIndex = argumentClassList.firstIndex(of: (typeB as! TypeClass))
-                    {
-                    orderings.append(typeAIndex > typeBIndex ? .more : .less)
-                    }
-                else
-                    {
-                    orderings.append(.unordered)
-                    }
-                }
-            else
-                {
-                orderings.append(.unordered)
-                }
-            }
-        for ordering in orderings
-            {
-            if ordering == .more
-                {
-                return(true)
-                }
-            }
-        return(false)
+        self.label = label
+        self.tags = parameters.map{$0.0.isNil ? .hidden($0.1) : .tag($0.0!,$0.1)}
+        self.returnType = returnType
         }
         
-    public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
+    public func isEquivalent(_ rhs: MethodSignature) -> Bool
         {
-        for (inType,myType) in zip(types,self.parameters.map{$0.type!})
+        if self.label != rhs.label
             {
-            if !inType.isSubtype(of: myType)
+            return(false)
+            }
+        if self.tags.count != rhs.tags.count
+            {
+            return(false)
+            }
+        for (left,right) in zip(self.tags,rhs.tags)
+            {
+            if !left.isEquivalent(right)
                 {
                 return(false)
                 }
             }
-        return(true)
+        return(self.returnType.isEquivalent(rhs.returnType))
         }
     }

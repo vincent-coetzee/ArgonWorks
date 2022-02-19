@@ -79,7 +79,7 @@ public class ClosureExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.closure!.initializeType(inContext: context)
-        self.type = TypeFunction(label: "Closure", types: self.closure!.parameters.map{$0.type}, returnType: self.closure!.returnType)
+        self.type = self.closure!.returnType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

@@ -29,8 +29,7 @@ public class EnumerationCase:Symbol
             }
         hashValue = hashValue << 13 ^ self.symbol.polynomialRollingHash
         hashValue = hashValue << 13 ^ self.caseIndex
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
         
     public override var asLiteralExpression: LiteralExpression?
@@ -102,6 +101,30 @@ public class EnumerationCase:Symbol
         copy.caseIndex = self.caseIndex
         copy.symbolIndex = self.symbolIndex
         return(copy)
+        }
+        
+    public func isEquivalent(_ rightCase: EnumerationCase) -> Bool
+        {
+        if self.caseIndex != rightCase.caseIndex
+            {
+            return(false)
+            }
+        if self.symbol != rightCase.symbol
+            {
+            return(false)
+            }
+        if self.associatedTypes.count != rightCase.associatedTypes.count
+                {
+                return(false)
+                }
+        for (left,right) in zip(self.associatedTypes,rightCase.associatedTypes)
+            {
+            if !left.isEquivalent(right)
+                {
+                return(false)
+                }
+            }
+        return(true)
         }
         
     public override func isEqual(_ object: Any?) -> Bool

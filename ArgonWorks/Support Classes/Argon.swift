@@ -165,17 +165,13 @@ public struct Argon
     public static let kTagMask:Word = 0b111 << Argon.kTagShift
     public static let kTagShift:Word = 60
     
-    public static let kWordSizeInBytes = 8
-    public static let kArgumentSizeInBytes = 8
-    public static let kHandleSizeInBytes = 8
-    
     public static let kWordSizeInBytesInt = MemoryLayout<Word>.size
     public static let kWordSizeInBytesWord = Word(MemoryLayout<Word>.size)
-    
-    public static let kIsEnumerationInstancePointerShift: Word = 59
-    public static let kIsEnumerationInstancePointerBits: Word = 0b1
-    public static let kIsEnumerationInstancePointerBitMask = Argon.kIsEnumerationInstancePointerBits << Argon.kIsEnumerationInstancePointerShift
-    
+//    
+//    public static let kIsEnumerationInstancePointerShift: Word = 59
+//    public static let kIsEnumerationInstancePointerBits: Word = 0b1
+//    public static let kIsEnumerationInstancePointerBitMask = Argon.kIsEnumerationInstancePointerBits << Argon.kIsEnumerationInstancePointerShift
+//    
     public enum ObjectType:UInt64
         {
         case none = 0
@@ -235,6 +231,7 @@ public struct Argon
         case setBlock = 54
         case instructionBlock =  55
         case treeNode = 56
+        case iterable = 57
         case custom = 100
         }
         

@@ -49,6 +49,31 @@ public class TypeClass: TypeConstructor
         return(self.findSuperclassHierarchy(visitedClasses: &classes))
         }
         
+    public override var isSetClass: Bool
+        {
+        self.label == "Set" && self.typeFlags.contains(.kSystemTypeFlag)
+        }
+        
+    public override var isArrayClass: Bool
+        {
+        self.label == "Array" && self.typeFlags.contains(.kSystemTypeFlag)
+        }
+        
+    public override var isListClass: Bool
+        {
+        self.label == "List" && self.typeFlags.contains(.kSystemTypeFlag)
+        }
+        
+    public override var isDictionaryClass: Bool
+        {
+        self.label == "Dictionary" && self.typeFlags.contains(.kSystemTypeFlag)
+        }
+        
+    public override var isBitSetClass: Bool
+        {
+        self.label == "BitSet" && self.typeFlags.contains(.kSystemTypeFlag)
+        }
+        
     public var lastSuperclass: TypeClass
         {
         if self.superclasses.isEmpty
@@ -83,6 +108,11 @@ public class TypeClass: TypeConstructor
         return(depth)
         }
         
+    public var classPrecedenceList: TypeClasses
+        {
+        TopologicalSorter(class: self).sortedClasses()
+        }
+        
     public override var classValue: TypeClass
         {
         self
@@ -92,19 +122,27 @@ public class TypeClass: TypeConstructor
         {
         self.supertypes.map{$0 as! TypeClass}
         }
-        
-    public var rawPrecedenceList: TypeClasses
-        {
-        var array = TypeClasses()
-        array += self.superclasses
-        array += self.superclasses.flatMap{$0.rawPrecedenceList}
-        return(array)
-        }
-        
+
     public var allSupertypes: TypeClasses
         {
+        self.allSuperclasses
+        }
+        
+    public var allSuperclasses: TypeClasses
+        {
+        var visited = Set<TypeClass>()
+        return(self.allSuperclasses(visited: &visited))
+        }
+        
+    public func allSuperclasses(visited: inout Set<TypeClass>) -> TypeClasses
+        {
+        guard !visited.contains(self) else
+            {
+            return([])
+            }
+        visited.insert(self)
         var array = [self]
-        array += self.superclasses.flatMap{$0.allSupertypes}
+        array += self.superclasses.flatMap{$0.allSuperclasses(visited: &visited)}
         return(array)
         }
         
@@ -114,127 +152,7 @@ public class TypeClass: TypeConstructor
         array += self.superclasses.flatMap{$0.allSupertypes(inClass: self)}
         return(array)
         }
-        
-    public var precedenceList: TypeClasses
-        {
-        var array = [(0,self)]
-        array += self.superclasses.flatMap{$0.allSupertypes(inClass: self)}
-        var list = Array<(Int,TypeClass)>()
-        for element in array
-            {
-            var found = false
-            for item in list
-                {
-                if item.1 == element.1
-                    {
-                    found = true
-                    break
-                    }
-                }
-            if !found
-                {
-                list.append(element)
-                }
-            }
-        let sorted = list.sorted{"\($0.1.depth).\($0.0)" > "\($1.1.depth).\($1.0)"}
-        let classes = sorted.map{$0.1}
-        return(classes)
-        }
-        
-//    public func isDirectSuperclass(of aClass: Type) -> Bool
-//        {
-//        aClass.superclasses.contains(self)
-//        }
-//        
-//    public var classPrecedenceList: Array<TypeClass>
-//        {
-//        var classes = Array(Set(self.allSupertypes))
-//        var list = TypeClasses()
-//        list.append(self)
-//        classes.remove(self)
-//        var currentClass:TypeClass = self
-//        while !classes.isEmpty
-//            {
-//            let classList = classes
-//            for aClass in classList
-//                {
-//                if currentClass.superclasses.contains(aClass)
-//                    {
-//                    list.append(aClass)
-//                    classes.remove(aClass)
-//                    }
-//                }
-//            }
-//        }
-        
-    private class ClassNode
-        {
-        internal static var classNodes = Dictionary<TypeClass,ClassNode>()
-        
-        internal static func classNode(forClass: TypeClass) -> ClassNode
-            {
-            if let node = self.classNodes[forClass]
-                {
-                return(node)
-                }
-            let node = ClassNode(class: forClass)
-            self.classNodes[forClass] = node
-            return(node)
-            }
-            
-        internal var adjacents: Array<ClassNode>
-            {
-            return(self.theClass.superclasses.map{ClassNode.classNode(forClass: $0)})
-            }
-            
-        internal let theClass: TypeClass
-        internal var number: Int = 0
-        internal var label: Int = 0
-        
-        init(class aClass: TypeClass)
-            {
-            self.theClass = aClass
-            }
-        }
-        
-    public func topologicalSort() -> TypeClasses
-        {
-        var nodes = Array<ClassNode>()
-        for type in self.allSupertypes
-            {
-            nodes.append(ClassNode.classNode(forClass: type))
-            }
-        var j = nodes.count + 1
-        var i = 0
-        for node in nodes
-            {
-            if node.number == 0
-                {
-                self.topSort(node,i: &i,j: &j)
-                }
-            }
-        return(nodes.sorted{$0.label < $1.label}.map{$0.theClass})
-        }
-        
-    private func topSort(_ node: ClassNode,i:inout Int,j:inout Int)
-        {
-        i = i + 1
-        node.number = i
-        for vertex in node.adjacents
-            {
-            if vertex.number == 0
-                {
-                self.topSort(vertex,i:&i,j: &j)
-                }
-            else if vertex.label == 0
-                {
-                fatalError("Circular class hierarchy")
-                }
-            j = j - 1
-            node.label = j
-            }
-        }
-        
+
     public override var displayString: String
         {
         var names = self.generics.map{$0.displayString}.joined(separator: ",")
@@ -371,15 +289,35 @@ public class TypeClass: TypeConstructor
     /// class to be a type.
     ///
     ///
+    private var _objectType: Argon.ObjectType = .object
     public var _subtypes = Types()
     public var supertypes = Types()
     public var instanceSlots = Slots()
+    public var metaclass:TypeClass!
     public var localSystemSlots = Slots()
     public var layoutSlots = Slots()
     public private(set) var hasBytes: Bool = false
     private var classLayoutOffsets = Dictionary<TypeClass,Int>()
     public private(set) var slotIndexCache = Dictionary<Label,Int>()
     
+    public func substitute(substitution: TypeContext.Substitution) -> Self
+        {
+        let newClass = Self(label: self.label)
+        newClass.generics = self.generics.map{substitution.substitute($0)}
+        newClass.setModule(substitution.symbols[self.module.argonHash] as! Module)
+        newClass._objectType = self._objectType
+        newClass._subtypes = self._subtypes.map{$0 as! TypeClass}.map{substitution.substitute($0)}
+        newClass.supertypes = self.supertypes.map{$0 as! TypeClass}.map{substitution.substitute($0)}
+        newClass.instanceSlots = self.instanceSlots.map{substitution.substitute($0)}
+        newClass.metaclass = substitution.substitute(self.metaclass) as? TypeClass
+        newClass.localSystemSlots = self.localSystemSlots.map{substitution.substitute($0)}
+        newClass.layoutSlots = self.layoutSlots.map{substitution.substitute($0)}
+        newClass.hasBytes = self.hasBytes
+        newClass.classLayoutOffsets = self.classLayoutOffsets
+        newClass.slotIndexCache = self.slotIndexCache
+        return(newClass)
+        }
+        
     required init(label: Label,isSystem: Bool = false,generics: Types = [])
         {
         super.init(label: label,generics: generics)
@@ -393,6 +331,7 @@ public class TypeClass: TypeConstructor
         self.instanceSlots = coder.decodeObject(forKey: "instanceSlots") as! Slots
         self.layoutSlots = coder.decodeObject(forKey: "layoutSlots") as! Slots
         self.hasBytes = coder.decodeBool(forKey: "hasBytes")
+        self.metaclass = coder.decodeObject(forKey: "metaclassClass") as? TypeClass
         super.init(coder: coder)
         print("END DECODE TYPE CLASS")
         }
@@ -414,6 +353,7 @@ public class TypeClass: TypeConstructor
         coder.encode(self.supertypes,forKey: "supertypes")
         coder.encode(self.instanceSlots,forKey: "instanceSlots")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
+        coder.encode(self.metaclass,forKey: "metaclassClass")
         super.encode(with: coder)
         }
         
@@ -430,7 +370,24 @@ public class TypeClass: TypeConstructor
         newClass.supertypes = self.supertypes
         newClass.instanceSlots = self.instanceSlots
         newClass.layoutSlots = self.layoutSlots
+        newClass.makeMetaclass()
+        newClass.configureMetaclass()
         return(newClass)
+        }
+        
+    public func configureMetaclass()
+        {
+        self.metaclass.generics = self.generics.compactMap{$0 as? TypeClass}.map{$0.metaclass}
+        self.metaclass.supertypes = self.superclasses.map{$0.metaclass}
+        self.metaclass.subtypes = self.subtypes.compactMap{$0 as? TypeClass}.map{$0.metaclass}
+        self.metaclass.metaclass = ArgonModule.shared.metaclassType as? TypeClass
+        self.metaclass.type = ArgonModule.shared.metaclassType
+        }
+        
+    public override func setType(_ type: Argon.ObjectType) -> Type
+        {
+        self._objectType = type
+        return(self)
         }
         
     public func addSupertype(_ type: Type)
@@ -463,6 +420,15 @@ public class TypeClass: TypeConstructor
                 }
             }
         return(false)
+        }
+        
+    @discardableResult
+    public func makeMetaclass() -> TypeClass
+        {
+        self.metaclass = TypeMetaclass(label: self.label + "Class")
+        self.metaclass.setModule(self.module)
+        self.type = self.metaclass
+        return(self.metaclass)
         }
         
 //    public override func setType(_ objectType:Argon.ObjectType) -> Type
@@ -577,6 +543,14 @@ public class TypeClass: TypeConstructor
         
     public func layoutObject(atAddress: Address)
         {
+        let someClasses = self.allSuperclasses
+//        print("LAYING OUT OBJECT OF cLASS \(self.label)")
+//        print("CLASS LIST: \(someClasses)")
+        let slots = self.virtualTableSlots
+        if someClasses.count > 2
+            {
+            print(slots)
+            }
         self.layoutObject(inClass: self,atAddress: atAddress,writeInnerHeader: false)
         }
         
@@ -585,24 +559,37 @@ public class TypeClass: TypeConstructor
         var address = atAddress
         if writeInnerHeader
             {
-            let header = Header(word: 0)
+            let header = Header(atAddress: address)
             header.tag = .header
             header.sizeInBytes = Word(self.instanceSizeInBytes)
             header.hasBytes = false
             header.isForwarded = false
             header.flipCount = 0
-            SetWordAtAddress(header.bytes,address)
+            header.objectType = self.objectType
+//            let someWord = WordAtAddress(address)
+//            print("INNER HEADER FOR OBJECT OF CLASS \(self.label) \(someWord.bitString)")
             }
         address += Argon.kWordSizeInBytesWord
         let word1 = Word(integer: self.magicNumber)
-        SetWordAtAddress(word1,atAddress)
+        SetWordAtAddress(word1,address)
+//        let someWord1 = WordAtAddress(address)
+//        print("MAGIC NUMBER: \(someWord1.bitString)")
         address += Argon.kWordSizeInBytesWord
         let word2 = Word(pointer: self.memoryAddress)
         SetWordAtAddress(word2,address)
+//        let someWord2 = WordAtAddress(address)
+//        print("CLASS POINTER: \(someWord2.bitString)")
         address += Argon.kWordSizeInBytesWord
         let virtualTable = inClass.virtualTable(forClass: self)
-        let word3 = virtualTable.memoryAddress
+        ///
+        ///
+        /// THE VT ADDRESS NEEDS TO BE OFFSET BY A WORD BECAUSE THE VT HAS A HEADER RECORD
+        ///
+        ///
+        let word3 = Word(pointer: virtualTable.memoryAddress + Argon.kWordSizeInBytesWord)
         SetWordAtAddress(word3,address)
+//        let someWord3 = WordAtAddress(address)
+//        print("VT POINTER: \(someWord3.bitString)")
         address += Argon.kWordSizeInBytesWord
         for aClass in self.superclasses
             {
@@ -630,15 +617,24 @@ public class TypeClass: TypeConstructor
         /// DID NOT LAYOUT THE TYPE IF IT WAS, BUT WE NEED THE PRIMITIVE CLASSES EVEN IF
         /// THE NORMAL METHODS OF ACCESSING A CLASS OF AN OBJECT ARE MAGICKED IN.
         ///
+        guard self.wasAddressAllocationDone else
+            {
+            fatalError("Address allocation should have been done")
+            }
         guard !self.wasMemoryLayoutDone else
             {
             return
             }
         self.wasMemoryLayoutDone = true
+        if self.label == "Metaclass"
+            {
+            print("HALT")
+            }
         let segment = allocator.segment(for: self.segmentType)
+        self.metaclass.layoutInMemory(using: allocator)
         let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: self.classType)
         classPointer.objectType = self.objectType
-        classPointer.setClass(classType)
+        classPointer.setClass(self.classType)
         classPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         for type in self.supertypes
             {
@@ -659,9 +655,8 @@ public class TypeClass: TypeConstructor
         let subSize = max(100,subs.count * 4)
         let subAddress = segment.allocateArray(size: subSize,elements: subs)
         classPointer.setAddress(subAddress,atSlot: "subclasses")
-        for slot in self.instanceSlots
+        for slot in self.layoutSlots
             {
-            slot.setMemoryAddress(segment.allocateObject(ofType: ArgonModule.shared.slot,extraSizeInBytes: 0))
             slot.layoutInMemory(using: allocator)
             }
         let slotsArray = segment.allocateArray(size: self.layoutSlots.count,elements: self.layoutSlots.map{$0.memoryAddress})
@@ -693,41 +688,6 @@ public class TypeClass: TypeConstructor
 //        MemoryPointer.dumpMemory(atAddress: self.memoryAddress, count: 20)
         }
         
-    public func initMetatype(inModule: Module)
-        {
-        guard self.type.isNil else
-            {
-            return
-            }
-//        for type in self.superclasses
-//            {
-//            if type.type.isNil
-//                {
-//                type.initMetatype(inModule: inModule)
-//                }
-//            }
-        if let aType = self.module.lookup(label: self.label + "Class") as? TypeMetaclass
-            {
-            self.type = aType
-            }
-        else
-            {
-            let typeMetaclass = TypeMetaclass(label: self.label + "Class",isSystem: self.isSystemType,generics: self.generics)
-            typeMetaclass.type = ArgonModule.shared.metaclassType
-            for type in self.supertypes
-                {
-                typeMetaclass.addSupertype(type.type)
-                }
-            typeMetaclass.flags([.kSystemTypeFlag,.kMetaclassFlag])
-            inModule.addSymbol(typeMetaclass)
-            self.type = typeMetaclass
-//            for type in self.subtypes
-//                {
-//                (type as! TypeClass).initMetatype(inModule: inModule)
-//                }
-            }
-        }
-        
     internal func layoutBaseSlots(inClass: TypeClass,slotPrefix: String,offset: inout Int,visitedClasses: inout TypeClasses)
         {
         guard !visitedClasses.contains(self) else
@@ -754,7 +714,7 @@ public class TypeClass: TypeConstructor
         inClass.addLayoutSlot(slot)
         offset += Argon.kWordSizeInBytesInt
         let name3 = slotPrefix.isEmpty ? "class" : "Class"
-        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name3)",type: ArgonModule.shared.integer)
+        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name3)",type: ArgonModule.shared.address)
         slot.setOffset(offset)
         slot.slotType = .kSystemClassSlot
         slot.owningClass = self
@@ -762,7 +722,7 @@ public class TypeClass: TypeConstructor
         inClass.addLayoutSlot(slot)
         offset += Argon.kWordSizeInBytesInt
         let name4 = slotPrefix.isEmpty ? "virtualTable" : "VirtualTable"
-        let tableSlot = VirtualTableSlot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name4)",type: ArgonModule.shared.integer)
+        let tableSlot = VirtualTableSlot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name4)",type: ArgonModule.shared.address)
         tableSlot.virtualTable = VirtualTable(forClass: self)
         tableSlot.setOffset(offset)
         tableSlot.slotType = .kSystemVirtualTableSlot
@@ -802,38 +762,6 @@ public class TypeClass: TypeConstructor
         fatalError("SLOT \(atLabel) NOT FOUND")
         }
         
-//    private func layoutClass(inClass: TypeClass,slotPrefix: String,offset: inout Int)
-//        {
-//        var systemSlots = Slots()
-//        let name1 = slotPrefix.isEmpty ? "header" : "Header"
-//        var slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name1)",type: ArgonModule.shared.integer)
-//        slot.setOffset(offset)
-//        print("SETTING \(name1) OFFSET TO \(offset)")
-//        slot.slotType = .kSystemHeaderSlot
-//        systemSlots.append(slot)
-//        inClass.addLayoutSlot(slot)
-//        offset += Argon.kWordSizeInBytesInt
-//        let name2 = slotPrefix.isEmpty ? "magicNumber" : "MagicNumber"
-//        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name2)",type: ArgonModule.shared.integer)
-//        slot.setOffset(offset)
-//        slot.slotType = .kSystemMagicNumberSlot
-//        systemSlots.append(slot)
-//        inClass.addLayoutSlot(slot)
-//        offset += Argon.kWordSizeInBytesInt
-//        let name3 = slotPrefix.isEmpty ? "class" : "Class"
-//        slot = Slot(label: "_\(slotPrefix.lowercasingFirstLetter)\(name3)",type: ArgonModule.shared.integer)
-//        slot.setOffset(offset)
-//        slot.slotType = .kSystemClassSlot
-//        systemSlots.append(slot)
-//        inClass.addLayoutSlot(slot)
-//        offset += Argon.kWordSizeInBytesInt
-//        inClass.localSystemSlots = slotPrefix.isEmpty ? systemSlots : inClass.localSystemSlots
-//        for aClass in self.supertypes.map({$0 as! TypeClass})
-//            {
-//            aClass.layoutOffsetSlots(inClass: inClass,offset: &offset)
-//            }
-//        }
-        
     public func findSuperclassHierarchy(visitedClasses: inout TypeClasses) -> TypeClasses
         {
         guard !visitedClasses.contains(self) else
@@ -861,7 +789,7 @@ public class TypeClass: TypeConstructor
         var visitedClasses = TypeClasses()
         self.layoutBaseSlots(inClass: self,slotPrefix: "",offset: &offset,visitedClasses: &visitedClasses)
         visitedClasses = []
-        self.layoutObjectSlots(inClass: self,offset: &offset,visitedClasses: &visitedClasses)
+        self.layoutInstanceSlots(inClass: self,offset: &offset,visitedClasses: &visitedClasses)
         self.layoutSlots = self.layoutSlots.sorted{$0.offset < $1.offset}
         var start = 0
         while start < self.layoutSlots.count && !self.layoutSlots[start].slotType.contains(.kInstanceSlot)
@@ -884,8 +812,12 @@ public class TypeClass: TypeConstructor
             }
         var headerSlots = Dictionary<TypeClass,Slot>()
         var virtualSlots = Dictionary<TypeClass,Slot>()
+        let listOfSuperclasses = self.allSuperclasses
         for slot in self.layoutSlots
             {
+            let index = listOfSuperclasses.firstIndex(of: slot.owningClass!)!
+            print("SLOT \(slot.label) CLASS \(slot.owningClass!.label) VTINDEX \(index)")
+            slot.classIndexInVirtualTable = index
             if slot.slotType.contains(.kSystemHeaderSlot)
                 {
                 headerSlots[slot.owningClass!] = slot
@@ -905,7 +837,7 @@ public class TypeClass: TypeConstructor
                 for someClass in classes
                     {
                     let headerSlot = headerSlots[virtualTable.forClass]!
-                    var delta = -1
+                    var delta = 0
                     if let firstSlot = self.firstInstanceSlotOwned(byClass: someClass)
                         {
                         delta = firstSlot.offset - headerSlot.offset
@@ -919,6 +851,7 @@ public class TypeClass: TypeConstructor
                 slot.virtualOffset = slot.offset - startSlot.offset
                 }
             }
+        self.cacheIndices()
         }
         
     private func firstInstanceSlotOwned(byClass: TypeClass) -> Slot?
@@ -933,14 +866,13 @@ public class TypeClass: TypeConstructor
         return(nil)
         }
         
-    public func layoutObjectSlots(inClass: TypeClass,offset: inout Int,visitedClasses: inout TypeClasses)
+    public func layoutInstanceSlots(inClass: TypeClass,offset: inout Int,visitedClasses: inout TypeClasses)
         {
         guard !visitedClasses.contains(self) else
             {
             return
             }
         visitedClasses.append(self)
-//        self.layoutBaseSlots(inClass: inClass,slotPrefix: self.label,offset: &offset)
         var localOffset = 0
         for slot in self.instanceSlots
             {
@@ -954,17 +886,21 @@ public class TypeClass: TypeConstructor
             }
         for aClass in self.superclasses
             {
-            aClass.layoutObjectSlots(inClass: inClass,offset: &offset,visitedClasses: &visitedClasses)
+            aClass.layoutInstanceSlots(inClass: inClass,offset: &offset,visitedClasses: &visitedClasses)
             }
         }
         
     private var virtualTableSlots: Array<VirtualTableSlot>
         {
-        self.localSystemSlots.compactMap({$0 as? VirtualTableSlot})
+        self.layoutSlots.compactMap({$0 as? VirtualTableSlot})
         }
         
     public override func allocateAddresses(using allocator: AddressAllocator)
         {
+        if self.label == "DateClass"
+            {
+            print("halt")
+            }
         guard !self.wasAddressAllocationDone else
             {
             return
@@ -974,11 +910,8 @@ public class TypeClass: TypeConstructor
             {
             slot.virtualTable.allocateAddresses(using: allocator)
             }
-//        print("ABOUT TO ALLOCATE ADDRESS FOR CLASS \(self.label), SIZE IN BYTES IS \(self.sizeInBytes)")
         allocator.allocateAddress(for: self)
-//        print("AFTER ALLOCATE ADDRESS FOR CLASS, ADDRESS IS \(self.memoryAddress)")
-//        let header = Header(atAddress: self.memoryAddress)
-//        print("HEADER SIZE IN WORDS IS \(header.sizeInWords) SHOULD BE \(self.sizeInBytes / 8)")
+        self.metaclass.allocateAddresses(using: allocator)
         for aClass in self.superclasses
             {
             aClass.allocateAddresses(using: allocator)
@@ -1137,52 +1070,61 @@ public class TypeClass: TypeConstructor
             offset += Argon.kWordSizeInBytesInt
             }
         }
+        
+    @discardableResult
+    public override func typeVar(_ label: Label) -> TypeVariable
+        {
+        let typeVariable = TypeContext.freshTypeVariable(named: label)
+        self.generics.append(typeVariable)
+        return(typeVariable)
+        }
+        
+    @discardableResult
+    public override func typeVar(_ typeVar: TypeVariable) -> Type
+        {
+        self.generics.append(typeVar)
+        return(self)
+        }
+        
+    public override func typeVar(atId: Int) -> TypeVariable?
+        {
+        for element in self.generics
+            {
+            if let typeVar = element as? TypeVariable
+                {
+                if typeVar.id == atId
+                    {
+                    return(typeVar)
+                    }
+                }
+            }
+        return(nil)
+        }
+        
+    public override func isEquivalent(_ type: Type) -> Bool
+        {
+        if self.label != type.label
+            {
+            return(false)
+            }
+        if let rhs = type as? TypeClass
+            {
+            if self.generics.count != rhs.generics.count
+                {
+                return(false)
+                }
+            for (left,right) in zip(self.generics,rhs.generics)
+                {
+                if !left.isEquivalent(right)
+                    {
+                    return(false)
+                    }
+                }
+            return(true)
+            }
+        return(false)
+        }
     }
 
-//public class TypeRootClass: TypeClass
-//    {
-//    public override var isRootClass: Bool
-//        {
-//        return(true)
-//        }
-//
-//    public init()
-//        {
-//        super.init(label: "Object",isSystem: true,generics: [])
-//        }
-//
-//    required init?(coder: NSCoder)
-//        {
-//        super.init(coder: coder)
-//        }
-//
-//    required init(label: Label) {
-//        fatalError("init(label:) has not been implemented")
-//    }
-//
-//    required init(label: Label, isSystem: Bool = false, generics: Types = []) {
-//        fatalError("init(label:isSystem:generics:) has not been implemented")
-//    }
-//}
-//
-//public class TypeValueClass: TypeClass
-//    {
-//    public override var isValueClass: Bool
-//        {
-//        return(true)
-//        }
-//    }
-//
-//public class TypePrimitiveClass: TypeClass
-//    {
-//    }
-//
-//public class TypeArrayClass: TypeClass
-//    {
-//    }
-//
 public typealias TypeClasses = Array<TypeClass>
-//
-//public class TypeClassClass: TypeClass
-//    {
-//    }
+

@@ -410,7 +410,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             {
             block.initializeType(inContext: context)
             }
-        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
+//        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
         self.type = context.voidType
         }
         
@@ -420,7 +420,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             {
             block.inferType(inContext: context)
             }
-        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
+//        let blockTypes = self.returnBlocks.filter{$0.enclosingMethodInstance == self.container.enclosingMethodInstance}.reduce(TypeUnion(),{$0.append($1.type)})
         self.type = context.voidType
         }
         

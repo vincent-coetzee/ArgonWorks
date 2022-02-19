@@ -119,7 +119,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         let testClass = ArgonModule.shared.lookup(label: "ClassE") as! TypeClass
         testClass.printLayout()
         print()
-        let classes = [ArgonModule.shared.array,ArgonModule.shared.slot,ArgonModule.shared.string,ArgonModule.shared.classType,ArgonModule.shared.treeNode].map{$0 as! TypeClass}
+        let classes = [ArgonModule.shared.array,ArgonModule.shared.slot,ArgonModule.shared.string,ArgonModule.shared.classType,ArgonModule.shared.treeNode,ArgonModule.shared.block].map{$0 as! TypeClass}
         for someClass in classes
             {
             someClass.cacheIndices()
@@ -145,10 +145,28 @@ class AppDelegate: NSObject, NSApplicationDelegate
         ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object as! TypeClass,depth:"")
         ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object.type as! TypeClass,depth:"")
         let vulcan = ArgonModule.shared.lookup(label: "Vulcan") as! TypeClass
-        print(vulcan.topologicalSort())
+        let sorter1 = TopologicalSorter(class: vulcan)
+        let sort1 = sorter1.sortedClasses()
+        print(sort1)
         let human = ArgonModule.shared.lookup(label: "Human") as! TypeClass
-        print(human.topologicalSort())
+        let sorter2 = TopologicalSorter(class: human)
+        let sort2 = sorter2.sortedClasses()
+        print(sort2)
         
+        let arrayAddress = payload.staticSegment.allocateArray(size: 21)
+        let arrayPointer = ArrayPointer(dirtyAddress: arrayAddress)!
+        for index in 0..<21
+            {
+            arrayPointer.append(Word(index))
+            }
+        let string1 = payload.staticSegment.allocateString("This is a rather long string that we want allocated so we can see if it overwrites the array.")
+        assert(arrayPointer.size == 21)
+        assert(arrayPointer.count == 21)
+        for index in 0..<21
+            {
+            assert(arrayPointer[index] == Word(index))
+            }
+            
         let bitSet = BitSet()
         bitSet.addBitField(named: "opcode", width: 8)
         bitSet.addBitField(named: "mode", width: 4)
@@ -261,7 +279,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         method3.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
         method3.returnType = ArgonModule.shared.void
         module1.addSymbol(method3)
-        print(person.precedenceList)
+        print(person.classPrecedenceList)
         var instanceSet = module1.methodInstanceSet(withLabel: "name")
         instanceSet.display()
         var types = [person,ArgonModule.shared.string]
@@ -270,7 +288,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
         print(instanceSet.mostSpecificInstance(forTypes: types))
         types = [entity,ArgonModule.shared.string]
         print(instanceSet.mostSpecificInstance(forTypes: types))
-        print(person.precedenceList)
+        print(person.classPrecedenceList)
         let method4 = MethodInstance(label: "setName")
         method4.setModule(module1)
         method4.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
@@ -322,6 +340,26 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //        assert(module1.lookup(label: "module2").isNotNil)
 //        assert(module2.lookup(label: "class1").isNotNil)
 //        assert(module2.lookup(label: "class2").isNotNil)
+
+        let vectorAddress = payload.staticSegment.allocateVector(size: 25)
+        let vectorInstance = VectorPointer(address: vectorAddress,segment: payload.staticSegment)
+        for index in 0..<10000
+            {
+            vectorInstance.append(Word(integer: index))
+            }
+        for index in 0..<10000
+            {
+            let value = vectorInstance[index]
+            assert(index == value.integerValue)
+            }
+        vectorInstance.remove(atIndex: 9999)
+        assert(vectorInstance.count == 9999)
+        vectorInstance.remove(atIndex: 9998)
+        assert(vectorInstance.count == 9998)
+        assert(vectorInstance[9997] == Word(9997))
+        vectorInstance.remove(atIndex: 0)
+        assert(vectorInstance[0] == Word(1))
+        assert(vectorInstance[200] == Word(201))
         }
 
     func applicationWillTerminate(_ aNotification: Notification)

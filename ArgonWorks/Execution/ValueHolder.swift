@@ -13,6 +13,7 @@ public enum ValueHolder
     case integer(Int)
     case uInteger(Word)
     case string(Word,String)
+    case type(Type)
     
     public var displayString: String
         {
@@ -24,6 +25,8 @@ public enum ValueHolder
                 return("integer(\(value))")
             case .uInteger(let value):
                 return("uInteger(\(value))")
+            case .type(let value):
+                return("type(\(value.displayString))")
             case .string(let address,let string):
                 let addressString = String(format:"%08X",address)
                 return("string(\(addressString),\(string))")

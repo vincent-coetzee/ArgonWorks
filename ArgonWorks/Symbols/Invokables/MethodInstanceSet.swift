@@ -7,8 +7,26 @@
 
 import Foundation
 
+extension Collection
+    {
+    public var isNotEmpty: Bool
+        {
+        !self.isEmpty
+        }
+    }
+    
 public class MethodInstanceSet
     {
+    public var isNotEmpty: Bool
+        {
+        !self.isEmpty
+        }
+        
+    public var isEmpty: Bool
+        {
+        self.instances.isEmpty
+        }
+        
     public var hasGenericInstances: Bool
         {
         for instance in self.instances
@@ -57,6 +75,11 @@ public class MethodInstanceSet
         print(selectedInstances)
 //        print("===============================================")
         return(selectedInstances.first)
+        }
+        
+    public func instancesMatching(_ signature: MethodSignature) -> MethodInstanceSet
+        {
+        MethodInstanceSet(instances: self.instances.filter{$0.matches(signature)})
         }
         
     public func display()

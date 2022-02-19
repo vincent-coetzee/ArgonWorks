@@ -298,6 +298,10 @@ public indirect enum Literal:Hashable,Displayable
             case .dateTime:
                 return(self)
             case .class(let aClass):
+                if aClass.label == "DateClass"
+                    {
+                    print("halt")
+                    }
                 return(.class(substitution.substitute(aClass) as! TypeClass))
             case .module(let module):
                 return(.module(substitution.substitute(module) as! Module))
@@ -592,7 +596,7 @@ public class LiteralExpression: Expression
             case .array(let array):
                 self.type = array.type(inContext: context)
             case .class(let aClass):
-                    self.type = TypeClass(label: aClass.label,generics: aClass.generics)
+                    self.type = aClass.type
             case .module(let module):
                 self.type = module.type
             case .enumeration(let enumeration):
@@ -640,6 +644,11 @@ public class LiteralExpression: Expression
             default:
                 return(nil)
             }
+        }
+        
+    public override func substitute(from: TypeContext.Substitution) -> Self
+        {
+        LiteralExpression(self.literal.substitute(from: from)) as! Self
         }
         
     public override func emitAddressCode(into instance: InstructionBuffer,using: CodeGenerator) throws

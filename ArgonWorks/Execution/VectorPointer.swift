@@ -48,14 +48,29 @@ public class VectorPointer: ClassBasedPointer
         self.blockPointer = WordPointer(bitPattern: self.baseAddress)
         }
         
+    public func remove(atIndex: Int)
+        {
+        if atIndex >= self.count
+            {
+            fatalError()
+            }
+        let fromAddress = self.baseAddress + Word((atIndex + 1) * Argon.kWordSizeInBytesInt)
+        let toAddress = self.baseAddress + Word(atIndex * Argon.kWordSizeInBytesInt)
+        let fromPointer = UnsafeMutableRawPointer(bitPattern: fromAddress)
+        let toPointer = UnsafeMutableRawPointer(bitPattern: toAddress)
+        let size = self.count - atIndex
+        memmove(toPointer,fromPointer,size)
+        self.count -= 1
+        }
+        
     public func append(_ word: Word)
         {
-        if count + 1 >= self.size
+        if self.count >= self.size
             {
             self.grow()
             }
-        let address = self.baseAddress + Word(self.count * Argon.kWordSizeInBytesInt)
-        SetWordAtAddress(word,address)
+        self.blockPointer[self.count] = word
+        self.count += 1
         }
         
     private func grow()

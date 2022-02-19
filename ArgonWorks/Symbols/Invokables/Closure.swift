@@ -74,7 +74,7 @@ public class Closure:Invocable
             {
             block.initializeType(inContext: context)
             }
-        self.type = TypeFunction(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
+        self.type = TypeFunction(label: "Closure",types: self.parameters.map{$0.type},returnType: self.returnType)
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -86,6 +86,11 @@ public class Closure:Invocable
         for block in self.block.blocks
             {
             block.initializeTypeConstraints(inContext: context)
+            }
+        let returnBlocks = self.block.returnBlocks
+        for returnBlock in returnBlocks
+            {
+            context.append(TypeConstraint(left: self.returnType,right: returnBlock.type,origin: .symbol(self)))
             }
         }
         

@@ -50,6 +50,11 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
+    public var methodSignature: MethodSignature
+        {
+        MethodSignature(methodInstance: self)
+        }
+        
     public override var childOutlineItemCount: Int
         {
         self.parameters.count + 2
@@ -185,11 +190,6 @@ public class MethodInstance: Function
         false
         }
         
-    public var typeSignature:TypeSignature
-        {
-        TypeSignature(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
-        }
-        
     public var mangledName: String
         {
         let start = self.label
@@ -311,14 +311,6 @@ public class MethodInstance: Function
         return(self)
         }
         
-    public var methodSignature: MethodSignature
-        {
-        let signature = MethodSignature(label: self.label,methodInstance: self)
-        signature.parameters = self.parameters
-        signature.returnType = self.returnType
-        return(signature)
-        }
-        
     public override func allocateAddresses(using allocator: AddressAllocator)
         {
         guard !self.wasAddressAllocationDone else
@@ -415,6 +407,11 @@ public class MethodInstance: Function
             }
         }
         
+    public func matches(_ signature: MethodSignature) -> Bool
+        {
+        MethodSignature(methodInstance: self) == signature
+        }
+        
     public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool
         {
         var failed = false
@@ -491,7 +488,7 @@ public class MethodInstance: Function
                 }
             else if thisType.isClass && thatType.isClass && argumentType.isClass
                 {
-                let argumentClassList = (argumentType as! TypeClass).precedenceList
+                let argumentClassList = (argumentType as! TypeClass).classPrecedenceList
                 if let thisTypeIndex = argumentClassList.firstIndex(of: thisType as! TypeClass),let thatTypeIndex = argumentClassList.firstIndex(of: thatType as! TypeClass)
                     {
                     orderings.append(thisTypeIndex > thatTypeIndex ? .more : .less)

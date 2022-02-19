@@ -178,10 +178,15 @@ public class Slot:Symbol
         return(true)
         }
         
-    public var cloned: Slot
+    public var cloned: Self
         {
-        let newSlot = Slot(label: self.label,type:self.type)
+        let newSlot = Self(label: self.label)
+        newSlot.type = self.type
         newSlot.offset = self.offset
+        newSlot.owningClass = self.owningClass
+        newSlot.initialValue = self.initialValue
+        newSlot.slotType = self.slotType
+        newSlot.slotSymbol = self.slotSymbol
         return(newSlot)
         }
         
@@ -197,6 +202,7 @@ public class Slot:Symbol
     public var slotType: SlotType = .kInstanceSlot
     public var slotSymbol: Int = 0
     public weak var owningClass: TypeClass?
+    public var classIndexInVirtualTable = -1
 
     init(label:Label,type:Type? = nil)
         {
@@ -285,6 +291,10 @@ public class Slot:Symbol
         
     public override func layoutInMemory(using allocator: AddressAllocator)
         {
+        guard self.wasAddressAllocationDone else
+            {
+            fatalError("Address allocation should have been done")
+            }
         guard !self.wasMemoryLayoutDone else
             {
             return
@@ -298,13 +308,14 @@ public class Slot:Symbol
         slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        slotPointer.setInteger(self.classIndexInVirtualTable,atSlot: "vtIndex")
         if !(self is GlobalSlot || self is ModuleSlot)
             {
             slotPointer.setAddress(self.owningClass!.memoryAddress,atSlot: "owningClass")
             }
         else
             {
-            slotPointer.setAddress(0,atSlot: "owningClass")
+            slotPointer.setAddress(nil,atSlot: "owningClass")
             }
         let slotIndex = allocator.payload.symbolRegistry.registerSymbol("#" + self.label)
         slotPointer.setInteger(slotIndex,atSlot: "symbol")

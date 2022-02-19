@@ -119,10 +119,10 @@ public class TypeConstructor: Type
         }
         
     @discardableResult
-    public override func typeVar(_ label: Label) -> Type
+    public override func typeVar(_ label: Label) -> TypeVariable
         {
         let typeVariable = TypeContext.freshTypeVariable(named: label)
         self.generics.append(typeVariable)
-        return(self)
+        return(typeVariable)
         }
     }

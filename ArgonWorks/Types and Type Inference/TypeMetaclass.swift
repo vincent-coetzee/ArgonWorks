@@ -14,6 +14,20 @@ public class TypeMetaclass: TypeClass
         return(lhs.fullName == rhs.fullName && lhs.generics == rhs.generics)
         }
         
+    public override var displayString: String
+        {
+        var names = self.generics.map{$0.displayString}.joined(separator: ",")
+        if !names.isEmpty
+            {
+            names = "<" + names + ">"
+            }
+        else
+            {
+            names = "<none>"
+            }
+        return("TypeMetaclass(\(self.label)\(names))")
+        }
+        
     public override var sizeInBytes: Int
         {
         ArgonModule.shared.metaclassType.instanceSizeInBytes
@@ -27,5 +41,37 @@ public class TypeMetaclass: TypeClass
     public override var objectType: Argon.ObjectType
         {
         .metaclass
+        }
+        
+    public func resetInheritance()
+        {
+        self.supertypes = []
+        }
+        
+    public override func addSupertype(_ type: Type)
+        {
+        if type.label == "Class"
+            {
+            print("HALT")
+            }
+        if let aType = type as? TypeMetaclass
+            {
+            super.addSupertype(type)
+            return
+            }
+        print("ERROR")
+        }
+        
+    @discardableResult
+    public override func makeMetaclass() -> TypeClass
+        {
+        self.metaclass = ArgonModule.shared.metaclassType as? TypeClass
+        self.type = self.metaclass
+        return(self.metaclass as! TypeClass)
+        }
+        
+    public override func configureMetaclass()
+        {
+        self.metaclass.type = ArgonModule.shared.metaclassType
         }
     }

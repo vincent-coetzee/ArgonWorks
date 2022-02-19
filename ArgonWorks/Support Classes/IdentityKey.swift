@@ -11,6 +11,11 @@ fileprivate var NextKey = IdentityKey(major: 0,minor: 0)
 
 public class IdentityKey: NSObject,NSCoding,Comparable,StringConvertible
     {
+    public override var hash: Int
+        {
+        self.majorKey << 13 ^ self.minorKey
+        }
+        
     public var stringValue: String
         {
         self.description
@@ -30,7 +35,7 @@ public class IdentityKey: NSObject,NSCoding,Comparable,StringConvertible
         
     public static func ==(lhs:IdentityKey,rhs:IdentityKey) -> Bool
         {
-        lhs.majorKey == rhs.majorKey && lhs.minorKey == rhs.minorKey
+        lhs.isEqual(rhs)
         }
         
     public override var description: String

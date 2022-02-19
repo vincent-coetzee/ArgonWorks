@@ -581,4 +581,298 @@ public class InlineMethodInstance: StandardMethodInstance
             }
         return(self)
         }
+        
+    public func setInsertMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func setContainsMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func setIntersectionMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func setUnionMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func setRemoveMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func listRemoveMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func listInsertMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+//    public func listAppendMethod() -> StandardMethodInstance
+//        {
+//        self.closure =
+//            {
+//            (arguments,generator,buffer) -> Void in
+////            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+////            buffer.add(.PUSH,arguments[0].value.place)
+////            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+////            buffer.add(.PUSH,arguments[1].value.place)
+////            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+////            buffer.add(.PUSH,arguments[2].value.place)
+////            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+////            buffer.add(.POPN,.integer(Argon.Integer(3)))
+//            }
+//        return(self)
+//        }
+        
+    public func listContainsMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func listInsertBeforeMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func listInsertAfterMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func arrayInsertMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func arrayRemoveMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func arrayAppendMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func arrayAppendArrayMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func arrayContainsMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+//            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[0].value.place)
+//            try! arguments[1].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[1].value.place)
+//            try! arguments[3].value.emitValueCode(into: buffer, using: generator)
+//            buffer.add(.PUSH,arguments[2].value.place)
+//            buffer.add(.TDIFF,arguments[0].value.place,arguments[1].value.place,.register(.RR))
+//            buffer.add(.POPN,.integer(Argon.Integer(3)))
+            }
+        return(self)
+        }
+        
+    public func rawValueMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+            buffer.add(.RAW,arguments[0].value.place,.register(.RR))
+            }
+        return(self)
+        }
+        
+    public func makeEnumerationMethod() -> StandardMethodInstance
+        {
+        self.closure =
+            {
+            (arguments,generator,buffer) -> Void in
+            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
+            buffer.add(.MKENUM,arguments[0].value.place,.register(.RR))
+            }
+        return(self)
+        }
     }

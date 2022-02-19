@@ -112,12 +112,12 @@ extension Word
         self = UInt64(bitPattern: Int(integer)) & ~(Argon.kTagBits << Argon.kTagShift)
         }
         
-    public init(address: Word,offset: Word)
-        {
-        let bottom = address & 17592186044415
-        let top = (offset & 0b11111111_11111111) << 44
-        self = top | bottom
-        }
+//    public init(address: Word,offset: Word)
+//        {
+//        let bottom = address & 17592186044415
+//        let top = (offset & 0b11111111_11111111) << 44
+//        self = top | bottom
+//        }
         
     public init(uInteger: Argon.UInteger)
         {
@@ -140,7 +140,7 @@ extension Word
         
     public init(float: Argon.Float)
         {
-        let pattern = float.bitPattern >> 5
+        let pattern = float.bitPattern >> 4
         let base = pattern & ~Argon.kTagMask
         self = base | Argon.kFloatTag
         }
@@ -290,11 +290,11 @@ extension Address
             }
         }
         
-    public var isEnumerationInstancePointer: Bool
-        {
-        let value = (Argon.kIsEnumerationInstancePointerBitMask & self) >> Argon.kIsEnumerationInstancePointerShift
-        return(value & 1 == 1)
-        }
+//    public var isEnumerationInstancePointer: Bool
+//        {
+//        let value = (Argon.kIsEnumerationInstancePointerBitMask & self) >> Argon.kIsEnumerationInstancePointerShift
+//        return(value & 1 == 1)
+//        }
         
     public var cleanAddress: Address
         {

@@ -95,6 +95,7 @@ public class InstructionBuffer
         
     public func flattenLabels(atAddress: Address)
         {
+        self.instructions[0].addressLabel = atAddress
         for instruction in self.instructions
             {
             if instruction.hasLabelOperand
@@ -104,6 +105,7 @@ public class InstructionBuffer
                 let instructionIndex = targetInstruction.index
                 let address = atAddress + Word(instructionIndex * MemoryLayout<Word>.size)
                 instruction.replaceLabel(withAddress: address)
+                targetInstruction.addressLabel = address
                 }
             }
         }

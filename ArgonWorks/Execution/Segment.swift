@@ -91,6 +91,7 @@ public class Segment
     public func write(toStream: UnsafeMutablePointer<FILE>) throws
         {
         fwrite(UnsafeRawPointer(bitPattern: Int(self.baseAddress)),self.usedSizeInBytes,1,toStream)
+        print("SEGMENT \(self.segmentType) WRITING \(self.usedSizeInBytes)")
         }
     ///
     /// Align the given value to the given alignment but make sure
@@ -230,11 +231,15 @@ public class Segment
         let extraSizeInBytes = self.align(newSize * MemoryLayout<Word>.size)
         let blockAddress = self.allocateObject(ofType: ArgonModule.shared.block,extraSizeInBytes: Int(extraSizeInBytes))
         let blockPointer = ClassBasedPointer(address: blockAddress,type: ArgonModule.shared.block)
+        blockPointer.setClass(ArgonModule.shared.block)
+        blockPointer.sizeInBytes = Word(ArgonModule.shared.block.instanceSizeInBytes) + extraSizeInBytes
+        blockPointer.hasBytes = true
+        blockPointer.objectType = .block
         blockPointer.setInteger(0,atSlot: "count")
         blockPointer.setInteger(newSize,atSlot: "size")
         blockPointer.setAddress(nil,atSlot: "nextBlock")
         blockPointer.setInteger(0,atSlot: "startIndex")
-        blockPointer.setInteger(newSize,atSlot: "stopIndex")
+        blockPointer.setInteger(0,atSlot: "stopIndex")
         let blockAfter = blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
         memset(UnsafeMutableRawPointer(bitPattern: blockAfter),0,Int(extraSizeInBytes))
         return(blockAddress)
@@ -242,10 +247,13 @@ public class Segment
         
     public func allocateVector(size: Int) -> Address
         {
-        let newSize = size * 7 / 3
+        let newSize = Int(self.align(size * Argon.kWordSizeInBytesInt) / Argon.kWordSizeInBytesWord)
         let blockAddress = self.allocateBlock(sizeInWords: newSize)
-        let vectorAddress = self.allocateObject(ofType: ArgonModule.shared.vector,extraSizeInBytes: 0)
+        let vectorAddress = self.allocateObject(ofType: ArgonModule.shared.vector)
         let pointer = ClassBasedPointer(address: vectorAddress, type: ArgonModule.shared.vector)
+        pointer.setClass(ArgonModule.shared.vector)
+        pointer.objectType = .vector
+        pointer.sizeInBytes = Word(ArgonModule.shared.vector.instanceSizeInBytes)
         pointer.setAddress(blockAddress,atSlot: "block")
         pointer.setInteger(0,atSlot: "count")
         pointer.setInteger(newSize,atSlot: "size")
@@ -375,6 +383,7 @@ public class Segment
             }
         let stringPointer = StringPointer(address: address)
         stringPointer.setAddress(blockAddress,atSlot: "block")
+        stringPointer.objectType = .string
         stringPointer.string = string
         stringPointer.tag = .header
         stringPointer.setClass(stringType)
@@ -416,13 +425,19 @@ public class Segment
         arrayPointer.setClass(arrayType)
         arrayPointer.setInteger(elements.count,atSlot: "count")
         arrayPointer.setInteger(size,atSlot: "size")
-        let elementPointer = WordPointer(bitPattern: address + Word(arrayType.layoutSlotCount * Argon.kWordSizeInBytesInt))
+        let elementPointer = WordPointer(bitPattern: blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes))
         var index = 0
         for element in elements
             {
             elementPointer[index] = element
             index += 1
             }
+        let blockPointer = ClassBasedPointer(address: blockAddress,type: ArgonModule.shared.block)
+        blockPointer.setInteger(elements.count,atSlot: "count")
+        blockPointer.setInteger(size,atSlot: "size")
+        blockPointer.setAddress(nil,atSlot: "nextBlock")
+        blockPointer.setInteger(0,atSlot: "startIndex")
+        blockPointer.setInteger(elements.count - 1,atSlot: "stopIndex")
         Header(atAddress: address).tag = .header
         return(address)
         }

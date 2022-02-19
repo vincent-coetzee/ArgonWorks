@@ -15,7 +15,7 @@ public class TypeVariable: Type
         }
     
     internal static var typeVariableCount = 0
-    
+        
     public static func newTypeVariable() -> TypeVariable
         {
         let variable = TypeVariable(index: self.typeVariableCount)
@@ -48,14 +48,6 @@ public class TypeVariable: Type
             {
             }
         }
-    public override var argonHash: Int
-        {
-        var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
-        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
-        hashValue = hashValue << 13 ^ self.id
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
-        }
 
     public override var displayString: String
         {
@@ -87,6 +79,18 @@ public class TypeVariable: Type
         {
         coder.encode(self.id,forKey:"id")
         super.encode(with: coder)
+        }
+        
+    public override func isEquivalent(_ type: Type) -> Bool
+        {
+        if let rhs = type as? TypeVariable
+            {
+            return(rhs.id == self.id)
+            }
+        else
+            {
+            return(true)
+            }
         }
         
     public func occurs(in type: Type) -> Bool
