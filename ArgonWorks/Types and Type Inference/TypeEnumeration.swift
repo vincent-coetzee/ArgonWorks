@@ -5,13 +5,25 @@
 //  Created by Vincent Coetzee on 20/11/21.
 //
 
-import Foundation
+import Cocoa
+
+public typealias TypeEnumerations = Array<TypeEnumeration>
 
 public class TypeEnumeration: TypeConstructor
     {
     public static func ==(lhs:TypeEnumeration,rhs:TypeEnumeration) -> Bool
         {
         lhs.fullName == rhs.fullName && lhs.generics == rhs.generics
+        }
+        
+    public override var symbolType: SymbolType
+        {
+        .enumeration
+        }
+        
+    public override var children: Symbols
+        {
+        self.cases
         }
         
     public override var displayString: String
@@ -42,6 +54,18 @@ public class TypeEnumeration: TypeConstructor
     public override var isEnumeration: Bool
         {
         true
+        }
+        
+    public override var containsTypeVariable: Bool
+        {
+        for aType in self.generics
+            {
+            if aType.containsTypeVariable
+                {
+                return(true)
+                }
+            }
+        return(false)
         }
         
     public override var typeCode:TypeCode
@@ -93,18 +117,15 @@ public class TypeEnumeration: TypeConstructor
         return(Int(bitPattern: word))
         }
         
-//    public override var type: Type?
-//        {
-//        get
-//            {
-//            let anEnum = TypeEnumeration(enumeration: self.enumeration,generics: self.generics.map{$0.type!})
-//            anEnum.setParent(self.parent)
-//            return(anEnum)
-//            }
-//        set
-//            {
-//            }
-//        }
+    public override var iconName: String
+        {
+        "IconEnumeration"
+        }
+        
+    public override var iconTint: NSColor
+        {
+        SyntaxColorPalette.enumerationColor
+        }
         
     public var cases: EnumerationCases = []
     public var rawType: Type?
@@ -142,7 +163,7 @@ public class TypeEnumeration: TypeConstructor
                 return(aCase)
                 }
             }
-        return(self.container.lookup(label: label))
+        return(self.module.lookup(label: label))
         }
         
     public func caseIndex(forSymbol: Argon.Symbol) -> Int?
@@ -225,7 +246,7 @@ public class TypeEnumeration: TypeConstructor
         let newClass = TypeEnumeration(label: self.label,isSystem: self.isSystemType,generics: types)
         newClass.ancestors.append(self)
         newClass.setModule(self.module)
-        newClass.container = self.container
+//        newClass.container = self.container
         newClass.setIndex(self.index.keyByIncrementingMinor())
         newClass.cases = self.cases
         newClass.rawType = self.rawType

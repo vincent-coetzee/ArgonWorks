@@ -113,7 +113,7 @@ public class ComparisonExpression: BinaryExpression
                 default:
                     mode = .none
                 }
-            switch(self.operation.rawValue)
+            switch(self.operation)
                 {
                 case("<"):
                     instance.add(mode,.LT,self.lhs.place,self.rhs.place,temporary)
@@ -134,7 +134,7 @@ public class ComparisonExpression: BinaryExpression
             }
         else
             {
-            let label = "#" + self.operation.rawValue
+            let label = "#" + self.operation
             let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
             instance.add(.PUSH,self.lhs.place)
             instance.add(.PUSH,self.rhs.place)

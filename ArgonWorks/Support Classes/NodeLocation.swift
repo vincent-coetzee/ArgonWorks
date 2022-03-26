@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum NodeLocation: Storable
+public enum NodeLocation
     {
     case declaration(Location)
     case reference(Location)
@@ -32,16 +32,6 @@ public enum NodeLocation: Storable
             case .reference(let location):
                 return(location)
             }
-        }
-        
-    public init(input: InputFile) throws
-        {
-        fatalError()
-        }
-    
-    public func write(output: OutputFile) throws
-        {
-        
         }
     }
 

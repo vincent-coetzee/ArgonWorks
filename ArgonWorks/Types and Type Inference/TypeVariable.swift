@@ -38,11 +38,16 @@ public class TypeVariable: Type
         [self]
         }
         
+    public override var containsTypeVariable: Bool
+        {
+        true
+        }
+        
     public override var type: Type!
         {
         get
             {
-            self.boundType.isNil ? ArgonModule.shared.void : self.boundType!.type
+            ArgonModule.shared.void
             }
         set
             {
@@ -55,7 +60,7 @@ public class TypeVariable: Type
         }
         
     internal var id: Int
-    internal var boundType: Type?
+//    internal var boundType: Type?
     
     init(index: Int)
         {
@@ -93,20 +98,20 @@ public class TypeVariable: Type
             }
         }
         
-    public func occurs(in type: Type) -> Bool
-        {
-        if self.boundType.isNil
-            {
-            return(false)
-            }
-        return(type.contains(self))
-        }
+//    public func occurs(in type: Type) -> Bool
+//        {
+//        if self.boundType.isNil
+//            {
+//            return(false)
+//            }
+//        return(type.contains(self))
+//        }
         
     public override func freshTypeVariable(inContext context:TypeContext) -> Self
         {
 //        let variable = context.freshTypeVariable(forTypeVariable: self)
         let variable = context.freshTypeVariable(forTypeVariable: self)
-        self.boundType = variable
+//        self.boundType = variable
         return(variable as! Self)
         }
         

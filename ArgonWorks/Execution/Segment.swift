@@ -19,10 +19,11 @@ public class Segment
     {
     public enum SegmentType:Word
         {
-        case `static` =   1099511627776
-        case code =       2199023255552
-        case stack =      4398046511104
-        case managed =    8796093022208
+        case `static` =     68719476736
+        case code =        137438953472
+        case stack =       274877906944
+        case managed =     549755813888
+        case space =      1099511627776
         }
 
     public static let emptySegment = EmptySegment()
@@ -91,7 +92,6 @@ public class Segment
     public func write(toStream: UnsafeMutablePointer<FILE>) throws
         {
         fwrite(UnsafeRawPointer(bitPattern: Int(self.baseAddress)),self.usedSizeInBytes,1,toStream)
-        print("SEGMENT \(self.segmentType) WRITING \(self.usedSizeInBytes)")
         }
     ///
     /// Align the given value to the given alignment but make sure

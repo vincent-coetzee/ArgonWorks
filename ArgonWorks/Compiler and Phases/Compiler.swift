@@ -14,20 +14,17 @@ public class Compiler
     
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
-    internal var tokenRenderer:SemanticTokenRenderer
     internal let source: String
-    internal let reporter: Reporter
+    internal let tokenHandler: TokenHandler?
     
-    init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
+    init(source: String,tokenHandler: TokenHandler? = nil)
         {
         Argon.resetStatics()
         Argon.resetTypes()
         TopModule.resetTopModule()
         self.source = source
         self.currentPass = nil
-        self.tokenRenderer = tokenRenderer
-        self.tokenRenderer.update(source)
-        self.reporter = reportingContext
+        self.tokenHandler = tokenHandler
         }
 
 //    init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
@@ -59,10 +56,12 @@ public class Compiler
 //                    objectFile!.module.display(indent: "")
 
     @discardableResult
-    public func compile(parseOnly: Bool = false,moduleReceiver: ModuleReceiver? = nil) -> Module?
+    public func compile(parseOnly: Bool = false) -> Module?
         {
         let addressAllocator = AddressAllocator()
-        guard let parsedModule = Parser(self).processModule(nil) else
+        let parser = Parser(self)
+        parser.tokenHandler = self.tokenHandler
+        guard let parsedModule = parser.processModule(nil) else
             {
             return(nil)
             }
@@ -78,10 +77,10 @@ public class Compiler
             {
             return(addressAllocatedModule)
             }
-        moduleReceiver?.moduleUpdated(codeGeneratedModule)
         addressAllocator.payload.installArgonModule(ArgonModule.shared)
         addressAllocator.payload.installClientModule(codeGeneratedModule)
         addressAllocator.payload.installMainMethod(codeGeneratedModule.mainMethod)
+        try! ObjectFile.write(module: addressAllocatedModule, topModule: TopModule.shared, atPath: "/Users/vincent/Desktop/Test.armod")
         let vm = VirtualMachine(payload: addressAllocator.payload)
         try! vm.payload.write(toPath: "/Users/vincent/Desktop/InferenceSample.carton")
         codeGeneratedModule.display(indent: "")
@@ -89,11 +88,11 @@ public class Compiler
             {
             return(codeGeneratedModule)
             }
-        let visitor = TestVisitor.visit(optimizedModule)
+        let visitor = IssueVisitor.visit(optimizedModule)
 //        print(visitor.allIssues)
         let someIssues = optimizedModule.issues
         print(someIssues)
-        self.reporter.pushIssues(visitor.allIssues)
+//        self.reporter.pushIssues(visitor.allIssues)
         return(optimizedModule)
         }
     }

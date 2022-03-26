@@ -17,9 +17,9 @@ public class UnaryExpression: Expression
     private let operationName: String
     private let rhs: Expression
     
-    init(_ operation:Token.Symbol,_ rhs:Expression)
+    init(_ operation:String,_ rhs:Expression)
         {
-        self.operationName = operation.rawValue
+        self.operationName = operation
         self.rhs = rhs
         super.init()
         }
@@ -62,7 +62,7 @@ public class UnaryExpression: Expression
         
    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let expression = UnaryExpression(Token.Symbol(rawValue: self.operationName)!,self.rhs.freshTypeVariable(inContext: context))
+        let expression = UnaryExpression(self.operationName,self.rhs.freshTypeVariable(inContext: context))
         expression.locations = self.locations
         expression.issues = self.issues
         return(expression as! Self)
@@ -70,7 +70,7 @@ public class UnaryExpression: Expression
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
+        let expression = UnaryExpression(self.operationName,substitution.substitute(self.rhs)) as! Self
         expression.locations = self.locations
         expression.issues = self.issues
         return(expression)
@@ -83,7 +83,6 @@ public class UnaryExpression: Expression
             instance.add(lineNumber: location.line)
             }
         try self.rhs.emitCode(into: instance, using: using)
-        var opcode = Opcode.NOP
         let temp = instance.nextTemporary
         switch(self.operationName)
             {

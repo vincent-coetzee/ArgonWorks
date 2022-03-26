@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class TestVisitor: Visitor
+public class IssueVisitor: Visitor
     {
     internal var allIssues = CompilerIssues()
     
@@ -34,9 +34,9 @@ public class TestVisitor: Visitor
         {
         }
         
-    public func accept(_ tuple: Tuple) throws
-        {
-        }
+//    public func accept(_ tuple: Tuple) throws
+//        {
+//        }
         
     public func startVisit()
         {
@@ -76,11 +76,11 @@ public class TestWalker: Visitor
         {
         print("\(Swift.type(of: argument)) \(argument.displayString) =====>> \(argument.value.type.displayString)")
         }
-        
-    public func accept(_ tuple: Tuple) throws
-        {
-        print("\(Swift.type(of: tuple)) \(tuple.displayString) =====>> \(tuple.type.displayString)")
-        }
+//        
+//    public func accept(_ tuple: Tuple) throws
+//        {
+//        print("\(Swift.type(of: tuple)) \(tuple.displayString) =====>> \(tuple.type.displayString)")
+//        }
         
     public func startVisit()
         {

@@ -9,7 +9,7 @@ import Foundation
 
 fileprivate var NextKey = IdentityKey(major: 0,minor: 0)
 
-public class IdentityKey: NSObject,NSCoding,Comparable,StringConvertible
+public class IdentityKey: NSObject,NSCoding,Comparable
     {
     public override var hash: Int
         {

@@ -5,7 +5,7 @@
 //  Created by Vincent Coetzee on 20/11/21.
 //
 
-import Foundation
+import Cocoa
 import FFI
 import MachMemory
 
@@ -27,7 +27,22 @@ public class TypeClass: TypeConstructor
         .class
         }
         
-    public var isRootClass: Bool
+    public override var symbolType: SymbolType
+        {
+        .class
+        }
+        
+    public override var displayName: String
+        {
+        self.label
+        }
+        
+    public override var children: Symbols
+        {
+        self.instanceSlots.sorted{$0.label < $1.label} + self.subtypes.map{$0 as! TypeClass}.sorted{$0.label < $1.label }
+        }
+        
+    public override var isRootClass: Bool
         {
         self.typeFlags.contains(.kRootTypeFlag)
         }
@@ -51,27 +66,27 @@ public class TypeClass: TypeConstructor
         
     public override var isSetClass: Bool
         {
-        self.label == "Set" && self.typeFlags.contains(.kSystemTypeFlag)
+        self.label == "Set" && self.typeFlags.contains(.kSystemTypeFlag) && self.module.label == "Argon"
         }
         
     public override var isArrayClass: Bool
         {
-        self.label == "Array" && self.typeFlags.contains(.kSystemTypeFlag)
+        self.label == "Array" && self.typeFlags.contains(.kSystemTypeFlag) && self.module.label == "Argon"
         }
         
     public override var isListClass: Bool
         {
-        self.label == "List" && self.typeFlags.contains(.kSystemTypeFlag)
+        self.label == "List" && self.typeFlags.contains(.kSystemTypeFlag) && self.module.label == "Argon"
         }
         
     public override var isDictionaryClass: Bool
         {
-        self.label == "Dictionary" && self.typeFlags.contains(.kSystemTypeFlag)
+        self.label == "Dictionary" && self.typeFlags.contains(.kSystemTypeFlag) && self.module.label == "Argon"
         }
         
     public override var isBitSetClass: Bool
         {
-        self.label == "BitSet" && self.typeFlags.contains(.kSystemTypeFlag)
+        self.label == "BitSet" && self.typeFlags.contains(.kSystemTypeFlag) && self.module.label == "Argon"
         }
         
     public var lastSuperclass: TypeClass
@@ -237,6 +252,18 @@ public class TypeClass: TypeConstructor
         fatalError()
         }
         
+    public override var containsTypeVariable: Bool
+        {
+        for aType in self.generics
+            {
+            if aType.containsTypeVariable
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+        
     public override var subtypes: Types
         {
         get
@@ -271,6 +298,16 @@ public class TypeClass: TypeConstructor
         ArgonModule.shared.classType as! TypeClass
         }
         
+    public override var iconName: String
+        {
+        "IconClass"
+        }
+        
+    public override var iconTint: NSColor
+        {
+        SyntaxColorPalette.classColor
+        }
+        
     public override var argonHash: Int
         {
         var hashValue = "\(Swift.type(of: self))".polynomialRollingHash
@@ -279,8 +316,7 @@ public class TypeClass: TypeConstructor
             {
             hashValue = hashValue << 13 ^ type.argonHash
             }
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
     ///
     ///
@@ -362,7 +398,7 @@ public class TypeClass: TypeConstructor
         let newClass = Self(label: self.label,isSystem: self.isSystemType,generics: types)
         newClass.ancestors.append(self)
         newClass.setModule(self.module)
-        newClass.container = self.container
+//        newClass.container = self.container
         newClass.setIndex(self.index.keyByIncrementingMinor())
         newClass.flags(self.typeFlags.subtracting(.kArcheTypeFlag))
         newClass.hasBytes = self.hasBytes
@@ -373,6 +409,15 @@ public class TypeClass: TypeConstructor
         newClass.makeMetaclass()
         newClass.configureMetaclass()
         return(newClass)
+        }
+        
+    public func removeFromHierarchy()
+        {
+        for aClass in self.superclasses
+            {
+            aClass.subtypes.remove(self)
+            }
+        self.subtypes = []
         }
         
     public func configureMetaclass()
@@ -454,14 +499,25 @@ public class TypeClass: TypeConstructor
         {
         if let second = object as? TypeClass
             {
-            return(self.fullName == second.fullName && self.generics.count == second.generics.count && self.generics == second.generics)
+            return(self.identityHash == second.identityHash && self.generics.count == second.generics.count && self.generics == second.generics)
             }
         return(super.isEqual(object))
         }
         
-    public func isSubclass(of superclass: TypeClass) -> Bool
+    public override func isSubclass(of ofType: Type) -> Bool
         {
-        if self == superclass
+        if !(ofType is TypeClass)
+            {
+            return(false)
+            }
+        let superclass = ofType as! TypeClass
+        if self.generics.count != superclass.generics.count
+            {
+            return(false)
+            }
+        let results = zip(self.generics,superclass.generics).map{$0.0.isSubclass(of: $0.1)}
+        let result = results.reduce(true,{$0 && $1})
+        if self == superclass && result
             {
             return(true)
             }
@@ -626,10 +682,6 @@ public class TypeClass: TypeConstructor
             return
             }
         self.wasMemoryLayoutDone = true
-        if self.label == "Metaclass"
-            {
-            print("HALT")
-            }
         let segment = allocator.segment(for: self.segmentType)
         self.metaclass.layoutInMemory(using: allocator)
         let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: self.classType)
@@ -816,7 +868,6 @@ public class TypeClass: TypeConstructor
         for slot in self.layoutSlots
             {
             let index = listOfSuperclasses.firstIndex(of: slot.owningClass!)!
-            print("SLOT \(slot.label) CLASS \(slot.owningClass!.label) VTINDEX \(index)")
             slot.classIndexInVirtualTable = index
             if slot.slotType.contains(.kSystemHeaderSlot)
                 {
@@ -897,10 +948,6 @@ public class TypeClass: TypeConstructor
         
     public override func allocateAddresses(using allocator: AddressAllocator)
         {
-        if self.label == "DateClass"
-            {
-            print("halt")
-            }
         guard !self.wasAddressAllocationDone else
             {
             return
@@ -939,9 +986,19 @@ public class TypeClass: TypeConstructor
         return(self)
         }
         
+    @discardableResult
     public override func slot(_ label: Label,_ type: Type) -> Type
         {
         let slot = InstanceSlot(labeled:label,ofType: type)
+        self.addInstanceSlot(slot)
+        return(self)
+        }
+        
+    @discardableResult
+    public override func slot(_ label: Label,mandatory:Argon.Symbol,_ type: Type) -> Type
+        {
+        let slot = InstanceSlot(labeled:label,ofType: type)
+        slot.slotMandatorySelector = Argon.addStatic(StaticSymbol(string: mandatory))
         self.addInstanceSlot(slot)
         return(self)
         }

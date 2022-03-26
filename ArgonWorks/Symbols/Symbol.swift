@@ -8,7 +8,7 @@
 import Foundation
 import AppKit
 
-public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
+public class Symbol:Node,VisitorReceiver,IssueHolder
     {
 //    public override var className: String
 //        {
@@ -30,16 +30,16 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         self.type.isNil ? "nil" : "\(Swift.type(of: self.type!))(\(self.type!.label))"
         }
         
-    public var outlineItemFields: Dictionary<String, FieldBox>
-        {
-        var fields = Dictionary<String,FieldBox>()
-        fields["class"] = FieldBox(label: "class",root: self,keyPath: \Symbol.classLabel)
-        fields["index"] = FieldBox(label: "index",root: self,keyPath: \Symbol.index)
-        fields["memoryAddress"] = FieldBox(label: "memoryAddress",root: self,keyPath: \Symbol.memoryAddressField)
-        fields["container"] = FieldBox(label: "container",root: self,keyPath: \Symbol.container)
-        fields["typeName"] = FieldBox(label: "typeName",root: self,keyPath: \Symbol.typeNameField)
-        return(fields)
-        }
+//    public var outlineItemFields: Dictionary<String, FieldBox>
+//        {
+//        var fields = Dictionary<String,FieldBox>()
+//        fields["class"] = FieldBox(label: "class",root: self,keyPath: \Symbol.classLabel)
+//        fields["index"] = FieldBox(label: "index",root: self,keyPath: \Symbol.index)
+//        fields["memoryAddress"] = FieldBox(label: "memoryAddress",root: self,keyPath: \Symbol.memoryAddressField)
+//        fields["container"] = FieldBox(label: "container",root: self,keyPath: \Symbol.container)
+//        fields["typeName"] = FieldBox(label: "typeName",root: self,keyPath: \Symbol.typeNameField)
+//        return(fields)
+//        }
     
     public var localLabel: Label
         {
@@ -60,15 +60,15 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         {
         true
         }
-
-    public func childOutlineItem(atIndex: Int) -> OutlineItem
-        {
-        if atIndex == 0
-            {
-            return(self.type)
-            }
-        fatalError()
-        }
+//
+//    public func childOutlineItem(atIndex: Int) -> OutlineItem
+//        {
+//        if atIndex == 0
+//            {
+//            return(self.type)
+//            }
+//        fatalError()
+//        }
     
     public static func ==(lhs:Symbol,rhs:Symbol) -> Bool
         {
@@ -80,22 +80,29 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         let hash1 = "Swift.type(of: self)".polynomialRollingHash
         let hash2 = self.label.polynomialRollingHash
         let hashValue = hash1 << 13 ^ hash2
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
         
     public var fullName: Name
         {
-        if self.module.isNil
-            {
-            return(Name("\\\\"))
-            }
-        return(self.module.fullName + self.label)
+        self.module!.fullName + self.label
         }
         
     public var isEnumerationInstanceClass: Bool
         {
         false
+        }
+        
+    public var identityHash: Int
+        {
+        var hash = 0
+        if self.module.isNotNil
+            {
+            hash = self.module.identityHash
+            }
+        hash = hash << 13 ^ "\(Swift.type(of: self))".polynomialRollingHash
+        hash = hash << 13 ^ self.label.polynomialRollingHash
+        return(hash)
         }
         
     public var methodInstances:MethodInstances
@@ -121,6 +128,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
     public var isInvokable: Bool
         {
         return(false)
+        }
+        
+    public var isMethod: Bool
+        {
+        false
         }
         
     public var isLiteral: Bool
@@ -153,24 +165,25 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         0
         }
         
+    public var isArgonModule: Bool
+        {
+        false
+        }
+        
     public var segmentType: Segment.SegmentType
         {
         .managed
         }
+
         
-    public var isArgonModule: Bool
+    public var isRootClass: Bool
         {
-        return(false)
+        false
         }
         
     public var isGenericType: Bool
         {
         return(false)
-        }
-        
-    public var defaultColor:NSColor
-        {
-        Palette.shared.argonPrimaryColor
         }
         
     public var canBecomeAType: Bool
@@ -238,31 +251,25 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         return(false)
         }
         
-    public var selectionColor: NSColor
-        {
-        get
-            {
-            if self._selectionColor.isNil
-                {
-                return(self.defaultColor)
-                }
-            return(self._selectionColor!)
-            }
-        set
-            {
-            self._selectionColor = newValue
-            }
-        }
-        
+//    public var selectionColor: NSColor
+//        {
+//        get
+//            {
+//            if self._selectionColor.isNil
+//                {
+//                return(self.defaultColor)
+//                }
+//            return(self._selectionColor!)
+//            }
+//        set
+//            {
+//            self._selectionColor = newValue
+//            }
+//        }
+//
     public var isSystemModule: Bool
         {
         return(false)
-        }
-        
-        
-    public var isSystemType: Bool
-        {
-        false
         }
         
     public var isSystemContainer: Bool
@@ -305,11 +312,18 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         "IconEmpty"
         }
         
-    public var symbolColor: NSColor
+    public var icon: NSImage
         {
-        .black
+        let image = NSImage(named: self.iconName)!
+        image.isTemplate = true
+        return(image)
         }
         
+    public var iconTint: NSColor
+        {
+        SyntaxColorPalette.textColor
+        }
+
     public var isPrimitiveType: Bool
         {
         false
@@ -328,6 +342,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
     public var isGenericClassInstance: Bool
         {
         return(false)
+        }
+        
+    public var isMetaclass: Bool
+        {
+        false
         }
         
     public var moduleScope: Module?
@@ -355,9 +374,19 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         10
         }
         
+    public var displayName: String
+        {
+        self.label
+        }
+        
     public var allIssues: CompilerIssues
         {
         return(self.issues)
+        }
+        
+    public var symbolType: SymbolType
+        {
+        .none
         }
         
     internal var wasAddressAllocationDone = false
@@ -372,9 +401,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
     public var type: Type!
     public var place: Instruction.Operand = .none
     public private(set) var memoryAddress: Address = 0
-    public var container: Container = .none
+//    public var container: Container = .none
     public private(set) var module: Module!
     public var ancestors = Symbols()
+//    public var source: String = ""
+    public var isSystemType = false
     
     public required init(label: Label)
         {
@@ -393,7 +424,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         self.type = coder.decodeObject(forKey: "type") as? Type
         self.memoryAddress = Address(coder.decodeInteger(forKey: "memoryAddress"))
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
-        self.container = coder.decodeContainer(forKey: "container")
+//        self.container = coder.decodeContainer(forKey: "container")
         self.module = coder.decodeObject(forKey: "module") as? Module
         self.locations = coder.decodeSourceLocations(forKey: "symboloLocations")
         super.init(coder: coder)
@@ -411,7 +442,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         coder.encode(self.wasMemoryLayoutDone,forKey: "wasMemoryLayoutDone")
         coder.encode(self.wasSlotLayoutDone,forKey: "wasSlotLayoutDone")
         coder.encodeSourceLocations(self.locations,forKey: "symbolLocations")
-        coder.encodeContainer(self.container,forKey: "container")
+//        coder.encodeContainer(self.container,forKey: "container")
         coder.encode(self.type,forKey: "type")
         coder.encode(Int(self.memoryAddress),forKey: "memoryAddress")
         coder.encodeCompilerIssues(self.issues,forKey: "issues")
@@ -426,6 +457,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
             return(self.label == second.label && self.module == second.module)
             }
         return(super.isEqual(object))
+        }
+        
+    public func removeFromParentSymbol()
+        {
+        self.module.removeSymbol(self)
         }
         
     public func setModule(_ module: Module)
@@ -501,21 +537,12 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         {
         if let exporter = archiver as? ImportArchiver
             {
-            if exporter.isSwappingSystemTypes && self.isSystemType
+            if self.isSystemType
                 {
-                if self is TypeClass && self.isSystemType
-                    {
-                    fatalError()
-                    }
-                exporter.noteSwappedSystemType(self)
-                let holder = SystemSymbolPlaceholder(original: self)
-                assert(self.argonHash != 0)
-                return(holder)
+                return(SystemSymbolPlaceholder(original: self))
                 }
-            if exporter.isSwappingImportedSymbols && self.isImported
+            if self.isImported
                 {
-                assert(self.loader.isNotNil,"self.loader should not be nil")
-                exporter.noteSwappedImportedSymbol(self)
                 return(ImportedSymbolPlaceholder(original: self))
                 }
             }
@@ -554,125 +581,125 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
     public func replaceSymbol(_ source: Symbol,with replacement: Symbol)
         {
         }
-        
-    public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
-        {
+//        
+//    public func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+//        {
+////        cell.text.stringValue = self.displayString
+////        let image = NSImage(named: self.imageName)!
+////        image.isTemplate = true
+////        cell.icon.image = image
+////        cell.icon.contentTintColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+////        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
+////
 //        cell.text.stringValue = self.displayString
-//        let image = NSImage(named: self.imageName)!
+//        let image = NSImage(named: self.iconName)!
 //        image.isTemplate = true
 //        cell.icon.image = image
-//        cell.icon.contentTintColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
-//        cell.text.textColor = foregroundColor.isNil ? self.defaultColor : foregroundColor!
-//
-        cell.text.stringValue = self.displayString
-        let image = NSImage(named: self.iconName)!
-        image.isTemplate = true
-        cell.icon.image = image
-//        var iconColor = NSColor.black
-        var textColor = Palette.shared.hierarchyTextColor
-        if self.isSymbolContainer
-            {
-//            var textColor = Palette.shared.hierarchyTextColor
-            if self.childCount == 0
-                {
-//                iconColor = .argonMidGray
-                textColor = .argonWhite70
-                self.selectionColor = NSColor.argonMidGray
-                }
-            else
-                {
-//                iconColor = .argonNeonOrange
-                }
-            }
-        else
-            {
-            textColor = .argonWhite30
-            if self.isSlot
-                {
-//                iconColor = NSColor.argonThemeBlueGreen
-                }
-            else
-                {
-//                iconColor = NSColor.argonNeonOrange
-                }
-            }
-        cell.icon.contentTintColor = Palette.shared.headerTextColor
-        cell.text.textColor = textColor
-        }
+////        var iconColor = NSColor.black
+//        var textColor = Palette.shared.hierarchyTextColor
+//        if self.isSymbolContainer
+//            {
+////            var textColor = Palette.shared.hierarchyTextColor
+//            if self.childCount == 0
+//                {
+////                iconColor = .argonMidGray
+//                textColor = .argonWhite70
+//                self.selectionColor = NSColor.argonMidGray
+//                }
+//            else
+//                {
+////                iconColor = .argonNeonOrange
+//                }
+//            }
+//        else
+//            {
+//            textColor = .argonWhite30
+//            if self.isSlot
+//                {
+////                iconColor = NSColor.argonThemeBlueGreen
+//                }
+//            else
+//                {
+////                iconColor = NSColor.argonNeonOrange
+//                }
+//            }
+//        cell.icon.contentTintColor = Palette.shared.headerTextColor
+//        cell.text.textColor = textColor
+//        }
         
     public func visit(visitor: Visitor) throws
         {
         try visitor.accept(self)
         }
         
-    public func invert(cell: HierarchyCellView)
-        {
-        let image = NSImage(named: self.iconName)!.image(withTintColor: NSColor.black)
-        cell.icon.image = image
-        cell.icon.contentTintColor = NSColor.black
-        cell.icon.isHighlighted = false
-        cell.text.textColor = NSColor.black
-        }
+//    public func invert(cell: HierarchyCellView)
+//        {
+//        let image = NSImage(named: self.iconName)!.image(withTintColor: NSColor.black)
+//        cell.icon.image = image
+//        cell.icon.contentTintColor = NSColor.black
+//        cell.icon.isHighlighted = false
+//        cell.text.textColor = NSColor.black
+//        }
+//        
+//    public func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+//        {
+//        leaderCell.textField?.stringValue = ""
+//        }
+//        
+//    public func isElement(ofType: Group.ElementType) -> Bool
+//        {
+//        return(false)
+//        }
         
-    public func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
-        {
-        leaderCell.textField?.stringValue = ""
-        }
-        
-    public func isElement(ofType: Group.ElementType) -> Bool
-        {
-        return(false)
-        }
-        
-    public func child(atIndex: Int) -> Symbol
-        {
-        return(self.children[atIndex])
-        }
-    
-    public func childCount(forChildType type: ChildType) -> Int
-        {
-        let kids = self.children(forChildType: type)
-        return(kids.count)
-        }
-        
-    public func printContents(_ indent: String = "")
-        {
-        let typeName = Swift.type(of: self)
-        print("\(indent)\(typeName): \(self.label)")
-        print("\(indent)INDEX: \(self.index)")
-        }
-        
-    public func isExpandable(forChildType type: ChildType) -> Bool
-        {
-        return(self.isExpandable && self.childCount(forChildType: type) > 0)
-        }
-        
-    public func children(forChildType type: ChildType) -> Array<Symbol>
-        {
-        let allKids = self.children
-        if type == .class
-            {
-            return(allKids.filter{$0 is TypeClass || $0 is SymbolGroup}.sorted{$0.label < $1.label})
-            }
-        else if type == .method
-            {
-            return(allKids.filter{$0 is MethodInstance || $0 is Module || $0 is SymbolGroup}.sorted{$0.label < $1.label})
-            }
-        else
-            {
-            return(allKids.map{ElementHolder($0)}.sorted{$0.label < $1.label})
-            }
-        }
-        
-    public func child(forChildType type: ChildType,atIndex: Int) -> Symbol
-        {
-        return(self.children(forChildType: type)[atIndex])
-        }
-        
-    public var isGroup: Bool
-        {
-        return(false)
-        }
+//    public func child(atIndex: Int) -> Symbol
+//        {
+//        return(self.children[atIndex])
+//        }
+//    
+//    public func childCount(forChildType type: ChildType) -> Int
+//        {
+//        let kids = self.children(forChildType: type)
+//        return(kids.count)
+//        }
+//        
+//    public func printContents(_ indent: String = "")
+//        {
+//        let typeName = Swift.type(of: self)
+//        print("\(indent)\(typeName): \(self.label)")
+//        print("\(indent)INDEX: \(self.index)")
+//        }
+//        
+//    public func isExpandable(forChildType type: ChildType) -> Bool
+//        {
+//        return(self.isExpandable && self.childCount(forChildType: type) > 0)
+//        }
+//        
+//    public func children(forChildType type: ChildType) -> Array<Symbol>
+//        {
+//        let allKids = self.children
+//        if type == .class
+//            {
+//            return(allKids.filter{$0 is TypeClass || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+//            }
+//        else if type == .method
+//            {
+//            return(allKids.filter{$0 is MethodInstance || $0 is Module || $0 is SymbolGroup}.sorted{$0.label < $1.label})
+//            }
+//        else
+//            {
+//            return(allKids.map{ElementHolder($0)}.sorted{$0.label < $1.label})
+//            }
+//        }
+//        
+//    public func child(forChildType type: ChildType,atIndex: Int) -> Symbol
+//        {
+//        return(self.children(forChildType: type)[atIndex])
+//        }
+//        
+//    public var isGroup: Bool
+//        {
+//        return(false)
+//        }
         
     public func directlyContains(symbol:Symbol) -> Bool
         {
@@ -703,93 +730,93 @@ public class Symbol:Node,VisitorReceiver,IssueHolder,OutlineItem
         fatalError("lookup should not be called on a \(Swift.type(of: self)).")
         }
         
-    public func lookup(name: Name) -> Symbol?
-        {
-        if name.isRooted
-            {
-            if name.count == 1
-                {
-                return(nil)
-                }
-            if let start = TopModule.shared.lookup(label: name.first)
-                {
-                if name.count == 2
-                    {
-                    return(start)
-                    }
-                if let symbol = start.lookup(name: name.withoutFirst)
-                    {
-                    return(symbol)
-                    }
-                }
-            }
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        else if name.count == 1
-            {
-            if let symbol = self.lookup(label: name.first)
-                {
-                return(symbol)
-                }
-            }
-        else if let start = self.lookup(label: name.first)
-            {
-            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
-                {
-                return(symbol)
-                }
-            }
-        return(self.module?.lookup(name: name))
-        }
-        
+//    public func lookup(name: Name) -> Symbol?
+//        {
+//        if name.isRooted
+//            {
+//            if name.count == 1
+//                {
+//                return(nil)
+//                }
+//            if let start = TopModule.shared.lookup(label: name.first)
+//                {
+//                if name.count == 2
+//                    {
+//                    return(start)
+//                    }
+//                if let symbol = start.lookup(name: name.withoutFirst)
+//                    {
+//                    return(symbol)
+//                    }
+//                }
+//            }
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        else if name.count == 1
+//            {
+//            if let symbol = self.lookup(label: name.first)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        else if let start = self.lookup(label: name.first)
+//            {
+//            if let symbol = (start as? Scope)?.lookup(lab: name.withoutFirst)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        return(self.module?.lookup(name: name))
+//        }
+//
     public func lookupN(label: Label) -> Symbols?
         {
         return(self.module?.lookupN(label: label))
         }
         
-    public func lookupN(name: Name) -> Symbols?
-        {
-        if name.isRooted
-            {
-            if name.count == 1
-                {
-                return(nil)
-                }
-            if let start = TopModule.shared.lookupN(label: name.first)
-                {
-                if name.count == 2
-                    {
-                    return(start.nilIfEmpty)
-                    }
-                if let symbol = (start.first)?.lookupN(name: name.withoutFirst)
-                    {
-                    return(symbol.nilIfEmpty)
-                    }
-                }
-            return(nil)
-            }
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        else if name.count == 1
-            {
-            if let symbol = self.lookupN(label: name.first)
-                {
-                return(symbol.nilIfEmpty)
-                }
-            }
-        else if let start = self.lookupN(label: name.first)
-            {
-            if let symbol = start.first?.lookupN(name: name.withoutFirst)
-                {
-                return(symbol.nilIfEmpty)
-                }
-            }
-        return(self.module?.lookupN(name: name))
-        }
+//    public func lookupN(name: Name) -> Symbols?
+//        {
+//        if name.isRooted
+//            {
+//            if name.count == 1
+//                {
+//                return(nil)
+//                }
+//            if let start = TopModule.shared.lookupN(label: name.first)
+//                {
+//                if name.count == 2
+//                    {
+//                    return(start.nilIfEmpty)
+//                    }
+//                if let symbol = (start.first)?.lookupN(name: name.withoutFirst)
+//                    {
+//                    return(symbol.nilIfEmpty)
+//                    }
+//                }
+//            return(nil)
+//            }
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        else if name.count == 1
+//            {
+//            if let symbol = self.lookupN(label: name.first)
+//                {
+//                return(symbol.nilIfEmpty)
+//                }
+//            }
+//        else if let start = self.lookupN(label: name.first)
+//            {
+//            if let symbol = start.first?.lookupN(name: name.withoutFirst)
+//                {
+//                return(symbol.nilIfEmpty)
+//                }
+//            }
+//        return(self.module?.lookupN(name: name))
+//        }
         
     public func layoutObjectSlots()
         {

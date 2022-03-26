@@ -28,16 +28,24 @@ public class CastExpression: Expression
         coder.encode(self.expression,forKey:"expression")
         }
 
-    init(expression: Expression,type: Type)
+    init(lhs: Expression,rhs: Type)
         {
-        self.expression = expression
+        self.expression = lhs
         super.init()
-        self.type = type
+        self.type = rhs
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)TYPE CAST EXPRESSION")
+        print("\(indent)ARGUMENTS:")
+        self.expression.display(indent: indent + "\t")
+        self.type.display(indent: indent + "\t")
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = CastExpression(expression: substitution.substitute(self.expression),type: substitution.substitute(self.type))
+        let expression = CastExpression(lhs: substitution.substitute(self.expression),rhs: substitution.substitute(self.type))
         expression.type = substitution.substitute(self.type)
         expression.issues = self.issues
         return(expression as! Self)
@@ -71,12 +79,40 @@ public class CastExpression: Expression
         {
         }
 
+    public override func emitValueCode(into: InstructionBuffer,using: CodeGenerator) throws
+        {
+        try self.expression.emitValueCode(into: into,using: using)
+        let leftType = self.expression.type
+        let temporary = into.nextTemporary
+        if !leftType.isClass
+            {
+            into.add(.DYNCAST,self.expression.place,.address(self.type.memoryAddress))
+            }
+        else if (leftType as! TypeClass).isSubclass(of: self.type as! TypeClass)
+            {
+            let classes = (leftType as! TypeClass).allSuperclasses
+            let lowerIndex = classes.firstIndex(of: leftType as! TypeClass)!
+            let upperIndex = classes.firstIndex(of: self.type as! TypeClass)!
+            let delta = (upperIndex - lowerIndex) * 4 * Argon.kWordSizeInBytesInt
+            into.add(.SUB,self.expression.place,.integer(delta),temporary)
+            }
+        else if (self.type as! TypeClass).isSubclass(of: leftType as! TypeClass)
+            {
+            let classes = (leftType as! TypeClass).allSuperclasses
+            let upperIndex = classes.firstIndex(of: leftType as! TypeClass)!
+            let lowerIndex = classes.firstIndex(of: self.type as! TypeClass)!
+            let delta = (upperIndex - lowerIndex) * 4 * Argon.kWordSizeInBytesInt
+            into.add(.ADD,self.expression.place,.integer(delta),temporary)
+            }
+        else
+            {
+            self.appendIssue(at: self.declaration!, message: "It is not valid to cast from \(leftType.label) to \(self.type.label).")
+            }
+        self._place = temporary
+        }
+        
     public override func emitCode(into instance: InstructionBuffer, using generator: CodeGenerator) throws
         {
-        try self.expression.emitCode(into: instance,using: generator)
-        let temp = instance.nextTemporary
-        let typeClass = self.type as! TypeClass
-        instance.add(.CAST,self.expression.place,.address(typeClass.memoryAddress),temp)
-        self._place = temp
+        try self.emitValueCode(into: instance,using: generator)
         }
     }

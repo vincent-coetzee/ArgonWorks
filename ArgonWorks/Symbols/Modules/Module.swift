@@ -12,38 +12,19 @@ public var AddressTable = Dictionary<IdentityKey,Address>()
 
 public class Module:ContainerSymbol,Scope
     {
-    public override var childOutlineItemCount: Int
-        {
-        self.symbols.count + 1
-        }
-
-    public override var hasChildOutlineItems: Bool
-        {
-        true
-        }
-        
-    public override var isOutlineItemExpandable: Bool
-        {
-        self.childOutlineItemCount > 0
-        }
-
-    public override func childOutlineItem(atIndex: Int) -> OutlineItem
-        {
-        if atIndex >= self.symbols.count
-            {
-            return(self.type)
-            }
-        return(self.symbols[atIndex])
-        }
-        
     public var enclosingMethodInstance: MethodInstance
         {
         fatalError()
         }
         
+    public override var symbolType: SymbolType
+        {
+        .module
+        }
+        
     public var mainMethod: MethodInstance?
         {
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             if let instance = symbol as? MethodInstance
                 {
@@ -55,11 +36,11 @@ public class Module:ContainerSymbol,Scope
             }
         return(nil)
         }
-        
-    public var asContainer: Container
-        {
-        .module(self)
-        }
+//
+//    public var asContainer: Container
+//        {
+//        return(.module(self))
+//        }
         
     public override var segmentType: Segment.SegmentType
         {
@@ -74,6 +55,11 @@ public class Module:ContainerSymbol,Scope
     public var enclosingMethodInstanceScope: MethodInstance
         {
         fatalError()
+        }
+        
+    public var placeholderSymbols: Array<PlaceholderSymbol>
+        {
+        self.allSymbols.compactMap{$0 as? PlaceholderSymbol}
         }
         
     public var parentScope: Scope?
@@ -95,13 +81,13 @@ public class Module:ContainerSymbol,Scope
         
     public override var argonHash: Int
         {
-        self.displayString.polynomialRollingHash
+        "\(Swift.type(of: self))\(self.label)".polynomialRollingHash
         }
         
     public var everyMethodInstance: MethodInstances
         {
-        var instances = self.symbols.compactMap{$0 as? MethodInstance}
-        for module in (self.symbols.compactMap{$0 as? Module})
+        var instances = self.allSymbols.compactMap{$0 as? MethodInstance}
+        for module in (self.allSymbols.compactMap{$0 as? Module})
             {
             instances.append(contentsOf: module.everyMethodInstance)
             }
@@ -112,7 +98,7 @@ public class Module:ContainerSymbol,Scope
         {
         let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
         let size = moduleType.instanceSizeInBytes
-        let slotsSize = self.symbols.filter{$0 is ModuleSlot}.count * Argon.kWordSizeInBytesInt
+        let slotsSize = self.allSymbols.filter{$0 is ModuleSlot}.count * Argon.kWordSizeInBytesInt
         return(size + slotsSize)
         }
         
@@ -127,14 +113,24 @@ public class Module:ContainerSymbol,Scope
         false
         }
         
+    public var everySymbol: Symbols
+        {
+        var everySymbol = Symbols()
+        for module in self.allModules
+            {
+            everySymbol.append(contentsOf: module.allSymbols)
+            }
+        return(everySymbol)
+        }
+        
     public var moduleSlots: Array<ModuleSlot>
         {
-        self.symbols.compactMap{$0 as? ModuleSlot}
+        self.allSymbols.compactMap{$0 as? ModuleSlot}
         }
         
     public var firstMainModule: MainModule?
         {
-        for symbol in self.symbols where symbol is Module
+        for symbol in self.allSymbols where symbol is Module
             {
             if let module = (symbol as! Module).firstMainModule
                 {
@@ -210,7 +206,7 @@ public class Module:ContainerSymbol,Scope
     public func layoutObjectSlots(withArgonModule argonModule: ArgonModule)
         {
         var offset = 0
-        for slot in self.symbols.compactMap({$0 as? Slot}).sorted(by: {$0.label < $1.label})
+        for slot in self.allSymbols.compactMap({$0 as? Slot}).sorted(by: {$0.label < $1.label})
             {
             slot.offset = offset
             offset += Argon.kWordSizeInBytesInt
@@ -219,7 +215,7 @@ public class Module:ContainerSymbol,Scope
 
     public func emitCode(using generator: CodeGenerator) throws -> Module
         {
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             if symbol.label == "testSomeDates"
                 {
@@ -235,17 +231,53 @@ public class Module:ContainerSymbol,Scope
         .module
         }
         
+    public var allClasses: TypeClasses
+        {
+        var classes = TypeClasses()
+        for module in self.allModules
+            {
+            classes.append(contentsOf: module.classes)
+            }
+        return(classes.sorted{$0.label < $1.label})
+        }
+        
+    public var allEnumerations: TypeEnumerations
+        {
+        var enumerations = TypeEnumerations()
+        for module in self.allModules
+            {
+            enumerations.append(contentsOf: module.allEnumerations)
+            }
+        return(enumerations.sorted{$0.label < $1.label})
+        }
+        
+    public var allModules: Modules
+        {
+        var modules = Modules()
+        for module in self.allSymbols.compactMap({$0 as? Module})
+            {
+            modules.append(module)
+            modules.append(contentsOf: module.allModules)
+            }
+        return(modules)
+        }
+        
     public var classes:TypeClasses
         {
-        var classes = Array(self.symbols.compactMap{$0 as? TypeClass})
-        classes += self.symbols.compactMap{($0 as? Module)?.classes}.flatMap{$0}
+        Array(self.allSymbols.compactMap{$0 as? TypeClass})
+        }
+        
+    public var enumerations:TypeEnumerations
+        {
+        var classes = Array(self.allSymbols.compactMap{$0 as? TypeEnumeration})
+        classes += self.allSymbols.compactMap{($0 as? Module)?.enumerations}.flatMap{$0}
         return(classes)
         }
         
     public override func initializeType(inContext context: TypeContext)
         {
         self.type = ArgonModule.shared.moduleType
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             symbol.initializeType(inContext: context)
             }
@@ -253,7 +285,7 @@ public class Module:ContainerSymbol,Scope
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
         {
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             symbol.initializeTypeConstraints(inContext: context)
             }
@@ -264,18 +296,18 @@ public class Module:ContainerSymbol,Scope
         "IconModule"
         }
         
-    public override var defaultColor: NSColor
+    public override var iconTint: NSColor
         {
-        Palette.shared.moduleColor
+        NSColor.argonNeonPink
         }
         
     public func dumpMethods()
         {
-//        for method in self.symbols.flatMap({$0 as? Method})
+//        for method in self.allSymbols.flatMap({$0 as? Method})
 //            {
 //            method.dump()
 //            }
-        for module in self.symbols.compactMap({$0 as? Module})
+        for module in self.allSymbols.compactMap({$0 as? Module})
             {
             module.dumpMethods()
             }
@@ -288,14 +320,14 @@ public class Module:ContainerSymbol,Scope
             {
             self.imports.append(symbol as! Importer)
             }
-        self.symbols.append(symbol)
+        super.addSymbol(symbol)
         symbol.setModule(self)
-        symbol.container = .module(self)
+//        symbol.container = .module(self)
         }
         
     public func slotWithLabel(_ label: Label) -> Slot?
         {
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             if symbol is Slot && symbol.label == label
                 {
@@ -305,32 +337,32 @@ public class Module:ContainerSymbol,Scope
         return(nil)
         }
         
-    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
-        {
-        let count = self.symbols.count
-        var text = ""
-        if count == 0
-            {
-            }
-        else if count == 1
-            {
-            text = "1 child"
-            }
-        else
-            {
-            text = "\(count) children"
-            }
-        leaderCell.textField?.stringValue = text
-        }
-        
-    public override func isElement(ofType: Group.ElementType) -> Bool
-        {
-        return(true)
-        }
+//    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+//        {
+//        let count = self.allSymbols.count
+//        var text = ""
+//        if count == 0
+//            {
+//            }
+//        else if count == 1
+//            {
+//            text = "1 child"
+//            }
+//        else
+//            {
+//            text = "\(count) children"
+//            }
+//        leaderCell.textField?.stringValue = text
+//        }
+//        
+//    public override func isElement(ofType: Group.ElementType) -> Bool
+//        {
+//        return(true)
+//        }
         
     public func lookupSlot(label: String) -> Slot?
         {
-        for symbol in self.symbols where symbol.label == label
+        for symbol in self.allSymbols where symbol.label == label
             {
             if let slot = symbol as? Slot
                 {
@@ -345,14 +377,9 @@ public class Module:ContainerSymbol,Scope
         10_000
         }
         
-    public func removeSymbol(_ symbol: Symbol)
-        {
-        self.symbols.removeAll(where: {$0 === symbol})
-        }
-        
     public override func directlyContains(symbol:Symbol) -> Bool
         {
-        for aSymbol in self.symbols
+        for aSymbol in self.allSymbols
             {
             if aSymbol.index == symbol.index
                 {
@@ -381,7 +408,7 @@ public class Module:ContainerSymbol,Scope
         
     public override func inferType()
         {
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             symbol.inferType()
             }
@@ -394,7 +421,7 @@ public class Module:ContainerSymbol,Scope
             let newModule = Self(label: self.label)
             TypeContext.initialSubstitution.symbols[newModule.argonHash] = newModule
             TypeContext.initialSubstitution.symbols[ArgonModule.shared.argonHash] = ArgonModule.shared
-            for symbol in self.symbols
+            for symbol in self.allSymbols
                 {
                 symbol.initializeType(inContext: typeContext)
                 let newSymbol = symbol.freshTypeVariable(inContext: typeContext)
@@ -406,7 +433,7 @@ public class Module:ContainerSymbol,Scope
                 {
                 newModule.addSymbol(substitution.substitute(symbol))
                 }
-            for symbol in newModule.symbols
+            for symbol in newModule.allSymbols
                 {
                 do
                     {
@@ -433,7 +460,7 @@ public class Module:ContainerSymbol,Scope
         {
         if let second = object as? Module
             {
-            return(self.label == second.label && self.module == second.module && self.symbols == second.symbols)
+            return(self.label == second.label && self.module == second.module && self.allSymbols == second.allSymbols)
             }
         return(super.isEqual(object))
         }
@@ -456,7 +483,7 @@ public class Module:ContainerSymbol,Scope
             slot.offset = offset
             offset += Argon.kWordSizeInBytesInt
             }
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             symbol.layoutObjectSlots()
             }
@@ -472,7 +499,7 @@ public class Module:ContainerSymbol,Scope
         allocator.allocateAddress(for: self)
         do
             {
-            for symbol in self.symbols
+            for symbol in self.allSymbols
                 {
                 symbol.allocateAddresses(using: allocator)
                 AddressTable[symbol.index] = symbol.memoryAddress
@@ -528,7 +555,7 @@ public class Module:ContainerSymbol,Scope
         let listNodeClass = self.lookup(label: "ListNode") as! TypeClass
         let thisNodeClass = listNodeClass.withGenerics([elementType])
         let slot = ClassSlot(label: "ListNodeClass",type: listNodeClass)
-        slot.value = .type(thisNodeClass)
+//        slot.value = .type(thisNodeClass)
         listClass.addClassSlot(slot)
         var method = InlineMethodInstance(label: "append",parameters: [Parameter(label: "element", relabel: nil, type: elementType, isVisible: false, isVariadic: false),Parameter(label: "to", relabel: nil, type: listClass, isVisible: true, isVariadic: false)],returnType: ArgonModule.shared.void).listInsertMethod()
         var signature = method.methodSignature
@@ -658,7 +685,7 @@ public class Module:ContainerSymbol,Scope
         
     public func matchingTypeOrType(_ type: Type) -> Type
         {
-        for typeSymbol in self.symbols.compactMap({$0 as? Type})
+        for typeSymbol in self.allSymbols.compactMap({$0 as? Type})
             {
             if type.isEqual(typeSymbol)
                 {
@@ -682,7 +709,7 @@ public class Module:ContainerSymbol,Scope
         let moduleType = ArgonModule.shared.lookup(label: "Module") as! Type
         let modulePointer = ClassBasedPointer(address: self.memoryAddress,type: moduleType)
         modulePointer.setClass(moduleType)
-        let addresses = self.symbols.map{$0.memoryAddress}
+        let addresses = self.allSymbols.map{$0.memoryAddress}
         let symbolsSize = addresses.count + 100
         let symbolArray = segment.allocateArray(size: symbolsSize,elements: addresses)
         modulePointer.setAddress(symbolArray,atSlot: "symbols")
@@ -690,13 +717,13 @@ public class Module:ContainerSymbol,Scope
         modulePointer.setBoolean(self is TopModule,atSlot: "isTopModule")
         modulePointer.setBoolean(self is ArgonModule,atSlot: "isArgonModule")
         modulePointer.setInteger(self.instanceSizeInBytes,atSlot: "instanceSizeInBytes")
-        let moduleSlots = self.symbols.compactMap{$0 as? ModuleSlot}
+        let moduleSlots = self.allSymbols.compactMap{$0 as? ModuleSlot}
         moduleSlots.forEach{$0.layoutInMemory(using: allocator)}
         modulePointer.setAddress(segment.allocateArray(size: moduleSlots.count,elements: moduleSlots.map{$0.memoryAddress}),atSlot: "slots")
         ////
         /// Now lay out each of the symsols in a module
         ///
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             symbol.layoutInMemory(using: allocator)
             }
@@ -714,6 +741,30 @@ public class Module:ContainerSymbol,Scope
         let temporary = buffer.nextTemporary
         buffer.add(.MOVE,.address(self.memoryAddress),temporary)
         self.place = temporary
+        }
+        
+    public func lookupType(label: Label) -> Type?
+        {
+        for symbol in self.allSymbols
+            {
+            if symbol.isType && symbol.label == label
+                {
+                return(symbol as? Type)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func lookupMethod(label: Label) -> Method?
+        {
+        for symbol in self.allSymbols
+            {
+            if symbol.isMethod && symbol.label == label
+                {
+                return(symbol as? Method)
+                }
+            }
+        return(nil)
         }
     }
 

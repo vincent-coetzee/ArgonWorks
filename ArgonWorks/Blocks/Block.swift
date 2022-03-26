@@ -9,16 +9,16 @@ import Foundation
 
 public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFrame
     {
-    public var asContainer: Container
-        {
-        .block(self)
-        }
-        
+//    public var asContainer: Container
+//        {
+//        .block(self)
+//        }
+//
     public var parentScope: Scope?
         {
         get
             {
-            self.container
+            self.parentBlock
             }
         set
             {
@@ -28,13 +28,13 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         
     public var enclosingMethodInstance: MethodInstance
         {
-        self.container.enclosingMethodInstance
+        self.parentBlock!.enclosingMethodInstance
         }
         
-    public var moduleScope: Module?
-        {
-        self.container.module
-        }
+//    public var moduleScope: Module?
+//        {
+//        self.parentBlock?.module
+//        }
         
     public var argonHash: Int
         {
@@ -101,7 +101,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.locations.declaration.isNil ? .zero : self.locations.declaration
         }
         
-    public var container: Container = .none
+//    public var container: Container = .none
     public var type: Type = TypeContext.freshTypeVariable()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
@@ -112,6 +112,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     private var nextLocalSlotOffset = 0
     private var nextParameterOffset = 16
     public var ancestors = Blocks()
+    public private(set) var parentBlock: Block?
     
     required override init()
         {
@@ -119,7 +120,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         
     public required init?(coder: NSCoder)
         {
-        self.container = coder.decodeContainer(forKey: "container")
+        self.parentBlock = coder.decodeObject(forKey: "parentBlock") as? Block
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
         self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Symbols
         self.index = coder.decodeObject(forKey: "index") as! IdentityKey
@@ -134,7 +135,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func encode(with coder: NSCoder)
         {
         print("ENCODE \(Swift.type(of: self))")
-        coder.encodeContainer(self.container,forKey: "container")
+        coder.encode(self.parentBlock,forKey: "parentBlock")
         coder.encode(self.blocks,forKey: "blocks")
         coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.index,forKey: "index")
@@ -149,6 +150,16 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
 //        {
 //        self.container = .scope(scope!)
 //        }
+        
+    public func lookupMethod(label: Label) -> Method?
+        {
+        self.parentBlock?.lookupMethod(label: label)
+        }
+        
+    public func removeSymbol(_ symbol: Symbol)
+        {
+        fatalError()
+        }
         
     public func appendIssue(at: Location, message: String)
         {
@@ -176,10 +187,15 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
             }
         }
         
+    public func setParentBlock(_ block: Block)
+        {
+        self.parentBlock = block
+        }
+        
     public func freshTypeVariable(inContext context: TypeContext) -> Self
         {
         let newBlock = Self.init()
-        newBlock.container = self.container
+        newBlock.parentBlock = self.parentBlock
         newBlock.index = self.index
         for block in self.blocks
             {
@@ -238,81 +254,86 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
                 found.append(symbol)
                 }
             }
-        if let more = self.container.lookupN(label: label)
+        if let more = self.parentBlock?.lookupN(label: label)
             {
             found.append(contentsOf: more)
             }
         return(found.isEmpty ? nil : found)
         }
         
-    public func lookupN(name: Name) -> Symbols?
+    public func lookupType(label: Label) -> Type?
         {
-        if name.isRooted
-            {
-            return(self.container.lookupN(name: name))
-            }
-        else if name.count == 1
-            {
-            var results = Symbols()
-            for symbol in self.localSymbols
-                {
-                if symbol.localLabel == name.last
-                    {
-                    results.append(symbol)
-                    }
-                }
-            if let upper = self.container.lookupN(name: name)
-                {
-                results.append(contentsOf: upper)
-                }
-            return(results.isEmpty ? nil : results)
-            }
-        else
-            {
-            return(self.container.lookupN(name: name))
-            }
+        self.parentBlock?.lookupType(label: label)
         }
         
-    public func lookup(name: Name) -> Symbol?
-        {
-        if name.isRooted
-            {
-            if name.count == 1
-                {
-                return(nil)
-                }
-            if let start = TopModule.shared.lookup(label: name.first)
-                {
-                if name.count == 2
-                    {
-                    return(start)
-                    }
-                if let symbol = start.lookup(name: name.withoutFirst)
-                    {
-                    return(symbol)
-                    }
-                }
-            }
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        else if name.count == 1
-            {
-            if let symbol = self.lookup(label: name.first)
-                {
-                return(symbol)
-                }
-            }
-        else if let start = self.lookup(label: name.first)
-            {
-            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
-                {
-                return(symbol)
-                }
-            }
-        return(self.container.lookup(name: name))
-        }
+//    public func lookupN(name: Name) -> Symbols?
+//        {
+//        if name.isRooted
+//            {
+//            return(self.parentBlock?.lookupN(name: name))
+//            }
+//        else if name.count == 1
+//            {
+//            var results = Symbols()
+//            for symbol in self.localSymbols
+//                {
+//                if symbol.localLabel == name.last
+//                    {
+//                    results.append(symbol)
+//                    }
+//                }
+//            if let upper = self.parentBlock?.lookupN(name: name)
+//                {
+//                results.append(contentsOf: upper)
+//                }
+//            return(results.isEmpty ? nil : results)
+//            }
+//        else
+//            {
+//            return(self.parentBlock?.lookupN(name: name))
+//            }
+//        }
+        
+//    public func lookup(name: Name) -> Symbol?
+//        {
+//        if name.isRooted
+//            {
+//            if name.count == 1
+//                {
+//                return(nil)
+//                }
+//            if let start = TopModule.shared.lookup(label: name.first)
+//                {
+//                if name.count == 2
+//                    {
+//                    return(start)
+//                    }
+//                if let symbol = start.lookup(name: name.withoutFirst)
+//                    {
+//                    return(symbol)
+//                    }
+//                }
+//            }
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        else if name.count == 1
+//            {
+//            if let symbol = self.lookup(label: name.first)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        else if let start = self.lookup(label: name.first)
+//            {
+//            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        return(self.parentBlock?.lookup(name: name))
+//        }
         
     public func lookup(label: String) -> Symbol?
         {
@@ -323,7 +344,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
                 return(symbol)
                 }
             }
-        return(self.container.lookup(label: label))
+        return(self.parentBlock?.lookup(label: label))
         }
         
     public func visit(visitor: Visitor) throws
@@ -376,7 +397,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func addBlock(_ block:Block)
         {
         self.blocks.append(block)
-        block.container = .block(self)
+        block.parentBlock = self
         }
         
     public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws

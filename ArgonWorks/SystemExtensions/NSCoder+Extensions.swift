@@ -121,6 +121,12 @@ extension NSCoder
             case .dateTime(let address):
                 self.encode(18,forKey:forKey + "kind")
                 self.encode(address,forKey:forKey + "dateTime")
+            case .character(let char):
+                self.encode(19,forKey:forKey + "kind")
+                self.encode(char,forKey:forKey + "character")
+            case .byte(let byte):
+                self.encode(20,forKey:forKey + "kind")
+                self.encode(byte,forKey:forKey + "byte")
             }
         }
         
@@ -564,55 +570,55 @@ extension NSCoder
 //            }
 //        }
         
-    public func encodeContainer(_ container: Container,forKey: String)
-        {
-        switch(container)
-            {
-            case .none:
-                self.encode(0,forKey: forKey + "kind")
-//            case .type(let type):
-//                self.encode(1,forKey: forKey + "kind")
-//                self.encode(type,forKey: forKey + "type")
-            case .module(let symbol):
-                self.encode(2,forKey: forKey + "kind")
-                self.encode(symbol,forKey: forKey + "module")
-            case .block(let block):
-                self.encode(3,forKey: forKey + "kind")
-                self.encode(block,forKey: forKey + "block")
-            case .methodInstance(let scope):
-                self.encode(4,forKey: forKey + "kind")
-                self.encodeScope(scope,forKey: forKey + "methodInstance")
-            }
-        }
+//    public func encodeContainer(_ container: Container,forKey: String)
+//        {
+//        switch(container)
+//            {
+//            case .none:
+//                self.encode(0,forKey: forKey + "kind")
+////            case .type(let type):
+////                self.encode(1,forKey: forKey + "kind")
+////                self.encode(type,forKey: forKey + "type")
+//            case .module(let symbol):
+//                self.encode(2,forKey: forKey + "kind")
+//                self.encode(symbol,forKey: forKey + "module")
+//            case .block(let block):
+//                self.encode(3,forKey: forKey + "kind")
+//                self.encode(block,forKey: forKey + "block")
+//            case .methodInstance(let scope):
+//                self.encode(4,forKey: forKey + "kind")
+//                self.encodeScope(scope,forKey: forKey + "methodInstance")
+//            }
+//        }
         
-    public func decodeContainer(forKey: String) -> Container
-        {
-        let kind = self.decodeInteger(forKey: forKey + "kind")
-        switch(kind)
-            {
-            case 0:
-                return(.none)
-//            case 1:
-//                return(.type(self.decodeObject(forKey: forKey + "type") as! Type))
-            case 2:
-                return(.module(self.decodeObject(forKey: forKey + "module") as! Module))
-            case 3:
-                return(.block(self.decodeObject(forKey: forKey + "block") as! Block))
-            case 4:
-                return(.methodInstance(self.decodeObject(forKey: forKey + "methodInstance") as! MethodInstance))
-            default:
-                fatalError("This should not happen.")
-            }
-        fatalError("This should not happen.")
-        }
+//    public func decodeContainer(forKey: String) -> Container
+//        {
+//        let kind = self.decodeInteger(forKey: forKey + "kind")
+//        switch(kind)
+//            {
+//            case 0:
+//                return(.none)
+////            case 1:
+////                return(.type(self.decodeObject(forKey: forKey + "type") as! Type))
+//            case 2:
+//                return(.module(self.decodeObject(forKey: forKey + "module") as! Module))
+//            case 3:
+//                return(.block(self.decodeObject(forKey: forKey + "block") as! Block))
+//            case 4:
+//                return(.methodInstance(self.decodeObject(forKey: forKey + "methodInstance") as! MethodInstance))
+//            default:
+//                fatalError("This should not happen.")
+//            }
+//        fatalError("This should not happen.")
+//        }
         
     public func decodeScope(forKey: String) -> Scope
         {
         let kind = self.decodeInteger(forKey: forKey + "kind")
         switch(kind)
             {
-            case 2:
-                return(self.decodeContainer(forKey: forKey + "symbol"))
+//            case 2:
+//                return(self.decodeContainer(forKey: forKey + "symbol"))
             case 3:
                 return(self.decodeObject(forKey: forKey + "module") as! Module)
             case 4:
@@ -631,13 +637,13 @@ extension NSCoder
         
     public func encodeScope(_ scope: Scope,forKey: String)
         {
-        if scope is Container
-            {
-            let container = scope as! Container
-            self.encode(2,forKey: forKey + "kind")
-            self.encode(container,forKey: forKey + "container")
-            }
-        else if scope is Module
+//        if scope is Container
+//            {
+//            let container = scope as! Container
+//            self.encode(2,forKey: forKey + "kind")
+//            self.encode(container,forKey: forKey + "container")
+//            }
+        if scope is Module
             {
             let module = scope as! Module
             self.encode(3,forKey: forKey + "kind")

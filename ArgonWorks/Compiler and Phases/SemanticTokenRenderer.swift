@@ -12,6 +12,8 @@ public enum TokenKind
         case none
         case localSlot
         case classSlot
+        case moduleSlot
+        case instanceSlot
         case `class`
         case module
         case method
@@ -47,21 +49,21 @@ public enum TokenKind
         case genericClassParameter
         }
         
-public protocol SemanticTokenRenderer
-    {
-    func setKind(_ kind: TokenKind,ofToken token: Token)
-    func update(_ string: String)
-    }
-
-public class NullTokenRenderer: SemanticTokenRenderer
-    {
-    public static let shared = NullTokenRenderer()
-    
-    public func setKind(_ kind: TokenKind,ofToken token: Token)
-        {
-        }
-        
-    public func update(_ string:String)
-        {
-        }
-    }
+//public protocol SemanticTokenRenderer
+//    {
+//    func setKind(_ kind: TokenKind,ofToken token: ParseToken)
+//    func update(_ string: String)
+//    }
+//
+//public class NullTokenRenderer: SemanticTokenRenderer
+//    {
+//    public static let shared = NullTokenRenderer()
+//    
+//    public func setKind(_ kind: TokenKind,ofToken token: Token)
+//        {
+//        }
+//        
+//    public func update(_ string:String)
+//        {
+//        }
+//    }

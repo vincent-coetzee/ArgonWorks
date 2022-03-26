@@ -36,8 +36,8 @@ public class TopModule: SystemModule
         
     public override var everyMethodInstance: MethodInstances
         {
-        var instances = self.symbols.compactMap{$0 as? MethodInstance}
-        for module in (self.symbols.compactMap{$0 as? Module}.filter{!($0 is ArgonModule)})
+        var instances = self.allSymbols.compactMap{$0 as? MethodInstance}
+        for module in (self.allSymbols.compactMap{$0 as? Module}.filter{!($0 is ArgonModule)})
             {
             instances.append(contentsOf: module.everyMethodInstance)
             }
@@ -54,11 +54,6 @@ public class TopModule: SystemModule
 //        let modules = self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label}
 //        return(ModuleHolder(TopModule(modules)))
 //        }
-
-    public var allModules: Symbols
-        {
-        return(self.symbols.filter({$0 is Module}).map({$0 as! Module}).sorted{$0.label<$1.label})
-        }
         
     public override var fullName: Name
         {
@@ -67,7 +62,7 @@ public class TopModule: SystemModule
         
     public var userModules: Array<Module>
         {
-        return(self.symbols.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
+        return(self.allSymbols.filter{$0 is Module && !($0 is ArgonModule)}.map{$0 as! Module})
         }
         
     init(instanceNumber: Int)
@@ -98,7 +93,7 @@ public class TopModule: SystemModule
     public override func lookupN(label: Label) -> Symbols?
         {
         var found = Symbols()
-        for symbol in self.symbols
+        for symbol in self.allSymbols
             {
             if symbol.label == label
                 {
@@ -112,44 +107,44 @@ public class TopModule: SystemModule
         return(found.isEmpty ? nil : found)
         }
         
-    public override func lookup(name: Name) -> Symbol?
-        {
-        if name.isRooted
-            {
-            if name.count == 1
-                {
-                return(self)
-                }
-            if let start = self.lookup(label: name.first)
-                {
-                if name.count == 2
-                    {
-                    return(start)
-                    }
-                if let symbol = start.lookup(name: name.withoutFirst)
-                    {
-                    return(symbol)
-                    }
-                }
-            }
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        else if name.count == 1
-            {
-            if let symbol = self.lookup(label: name.first)
-                {
-                return(symbol)
-                }
-            }
-        else if let start = self.lookup(label: name.first)
-            {
-            if let symbol = start.lookup(name: name.withoutFirst)
-                {
-                return(symbol)
-                }
-            }
-        return(nil)
-        }
+//    public override func lookup(name: Name) -> Symbol?
+//        {
+//        if name.isRooted
+//            {
+//            if name.count == 1
+//                {
+//                return(self)
+//                }
+//            if let start = self.lookup(label: name.first)
+//                {
+//                if name.count == 2
+//                    {
+//                    return(start)
+//                    }
+//                if let symbol = start.lookup(name: name.withoutFirst)
+//                    {
+//                    return(symbol)
+//                    }
+//                }
+//            }
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        else if name.count == 1
+//            {
+//            if let symbol = self.lookup(label: name.first)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        else if let start = self.lookup(label: name.first)
+//            {
+//            if let symbol = start.lookup(name: name.withoutFirst)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        return(nil)
+//        }
     }

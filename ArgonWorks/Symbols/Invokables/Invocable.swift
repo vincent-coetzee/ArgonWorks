@@ -9,9 +9,14 @@ import AppKit
 
 public class Invocable: Symbol,Scope,StackFrame
     {
-    public var asContainer: Container
+    public override var iconName: String
         {
-        fatalError()
+        "IconMethod"
+        }
+        
+    public override var iconTint: NSColor
+        {
+        SyntaxColorPalette.methodColor
         }
         
     public override var segmentType: Segment.SegmentType
@@ -41,6 +46,11 @@ public class Invocable: Symbol,Scope,StackFrame
             }
         }
     
+    public func removeSymbol(_ symbol: Symbol)
+        {
+        fatalError()
+        }
+        
     public override func addSymbol(_ symbol: Symbol)
         {
         if symbol is LocalSlot
@@ -122,10 +132,10 @@ public class Invocable: Symbol,Scope,StackFrame
         super.encode(with: coder)
         }
         
-    public override func isElement(ofType: Group.ElementType) -> Bool
-        {
-        return(ofType == .method)
-        }
+//    public override func isElement(ofType: Group.ElementType) -> Bool
+//        {
+//        return(ofType == .method)
+//        }
         
     public override func lookup(label: Label) -> Symbol?
         {
@@ -176,6 +186,16 @@ public class Invocable: Symbol,Scope,StackFrame
         copy.returnType = substitution.substitute(self.returnType)
         copy.cName = self.cName
         return(copy)
+        }
+        
+    public func lookupMethod(label: Label) -> Method?
+        {
+        self.module.lookupMethod(label: label)
+        }
+        
+    public func lookupType(label: Label) -> Type?
+        {
+        self.module.lookupType(label: label)
         }
     }
     

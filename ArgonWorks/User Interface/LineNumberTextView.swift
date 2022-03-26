@@ -146,6 +146,18 @@ public class LineNumberTextView: NSTextView
     override public func awakeFromNib() {
         super.awakeFromNib()
         // Get the enclosing scroll view
+         self.isAutomaticTextReplacementEnabled = false
+        self.isAutomaticTextCompletionEnabled = false
+        self.isAutomaticDashSubstitutionEnabled = false
+        self.isAutomaticQuoteSubstitutionEnabled = false
+        self.isAutomaticSpellingCorrectionEnabled = false
+        self.smartInsertDeleteEnabled = false
+        self.isContinuousSpellCheckingEnabled = false
+        self.isGrammarCheckingEnabled = false
+        self.isAutomaticDataDetectionEnabled = false
+        self.isAutomaticLinkDetectionEnabled = false
+        self.turnOffKerning(nil)
+        self.turnOffLigatures(nil)
         guard let scrollView = self.enclosingScrollView else {
             fatalError("Unwrapping the text views scroll view failed!")
         }
@@ -319,9 +331,16 @@ public class LineNumberTextView: NSTextView
                 }
             }
         }
-        
+
     public override func keyDown(with event: NSEvent)
         {
+        if event.characters == "="
+            {
+            let newCharacters = "⇦"
+            let newEvent = NSEvent.keyEvent(with: event.type, location: event.locationInWindow, modifierFlags: event.modifierFlags, timestamp: event.timestamp, windowNumber: event.windowNumber, context: nil, characters: newCharacters, charactersIgnoringModifiers: event.charactersIgnoringModifiers!, isARepeat: event.isARepeat, keyCode: event.keyCode)
+            self.interpretKeyEvents([newEvent!])
+            }
+        else
         if event.isARepeat,let someCharacters = event.characters
             {
             let newCharacters = someCharacters + someCharacters + someCharacters + someCharacters
@@ -342,12 +361,10 @@ public class LineNumberTextView: NSTextView
             line += 1
             }
         location = self.selectedRanges.first!.rangeValue.location
-        print("LOCATION \(location)")
-        print("OFFSET \(offset)")
-        print("POSITION \(location - offset)")
+
         self.sourceEditorDelegate?.sourceEditor(self,changedLine: line + 1,offset: location - offset)
         }
-        
+
     public override func insertNewline(_ sender:Any?)
         {
         let location = self.selectedRanges[0].rangeValue.location

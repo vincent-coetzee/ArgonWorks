@@ -25,6 +25,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         0
         }
         
+    public override var isType: Bool
+        {
+        true
+        }
+        
     public var isSetClass: Bool
         {
         false
@@ -68,6 +73,11 @@ public class Type: Symbol,Displayable,UserDisplayable
     public var layoutSlotCount: Int
         {
         0
+        }
+        
+    public var containsTypeVariable: Bool
+        {
+        false
         }
         
     public override var description: String
@@ -152,7 +162,14 @@ public class Type: Symbol,Displayable,UserDisplayable
         
     public override var isSystemType: Bool
         {
-        self._flags.contains(.kSystemTypeFlag)
+        get
+            {
+            self._flags.contains(.kSystemTypeFlag)
+            }
+        set
+            {
+            self._flags.insert(.kSystemTypeFlag)
+            }
         }
         
     public var isValueType: Bool
@@ -205,11 +222,6 @@ public class Type: Symbol,Displayable,UserDisplayable
         self._flags.contains(.kArcheTypeFlag)
         }
         
-    public override var isType: Bool
-        {
-        true
-        }
-        
     public var superclassType: Type
         {
         fatalError()
@@ -239,6 +251,11 @@ public class Type: Symbol,Displayable,UserDisplayable
         self._flags = TypeFlags(rawValue: UInt16(coder.decodeInteger(forKey: "flags")))
         super.init(coder: coder)
         print("END DECODE TYPE")
+        }
+        
+    public func isSubclass(of: Type) -> Bool
+        {
+        return(false)
         }
         
     public func of(_ type: Type) -> Type
@@ -324,6 +341,12 @@ public class Type: Symbol,Displayable,UserDisplayable
         
     @discardableResult
     public func slot(_ label: Label,_ type: Type) -> Type
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func slot(_ label: Label,mandatory:Argon.Symbol,_ type: Type) -> Type
         {
         fatalError()
         }

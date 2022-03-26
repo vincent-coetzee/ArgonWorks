@@ -24,7 +24,7 @@ public class AddressAllocator: CompilerPass
         
     private func allocateArgonModule()
         {
-        try! ArgonModule.shared.allocateAddresses(using: self)
+        ArgonModule.shared.allocateAddresses(using: self)
         ArgonModule.shared.layoutInMemory(using: self)
         }
         
@@ -68,6 +68,8 @@ public class AddressAllocator: CompilerPass
                 return(self.payload.stackSegment)
             case .code:
                 return(self.payload.codeSegment)
+            case .space:
+                fatalError()
             }
         }
         

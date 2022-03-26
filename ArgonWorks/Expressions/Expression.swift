@@ -310,7 +310,7 @@ public class CompoundExpression: Expression
         
     public override func display(indent: String)
         {
-        var dent = indent + "\t"
+        let dent = indent + "\t"
         print("\(indent)EXPRESSIONS")
         for expression in self.expressions
             {

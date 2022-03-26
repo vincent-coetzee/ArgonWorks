@@ -23,8 +23,8 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                 return(expression.declaration!.line)
             case .block(let block):
                 return(block.declaration.isNil ? 0 : block.declaration!.line)
-            case .tuple:
-                return(0)
+//            case .tuple:
+//                return(0)
             }
         }
         
@@ -38,8 +38,8 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                 return("\(Swift.type(of: expression)) \(expression.diagnosticString)")
             case .block(let block):
                 return("\(Swift.type(of: block))")
-            case .tuple(let tuple):
-                return("\(tuple)")
+//            case .tuple(let tuple):
+//                return("\(tuple)")
             }
         }
         
@@ -73,7 +73,7 @@ public class TypeConstraint: Displayable,CustomStringConvertible
         case symbol(Symbol)
         case expression(Expression)
         case block(Block)
-        case tuple(Tuple)
+//        case tuple(Tuple)
         
         public func appendIssue(_ issue: CompilerIssue)
             {

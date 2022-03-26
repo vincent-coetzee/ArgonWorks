@@ -10,17 +10,20 @@ import Foundation
     
 public protocol Scope: IssueHolder
     {
-    var container: Container { get set }
-    var asContainer: Container { get }
-    var moduleScope: Module? { get }
+//    var asContainer: Container { get }
+//    var moduleScope: Module? { get }
     var parentScope: Scope? { get set }
     var enclosingMethodInstance: MethodInstance { get }
+    var enclosingModule: Module { get }
     func addSymbol(_ symbol: Symbol)
+    func removeSymbol(_ symbol: Symbol)
     func addLocalSlot(_ localSlot: LocalSlot)
+    func lookupMethod(label: Label) -> Method?
+    func lookupType(label: Label) -> Type?
     func lookup(label: Label) -> Symbol?
-    func lookup(name: Name) -> Symbol?
+//    func lookup(name: Name) -> Symbol?
     func lookupN(label: Label) -> Symbols?
-    func lookupN(name: Name) -> Symbols?
+//    func lookupN(name: Name) -> Symbols?
 //    func setContainer(_ scope: Scope?) 
     }
 
@@ -39,6 +42,15 @@ extension Scope
 //        return(self.parentScope!.containsMethodInstanceScope)
 //        }
         
+    public var enclosingModule: Module
+        {
+        if (self as? Module).isNotNil
+            {
+            return(self as! Module)
+            }
+        return(self.parentScope!.enclosingModule)
+        }
+        
     public func methodInstanceSet(withLabel: Label) -> MethodInstanceSet
         {
         MethodInstanceSet(instances: self.lookupN(label: withLabel)?.compactMap{$0 as? MethodInstance})
@@ -49,48 +61,58 @@ extension Scope
         self.parentScope = scope!
         }
         
-    public func lookupEnumeration(name: Name) -> TypeEnumeration?
+    public func lookupEnumeration(label: Label) -> TypeEnumeration?
         {
-        if let item = self.lookup(name: name) as? TypeEnumeration
+        if let item = self.lookupType(label: label) as? TypeEnumeration
             {
             return(item)
             }
         return(nil)
         }
         
-    public func lookupPrefixOperatorInstances(label: Label) -> PrefixOperatorInstances?
+    public func lookupPrefixOperators(label: Label) -> Operators?
         {
         if let items = self.lookupN(label: label)
             {
-            let methods = items.compactMap{$0 as? PrefixOperatorInstance}
+            let methods = items.compactMap{$0 as? Operator}.filter{$0.isPrefix}
             return(methods.isEmpty ? nil : methods)
             }
         return(nil)
         }
         
-    public func lookupInfixOperatorInstances(label: Label) -> InfixOperatorInstances?
+    public func lookupInfixOperators(label: Label) -> Operators?
         {
         if let items = self.lookupN(label: label)
             {
-            let methods = items.compactMap{$0 as? InfixOperatorInstance}
+            let methods = items.compactMap{$0 as? Operator}.filter{$0.isInfix}
             return(methods.isEmpty ? nil : methods)
             }
         return(nil)
         }
         
-    public func lookupPostfixOperatorInstances(label: Label) -> PostfixOperatorInstances?
+    public func lookupPostfixOperators(label: Label) -> Operators?
         {
         if let items = self.lookupN(label: label)
             {
-            let methods = items.compactMap{$0 as? PostfixOperatorInstance}
+            let methods = items.compactMap{$0 as? Operator}.filter{$0.isPostfix}
             return(methods.isEmpty ? nil : methods)
             }
         return(nil)
         }
         
-    public func lookupMethodInstances(name: Name) -> Array<MethodInstance>?
+//    public func lookupMethodInstances(name: Name) -> Array<MethodInstance>?
+//        {
+//        if let items = self.lookupN(name: name)
+//            {
+//            let methods = items.filter{$0 is MethodInstance}.map{$0 as! MethodInstance}
+//            return(methods.isEmpty ? nil : methods)
+//            }
+//        return(nil)
+//        }
+        
+    public func lookupMethodInstances(label: Label) -> Array<MethodInstance>?
         {
-        if let items = self.lookupN(name: name)
+        if let items = self.lookupN(label: label)
             {
             let methods = items.filter{$0 is MethodInstance}.map{$0 as! MethodInstance}
             return(methods.isEmpty ? nil : methods)
@@ -98,19 +120,19 @@ extension Scope
         return(nil)
         }
         
-    public func lookupFunctions(name: Name) -> Array<Function>?
+    public func lookupFunctions(label: Label) -> Array<Function>?
         {
-        if let items = self.lookupN(name: name)
+        if let items = self.lookupN(label: label)
             {
             let methods = items.filter{$0 is Function}.map{$0 as! Function}
             return(methods.isEmpty ? nil : methods)
             }
         return(nil)
         }
-        
-    public func lookupTypes(name: Name) -> Types?
+
+    public func lookupTypes(label: Label) -> Types?
         {
-        if let items = self.lookupN(name: name)
+        if let items = self.lookupN(label: label)
             {
             let types = items.filter{$0 is Type}.map{$0 as! Type}
             return(types.isEmpty ? nil : types)
@@ -118,15 +140,15 @@ extension Scope
         return(nil)
         }
         
-    public func lookupNonTypeSymbols(name: Name) -> Symbols?
-        {
-        if let items = self.lookupN(name: name)
-            {
-            let symbols = items.filter{!($0 is Type)}
-            return(symbols.isEmpty ? nil : symbols)
-            }
-        return(nil)
-        }
+//    public func lookupNonTypeSymbols(name: Name) -> Symbols?
+//        {
+//        if let items = self.lookupN(name: name)
+//            {
+//            let symbols = items.filter{!($0 is Type)}
+//            return(symbols.isEmpty ? nil : symbols)
+//            }
+//        return(nil)
+//        }
         
     public func hasMethod(withSignature signature: MethodSignature) -> Bool
         {

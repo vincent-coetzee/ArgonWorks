@@ -59,8 +59,9 @@ public struct VMPayload: ExecutionContext
                 return(self.stackSegment)
             case .code:
                 return(self.codeSegment)
+            case .space:
+                fatalError()
             }
-        fatalError("Can not determine segment")
         }
         
     public func address(forPrimitiveIndex: Int) -> Address
@@ -75,7 +76,7 @@ public struct VMPayload: ExecutionContext
         
     public mutating func installArgonModule(_ module: ArgonModule)
         {
-        let types = module.symbols.compactMap{$0 as? Type}.sorted{$0.label < $1.label}
+        let types = module.allSymbols.compactMap{$0 as? Type}.sorted{$0.label < $1.label}
         let array = self.staticSegment.allocateArray(size: types.count, elements: Addresses())
         let pointer = ArrayPointer(dirtyAddress: array)!
         for type in types
@@ -91,7 +92,7 @@ public struct VMPayload: ExecutionContext
     public mutating func installClientModule(_ module: Module)
         {
         module.install(inContext: self)
-        let types = module.symbols.compactMap{$0 as? Type}
+        let types = module.allSymbols.compactMap{$0 as? Type}
         let array = self.staticSegment.allocateArray(size: types.count, elements: Addresses())
         let pointer = ArrayPointer(dirtyAddress: array)!
         for type in types
@@ -99,7 +100,7 @@ public struct VMPayload: ExecutionContext
             pointer.append(type.memoryAddress)
             }
         self.clientModuleTypes = array
-        let instances = module.symbols.compactMap{$0 as? MethodInstance}
+        let instances = module.allSymbols.compactMap{$0 as? MethodInstance}
         let methods = self.staticSegment.allocateArray(size: instances.count, elements: Addresses())
         let methodPointer = ArrayPointer(dirtyAddress: methods)!
         for instance in instances

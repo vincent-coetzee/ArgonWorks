@@ -14,6 +14,10 @@ public class EnumerationCase:Symbol
         lhs.caseIndex == rhs.caseIndex && lhs.enumeration.index == rhs.enumeration.index && lhs.associatedTypes == rhs.associatedTypes
         }
         
+    public override var displayString: String
+        {
+        "Case(\(self.symbol))"
+        }
         
     public override var segmentType: Segment.SegmentType
         {
@@ -224,15 +228,15 @@ public class EnumerationCase:Symbol
         return(copy)
         }
         
-    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
-        {
-        super.configure(cell: cell)
-        if associatedTypes.count > 0
-            {
-            let names = associatedTypes.map{$0.label}.joined(separator: ",")
-            cell.trailer.stringValue = "(\(names))"
-            }
-        }
+//    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+//        {
+//        super.configure(cell: cell)
+//        if associatedTypes.count > 0
+//            {
+//            let names = associatedTypes.map{$0.label}.joined(separator: ",")
+//            cell.trailer.stringValue = "(\(names))"
+//            }
+//        }
         
     private func calculateSizeInBytes()
         {

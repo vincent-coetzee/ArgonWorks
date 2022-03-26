@@ -28,6 +28,11 @@ public class TypeMetaclass: TypeClass
         return("TypeMetaclass(\(self.label)\(names))")
         }
         
+    public override var isMetaclass: Bool
+        {
+        true
+        }
+        
     public override var sizeInBytes: Int
         {
         ArgonModule.shared.metaclassType.instanceSizeInBytes
@@ -59,7 +64,7 @@ public class TypeMetaclass: TypeClass
             super.addSupertype(type)
             return
             }
-        print("ERROR")
+        self.supertypes.append(type)
         }
         
     @discardableResult

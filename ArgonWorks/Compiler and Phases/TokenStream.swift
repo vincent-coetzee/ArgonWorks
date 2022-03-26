@@ -36,7 +36,6 @@ public class TokenStream:Equatable, TokenSource
             }
         }
         
-    private var reportingContext:Reporter = NullReporter.shared
     private var source:String = ""
     private var line:Int = 0
     private var lineAtTokenStart = 0
@@ -55,10 +54,10 @@ public class TokenStream:Equatable, TokenSource
     private let digits = NSCharacterSet.decimalDigits
     private let whitespace = NSCharacterSet.whitespaces
     private let newline = NSCharacterSet.newlines
-    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},;")
+    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},;?")
     private let hexDigits = CharacterSet(charactersIn: "avbdefABCDEF0123456789_")
     private let binaryDigits = CharacterSet(charactersIn: "01_")
-    private let operatorSymbols = CharacterSet(charactersIn: "=>-+*/%!&|^~@")
+    private let operatorSymbols = CharacterSet(charactersIn: "=>-+*/%!&|^~@?")
     private let hashStringCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
     private var tokenStart:Int = 0
     private var tokenStop:Int = 0
@@ -74,6 +73,7 @@ public class TokenStream:Equatable, TokenSource
     private var _braceDepth = 0
     public var lineNumber:LineNumber = EmptyLineNumber()
     private var withComments = false
+    private var issues = CompilerIssues()
     public var braceDepth:Int
         {
         return(self._braceDepth)
@@ -93,7 +93,7 @@ public class TokenStream:Equatable, TokenSource
         
     private var atEnd:Bool
         {
-        return(offset == source.endIndex)
+        return(offset >= source.endIndex)
         }
     
     private var atEndOfLine:Bool
@@ -101,10 +101,9 @@ public class TokenStream:Equatable, TokenSource
         return(newline.contains(self.currentChar))
         }
     
-    init(source:String,context:Reporter,withComments: Bool = true)
+    init(source:String,withComments: Bool = true)
         {
         self.withComments = withComments
-        self.reportingContext = context
         self.source = source
         self.initState()
         self.initKeywords()
@@ -117,9 +116,8 @@ public class TokenStream:Equatable, TokenSource
         self.initKeywords()
         }
         
-    public func allTokens(withComments:Bool,context:Reporter) -> [Token]
+    public func allTokens(withComments:Bool) -> [Token]
         {
-        self.reportingContext = context
         self.parseComments = withComments
         self.parseInvisibles = withComments
         var tokens:[Token] = []
@@ -134,12 +132,17 @@ public class TokenStream:Equatable, TokenSource
             {
             return(tokens)
             }
-        return(tokens.flatMap{($0.isComment || $0.isInvisible) ? nil : $0})
+        return(tokens.flatMap{$0.isComment ? nil : $0})
         }
         
     public func line(from:Int,to:Int) -> String
         {
         return(self.source.substring(with: from..<to))
+        }
+        
+    private func appendIssue(at: Location,message: String)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message))
         }
         
     private func initState()
@@ -159,10 +162,10 @@ public class TokenStream:Equatable, TokenSource
     @inline(__always)
     private func nextChar() -> Unicode.Scalar
         {
-        guard !self.atEnd else
+        guard self.offset < self.source.endIndex else
             {
             self.currentChar = Unicode.Scalar(0)
-            return(" ")
+            return(Unicode.Scalar(0))
             }
         self.currentChar = source.unicodeScalars[offset]
         if self.currentChar == "\n"
@@ -219,17 +222,8 @@ public class TokenStream:Equatable, TokenSource
             {
             self.line -= 1
             }
-        offset = source.index(before: offset)
-        if source.unicodeScalars[offset] == "\n"
-            {
-            self.line -= 1
-            }
         self.currentChar = source.unicodeScalars[offset]
-        if source.unicodeScalars[offset] == "\n"
-            {
-            self.line += 1
-            }
-        characterOffset -= 2
+        self.characterOffset -= 1
         }
     
     @discardableResult
@@ -335,7 +329,7 @@ public class TokenStream:Equatable, TokenSource
                 {
 //                let anIndex = self.source.index(self.source.startIndex,offsetBy: self.startIndex)
                 let endIndex = source.distance(from: source.startIndex, to: offset)
-                return(Token.comment(source.substring(with: (startIndex-1)..<endIndex),self.sourceLocation()))
+                return(CommentToken(comment: source.substring(with: (startIndex-1)..<endIndex),location: self.sourceLocation()))
                 }
             return(self.nextToken())
             }
@@ -345,7 +339,7 @@ public class TokenStream:Equatable, TokenSource
             if parseComments
                 {
                 let endIndex = source.distance(from: source.startIndex, to: offset)
-                return(Token.comment(source.substring(with: startIndex..<endIndex),self.sourceLocation()))
+                return(CommentToken(comment: source.substring(with: startIndex..<endIndex),location: self.sourceLocation()))
                 }
             return(self.nextToken())
             }
@@ -354,9 +348,9 @@ public class TokenStream:Equatable, TokenSource
              if self.currentChar == "="
                 {
                 self.nextChar()
-                return(Token("/=",self.sourceLocation()))
+                 return(OperatorToken(string: "/=",location: self.sourceLocation()))
                 }
-            return(Token("/",self.sourceLocation()))
+            return(OperatorToken(string: "/",location: self.sourceLocation()))
             }
         }
         
@@ -377,9 +371,9 @@ public class TokenStream:Equatable, TokenSource
             }
         if self.keywords.contains(string)
             {
-            return(.keyword(Token.Keyword(rawValue: string)!,self.sourceLocation()))
+            return(KeywordToken(keyword: Token.Keyword(rawValue: string)!,location: self.sourceLocation()))
             }
-        return(.identifier(string,self.sourceLocation()))
+        return(IdentifierToken(identifier: string,location: self.sourceLocation()))
         }
         ///
         /// If we have found a "/" or a "." that means this was actually a path and
@@ -395,7 +389,7 @@ public class TokenStream:Equatable, TokenSource
             string += self.currentChar
             self.nextChar()
             }
-        return(.path(string,self.sourceLocation()))
+        return(PathToken(path: string,location: self.sourceLocation()))
         }
         
     public func peekToken(count: Int) -> Token
@@ -414,6 +408,21 @@ public class TokenStream:Equatable, TokenSource
         
     public func nextToken() -> Token
         {
+        let token = self._nextToken()
+        if !self.issues.isEmpty
+            {
+            token.appendIssues(self.issues)
+            self.issues = []
+            }
+        return(token)
+        }
+        
+    private func _nextToken() -> Token
+        {
+        if self.currentChar == Unicode.Scalar(0)
+            {
+            return(EndToken(location: self.sourceLocation()))
+            }
         let token = self.scanToken()
         if !self.withComments && token.isWhitespace
             {
@@ -424,12 +433,12 @@ public class TokenStream:Equatable, TokenSource
         
     private func scanToken() -> Token
         {
+
         self.tokenLine = line
         if !self.tokenStack.isEmpty
             {
             return(self.tokenStack.removeFirst())
             }
-        self.tokenStart = self.characterOffset
         self.scanInvisible()
 //            {
 //            return(invisible)
@@ -440,10 +449,12 @@ public class TokenStream:Equatable, TokenSource
         /// it if it is
         ///
         ///
+        self.startIndex = self.characterOffset
+        self.tokenStart = self.characterOffset
         if self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.peekChar(at:1))
             {
             self.nextChar()
-            return(.symbol(.leftBrocket,self.sourceLocation()))
+            return(OperatorToken(string:"<",location: self.sourceLocation()))
             }
         else if self.currentChar == "<"
             {
@@ -451,18 +462,18 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.leftBrocketEquals,self.sourceLocation()))
+                return(OperatorToken(string:"<=",location: self.sourceLocation()))
                 }
-            return(.symbol(.leftBrocket,self.sourceLocation()))
+            return(OperatorToken(string:"<",location: self.sourceLocation()))
             }
         else if self.currentChar == "$" && self.peekChar(at: 0) == "{"
             {
             self.nextChar()
             self.nextChar()
             let text = self.scanTextUntilMacroEnd()
-            self.tokenStack.append(.string(text,self.sourceLocation()))
-//            self.tokenStack.append(.symbol(.macroStop,self.sourceLocation()))
-            return(.symbol(.macroStart,self.sourceLocation()))
+            self.tokenStack.append(LiteralToken(string: Argon.addStatic(StaticString(string: text)),location: self.sourceLocation()))
+//            self.tokenStack.append(.symbol(.macroStop,location: self.sourceLocation()))
+            return(OperatorToken(string:"${",location: self.sourceLocation()))
             }
         ///
         ///
@@ -513,7 +524,8 @@ public class TokenStream:Equatable, TokenSource
                 self.nextChar()
                 string = string.replacingOccurrences(of: "\n", with: " ")
                 string = string.replacingOccurrences(of: "\t", with: " ")
-                return(.note(string,self.sourceLocation()))
+//                return(.note(string,location: self.sourceLocation()))
+                fatalError()
                 }
             }
         //
@@ -530,7 +542,7 @@ public class TokenStream:Equatable, TokenSource
 //                    self.currentString += String(self.currentChar)
 //                    self.nextChar()
 //                    }
-//                return(.directive(self.currentString,self.sourceLocation()))
+//                return(.directive(self.currentString,location: self.sourceLocation()))
 //                }
 //            else
 //                {
@@ -545,11 +557,12 @@ public class TokenStream:Equatable, TokenSource
             {
             self.nextChar()
             self.nextChar()
-            return(.symbol(.rightArrow, self.sourceLocation()))
+            return(OperatorToken(string:"->",location: self.sourceLocation()))
             }
-        else if digits.contains(self.currentChar) || self.currentChar == "-"
+        else if digits.contains(self.currentChar)
             {
-            return(self.scanNumber())
+            let number = self.scanNumber()
+            return(number)
             }
         //
         // Is it a string
@@ -570,7 +583,7 @@ public class TokenStream:Equatable, TokenSource
         //
         else if atEnd
             {
-            return(Token.end(self.sourceLocation()))
+            return(EndToken(location: self.sourceLocation()))
             }
         //
         // Is it a hash string called a Symbol in the language
@@ -585,7 +598,7 @@ public class TokenStream:Equatable, TokenSource
                 string += String(self.currentChar)
                 self.nextChar()
                 }
-            return(.hashString(string,self.sourceLocation()))
+            return(LiteralToken(symbol: Argon.addStatic(StaticSymbol(string: string)),location: self.sourceLocation()))
             }
         //
         // Is it a date, time or date time literal
@@ -601,8 +614,16 @@ public class TokenStream:Equatable, TokenSource
             {
             return(self.scanCharacterLiteral())
             }
-        self.reportingContext.dispatchError(at: self.sourceLocation(), message: "Invalid character '\(self.currentChar)'")
-        self.nextChar()
+        else if self.currentChar == "⇦"
+            {
+            self.nextChar()
+            return(OperatorToken(string: "=", location: self.sourceLocation()))
+            }
+        else if self.currentChar != Unicode.Scalar(0)
+            {
+            self.appendIssue(at: self.sourceLocation(), message: "Invalid character '\(self.currentChar)'")
+            self.nextChar()
+            }
         return(self.nextToken())
         }
         
@@ -613,10 +634,10 @@ public class TokenStream:Equatable, TokenSource
         self.nextChar()
         if self.currentChar != "'"
             {
-            self.reportingContext.dispatchError(at:self.sourceLocation(),message:"' expected after character constant")
+            self.appendIssue(at:self.sourceLocation(),message:"' expected after character constant")
             }
         self.nextChar()
-        return(.character(characterValue,self.sourceLocation()))
+        return(LiteralToken(character: characterValue,location: self.sourceLocation()))
         }
         
     private func scanNumericElement(maximum: Int) -> Int
@@ -649,7 +670,7 @@ public class TokenStream:Equatable, TokenSource
         
         if self.currentChar != "("
             {
-            self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'(' expected after '@'.")
+            self.appendIssue(at:self.sourceLocation(),message:"'(' expected after '@'.")
             }
         self.nextChar()
         let first = self.scanNumericElement(maximum: 60)
@@ -660,7 +681,7 @@ public class TokenStream:Equatable, TokenSource
             month = self.scanNumericElement(maximum: 12)
             if self.currentChar != "/"
                 {
-                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"'/' expected in date literal.")
+                self.appendIssue(at:self.sourceLocation(),message:"'/' expected in date literal.")
                 }
             self.nextChar()
             year = self.scanNumericElement(maximum: 65535)
@@ -690,23 +711,23 @@ public class TokenStream:Equatable, TokenSource
                 }
             else
                 {
-                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"':' expected in time literal.")
+                self.appendIssue(at:self.sourceLocation(),message:"':' expected in time literal.")
                 }
             if self.currentChar != ")"
                 {
-                self.reportingContext.dispatchError(at:self.sourceLocation(),message:"')' was expected after magnitude date/time literal.")
+                self.appendIssue(at:self.sourceLocation(),message:"')' was expected after magnitude date/time literal.")
                 }
             self.nextChar()
             }
         if hasDate && hasTime
             {
-            return(.dateTime(Argon.DateTime(day: day, month: month, year: year, hour: hour, minute: minute, second: second, millisecond: millisecond),self.sourceLocation()))
+            return(LiteralToken(dateTime: Argon.DateTime(day: day, month: month, year: year, hour: hour, minute: minute, second: second, millisecond: millisecond),location: self.sourceLocation()))
             }
         else if hasTime
             {
-            return(.time(Argon.Time(hour: hour, minute: minute, second: second, millisecond: millisecond),self.sourceLocation()))
+            return(LiteralToken(time: Argon.Time(hour: hour, minute: minute, second: second, millisecond: millisecond),location: self.sourceLocation()))
             }
-        return(.date(Argon.Date(day:day,month:month,year:year),self.sourceLocation()))
+        return(LiteralToken(date: Argon.Date(day:day,month:month,year:year),location: self.sourceLocation()))
         }
         
     private func scanString() -> Token
@@ -720,7 +741,7 @@ public class TokenStream:Equatable, TokenSource
             self.nextChar()
             }
         self.nextChar()
-        return(Token.string(string,self.sourceLocation()))
+        return(LiteralToken(string: Argon.addStatic(StaticString(string: string)),location: self.sourceLocation()))
         }
     
     @inline(__always)
@@ -768,11 +789,12 @@ public class TokenStream:Equatable, TokenSource
             number += Argon.Integer(String(self.currentChar))!
             self.nextChar()
             }
-        return(.integer(number,self.sourceLocation()))
+        return(LiteralToken(integer: number,location: self.sourceLocation()))
         }
     
     private func scanNumber() -> Token
         {
+        print("scanNumber")
         self.startIndex = self.characterOffset
         var sign = 1
         var number:Int = 0
@@ -797,9 +819,9 @@ public class TokenStream:Equatable, TokenSource
                 self.rewindChar()
                 }
             }
-        while (digits.contains(self.currentChar) || self.currentChar == "_") && !atEnd
+        repeat
             {
-            if self.currentChar == "_"
+            while self.currentChar == "_" && !self.atEnd
                 {
                 self.nextChar()
                 }
@@ -810,22 +832,23 @@ public class TokenStream:Equatable, TokenSource
                 self.nextChar()
                 }
             }
+        while (digits.contains(self.currentChar) || self.currentChar == "_") && !self.atEnd
         if self.currentChar == "." && self.peekChar(at:0) == "." && self.peekChar(at:1) == "."
             {
-            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
+            return(LiteralToken(integer: Argon.Integer(number * sign),location: self.sourceLocation()))
             }
         else if self.currentChar == "." && self.peekChar(at:0) == "."
             {
-            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
+            return(LiteralToken(integer: Argon.Integer(number * sign),location: self.sourceLocation()))
             }
         else if self.currentChar == "."
             {
             self.nextChar()
             var factor = Double(0.0)
             var divisor = 10
-            while (digits.contains(self.currentChar) || self.currentChar == "_") && !atEnd
+            while (digits.contains(self.currentChar) || self.currentChar == "_") && !self.atEnd
                 {
-                if self.currentChar == "_"
+                while self.currentChar == "_" && !self.atEnd
                     {
                     self.nextChar()
                     }
@@ -836,11 +859,11 @@ public class TokenStream:Equatable, TokenSource
                     self.nextChar()
                     }
                 }
-            return(.float(Double(sign) * Double(Double(number)+factor),self.sourceLocation()))
+            return(LiteralToken(float: Double(sign) * Double(Double(number)+factor),location: self.sourceLocation()))
             }
         else
             {
-            return(.integer(Argon.Integer(number * sign),self.sourceLocation()))
+            return(LiteralToken(integer: Argon.Integer(number * sign),location: self.sourceLocation()))
             }
         }
     
@@ -872,7 +895,7 @@ public class TokenStream:Equatable, TokenSource
                 }
             nextChar()
             }
-        return(.integer(Argon.Integer(hexValue),self.sourceLocation()))
+        return(LiteralToken(integer: Argon.Integer(hexValue),location: self.sourceLocation()))
         }
     
     private func scanBinaryNumber() -> Token
@@ -889,7 +912,7 @@ public class TokenStream:Equatable, TokenSource
                 }
             nextChar()
             }
-        return(.integer(Argon.Integer(binaryValue),self.sourceLocation()))
+        return(LiteralToken(integer: Argon.Integer(binaryValue),location: self.sourceLocation()))
         }
         
     private func scanIdentifier(with:String) -> Token
@@ -904,13 +927,13 @@ public class TokenStream:Equatable, TokenSource
         if currentString == "?"
             {
             self.nextChar()
-            return(.identifier(String(self.currentString),self.sourceLocation()))
+            return(IdentifierToken(identifier: String(self.currentString),location: self.sourceLocation()))
             }
         if self.keywords.contains(self.currentString)
             {
-            return(.keyword(Token.Keyword(rawValue:self.currentString)!,self.sourceLocation()))
+            return(KeywordToken(keyword: Token.Keyword(rawValue:self.currentString)!,location: self.sourceLocation()))
             }
-        return(.identifier(String(self.currentString),self.sourceLocation()))
+        return(IdentifierToken(identifier: String(self.currentString),location: self.sourceLocation()))
         }
         
     private func scanName(with:String) -> Token
@@ -924,9 +947,10 @@ public class TokenStream:Equatable, TokenSource
         while self.nameCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
         if self.keywords.contains(self.currentString)
             {
-            return(.keyword(Token.Keyword(rawValue:self.currentString)!,self.sourceLocation()))
+            return(KeywordToken(keyword: Token.Keyword(rawValue:self.currentString)!,location: self.sourceLocation()))
             }
-        return(.name(Name(self.currentString),self.sourceLocation()))
+        fatalError()
+//        return(.name(Name(self.currentString),location: self.sourceLocation()))
         }
         
     private func scanSymbol() -> Token
@@ -942,21 +966,21 @@ public class TokenStream:Equatable, TokenSource
                 if self.currentChar == "."
                     {
                     self.nextChar()
-                    return(.symbol(.fullRange,self.sourceLocation()))
+                    return(OperatorToken(string:"...",location: self.sourceLocation()))
                     }
-                return(.symbol(.halfRange,self.sourceLocation()))
+                return(OperatorToken(string:"..",location: self.sourceLocation()))
                 }
-            return(.symbol(.stop,self.sourceLocation()))
+            return(OperatorToken(string:".",location: self.sourceLocation()))
             }
         if self.currentChar == "("
             {
             self.nextChar()
-            return(.symbol(.leftParenthesis,self.sourceLocation()))
+            return(OperatorToken(string:"(",location: self.sourceLocation()))
             }
         else if self.currentChar == ")"
             {
             self.nextChar()
-            return(.symbol(.rightParenthesis,self.sourceLocation()))
+            return(OperatorToken(string:")",location: self.sourceLocation()))
             }
         else if self.currentChar == "}"
             {
@@ -964,26 +988,26 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "$"
                 {
                 self.nextChar()
-                return(.symbol(.macroStop,self.sourceLocation()))
+                return(OperatorToken(string:"}$",location: self.sourceLocation()))
                 }
             self._braceDepth -= 1
-            return(.symbol(.rightBrace,self.sourceLocation()))
+            return(OperatorToken(string:"}",location: self.sourceLocation()))
             }
         else if self.currentChar == "{"
             {
             self.nextChar()
             self._braceDepth += 1
-            return(.symbol(.leftBrace,self.sourceLocation()))
+            return(OperatorToken(string:"{",location: self.sourceLocation()))
             }
         else if self.currentChar == "]"
             {
             self.nextChar()
-            return(.symbol(.rightBracket,self.sourceLocation()))
+            return(OperatorToken(string:"]",location: self.sourceLocation()))
             }
         else if self.currentChar == "["
             {
             self.nextChar()
-            return(.symbol(.leftBracket,self.sourceLocation()))
+            return(OperatorToken(string:"[",location: self.sourceLocation()))
             }
         else if self.currentChar == "/"
             {
@@ -991,7 +1015,7 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.divEquals,self.sourceLocation()))
+                return(OperatorToken(string:"/=",location: self.sourceLocation()))
                 }
             else
                 {
@@ -1001,7 +1025,7 @@ public class TokenStream:Equatable, TokenSource
         else if self.currentChar == ","
             {
             self.nextChar()
-            return(.symbol(.comma,self.sourceLocation()))
+            return(OperatorToken(string:",",location: self.sourceLocation()))
             }
         else if self.currentChar == ">"
             {
@@ -1009,7 +1033,7 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.rightBrocketEquals,self.sourceLocation()))
+                return(OperatorToken(string:">=",location: self.sourceLocation()))
                 }
             else
                 {
@@ -1019,7 +1043,7 @@ public class TokenStream:Equatable, TokenSource
         else if self.currentChar == ";"
             {
             self.nextChar()
-            return(.symbol(.semicolon,self.sourceLocation()))
+            return(OperatorToken(string:";",location: self.sourceLocation()))
             }
         else if self.currentChar == ":"
             {
@@ -1027,9 +1051,9 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == ":"
                 {
                 self.nextChar()
-                return(.symbol(.gluon,self.sourceLocation()))
+                return(OperatorToken(string:"::",location: self.sourceLocation()))
                 }
-            return(.symbol(.colon,self.sourceLocation()))
+            return(OperatorToken(string:":",location: self.sourceLocation()))
             }
         else if self.currentChar == "="
             {
@@ -1042,16 +1066,16 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "&"
                 {
                 self.nextChar()
-                return(.symbol(.and,self.sourceLocation()))
+                return(OperatorToken(string:"&&",location: self.sourceLocation()))
                 }
             else if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.bitAndEquals,self.sourceLocation()))
+                return(OperatorToken(string:"&=",location: self.sourceLocation()))
                 }
             else
                 {
-                return(.symbol(.bitAnd,self.sourceLocation()))
+                return(OperatorToken(string:"&",location: self.sourceLocation()))
                 }
             }
         else if self.currentChar == "|"
@@ -1060,16 +1084,16 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "|"
                 {
                 self.nextChar()
-                return(.symbol(.or,self.sourceLocation()))
+                return(OperatorToken(string:"||",location: self.sourceLocation()))
                 }
             else if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.bitOrEquals,self.sourceLocation()))
+                return(OperatorToken(string:"|=",location: self.sourceLocation()))
                 }
             else
                 {
-                return(.symbol(.bitOr,self.sourceLocation()))
+                return(OperatorToken(string:"|",location: self.sourceLocation()))
                 }
             }
         else if self.currentChar == "+"
@@ -1078,7 +1102,7 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.addEquals,self.sourceLocation()))
+                return(OperatorToken(string:"+=",location: self.sourceLocation()))
                 }
             else
                 {
@@ -1091,16 +1115,16 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.subEquals,self.sourceLocation()))
+                return(OperatorToken(string:"-=",location: self.sourceLocation()))
                 }
             else if self.currentChar == ">"
                 {
                 self.nextChar()
-                return(.symbol(.rightArrow,self.sourceLocation()))
+                return(OperatorToken(string:"->",location: self.sourceLocation()))
                 }
             else
                 {
-                return(.symbol(.sub,self.sourceLocation()))
+                return(OperatorToken(string:"-",location: self.sourceLocation()))
                 }
             }
         else if self.currentChar == "*"
@@ -1109,7 +1133,7 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.mulEquals,self.sourceLocation()))
+                return(OperatorToken(string:"*=",location: self.sourceLocation()))
                 }
             else
                 {
@@ -1121,16 +1145,41 @@ public class TokenStream:Equatable, TokenSource
             if self.currentChar == "="
                 {
                 self.nextChar()
-                return(.symbol(.bitNotEquals,self.sourceLocation()))
+                return(OperatorToken(string:"~=",location: self.sourceLocation()))
                 }
             else
                 {
                 return(self.scanOperator(withPrefix:"~"))
                 }
             }
+        else if self.currentChar == "?"
+            {
+            self.nextChar()
+            if self.currentChar == "?"
+                {
+                self.nextChar()
+                return(OperatorToken(string:"??",location: self.sourceLocation()))
+                }
+            return(OperatorToken(string:"?",location: self.sourceLocation()))
+            }
+        else if self.currentChar == "!"
+            {
+            self.nextChar()
+            if self.currentChar == "="
+                {
+                self.nextChar()
+                return(OperatorToken(string:"!=",location: self.sourceLocation()))
+                }
+            else if self.currentChar == "!"
+                {
+                self.nextChar()
+                return(OperatorToken(string:"!!",location: self.sourceLocation()))
+                }
+            return(OperatorToken(string:"!",location: self.sourceLocation()))
+            }
         else if !self.operatorSymbols.contains(self.currentChar)
             {
-            self.reportingContext.dispatchError(at:self.sourceLocation(),message:"Invalid symbol character '\(self.currentChar)'.")
+            self.appendIssue(at:self.sourceLocation(),message:"Invalid symbol character '\(self.currentChar)'.")
             self.nextChar()
             }
         while self.operatorSymbols.contains(self.currentChar) && !(self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.currentChar))
@@ -1138,11 +1187,7 @@ public class TokenStream:Equatable, TokenSource
             operatorString += String(self.currentChar)
             self.nextChar()
             }
-        if let symbolType = Token.Symbol(rawValue: operatorString)
-            {
-            return(.symbol(symbolType,self.sourceLocation()))
-            }
-        return(.operator(operatorString,self.sourceLocation()))
+        return(OperatorToken(string:operatorString,location: self.sourceLocation()))
         }
     
     internal func sourceLocation() -> Location
@@ -1157,22 +1202,18 @@ public class TokenStream:Equatable, TokenSource
         var operatorString = startString
         if startString == "<" && self.currentChar == "/" && self.alphanumerics.contains(self.peekChar(at:0))
             {
-            return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
+            return(OperatorToken(string:operatorString,location: self.sourceLocation()))
             }
         if self.currentChar == "<"
             {
-            return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
+            return(OperatorToken(string:operatorString,location: self.sourceLocation()))
             }
         while self.operatorSymbols.contains(self.currentChar) && !(self.currentChar == "<" && self.peekChar(at:0) == "/" && self.alphanumerics.contains(self.peekChar(at:1)))
             {
             operatorString += String(self.currentChar)
             self.nextChar()
             }
-        if let symbolType = Token.Symbol(rawValue: operatorString)
-            {
-            return(.symbol(symbolType,self.sourceLocation()))
-            }
-         return(.operator(operatorString,self.sourceLocation()))
+         return(OperatorToken(string:operatorString,location: self.sourceLocation()))
         }
         
     private func initKeywords()

@@ -50,48 +50,33 @@ public struct TagSignature: Equatable
     
 public class MethodInstance: Function
     {
+    public override var displayName: String
+        {
+        var parms:[String] = []
+        for parm in self.parameters
+            {
+            if parm.isVisible
+                {
+                parms.append(parm.label + "::" + parm.type.displayName)
+                }
+            else
+                {
+                parms.append(parm.type.displayName)
+                }
+            }
+        let string = parms.joined(separator: ",")
+        let name = "\(self.label)(\(string)) -> \(self.returnType.displayName)"
+        return(name)
+        }
+        
+    public override var symbolType: SymbolType
+        {
+        .method
+        }
+        
     public var methodSignature: MethodSignature
         {
         MethodSignature(methodInstance: self)
-        }
-        
-    public override var childOutlineItemCount: Int
-        {
-        self.parameters.count + 2
-        }
-
-    public override var hasChildOutlineItems: Bool
-        {
-        true
-        }
-        
-    public override var isOutlineItemExpandable: Bool
-        {
-        self.childOutlineItemCount > 0
-        }
-
-    public override func childOutlineItem(atIndex: Int) -> OutlineItem
-        {
-        if atIndex == self.parameters.count
-            {
-            return(self.type)
-            }
-        else if atIndex == self.parameters.count + 1
-            {
-            return(self.returnType)
-            }
-        return(self.parameters[atIndex])
-        }
-        
-    public override var outlineItemFields: Dictionary<String, FieldBox>
-        {
-        var fields = Dictionary<String,FieldBox>()
-        fields["class"] = FieldBox(label: "class",root: self,keyPath: \Symbol.classLabel)
-        fields["index"] = FieldBox(label: "index",root: self,keyPath: \Symbol.index)
-        fields["memoryAddress"] = FieldBox(label: "memoryAddress",root: self,keyPath: \Symbol.memoryAddressField)
-        fields["container"] = FieldBox(label: "container",root: self,keyPath: \Symbol.container)
-        fields["typeName"] = FieldBox(label: "typeName",root: self,keyPath: \Symbol.typeNameField)
-        return(fields)
         }
         
     public var methodSelectorString: String
@@ -104,11 +89,11 @@ public class MethodInstance: Function
         return(string)
         }
         
-    public override var asContainer: Container
-        {
-        .methodInstance(self)
-        }
-        
+//    public override var asContainer: Container
+//        {
+//        .methodInstance(self)
+//        }
+//        
     public override var enclosingMethodInstance: MethodInstance
         {
         self
@@ -165,14 +150,13 @@ public class MethodInstance: Function
         
     public override var argonHash: Int
         {
-        var hashValue = super.argonHash
+        var hashValue = "\(Swift.type(of: self))\(self.label)".polynomialRollingHash
         for slot in self.parameters
             {
             hashValue = hashValue << 13 ^ slot.argonHash
             }
         hashValue = hashValue << 13 ^ self.returnType.argonHash
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
         
     public var isBlockContextScope: Bool
@@ -307,6 +291,8 @@ public class MethodInstance: Function
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.isMainMethod = self.isMainMethod
+        let newInstance = Self(label: self.label)
+        instance.setModule(self.module)
         instance.setMemoryAddress(self.memoryAddress)
         return(self)
         }
@@ -326,9 +312,10 @@ public class MethodInstance: Function
         let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
         let newReturnType = self.returnType.freshTypeVariable(inContext: context)
         let newInstance = Self(label: self.label)
+        newInstance.setModule(self.module)
         newInstance.setIndex(self.index.keyByIncrementingMinor())
         newInstance.ancestors.append(self)
-        newInstance.container = self.container
+//        newInstance.container = self.container
         newInstance.setIndex(self.index)
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
@@ -348,11 +335,6 @@ public class MethodInstance: Function
             return
             }
         self.wasMemoryLayoutDone = true
-        if self.label == "doSomeSeriousShit"
-            {
-            print("halt")
-            print("soSomeSeriousShit: \(self.memoryAddress)")
-            }
         let segment = context.segment(for: self)
         let methodInstanceType = ArgonModule.shared.lookup(label: "MethodInstance") as! Type
         let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType)
@@ -545,7 +527,7 @@ public class MethodInstance: Function
         {
         for (inType,myType) in zip(types,self.parameters.map{$0.type!})
             {
-            if inType.isTypeVariable || myType.isTypeVariable
+            if inType.containsTypeVariable || myType.containsTypeVariable
                 {
                 return(false)
                 }

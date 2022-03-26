@@ -7,18 +7,23 @@
 
 import Foundation
 
+public enum ReferenceType: Int
+    {
+    case reference = 1
+    case value = 0
+    }
+    
 public class Parameter:LocalSlot,Displayable
     {
     public override var argonHash: Int
         {
-        var hashValue = super.argonHash
+        var hashValue = "\(Swift.type(of: self))\(self.label)".polynomialRollingHash
         hashValue = hashValue << 13 ^ self.type.argonHash
         if self.relabel.isNotNil
             {
             hashValue = hashValue << 13 ^ self.relabel!.argonHash
             }
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
         
     public override var displayString: String
@@ -49,12 +54,14 @@ public class Parameter:LocalSlot,Displayable
     public let isVisible:Bool
     public let isVariadic: Bool
     public let relabel: Label?
+    public var referenceType: ReferenceType
     
-    init(label:Label,relabel:Label? = nil,type:Type,isVisible:Bool = false,isVariadic:Bool = false)
+    init(label:Label,relabel:Label? = nil,type:Type,isVisible:Bool = false,isVariadic:Bool = false,referenceType: ReferenceType = .value)
         {
         self.isVisible = isVisible
         self.isVariadic = isVariadic
         self.relabel = relabel
+        self.referenceType = referenceType
         super.init(label: label,type: type,value: nil)
         }
     
@@ -74,6 +81,7 @@ public class Parameter:LocalSlot,Displayable
         self.isVisible = coder.decodeBool(forKey: "isVisible")
         self.isVariadic = coder.decodeBool(forKey: "isVariadic")
         self.relabel = coder.decodeString(forKey: "relabel")
+        self.referenceType = ReferenceType(rawValue: coder.decodeInteger(forKey: "referenceType"))!
         super.init(coder: coder)
         }
         
@@ -82,6 +90,7 @@ public class Parameter:LocalSlot,Displayable
         self.isVisible = true
         self.isVariadic = false
         self.relabel = nil
+        self.referenceType = .value
         super.init(label: label)
         }
         
@@ -91,6 +100,7 @@ public class Parameter:LocalSlot,Displayable
         coder.encode(self.isVisible,forKey: "isVisible")
         coder.encode(self.isVariadic,forKey: "isVariadic")
         coder.encode(self.relabel,forKey: "relabel")
+        coder.encode(self.referenceType.rawValue,forKey: "referenceType")
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self

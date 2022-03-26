@@ -9,26 +9,26 @@ import Foundation
 
 public class ImportedSymbolPlaceholder: NSObject, NSCoding
     {
-    private let originalName: Name
+    private let originalName: Label
     private let originalImportPath: String
     
     init(original: Symbol)
         {
-        self.originalName = original.fullName
+        self.originalName = original.label
         self.originalImportPath = original.loader!.canonicalPath
         super.init()
         }
         
     public required init(coder: NSCoder)
         {
-        self.originalName = Name(coder: coder,forKey: "originalName")
+        self.originalName = coder.decodeObject(forKey: "originalName") as! String
         self.originalImportPath = coder.decodeString(forKey: "originalImportPath")!
         super.init()
         }
         
     public func encode(with coder:NSCoder)
         {
-        self.originalName.encode(with: coder,forKey: "originalName")
+        coder.encode(self.originalName,forKey: "originalName")
         coder.encode(self.originalImportPath,forKey: "originalImportPath")
         }
         
@@ -36,11 +36,11 @@ public class ImportedSymbolPlaceholder: NSObject, NSCoding
         {
         if let importer = coder as? ImportUnarchiver
             {
-            if let object = importer.topModule.lookup(name: self.originalName)
+            if let object = importer.topModule.lookup(label: self.originalName)
                 {
                 return(object)
                 }
-            importer.noteMissingSymbol(named: self.originalName, path: self.originalImportPath)
+//            importer.noteMissingSymbol(named: self.originalName, path: self.originalImportPath)
             }
         return(self)
         }

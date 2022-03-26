@@ -39,11 +39,11 @@ public class AssignmentOperatorExpression: Expression
         coder.encode(self.operationName,forKey: "operationName")
         }
 
-    init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)
+    init(_ lhs:Expression,_ operation: String,_ rhs:Expression)
         {
         self.rhs = rhs
         self.lhs = lhs
-        self.operationName = operation.name
+        self.operationName = operation
         super.init()
         }
         
@@ -71,7 +71,7 @@ public class AssignmentOperatorExpression: Expression
 
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let expression = AssignmentOperatorExpression(substitution.substitute(self.lhs),Token.Operator(self.operationName),substitution.substitute(self.rhs))
+        let expression = AssignmentOperatorExpression(substitution.substitute(self.lhs),self.operationName,substitution.substitute(self.rhs))
         expression.issues = self.issues
         expression.type = substitution.substitute(self.type)
         expression.locations = self.locations

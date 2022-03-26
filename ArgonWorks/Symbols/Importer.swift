@@ -101,7 +101,7 @@ public class Importer: Symbol,Loader
         return(input)
         }
         
-    public static func tryLoadingPath(_ path: String?,topModule: TopModule,reportingContext: Reporter,location: Location) -> String?
+    public static func tryLoadingPath(_ path: String?,topModule: TopModule,location: Location) -> String?
         {
 //        guard let filePath = path else
 //            {
@@ -175,8 +175,8 @@ public class Importer: Symbol,Loader
         return(self.rootModule.lookup(label: label))
         }
         
-    public override func lookup(name: Name) -> Symbol?
-        {
-        return(self.rootModule.lookup(name: name))
-        }
+//    public override func lookup(name: Name) -> Symbol?
+//        {
+//        return(self.rootModule.lookup(name: name))
+//        }
     }

@@ -1,127 +1,153 @@
-////
-////  MethodInstanceBlock.swift
-////  MethodInstanceBlock
-////
-////  Created by Vincent Coetzee on 4/8/21.
-////
-//
-//import Foundation
-//
-//public class MethodInstanceBlock: Block
-//    {
-//    public override var container: Container
+///
+///
+///
+///
+///
+
+import Cocoa
+
+public class MethodInstanceBlock: Block
+    {
+    public override var parentScope: Scope?
+        {
+        get
+            {
+            self.methodInstance
+            }
+        set
+            {
+            fatalError()
+            }
+        }
+        
+    private var methodInstance: MethodInstance!
+    
+    init(methodInstance: MethodInstance)
+        {
+        self.methodInstance = methodInstance
+        super.init()
+        }
+        
+        required init()
+            {
+            super.init()
+            }
+        
+        public required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        return(self)
+        }
+        
+    public override func lookupMethod(label: Label) -> Method?
+        {
+        self.methodInstance.lookupMethod(label: label)
+        }
+        
+    public override func lookupN(label: Label) -> Symbols?
+        {
+        var found = Symbols()
+        for symbol in self.localSymbols
+            {
+            if symbol.localLabel == label
+                {
+                found.append(symbol)
+                }
+            }
+        if let more = self.methodInstance.lookupN(label: label)
+            {
+            found.append(contentsOf: more)
+            }
+        return(found.isEmpty ? nil : found)
+        }
+        
+//    public override func lookupN(name: Name) -> Symbols?
 //        {
-//        get
+//        if name.isRooted
 //            {
-//            .methodInstance(methodInstance!)
+//            return(self.methodInstance.lookupN(name: name))
 //            }
-//        set
+//        else if name.count == 1
 //            {
+//            var results = Symbols()
+//            for symbol in self.localSymbols
+//                {
+//                if symbol.localLabel == name.last
+//                    {
+//                    results.append(symbol)
+//                    }
+//                }
+//            if let upper = self.methodInstance.lookupN(name: name)
+//                {
+//                results.append(contentsOf: upper)
+//                }
+//            return(results.isEmpty ? nil : results)
+//            }
+//        else
+//            {
+//            return(self.methodInstance.lookupN(name: name))
 //            }
 //        }
-//        
-//    public override var declaration: Location?
+        
+//    public override func lookup(name: Name) -> Symbol?
 //        {
-//        self.methodInstance.isNil ? .zero : self.methodInstance!.declaration
-//        }
-//        
-//    required init()
-//        {
-//        super.init()
-//        }
-//        
-//    public var methodInstance: MethodInstance?
-//    
-//    init(methodInstance:MethodInstance)
-//        {
-//        super.init()
-//        self.methodInstance = methodInstance
-//        }
-//        
-//    public required init?(coder: NSCoder)
-//        {
-//        super.init(coder: coder)
-//        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
-//        }
-//    
-//    public override func encode(with coder: NSCoder)
-//        {
-//        coder.encode(self.methodInstance,forKey: "methodInstance")
-//        super.encode(with: coder)
-//        }
-//        
-//    public override func lookup(label: String) -> Symbol?
-//        {
-//        for symbol in self.localSymbols
+//        if name.isRooted
 //            {
-//            if symbol.label == label
+//            if name.count == 1
+//                {
+//                return(nil)
+//                }
+//            if let start = TopModule.shared.lookup(label: name.first)
+//                {
+//                if name.count == 2
+//                    {
+//                    return(start)
+//                    }
+//                if let symbol = start.lookup(name: name.withoutFirst)
+//                    {
+//                    return(symbol)
+//                    }
+//                }
+//            }
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        else if name.count == 1
+//            {
+//            if let symbol = self.lookup(label: name.first)
 //                {
 //                return(symbol)
 //                }
 //            }
-//        return(nil)
+//        else if let start = self.lookup(label: name.first)
+//            {
+//            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        return(self.methodInstance.lookup(name: name))
 //        }
-//        
-//    public override func display(indent: String)
-//        {
-//        print("START OF METHOD INSTANCE BLOCK--------------------------------------------------------------------------------")
-//        print("\(indent)\(Swift.type(of: self))")
-//        for block in self.blocks
-//            {
-//            block.display(indent: indent + "\t")
-//            }
-//        print("END OF METHOD INSTANCE BLOCK----------------------------------------------------------------------------------")
-//        }
-//        
-//    public override func initializeTypeConstraints(inContext context: TypeContext)
-//        {
-//        for block in self.blocks
-//            {
-//            block.initializeTypeConstraints(inContext: context)
-//            }
-//        let returnBlocks = self.returnBlocks.filter{$0.containsMethodInstanceScope}
-//        for block in returnBlocks
-//            {
-//            context.append(TypeConstraint(left: block.type, right: self.type, origin: .block(self)))
-//            }
-//        }
-//        
-//    public override func initializeType(inContext context: TypeContext)
-//        {
-//        for block in self.blocks
-//            {
-//            block.initializeType(inContext: context)
-//            }
-//        self.type = ArgonModule.shared.void
-//        }
-//        
-//    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
-//        {
-//        for block in self.blocks
-//            {
-//            block.analyzeSemantics(using: analyzer)
-//            }
-//        }
-//        
-//    public override func emitCode(into: T3ABuffer,using: CodeGenerator) throws
-//        {
-//        for symbol in self.localSymbols
-//            {
-//            try symbol.emitCode(into: into,using: using)
-//            }
-//        for block in self.blocks
-//            {
-//            try block.emitCode(into: into,using: using)
-//            }
-//        }
-//        
-//    public func dump()
-//        {
-//        print("METHOD INSTANCE BLOCK")
-//        print("=====================")
-//        for block in self.blocks
-//            {
-//            block.dump(depth: 4)
-//            }
-//        }
-//    }
+        
+    public override func lookupType(label: Label) -> Type?
+        {
+        self.methodInstance.lookupType(label: label)
+        }
+        
+    public override func lookup(label: String) -> Symbol?
+        {
+        for symbol in self.localSymbols
+            {
+            if symbol.localLabel == label
+                {
+                return(symbol)
+                }
+            }
+        return(self.methodInstance.lookup(label: label))
+        }
+        
+    }

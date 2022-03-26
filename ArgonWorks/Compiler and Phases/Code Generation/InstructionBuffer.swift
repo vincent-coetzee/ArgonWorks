@@ -7,8 +7,10 @@
 
 import Foundation
 
-public class InstructionBuffer
+public class InstructionBuffer:NSObject,NSCoding
     {
+    private static var nextTemporaryIndex = 1
+    
     public struct Label:Hashable
         {
         internal let index: Int
@@ -26,8 +28,8 @@ public class InstructionBuffer
         
     public var nextTemporary: Instruction.Operand
         {
-        let index = self.nextTemporaryIndex
-        self.nextTemporaryIndex += 1
+        let index = Self.nextTemporaryIndex
+        Self.nextTemporaryIndex += 1
         return(.temporary(index))
         }
         
@@ -39,11 +41,34 @@ public class InstructionBuffer
         }
         
     private var nextLabelIndex: Int = 1
-    private var nextTemporaryIndex: Int = 1
     public private(set) var instructions = Array<Instruction>()
     public var pendingLabel: Label?
     private var indexedInstructions = Dictionary<Int,Instruction>()
     private var nextIndex = 0
+    
+    public override init()
+        {
+        }
+        
+    required public init?(coder: NSCoder)
+        {
+        self.nextLabelIndex = coder.decodeInteger(forKey: "nextLabelIndex")
+        self.nextIndex = coder.decodeInteger(forKey: "nextIndex")
+        let incoming = coder.decodeObject(forKey: "words") as! Array<Array<Word>>
+        self.instructions = Array<Instruction>()
+        for words in incoming
+            {
+            self.instructions.append(Instruction(words: words))
+            }
+        }
+        
+    public func encode(with coder: NSCoder)
+        {
+        coder.encode(self.nextLabelIndex,forKey: "nextLabelIndex")
+        coder.encode(self.nextIndex,forKey: "nextIndex")
+        let words = self.instructions.map{$0.bytes}
+        coder.encode(words,forKey: "words")
+        }
         
     @discardableResult
     public func add(_ mode: Instruction.Mode = .i64,_ opcode: Instruction.Opcode,_ op1: Instruction.Operand = .none,_ op2: Instruction.Operand = .none,_ op3: Instruction.Operand = .none,tail: String? = nil) -> Instruction

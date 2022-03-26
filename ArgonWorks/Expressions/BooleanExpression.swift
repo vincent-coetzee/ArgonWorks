@@ -46,22 +46,22 @@ public class BooleanExpression: BinaryExpression
     public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
         {
         let temporary = instance.nextTemporary
-        try self.lhs.emitValueCode(into: instance, using: generator)
-        try self.rhs.emitValueCode(into: instance, using: generator)
-        switch(self.operation.rawValue,"Boolean")
-            {
-            case ("&&","Boolean"):
-                instance.add(.AND,self.lhs.place,self.rhs.place,temporary)
-            case ("||","Boolean"):
-                instance.add(.OR,self.lhs.place,self.rhs.place,temporary)
-            default:
-                let label = "#" + self.operation.rawValue
-                let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
-                instance.add(.PUSH,self.lhs.place)
-                instance.add(.PUSH,self.rhs.place)
-                instance.add(.SEND,.integer(symbol),temporary)
-                instance.add(.POPN,.integer(2))
-            }
+//        try self.lhs.emitValueCode(into: instance, using: generator)
+//        try self.rhs.emitValueCode(into: instance, using: generator)
+//        switch(self.operation.rawValue,"Boolean")
+//            {
+//            case ("&&","Boolean"):
+//                instance.add(.AND,self.lhs.place,self.rhs.place,temporary)
+//            case ("||","Boolean"):
+//                instance.add(.OR,self.lhs.place,self.rhs.place,temporary)
+//            default:
+//                let label = "#" + self.operation.rawValue
+//                let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
+//                instance.add(.PUSH,self.lhs.place)
+//                instance.add(.PUSH,self.rhs.place)
+//                instance.add(.SEND,.integer(symbol),temporary)
+//                instance.add(.POPN,.integer(2))
+//            }
         self._place = temporary
         }
     }

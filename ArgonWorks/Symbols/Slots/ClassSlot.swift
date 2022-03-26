@@ -9,5 +9,5 @@ import Foundation
 
 public class ClassSlot: Slot
     {
-    public var value: ValueHolder = .none
+//    public var value: ValueHolder = .none
     }

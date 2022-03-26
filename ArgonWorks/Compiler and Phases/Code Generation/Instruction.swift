@@ -154,6 +154,7 @@ public class Instruction
         case DECW = 64
         case RAW = 65
         case MKENUM = 66
+        case DYNCAST = 67
         }
         
     public enum Register: Word
@@ -480,6 +481,18 @@ public class Instruction
         self.operand3 = Operand(encodedOperand: wordPointer[3])
         }
         
+    public init(words: Array<Word>)
+        {
+        let word = words[0]
+        let modeIndex = word >> 10
+        let opcodeIndex = word & 0b1111111111
+        self.opcode = Opcode(rawValue: opcodeIndex)!
+        self.mode = Mode(rawValue: modeIndex)!
+        self.operand1 = Operand(encodedOperand: words[1])
+        self.operand2 = Operand(encodedOperand: words[2])
+        self.operand3 = Operand(encodedOperand: words[3])
+        }
+        
     public init(mode: Mode,opcode: Opcode)
         {
         self.mode = mode
@@ -602,6 +615,19 @@ public class Instruction
         self.operand1 = .register(register)
         self.operand2 = .address(address)
         self.operand3 = .integer(Argon.Integer(integer))
+        }
+        
+    public var bytes: Array<Word>
+        {
+        var words = Array<Word>()
+        
+        var word = self.opcode.rawValue
+        word = mode.rawValue << 10 | word
+        words.append(word)
+        words.append(self.operand1.encodedOperand)
+        words.append(self.operand2.encodedOperand)
+        words.append(self.operand3.encodedOperand)
+        return(words)
         }
         
     public func install(intoPointer: WordPointer,context: ExecutionContext)

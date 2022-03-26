@@ -8,14 +8,14 @@
 import Foundation
 
 public typealias Label = String
-
-extension String: StringConvertible
-    {
-    public var stringValue: String
-        {
-        self
-        }
-    }
+//
+//extension String: StringConvertible
+//    {
+//    public var stringValue: String
+//        {
+//        self
+//        }
+//    }
     
 extension String
     {
@@ -131,6 +131,30 @@ extension String
             }
         return(self.prefix(1).lowercased() + self.dropFirst())
         }
+        
+    public func line(at: Int) -> String
+        {
+        let lines = self.components(separatedBy: "\n")
+        if at >= lines.count
+            {
+            fatalError()
+            }
+        return(lines[at])
+        }
     }
 
 public typealias Strings = Array<String>
+
+public struct Change
+    {
+    public let range: NSRange
+    public let string: String
+    
+    init(startIndex: Int,stopIndex: Int,string: String)
+        {
+        self.range = NSRange(location: startIndex,length: stopIndex - startIndex)
+        self.string = string
+        }
+    }
+    
+public typealias Changes = Array<Change>

@@ -34,59 +34,59 @@ public class SystemModule: Module
         return(true)
         }
         
-    public var subModules: Modules
-        {
-        return(self.symbols.compactMap{$0 as? SystemModule})
-        }
-    
-    public override func lookup(name:Name) -> Symbol?
-        {
-        if name.isEmpty
-            {
-            return(nil)
-            }
-        if name.isRooted
-            {
-            if let context = TopModule.shared.lookup(label: name.first)
-                {
-                return(context.lookup(name: name.withoutFirst))
-                }
-            return(nil)
-            }
-        if name.count == 1,let symbol = self.lookup(label: name.first)
-            {
-            return(symbol)
-            }
-        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
-            {
-            return(symbol)
-            }
-        for module in self.symbols.filter({$0.isSystemContainer})
-            {
-            if let symbol = module.lookup(name: name)
-                {
-                return(symbol)
-                }
-            }
-        return(nil)
-        }
-        
-    public override func lookup(label: Label) -> Symbol?
-        {
-        for symbol in self.symbols
-            {
-            if symbol.label == label
-                {
-                return(symbol)
-                }
-            }
-        for symbol in self.symbols where symbol is SystemModule || symbol is SymbolGroup
-            {
-            if let innerSymbol = symbol.lookup(label: label)
-                {
-                return(innerSymbol)
-                }
-            }
-        return(nil)
-        }
+//    public var subModules: Modules
+//        {
+//        return(self.symbols.compactMap{$0 as? SystemModule})
+//        }
+//    
+//    public override func lookup(name:Name) -> Symbol?
+//        {
+//        if name.isEmpty
+//            {
+//            return(nil)
+//            }
+//        if name.isRooted
+//            {
+//            if let context = TopModule.shared.lookup(label: name.first)
+//                {
+//                return(context.lookup(name: name.withoutFirst))
+//                }
+//            return(nil)
+//            }
+//        if name.count == 1,let symbol = self.lookup(label: name.first)
+//            {
+//            return(symbol)
+//            }
+//        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+//            {
+//            return(symbol)
+//            }
+//        for module in self.symbols.filter({$0.isSystemContainer})
+//            {
+//            if let symbol = module.lookup(name: name)
+//                {
+//                return(symbol)
+//                }
+//            }
+//        return(nil)
+//        }
+//        
+//    public override func lookup(label: Label) -> Symbol?
+//        {
+//        for symbol in self.symbols
+//            {
+//            if symbol.label == label
+//                {
+//                return(symbol)
+//                }
+//            }
+//        for symbol in self.symbols where symbol is SystemModule || symbol is SymbolGroup
+//            {
+//            if let innerSymbol = symbol.lookup(label: label)
+//                {
+//                return(innerSymbol)
+//                }
+//            }
+//        return(nil)
+//        }
     }

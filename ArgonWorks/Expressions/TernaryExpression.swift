@@ -21,8 +21,20 @@ public class TernaryExpression: Expression
         super.init()
         }
         
-        public required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
+    public required init?(coder: NSCoder)
+        {
+        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        self.mhs = coder.decodeObject(forKey: "mhs") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.lhs,forKey: "lhs")
+        coder.encode(self.mhs,forKey: "mhs")
+        coder.encode(self.rhs,forKey: "rhs")
+        super.encode(with: coder)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self

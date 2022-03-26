@@ -68,21 +68,21 @@ public class Macro: Symbol
         super.encode(with: coder)
         }
         
-    public func applyParameters(_ elements:Array<Token>) -> String
-        {
-        let count = min(elements.count,self.parameterCount)
-        var theString = self.text
-        for index in 0..<count
-            {
-            let replacement = elements[index].stringValue
-            let name = self.parameters[index].label
-            var parameterName = "%%\(name)"
-            var string = theString as NSString
-            theString = string.replacingOccurrences(of: parameterName, with: "\"\(replacement)\"")
-            parameterName = "%\(name)"
-            string = theString as NSString
-            theString = string.replacingOccurrences(of: parameterName, with: replacement)
-            }
-        return(theString)
-        }
+//    public func applyParameters(_ elements:Array<Token>) -> String
+//        {
+//        let count = min(elements.count,self.parameterCount)
+//        var theString = self.text
+//        for index in 0..<count
+//            {
+//            let replacement = elements[index].stringValue
+//            let name = self.parameters[index].label
+//            var parameterName = "%%\(name)"
+//            var string = theString as NSString
+//            theString = string.replacingOccurrences(of: parameterName, with: "\"\(replacement)\"")
+//            parameterName = "%\(name)"
+//            string = theString as NSString
+//            theString = string.replacingOccurrences(of: parameterName, with: replacement)
+//            }
+//        return(theString)
+//        }
 }

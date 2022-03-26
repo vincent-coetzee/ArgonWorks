@@ -126,7 +126,7 @@ public class EmptyLineNumber: LineNumber
     }
     
     
-public struct Location:Equatable,CustomStringConvertible
+public struct Location:Equatable,CustomStringConvertible,Hashable
     {
     public var description: String
         {
@@ -137,7 +137,8 @@ public struct Location:Equatable,CustomStringConvertible
     
     public var range: NSRange
         {
-        NSRange(location: self.tokenStart, length: self.tokenStop - self.tokenStart)
+        let length = max(0,self.tokenStop - self.tokenStart)
+        return(NSRange(location: self.tokenStart, length: length))
         }
         
     public var line: Int

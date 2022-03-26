@@ -30,6 +30,13 @@ public class Inline
         self.object2Type = nil
         }
         
+    public init(_ label: String,_ element: InlineElement)
+        {
+        self.label = label
+        self.elements = [element]
+        self.object1Type = ArgonModule.shared.void
+        }
+        
     public init(_ label: String,_ object1:Type,_ object2:Type)
         {
         self.label = label
@@ -205,7 +212,7 @@ public class InlineMethodInstance: StandardMethodInstance
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
-            try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
+            try! arguments[0].value.emitValueCode(into: buffer, using: generator)
             buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
             }
         self.returnType = ArgonModule.shared.float

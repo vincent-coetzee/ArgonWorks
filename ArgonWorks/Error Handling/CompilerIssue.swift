@@ -24,9 +24,45 @@ public struct CompilerIssue: Error
         self.message = message
         self.isWarning = isWarning
         }
+        
+    init(message: String)
+        {
+        self.location = .zero
+        self.message = message
+        self.isWarning = false
+        }
     }
 
 public typealias CompilerIssues = Array<CompilerIssue>
+
+public struct CompilerError: Error
+    {
+    public var isEmpty: Bool
+        {
+        self.issues.isEmpty
+        }
+        
+    public var issues: CompilerIssues = []
+    
+    public init()
+        {
+        }
+        
+    public init(_ message: String)
+        {
+        self.issues.append(CompilerIssue(location: .zero,message: message))
+        }
+        
+    public mutating func appendIssue(at: Location,message: String)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message))
+        }
+        
+    public mutating func appendIssue(_ issue: CompilerIssue)
+        {
+        self.issues.append(issue)
+        }
+    }
 
 extension CompilerIssues where Element == CompilerIssue
     {

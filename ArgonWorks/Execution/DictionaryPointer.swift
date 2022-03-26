@@ -58,9 +58,9 @@ public class DictionaryPointer: ClassBasedPointer
     public func printBalance()
         {
         print("LEFT HEIGHT = \(self.rootNode!.leftNodePointer!.height)")
-        print("RIGHT HEIGHT = \(self.rootNode!.rightNodePointer!.height)")
+        print("RIGHT HEIGHT = \(self.rootNode!.rightNodePointer?.height)")
         print("LEFT NODE HEIGHT = \(self.rootNode!.leftNodePointer!.nodeHeight)")
-        print("RIGHT NODE HEIGHT = \(self.rootNode!.rightNodePointer!.nodeHeight)")
+        print("RIGHT NODE HEIGHT = \(self.rootNode!.rightNodePointer?.nodeHeight)")
         print("BALANCE = \(self.rootNode!.balance)")
         }
         

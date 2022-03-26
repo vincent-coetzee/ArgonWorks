@@ -59,6 +59,10 @@ public indirect enum Literal:Hashable,Displayable
                 return(constant)
             case .dateTime(let constant):
                 return(constant)
+            case .byte(let byte):
+                return(Word(byte: byte))
+            case .character(let constant):
+                return(Word(character: constant))
             }
         }
         
@@ -68,6 +72,8 @@ public indirect enum Literal:Hashable,Displayable
     case string(StaticString)
     case boolean(Argon.Boolean)
     case symbol(StaticSymbol)
+    case character(Argon.Character)
+    case byte(Argon.Byte)
     case array(StaticArray)
     case `class`(TypeClass)
     case module(Module)
@@ -137,6 +143,10 @@ public indirect enum Literal:Hashable,Displayable
             case .nil:
                 return("nil")
             case .integer(let integer):
+                return("\(integer)")
+            case .byte(let byte):
+                return("\(byte)")
+            case .character(let integer):
                 return("\(integer)")
             case .float(let float):
                 return("\(float)")
@@ -234,6 +244,10 @@ public indirect enum Literal:Hashable,Displayable
                 return(ArgonModule.shared.integer)
             case .float:
                 return(ArgonModule.shared.float)
+            case .byte:
+                return(ArgonModule.shared.byte)
+            case .character:
+                return(ArgonModule.shared.character)
             case .string:
                 return(ArgonModule.shared.string)
             case .boolean:
@@ -285,6 +299,10 @@ public indirect enum Literal:Hashable,Displayable
                 return(self)
             case .string:
                 return(self)
+            case .byte:
+                return(self)
+            case .character:
+                return(self)
             case .boolean:
                 return(self)
             case .symbol:
@@ -298,10 +316,6 @@ public indirect enum Literal:Hashable,Displayable
             case .dateTime:
                 return(self)
             case .class(let aClass):
-                if aClass.label == "DateClass"
-                    {
-                    print("halt")
-                    }
                 return(.class(substitution.substitute(aClass) as! TypeClass))
             case .module(let module):
                 return(.module(substitution.substitute(module) as! Module))
@@ -534,6 +548,10 @@ public class LiteralExpression: Expression
                 context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.date,origin: .expression(self)))
             case .time:
                 context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.time,origin: .expression(self)))
+            case .byte:
+                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.byte,origin: .expression(self)))
+            case .character:
+                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.character,origin: .expression(self)))
             case .dateTime:
                 context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.dateTime,origin: .expression(self)))
             case .integer:
@@ -581,6 +599,10 @@ public class LiteralExpression: Expression
                 self.type = ArgonModule.shared.dateTime
             case .time:
                 self.type = ArgonModule.shared.time
+            case .byte:
+                self.type = ArgonModule.shared.byte
+            case .character:
+                self.type = ArgonModule.shared.character
             case .integer:
                 self.type = context.integerType
             case .address:
@@ -670,6 +692,10 @@ public class LiteralExpression: Expression
                 fatalError("Can not emit LValue of date")
             case .dateTime:
                 fatalError("Can not emit LValue of dateTime")
+            case .byte:
+                fatalError("Can not emit LValue of byte")
+            case .character:
+                fatalError("Can not emit LValue of character")
             case .time:
                 fatalError("Can not emit LValue of time")
             case .address(let address):
@@ -729,6 +755,10 @@ public class LiteralExpression: Expression
                 instance.add(.MOVE,.integer(Argon.Integer(word: date)),temp)
             case .dateTime(let date):
                 instance.add(.MOVE,.integer(Argon.Integer(word: date)),temp)
+            case .byte(let byte):
+                instance.add(.MOVE,.integer(Argon.Integer(Word(byte: byte))),temp)
+            case .character(let character):
+                instance.add(.MOVE,.integer(Argon.Integer(Word(character: character))),temp)
             case .time(let date):
                 instance.add(.MOVE,.integer(Argon.Integer(word: date)),temp)
             case .integer(let integer):

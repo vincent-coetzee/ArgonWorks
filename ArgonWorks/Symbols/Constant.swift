@@ -54,11 +54,11 @@ public class Constant:Slot
         super.encode(with: coder)
         coder.encode(self.value,forKey: "value")
         }
-    
-    public override func isElement(ofType: Group.ElementType) -> Bool
-        {
-        return(ofType == .constant)
-        }
+//    
+//    public override func isElement(ofType: Group.ElementType) -> Bool
+//        {
+//        return(ofType == .constant)
+//        }
         
     public override var typeCode:TypeCode
         {

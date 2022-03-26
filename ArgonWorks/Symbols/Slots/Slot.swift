@@ -87,19 +87,29 @@ public struct SlotType: OptionSet
     
 public class Slot:Symbol
     {
+    public override var symbolType: SymbolType
+        {
+        .slot
+        }
+        
     public override var segmentType: Segment.SegmentType
         {
         .static
         }
         
+    public override var displayName: String
+        {
+        self.label + "::" + self.type.displayName
+        }
+        
     public override var argonHash: Int
         {
-        var hashValue = super.argonHash
-        hashValue = hashValue << 13 ^ self.type.argonHash
+        var hashValue = self.type.argonHash
+        hashValue = hashValue << 13 ^ "\(Swift.type(of: self))".polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.label.polynomialRollingHash
         hashValue = hashValue << 13 ^ self.slotType.rawValue
         hashValue = hashValue << 13 ^ self.offset
-        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
-        return(Int(bitPattern: word))
+        return(hashValue)
         }
         
     public override var sizeInBytes: Int
@@ -203,6 +213,8 @@ public class Slot:Symbol
     public var slotSymbol: Int = 0
     public weak var owningClass: TypeClass?
     public var classIndexInVirtualTable = -1
+    public var slotInitializerSelector: StaticSymbol?
+    public var slotMandatorySelector: StaticSymbol?
 
     init(label:Label,type:Type? = nil)
         {

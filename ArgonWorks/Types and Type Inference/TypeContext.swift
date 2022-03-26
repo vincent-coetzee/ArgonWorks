@@ -308,7 +308,7 @@ public class TypeContext
                 }
             let newModule = container.substitute(from: self)
             self.symbols[container.argonHash] = newModule
-            for symbol in container.symbols
+            for symbol in container.allSymbols
                 {
                 let newSymbol = self.substitute(symbol)
                 newModule.addSymbol(newSymbol)
@@ -343,6 +343,11 @@ public class TypeContext
             
         public func unifySubtypes(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeAlias,let right = rhs as? TypeAlias
+                {
+                try self.unifySubtypes(left.type,right.type)
+                return
+                }
             if let left = lhs as? TypeMemberSlot,let right = rhs as? TypeMemberSlot
                 {
                 if left.slotLabel != right.slotLabel
@@ -466,6 +471,11 @@ public class TypeContext
             
         public func unify(_ lhs: Type,_ rhs:Type) throws
             {
+            if let left = lhs as? TypeAlias,let right = rhs as? TypeAlias
+                {
+                try self.unify(left.type,right.type)
+                return
+                }
             if let left = lhs as? TypeMemberSlot,let right = rhs as? TypeMemberSlot
                 {
                 if left.slotLabel != right.slotLabel

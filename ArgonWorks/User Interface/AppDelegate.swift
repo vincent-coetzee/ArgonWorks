@@ -14,6 +14,13 @@ class AppDelegate: NSObject, NSApplicationDelegate
     {
     func applicationDidFinishLaunching(_ aNotification: Notification)
         {
+        let stringA = "Hello there this is a string which has some characters in it."
+        let stringB = "Hello this is a long but simple string which has some unicode characters in it."
+        let difference = stringB.difference(from: stringA).inferringMoves()
+        for diff in difference
+            {
+            print(diff)
+            }
         TopModule.resetTopModule()
 //        let set = BitSet()
 //        set.addBitField(named: "first",width: 63)
@@ -177,42 +184,42 @@ class AppDelegate: NSObject, NSApplicationDelegate
         bitSet.addBitField(named: "operand2Value",width: 64)
         bitSet.addBitField(named: "resultValue",width: 64)
         print("NUMBER OF BITS USED = \(bitSet.maximumFieldOffset)")
-        let timer = Timer()
-        let dictionaryAddress = payload.staticSegment.allocateObject(ofType: ArgonModule.shared.dictionary)
-        let dict = DictionaryPointer(address: dictionaryAddress, inSegment: payload.staticSegment)
-        let words = EnglishWord.randomWords(maximum: 20000)
-        print("ADDING \(words.count) WORDS")
-        var ticker = 0
-        for word in words
-            {
-            ticker += 1
-            let wordAddress = payload.staticSegment.allocateString(word.word)
-            dict.setValue(wordAddress,forKey: word.word)
-            if ticker % 25 == 0
-                {
-                print(".",terminator: "")
-                }
-            }
-        print()
-        let milliseconds = timer.stop()
-        let average = milliseconds / words.count
-        dict.dump()
-        print("CURRENT TOTAL: \(dict.count)")
-        print("AVERAGE \(average) MS TO INSERT VALUE")
-        dict.printBalance()
-        let word1 = words[4]
-        dict.deleteNode(forKey: word1.word)
-        let word2 = words[7]
-        dict.deleteNode(forKey: word2.word)
-        print("TOTAL AFTER 2 DELETIONS: \(dict.count)")
-        let value1 = dict.value(forKey: word1.word)
-        dict.setValue(400,forKey: "supercalifragilisticexpealadocius")
-        let timer1 = Timer()
-        let value2 = dict.value(forKey: "supercalifragilisticexpealadocius")
-        let time = timer1.stop()
-        print("TIME TO LOOKUP \(time)")
-        print(value1)
-        print(value2)
+//        let timer = Timer()
+//        let dictionaryAddress = payload.staticSegment.allocateObject(ofType: ArgonModule.shared.dictionary)
+//        let dict = DictionaryPointer(address: dictionaryAddress, inSegment: payload.staticSegment)
+//        let words = EnglishWord.randomWords(maximum: 1000)
+//        print("ADDING \(words.count) WORDS")
+//        var ticker = 0
+//        for word in words
+//            {
+//            ticker += 1
+//            let wordAddress = payload.staticSegment.allocateString(word.word)
+//            dict.setValue(wordAddress,forKey: word.word)
+//            if ticker % 25 == 0
+//                {
+//                print(".",terminator: "")
+//                }
+//            }
+//        print()
+//        let milliseconds = timer.stop()
+//        let average = milliseconds / words.count
+//        dict.dump()
+//        print("CURRENT TOTAL: \(dict.count)")
+//        print("AVERAGE \(average) MS TO INSERT VALUE")
+//        dict.printBalance()
+//        let word1 = words[4]
+//        dict.deleteNode(forKey: word1.word)
+//        let word2 = words[7]
+//        dict.deleteNode(forKey: word2.word)
+//        print("TOTAL AFTER 2 DELETIONS: \(dict.count)")
+//        let value1 = dict.value(forKey: word1.word)
+//        dict.setValue(400,forKey: "supercalifragilisticexpealadocius")
+//        let timer1 = Timer()
+//        let value2 = dict.value(forKey: "supercalifragilisticexpealadocius")
+//        let time = timer1.stop()
+//        print("TIME TO LOOKUP \(time)")
+//        print(value1)
+//        print(value2)
 //        let payload = VMPayload()
 //        ArgonModule.shared.dictionary.layoutObjectSlots()
 //        let dPointer = DictionaryPointer(inSegment: payload.managedSegment)!
@@ -458,6 +465,24 @@ class AppDelegate: NSObject, NSApplicationDelegate
             return
             }
         controller.showWindow(self)
+        }
+        
+    @IBAction public func onOpenProject(_ sender: Any?)
+        {
+        let panel = NSOpenPanel()
+        panel.allowedFileTypes = ["arpro"]
+        if panel.runModal() == .OK
+            {
+            let url = panel.url!
+            let project = NSKeyedUnarchiver.unarchiveObject(withFile: url.path) as! Project
+            let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
+            guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonBrowser") as? NSWindowController else
+                {
+                return
+                }
+            (controller.contentViewController as! ArgonBrowserViewController).setProject(project)
+            controller.showWindow(self)
+            }
         }
     }
 

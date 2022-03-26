@@ -11,7 +11,7 @@ public class BinaryExpression: Expression
     {
     public override var diagnosticString: String
         {
-        "BinaryExpression(\(self.operation.rawValue))"
+        "BinaryExpression(\(self.operation))"
         }
         
     public override var lhsValue: Expression?
@@ -24,7 +24,7 @@ public class BinaryExpression: Expression
         return(self.rhs)
         }
         
-    internal let operation: Token.Symbol
+    internal let operation: String
     internal let rhs: Expression
     internal let lhs: Expression
     internal var returnType: Type?
@@ -38,7 +38,7 @@ public class BinaryExpression: Expression
 //            }
 //        }
     
-    init(_ lhs:Expression,_ operation:Token.Symbol,_ rhs:Expression)
+    init(_ lhs:Expression,_ operation:String,_ rhs:Expression)
         {
         self.operation = operation
         self.rhs = rhs
@@ -53,7 +53,7 @@ public class BinaryExpression: Expression
         
     required init?(coder: NSCoder)
         {
-        self.operation = coder.decodeTokenSymbol(forKey: "operation")
+        self.operation = coder.decodeObject(forKey: "operation") as! String
         self.lhs = coder.decodeObject(forKey:"lhs") as! Expression
         self.rhs = coder.decodeObject(forKey:"rhs") as! Expression
         self.selectedMethodInstance = coder.decodeObject(forKey: "selectedMethodInstance") as? MethodInstance
@@ -69,7 +69,7 @@ public class BinaryExpression: Expression
         
     public override func encode(with coder: NSCoder)
         {
-        coder.encodeTokenSymbol(self.operation,forKey: "operation")
+        coder.encode(self.operation,forKey: "operation")
         coder.encode(self.lhs,forKey: "lhs")
         coder.encode(self.rhs,forKey: "rhs")
         coder.encode(self.selectedMethodInstance,forKey: "selectedMethodInstance")
@@ -188,7 +188,7 @@ public class BinaryExpression: Expression
             default:
                 mode = .none
             }
-        switch(self.operation.rawValue)
+        switch(self.operation)
             {
             case("+"):
                 instance.add(mode,.ADD,self.lhs.place,self.rhs.place,temporary)
@@ -209,7 +209,7 @@ public class BinaryExpression: Expression
             case("^"):
                 instance.add(mode,.LXOR,self.lhs.place,self.rhs.place,temporary)
             default:
-                let label = "#" + self.operation.rawValue
+                let label = "#" + self.operation
                 let symbol = Argon.Integer(generator.payload.symbolRegistry.registerSymbol(label))
                 instance.add(.PUSH,self.lhs.place)
                 instance.add(.PUSH,self.rhs.place)

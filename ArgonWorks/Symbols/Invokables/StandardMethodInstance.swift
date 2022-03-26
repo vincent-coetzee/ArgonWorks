@@ -54,15 +54,15 @@ public class StandardMethodInstance: MethodInstance
             }
         set
             {
-            self.block = newValue
+            self.block = newValue as? MethodInstanceBlock
             }
         }
         
-    public var block = Block()
+    public var block: MethodInstanceBlock!
     
     public required init?(coder: NSCoder)
         {
-        self.block = coder.decodeObject(forKey: "block") as! Block
+        self.block = coder.decodeObject(forKey: "block") as? MethodInstanceBlock
         super.init(coder: coder)
         }
 
@@ -75,14 +75,15 @@ public class StandardMethodInstance: MethodInstance
     required init(label:Label)
         {
         super.init(label:label)
-        self.block.container = .methodInstance(self)
+        self.block = MethodInstanceBlock(methodInstance: self)
+//        self.block.container = .methodInstance(self)
         }
         
-    public init(_ label:Label)
-        {
-        super.init(label:label)
-        self.block.container = .methodInstance(self)
-        }
+//    public init(_ label:Label)
+//        {
+//        super.init(label:label)
+////        self.block.container = .methodInstance(self)
+//        }
         
     convenience init(label: Label,parameters: Parameters,returnType:Type)
         {
@@ -107,7 +108,7 @@ public class StandardMethodInstance: MethodInstance
         
     public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
         {
-        for symbol in scope.symbols
+        for symbol in scope.allSymbols
             {
             self.block.addSymbol(symbol)
             }
@@ -140,7 +141,6 @@ public class StandardMethodInstance: MethodInstance
         newInstance.parameters = newParameters
         newInstance.returnType = newReturnType
         newInstance.block = (self.block.freshTypeVariable(inContext: context))
-        newInstance.block.container = .methodInstance(self)
 //        newInstance.block._methodInstance = newInstance
         newInstance.type = self.type?.freshTypeVariable(inContext: context)
         return(newInstance)
@@ -149,8 +149,7 @@ public class StandardMethodInstance: MethodInstance
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = super.substitute(from: substitution)
-        instance.block = substitution.substitute(self.block)
-        instance.block.container = .methodInstance(self)
+        instance.block = substitution.substitute(self.block) as! MethodInstanceBlock
         return(instance)
         }
 

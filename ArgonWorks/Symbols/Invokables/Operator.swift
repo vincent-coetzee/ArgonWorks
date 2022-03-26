@@ -9,6 +9,136 @@ import Foundation
 
 public typealias ParameterTuple = (Label,Type)
     
+public typealias Operators = Array<Operator>
+
+public enum Condition
+    {
+    case `in`(Type,[Type])
+    case subtype(Type,Type)
+    }
+    
+public struct ParameterReferenceType
+    {
+    public let referenceType: ReferenceType
+    public let type: Type
+    
+    public static func byReference(_ type: Type) -> ParameterReferenceType
+        {
+        ParameterReferenceType(referenceType: .reference, type: type)
+        }
+        
+    public static func byValue(_ type: Type) -> ParameterReferenceType
+        {
+        ParameterReferenceType(referenceType: .value, type: type)
+        }
+    }
+    
+public class Operator: MethodInstance
+    {
+    public static func `prefix`(_ label: Label,_ lhs: Type,_ returnType: Type) -> Operator
+        {
+        let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false)]
+        let method = Operator(label: label)
+        method.parameters = parameters
+        method.returnType = returnType
+        method.operatorType = .prefix
+        return(method)
+        }
+        
+    public static func `infix`(_ label: Label,_ lhs: Type,_ rhs: Type,_ returnType: Type) -> Operator
+        {
+        let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rhs, isVisible: false, isVariadic: false)]
+        let method = Operator(label: label)
+        method.parameters = parameters
+        method.returnType = returnType
+        method.operatorType = .infix
+        return(method)
+        }
+        
+    public static func `postfix`(_ label: Label,_ lhs: Type,_ returnType: Type) -> Operator
+        {
+        let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false)]
+        let method = Operator(label: label)
+        method.parameters = parameters
+        method.returnType = returnType
+        method.operatorType = .postfix
+        return(method)
+        }
+        
+    public static func `infix`(_ label: Label,_ lhs: ParameterReferenceType,_ rhs: ParameterReferenceType,_ returnType: Type) -> Operator
+        {
+        let parameters = [Parameter(label: "left", relabel: nil, type: lhs.type, isVisible: false, isVariadic: false,referenceType: lhs.referenceType),Parameter(label: "right", relabel: nil, type: rhs.type, isVisible: false, isVariadic: false,referenceType: rhs.referenceType)]
+        let method = Operator(label: label)
+        method.parameters = parameters
+        method.returnType = returnType
+        method.operatorType = .infix
+        return(method)
+        }
+        
+    public static func `postfix`(_ label: Label,_ lhs: ParameterReferenceType,_ returnType: Type) -> Operator
+        {
+        let parameters = [Parameter(label: "left", relabel: nil, type: lhs.type, isVisible: false, isVariadic: false,referenceType: lhs.referenceType)]
+        let method = Operator(label: label)
+        method.parameters = parameters
+        method.returnType = returnType
+        method.operatorType = .postfix
+        return(method)
+        }
+        
+    public var isPrefix: Bool
+        {
+        self.operatorType == .prefix
+        }
+        
+    public var isPostfix: Bool
+        {
+        self.operatorType == .postfix
+        }
+        
+    public var isInfix: Bool
+        {
+        self.operatorType == .infix
+        }
+        
+    public enum OperatorType
+        {
+        case none
+        case prefix
+        case infix
+        case postfix
+        }
+        
+    public private(set) var operatorType: OperatorType = .none
+    public private(set) var mode: Instruction.Mode = .none
+    public private(set) var opcode: Instruction.Opcode = .NOP
+    public private(set) var conditions: Array<Condition> = []
+    public private(set) var isGeneric: Bool = false
+    
+    public func primitive(_ index: Int) -> Self
+        {
+        return(self)
+        }
+        
+    public func inline() -> Self
+        {
+        return(self)
+        }
+        
+    public func intrinsic(_ mode: Instruction.Mode,_ opcode:Instruction.Opcode) -> Self
+        {
+        self.mode = mode
+        self.opcode = opcode
+        return(self)
+        }
+        
+    public func `where`(_ conditions: Condition...) -> Self
+        {
+        self.isGeneric = true
+        self.conditions = conditions
+        return(self)
+        }
+    }
+    
 public class Infix
     {
     private let label: Label

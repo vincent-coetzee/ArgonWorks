@@ -68,7 +68,7 @@ extension UserDefaults
         }
     }
     
-class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate
+class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate,TokenHandler
     {
     private static let kWindowFrameKey = "EditorViewControllerWindowFrame"
     private static let kWindowURLKey = "EditorViewControllerWindowURL"
@@ -83,12 +83,14 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
     @IBOutlet var splitView: NSSplitView!
     @IBOutlet var outliner: NSOutlineView!
     
-    private var tokenizer: VisualTokenizer!
+//    private var tokenizer: VisualTokenizer!
     private var currentSourceFileURL: URL?
     private var fileItems = FileItems()
     private var currentItem = PackageItem(name: "Current", path: "/", date: Date())
     private var warningItem = WarningGroupItem()
     private var issues = Array<IssueItem>()
+    private let font = NSFont(name: "Menlo",size: 11)!
+    private let systemClassNames = ArgonModule.shared.systemClassNames!
     
     override func viewDidLoad()
         {
@@ -114,14 +116,15 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.resetReporting()
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.editorView.textStorage?.setAttributedString(mutableString)
-                self.tokenizer.update(self.editorView.string)
+//                self.tokenizer.update(self.editorView.string)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                if let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+                if let node = Compiler(source: self.editorView.string,tokenHandler: self).compile()
                     {
                     self.currentItem.appendItem(SymbolItem(symbol: node))
                     }
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
+
                 }
             }
         }
@@ -167,6 +170,74 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.splitView.delegate = self
         }
         
+    public func kindChanged(token: Token)
+        {
+        if !token.issues.isEmpty
+            {
+            self.pushIssues(token.issues)
+            }
+        let kind = token.kind
+        var localAttributes:[NSAttributedString.Key:Any] = [.foregroundColor: NSColor.white,.font: self.font]
+        switch(kind)
+            {
+            case .none:
+                break
+            case .invisible:
+                break
+            case .keyword:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.keywordColor
+            case .identifier:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
+            case .operator:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.operatorColor
+            case .name:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.nameColor
+            case .enumeration:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.enumerationColor
+            case .comment:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.commentColor
+            case .path:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.pathColor
+            case .symbol:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.symbolColor
+            case .string:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.stringColor
+            case .class:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.classColor
+            case .integer:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.integerColor
+            case .float:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.floatColor
+            case .directive:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.directiveColor
+            case .methodInvocation:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.methodColor
+            case .method:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.methodColor
+            case .functionInvocation:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
+            case .function:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
+            case .localSlot:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .systemClass:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
+            case .classSlot:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .type:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.typeColor
+            case .constant:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.constantColor
+            case .module:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
+            default:
+                localAttributes[.foregroundColor] = NSColor.magenta
+            }
+            self.editorView.textStorage?.beginEditing()
+            self.editorView.textStorage?.setAttributes(localAttributes, range: token.location.range)
+            self.editorView.textStorage?.endEditing()
+        }
+        
     private func updateStatusBar(_ text: String)
         {
         self.topRightText.stringValue = Date.dateFormatter.string(from: Date())
@@ -175,7 +246,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         
     private func initEditing()
         {
-        self.tokenizer = VisualTokenizer(lineNumberView: self.editorView,reporter: self)
+//        self.tokenizer = VisualTokenizer(lineNumberView: self.editorView,reporter: self)
         self.editorView.gutterBackgroundColor = NSColor.black
         self.editorView.backgroundColor = NSColor.black
         self.editorView.gutterForegroundColor = NSColor.lightGray
@@ -187,7 +258,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         
     private func scrollToLineNumber(_ line: Int)
         {
-        self.editorView.scrollToLine(line)
+//        self.editorView.scrollToLine(line)
         }
         
     public func status(_ string: String)
@@ -342,10 +413,10 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.currentSourceFileURL = url
                 let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
                 self.editorView.textStorage?.setAttributedString(mutableString)
-                self.tokenizer.update(self.editorView.string)
+//                self.tokenizer.update(self.editorView.string)
 //                UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                let node = Compiler(source: self.editorView.string,reportingContext: self,tokenRenderer: self.tokenizer).compile()
+                let node = Compiler(source: self.editorView.string,tokenHandler: self).compile()
                 self.currentItem.appendItem(SymbolItem(symbol: node!))
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
@@ -419,14 +490,13 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
+                let aCompiler = Compiler(source: self.editorView.string,tokenHandler: self)
                 if let module = aCompiler.compile()
                     {
                     do
                         {
-                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date(), version: SemanticVersion(major: 1, minor: 0, patch: 0))
+                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date())
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
-                        ImportArchiver.isSwappingSystemTypes = true
                         let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
                         try data.write(to: theUrl)
 //                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
@@ -462,7 +532,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
     @IBAction func onCompileFile(_ sender: Any?)
         {
         self.resetReporting()
-        let aCompiler = Compiler(source: self.editorView.string,reportingContext: NullReporter.shared,tokenRenderer: NullTokenRenderer.shared)
+        let aCompiler = Compiler(source: self.editorView.string,tokenHandler: self)
         _ = aCompiler.compile()
         }
     }

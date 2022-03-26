@@ -36,6 +36,9 @@ public enum SyntaxColor: String
     case background
     case constant
     case enumeration
+    case project
+    case group
+    case warning
     }
     
 public enum TokenColor:Int
@@ -65,26 +68,29 @@ extension SyntaxColorPalette
         palette[SyntaxColor.name.rawValue] = NSColor.argonXIvory
         palette[SyntaxColor.string.rawValue] = NSColor.argonXBlue
         palette[SyntaxColor.comment.rawValue] = NSColor(red: 145,green: 92,blue: 176)
-        palette[SyntaxColor.class.rawValue] = NSColor(hex: 0xE7B339)
+        palette[SyntaxColor.class.rawValue] = NSColor.argonLime
         palette[SyntaxColor.identifier.rawValue] = NSColor.argonThemePink
         palette[SyntaxColor.integer.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.float.rawValue] = NSColor.argonSizzlingRed
         palette[SyntaxColor.symbol.rawValue] = NSColor.argonSalmonPink
-        palette[SyntaxColor.operator.rawValue] = NSColor(hex: 0xD0EE62)
-        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonSalmonPink
+        palette[SyntaxColor.operator.rawValue] = NSColor.argonSalmonPink
+        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonBrightYellowCrayola
         palette[SyntaxColor.byte.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.character.rawValue] = NSColor.argonXSmoke
-        palette[SyntaxColor.type.rawValue] = NSColor.cyan
+        palette[SyntaxColor.lineNumbers.rawValue] = NSColor(hex: 0xA0A0A0)
+        palette[SyntaxColor.type.rawValue] = NSColor.argonXIvory
         palette[SyntaxColor.method.rawValue] = NSColor.argonNeonOrange
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside
         palette[SyntaxColor.path.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.keypath.rawValue] = NSColor.argonZomp
+        palette[SyntaxColor.group.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.slot.rawValue] = NSColor.argonCoral
         palette[SyntaxColor.directive.rawValue] = NSColor.argonYellow
-        palette[SyntaxColor.lineNumbers.rawValue] = NSColor(hex: 0xA0A0A0)
         palette[SyntaxColor.constant.rawValue] = NSColor.argonCheese
         palette[SyntaxColor.background.rawValue] = NSColor.black
+        palette[SyntaxColor.project.rawValue] = NSColor.argonNeonPink
+        palette[SyntaxColor.warning.rawValue] = NSColor.argonBrightYellowCrayola
         return(palette)
         }()
         
@@ -114,6 +120,9 @@ extension SyntaxColorPalette
     public static let lineNumberColor = SyntaxColorPalette.shared[SyntaxColor.lineNumbers.rawValue]!
     public static let backgroundColor = SyntaxColorPalette.shared[SyntaxColor.background.rawValue]!
     public static let enumerationColor = SyntaxColorPalette.shared[SyntaxColor.enumeration.rawValue]!
+    public static let projectColor = SyntaxColorPalette.shared[SyntaxColor.project.rawValue]!
+    public static let groupColor = SyntaxColorPalette.shared[SyntaxColor.group.rawValue]!
+    public static let warningColor = SyntaxColorPalette.shared[SyntaxColor.warning.rawValue]!
     
     public static let textFont = NSFont(name:"Menlo",size:11)!
     }

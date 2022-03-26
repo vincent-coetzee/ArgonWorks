@@ -9,4 +9,8 @@ import Foundation
 
 public class ModuleSlot: Slot
     {
+    public override var symbolType: SymbolType
+        {
+        .moduleSlot
+        }
     }

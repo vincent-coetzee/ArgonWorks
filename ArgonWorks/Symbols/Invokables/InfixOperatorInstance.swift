@@ -18,7 +18,7 @@ public class InfixOperatorInstance: StandardMethodInstance
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = InfixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)
@@ -33,7 +33,7 @@ public class PostfixOperatorInstance: StandardMethodInstance
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PostfixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)
@@ -48,7 +48,7 @@ public class PrefixOperatorInstance: StandardMethodInstance
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PrefixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)
@@ -81,7 +81,7 @@ public class PrimitiveInfixOperatorInstance: InfixOperatorInstance,PrimitiveInst
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PrimitiveInfixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)
@@ -114,7 +114,7 @@ public class PrimitivePostfixOperatorInstance: PostfixOperatorInstance,Primitive
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PrimitivePostfixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)
@@ -147,7 +147,7 @@ public class PrimitivePrefixOperatorInstance: PrefixOperatorInstance,PrimitiveIn
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = PrimitivePrefixOperatorInstance(label: self.label)
-        instance.block = (substitution.substitute(self.block))
+        instance.block = (substitution.substitute(self.block)) as? MethodInstanceBlock
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.setMemoryAddress(self.memoryAddress)

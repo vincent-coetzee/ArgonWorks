@@ -34,4 +34,14 @@ extension Array
         {
         !self.isEmpty
         }
+        
+    public func without(_ element: Element) -> Self where Element:Equatable
+        {
+        var copy = self
+        if copy.contains(element)
+            {
+            copy.remove(element)
+            }
+        return(copy)
+        }
     }

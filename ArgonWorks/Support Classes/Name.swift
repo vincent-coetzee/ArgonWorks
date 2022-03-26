@@ -12,7 +12,7 @@ public protocol Nameable
     var fullName: Name { get }
     }
 
-public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
+public struct Name:CustomStringConvertible,Comparable,Hashable
     {
     public static func ==(lhs:Name,rhs:Name) -> Bool
         {
@@ -68,6 +68,11 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
                     index += 1
                 }
             }
+        }
+        
+    public var hashValue: Int
+        {
+        self.string.polynomialRollingHash
         }
         
     private enum Component: Equatable
@@ -195,29 +200,7 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
 //        aName.topModule = topModule
 //        return(aName)
 //        }
-        
-    public func write(output: OutputFile) throws
-        {
-        try output.writeType(of: self)
-        try output.write(self.components.count)
-        for component in self.components
-            {
-            try output.write(component.string)
-            }
-        }
-        
-    public init(rooted:Bool)
-        {
-        if rooted
-            {
-            self.components = [.root]
-            }
-        else
-            {
-            self.components = []
-            }
-        }
-        
+
     public init(_ label:Label)
         {
         var input = label
@@ -233,6 +216,18 @@ public struct Name:CustomStringConvertible,Comparable,Hashable,Storable
             }
         let bits = input.components(separatedBy: "\\")
         self.components = (first.isNil ? [] : [first!]) + bits.map{Component.piece($0)}
+        }
+        
+    public init(rooted: Bool)
+        {
+        if rooted
+            {
+            self.components = [.root]
+            }
+        else
+            {
+            self.components = []
+            }
         }
         
     public func hash(into hasher:inout Hasher)
