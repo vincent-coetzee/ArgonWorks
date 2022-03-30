@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class ProjectSourceItem: ProjectItem,SourceDelegate
+public class ProjectSourceItem: ProjectItem
     {
     public var symbolValue: SymbolValue!
         {
@@ -58,9 +58,8 @@ public class ProjectSourceItem: ProjectItem,SourceDelegate
             view.font = self.controller.sourceOutlinerFont
             view.editorView.font = self.controller.sourceOutlinerFont
             view.editorView.incrementalParser = self.controller.incrementalParser
-            view.editorView.sourceDelegate = self
             view.editorView.sourceItem = self
-            view.editorView.source = self.sourceRecord
+            view.editorView.sourceRecord = self.sourceRecord
             return(view)
             }
         else
@@ -73,17 +72,6 @@ public class ProjectSourceItem: ProjectItem,SourceDelegate
         {
         self.versionState = state
         self.elementItem.markVersionState(as: state)
-        }
-        
-    public func sourceEditingDidEnd(_ view: BrowserEditorView)
-        {
-        self.elementItem.sourceEditingDidEnd(self)
-        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")] as? ProjectSourceItemView)?.becomeQuiet()
-        }
-        
-    public func sourceEditingDidBegin(_ view: BrowserEditorView)
-        {
-        self.elementItem.sourceEditingDidBegin(self)
         }
         
     public func sourceDidChange(_ view: BrowserEditorView)

@@ -89,6 +89,8 @@ public class PaddedTextLabel: NSView,Dependent,Control
             {
             self.textLayer.fontSize = self.textFont.pointSize
             self.textLayer.font = self.textFont
+            self.invalidateIntrinsicContentSize()
+            self.needsLayout = true
             }
         }
         

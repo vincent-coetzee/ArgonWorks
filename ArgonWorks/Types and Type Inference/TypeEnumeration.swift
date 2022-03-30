@@ -56,6 +56,11 @@ public class TypeEnumeration: TypeConstructor
         true
         }
         
+    public override var isEnumerationType: Bool
+        {
+        true
+        }
+        
     public override var containsTypeVariable: Bool
         {
         for aType in self.generics

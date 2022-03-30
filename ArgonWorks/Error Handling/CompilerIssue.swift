@@ -50,7 +50,7 @@ public struct CompilerError: Error
         
     public init(_ message: String)
         {
-        self.issues.append(CompilerIssue(location: .zero,message: message))
+        self.issues.append(CompilerIssue(location: .one,message: message))
         }
         
     public mutating func appendIssue(at: Location,message: String)

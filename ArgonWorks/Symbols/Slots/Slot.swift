@@ -87,6 +87,11 @@ public struct SlotType: OptionSet
     
 public class Slot:Symbol
     {
+    public override var parentSymbol: Symbol?
+        {
+        self.owningClass
+        }
+        
     public override var symbolType: SymbolType
         {
         .slot

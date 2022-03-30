@@ -12,6 +12,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     @IBOutlet internal var outliner: NSOutlineView!
     @IBOutlet private var toolbar: ToolbarView!
     @IBOutlet internal var leftView: NSView!
+    @IBOutlet internal var rightView: NSView!
     
     public let dependentKey = DependentSet.nextDependentKey
     
@@ -32,37 +33,74 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private let modulesController = Outliner(tag: "modules")
     internal var leftController: Outliner?
     private var baseRowHeight: CGFloat = 14
+    private var toolbarHeightConstraint: NSLayoutConstraint!
+    private var buttonBarHeightConstraint: NSLayoutConstraint!
+    
+    public private(set) var toolbarHeight: CGFloat = 0
     
     public override func viewDidLoad()
         {
         super.viewDidLoad()
-        self.outliner.rowSizeStyle = .custom
-        self.outliner.intercellSpacing = NSSize(width: 0, height: 4)
-        self.outliner.doubleAction = #selector(self.outlinerDoubleClicked)
-        self.outliner.target = self
         self.font = NSFont(name: "SunSans-SemiBold",size: 10)!
         self.baseRowHeight = self.font.lineHeight
         self.sourceOutlinerFont = self.font
         self.rootItem.controller = self
         self.incrementalParser = IncrementalParser()
         self.outliner.registerForDraggedTypes([.string])
-        let argon = SymbolHolder(symbol: ArgonModule.shared)
-        self.hierarchyItemsByHash[ArgonModule.shared.identityHash] = argon
-        let module = SymbolHolder(symbol: self.rootItem.module)
-        self.hierarchyItemsByHash[self.rootItem.module.identityHash] = module
-        self.initOutlinerMenu()
-        self.initTabs()
-        self.initLeftView()
+        self.hierarchyItemsByHash[ArgonModule.shared.identityHash] = SymbolHolder(symbol: ArgonModule.shared)
+        self.hierarchyItemsByHash[self.rootItem.module.identityHash] = SymbolHolder(symbol: self.rootItem.module)
+        self.configureOutlinerMenu()
         self.setProjectLabel()
+        self.configureDependencies()
+        self.configureToolbar()
+        self.configureTabs()
+        self.configureOutliner()
+        self.configureLeftView()
+        }
+        
+    private func configureToolbar()
+        {
+        self.toolbarHeight = self.sourceOutlinerFont.lineHeight + 4 + 4 + 2 + 2
+        self.toolbarHeightConstraint = self.toolbar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
+        self.toolbarHeightConstraint.isActive = true
+        self.outliner.topAnchor.constraint(equalTo: self.toolbar.bottomAnchor).isActive = true
+        }
+        
+    private func configureOutliner()
+        {
+        self.outliner.rowSizeStyle = .custom
+        self.outliner.intercellSpacing = NSSize(width: 0, height: 4)
+        self.outliner.doubleAction = #selector(self.outlinerDoubleClicked)
+        self.outliner.target = self
+        self.outliner.style = .plain
+        self.outliner.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
+        self.outliner.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "VersionState"))!.width = 14
+        NotificationCenter.default.addObserver(self, selector: #selector(self.outlinerFrameChanged), name: NSOutlineView.frameDidChangeNotification, object: self.outliner)
+        self.buttonBar.backgroundColor = NSColor.argonBlack20
+        self.toolbar.backgroundColor = NSColor.argonBlack20
+        self.buttonBar.backgroundColor = NSColor.argonBlack20
+        self.outliner.enclosingScrollView!.borderType = .noBorder
+        }
+        
+    private func configureDependencies()
+        {
         self.rootItem.addDependent(self)
-        var adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "issueCount"))
+        var adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "warningCount"))
             {
             incoming in
             let total = incoming as! Int
-            let string = "\(total) issue\(total == 1 ? "" : "s")"
+            let string = "\(total) warning\(total == 1 ? "" : "s")"
             return(string)
             }
-        self.toolbar.control(atKey: "issues")!.valueModel = adaptor
+        self.toolbar.control(atKey: "warnings")!.valueModel = adaptor
+        adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "errorCount"))
+            {
+            incoming in
+            let total = incoming as! Int
+            let string = "\(total) error\(total == 1 ? "" : "s")"
+            return(string)
+            }
+        self.toolbar.control(atKey: "errors")!.valueModel = adaptor
         adaptor = Transformer(model: AspectAdaptor(on: self.rootItem,aspect: "label"))
             {
             incoming in
@@ -79,15 +117,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             return(label)
             }
         self.toolbar.control(atKey: "records")!.valueModel = adaptor
-        self.outliner.style = .plain
-        self.outliner.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
-        self.outliner.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "VersionState"))!.width = 14
-        NotificationCenter.default.addObserver(self, selector: #selector(self.outlinerFrameChanged), name: NSOutlineView.frameDidChangeNotification, object: self.outliner)
-        self.buttonBar.backgroundColor = NSColor.argonBlack20
-        self.toolbar.backgroundColor = NSColor.argonBlack20
-        self.outliner.enclosingScrollView!.borderType = .noBorder
-        self.leftView.wantsLayer = true
-        self.leftView.layer?.backgroundColor = NSColor.white.cgColor
         }
         
     public override func viewDidAppear()
@@ -112,17 +141,31 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         primaryColumn?.width = self.outliner.bounds.size.width - (self.baseRowHeight + 25)
         }
         
-    private func initLeftView()
+    private func configureOutlinerMenu()
         {
-        self.classesController.rootItems = [SymbolHolder(symbol: ArgonModule.shared.object)]
-        self.enumerationController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0)}
-        self.constantsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0)}
-        self.methodsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0)}
-        self.modulesController.rootItems = TopModule.shared.allSymbols.map{SymbolHolder(symbol: $0)}
+        let menu = NSMenu()
+        self.outliner.menu = menu
+        menu.delegate = self
+        }
+        
+    private func configureLeftView()
+        {
+        self.leftView.wantsLayer = true
+        self.leftView.layer?.backgroundColor = NSColor.argonDarkerGray.cgColor
+        self.classesController.rootItems = [SymbolHolder(symbol: ArgonModule.shared.object,context: .classes)]
+        self.classesController.backgroundColor = NSColor.argonMidGray
+        self.enumerationController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0,context: .enumerations)}
+        self.enumerationController.backgroundColor = NSColor.argonMidGray
+        self.constantsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0,context: .constants)}
+        self.constantsController.backgroundColor = NSColor.argonMidGray
+        self.methodsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0,context: .methods)}
+        self.methodsController.backgroundColor = NSColor.argonMidGray
+        self.modulesController.rootItems = TopModule.shared.allSymbols.map{SymbolHolder(symbol: $0,context: .modules)}
+        self.modulesController.backgroundColor = NSColor.argonMidGray
         self.classesController.becomeActiveController(inController: self)
         }
         
-    private func initTabs()
+    private func configureTabs()
         {
         let bar = ButtonBar(frame: .zero)
         self.buttonBar = bar
@@ -136,7 +179,8 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         bar.leadingAnchor.constraint(equalTo: self.leftView.leadingAnchor).isActive = true
         bar.trailingAnchor.constraint(equalTo: self.leftView.trailingAnchor).isActive = true
         bar.topAnchor.constraint(equalTo: self.leftView.topAnchor).isActive = true
-        bar.heightAnchor.constraint(equalToConstant: 25).isActive = true
+        self.buttonBarHeightConstraint = bar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
+        self.buttonBarHeightConstraint.isActive = true
         }
         
     @IBAction public func onClassesClicked(_ any: Any?)
@@ -180,6 +224,98 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         let pasteboardItem = NSPasteboardItem()
         pasteboardItem.setString(source,forType: .string)
         return(pasteboardItem)
+        }
+        
+    public func removeSymbolsFromHierarchies(_ symbols: Symbols)
+        {
+        self.classesController.beginUpdates()
+        self.modulesController.beginUpdates()
+        self.constantsController.beginUpdates()
+        self.enumerationController.beginUpdates()
+        self.methodsController.beginUpdates()
+        for symbol in symbols
+            {
+            switch(symbol)
+                {
+                case is TypeAlias:
+                    if (symbol as! TypeAlias).isClassType
+                        {
+                        self.classesController.removeSymbol(symbol)
+                        }
+                    else if (symbol as! TypeAlias).isEnumerationType
+                        {
+                        self.enumerationController.removeSymbol(symbol)
+                        }
+                    else
+                        {
+                        fatalError("TypeAlias case not handled.")
+                        }
+                case is TypeClass:
+                    self.classesController.removeSymbol(symbol)
+                case is TypeEnumeration:
+                    self.enumerationController.removeSymbol(symbol)
+                case is Constant:
+                    self.constantsController.removeSymbol(symbol)
+                case is Method:
+                    self.methodsController.removeSymbol(symbol)
+                case is Module:
+                    break
+                default:
+                    fatalError("Case not handled \(symbol)")
+                }
+            self.modulesController.removeSymbol(symbol)
+            }
+        self.classesController.endUpdates()
+        self.modulesController.endUpdates()
+        self.constantsController.endUpdates()
+        self.enumerationController.endUpdates()
+        self.methodsController.endUpdates()
+        }
+        
+    public func insertSymbolsInHierarchies(_ symbols: Symbols)
+        {
+        self.classesController.beginUpdates()
+        self.modulesController.beginUpdates()
+        self.constantsController.beginUpdates()
+        self.enumerationController.beginUpdates()
+        self.methodsController.beginUpdates()
+        for symbol in symbols
+            {
+            switch(symbol)
+                {
+                case is TypeAlias:
+                    if (symbol as! TypeAlias).isClassType
+                        {
+                        self.classesController.insertSymbol(symbol)
+                        }
+                    else if (symbol as! TypeAlias).isEnumerationType
+                        {
+                        self.enumerationController.removeSymbol(symbol)
+                        }
+                    else
+                        {
+                        fatalError("TypeAlias case not handled.")
+                        }
+                case is TypeClass:
+                    self.classesController.removeSymbol(symbol)
+                case is TypeEnumeration:
+                    self.enumerationController.removeSymbol(symbol)
+                case is Constant:
+                    self.constantsController.removeSymbol(symbol)
+                case is Method:
+                    self.methodsController.removeSymbol(symbol)
+                case is Module:
+                    break
+                default:
+                    fatalError("Case not handled \(symbol)")
+                }
+            self.modulesController.removeSymbol(symbol)
+            }
+        self.classesController.endUpdates()
+        self.modulesController.endUpdates()
+        self.constantsController.endUpdates()
+        self.enumerationController.endUpdates()
+        self.methodsController.endUpdates()
         }
         
     public func setProjectLabel()
@@ -304,13 +440,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             }
         let item = self.outliner.item(atRow: row) as! ProjectItem
         item.doubleClicked(inOutliner: self.outliner)
-        }
-        
-    private func initOutlinerMenu()
-        {
-        let menu = NSMenu()
-        self.outliner.menu = menu
-        menu.delegate = self
         }
         
     @IBAction func onNewGroupClicked(_ any: Any?)

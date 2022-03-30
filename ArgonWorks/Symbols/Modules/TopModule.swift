@@ -46,7 +46,7 @@ public class TopModule: SystemModule
         
     public var argonModule: ArgonModule
         {
-        return(self.lookup(label: "Argon") as! ArgonModule)
+        self._argonModule
         }
         
 //    public var moduleRoot: Module
@@ -80,6 +80,9 @@ public class TopModule: SystemModule
 //            }
 //        }
         
+    
+    public var _argonModule: ArgonModule!
+    
     required init?(coder: NSCoder)
         {
         super.init(coder: coder)
@@ -88,6 +91,21 @@ public class TopModule: SystemModule
     public required init(label: Label)
         {
         super.init(label: label)
+        }
+        
+    public override func lookup(label: Label) -> Symbol?
+        {
+        self.argonModule.lookup(label: label)
+        }
+        
+    public override func lookupType(label: Label) -> Type?
+        {
+        self.argonModule.lookupType(label: label)
+        }
+        
+    public override func lookupMethod(label: Label) -> ArgonWorks.Method?
+        {
+        self.argonModule.lookupMethod(label: label)
         }
         
     public override func lookupN(label: Label) -> Symbols?

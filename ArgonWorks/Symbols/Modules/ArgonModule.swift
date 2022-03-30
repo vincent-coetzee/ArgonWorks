@@ -33,292 +33,292 @@ public class ArgonModule: SystemModule
         
     public var null: Type
         {
-        return(self.lookupType(label:  "Null") )
+        return(self.lookupType(label:  "Null")!)
         }
         
     public var number: Type
         {
-        return(self.lookupType(label:  "Number") )
+        return(self.lookupType(label:  "Number")!)
         }
 
     public var date: Type
         {
-        return(self.lookupType(label:  "Date") )
+        return(self.lookupType(label:  "Date")!)
         }
         
     public var time: Type
         {
-        return(self.lookupType(label:  "Time") )
+        return(self.lookupType(label:  "Time")!)
         }
         
     public var byte: Type
         {
-        return(self.lookupType(label:  "Byte") )
+        return(self.lookupType(label:  "Byte")!)
         }
         
     public var symbol: Type
         {
-        return(self.lookupType(label:  "Symbol") )
+        return(self.lookupType(label:  "Symbol")!)
         }
         
     public var void: Type
         {
-        return(self.lookupType(label:  "Void") )
+        return(self.lookupType(label:  "Void")!)
         }
         
     public var float: Type
         {
-        return(self.lookupType(label:  "Float") )
+        return(self.lookupType(label:  "Float")!)
         }
         
     public var uInteger: Type
         {
-        return(self.lookupType(label:  "UInteger") )
+        return(self.lookupType(label:  "UInteger")!)
         }
         
     public var writeStream: Type
         {
-        return(self.lookupType(label:  "WriteStream") )
+        return(self.lookupType(label:  "WriteStream")!)
         }
         
     public var boolean: Type
         {
-        return(self.lookupType(label:  "Boolean") )
+        return(self.lookupType(label:  "Boolean")!)
         }
         
     public var collection: Type
         {
-        return(self.lookupType(label:  "Collection") )
+        return(self.lookupType(label:  "Collection")!)
         }
         
     public var string: Type
         {
-        return(self.lookupType(label:  "String") )
+        return(self.lookupType(label:  "String")!)
         }
         
     public var methodInstance: Type
         {
-        return(self.lookupType(label:  "MethodInstance") )
+        return(self.lookupType(label:  "MethodInstance")!)
         }
         
     public var classType: Type
         {
-        return(self.lookupType(label:  "Class") )
+        return(self.lookupType(label:  "Class")!)
         }
         
     public var metaclassType: Type
         {
-        return(self.lookupType(label:  "Metaclass") )
+        return(self.lookupType(label:  "Metaclass")!)
         }
         
     public var array: Type
         {
-        return(self.lookupType(label:  "Array") )
+        return(self.lookupType(label:  "Array")!)
         }
         
     public var vector: Type
         {
-        return(self.lookupType(label:  "Vector") )
+        return(self.lookupType(label:  "Vector")!)
         }
         
     public var dictionary: Type
         {
-        return(self.lookupType(label:  "Dictionary") )
+        return(self.lookupType(label:  "Dictionary")!)
         }
         
     public var slot: Type
         {
-        return(self.lookupType(label:  "Slot") )
+        return(self.lookupType(label:  "Slot")!)
         }
         
     public var parameter: Type
         {
-        return(self.lookupType(label:  "Parameter") )
+        return(self.lookupType(label:  "Parameter")!)
         }
         
     public var pointer:Type
         {
-        return(self.lookupType(label:  "Pointer") )
+        return(self.lookupType(label:  "Pointer")!)
         }
         
     public var object: Type
         {
-        return(self.lookupType(label:  "Object") )
+        return(self.lookupType(label:  "Object")!)
         }
         
     public var function: Type
         {
-        return(self.lookupType(label:  "Function") )
+        return(self.lookupType(label:  "Function")!)
         }
         
     public var invokable: Type
         {
-        return(self.lookupType(label:  "Invokable") )
+        return(self.lookupType(label:  "Invokable")!)
         }
         
     public var list: Type
         {
-        return(self.lookupType(label:  "List") )
+        return(self.lookupType(label:  "List")!)
         }
         
     public var listNode: Type
         {
-        return(self.lookupType(label:  "ListNode") )
+        return(self.lookupType(label:  "ListNode")!)
         }
         
     public var typeType: Type
         {
-        return(self.lookupType(label:  "Type") )
+        return(self.lookupType(label:  "Type")!)
         }
         
     public var block: Type
         {
-        return(self.lookupType(label:  "Block") )
+        return(self.lookupType(label:  "Block")!)
         }
         
     public var integer: Type
         {
-        return(self.lookupType(label:  "Integer") )
+        return(self.lookupType(label:  "Integer")!)
         }
         
     public var address: Type
         {
-        return(self.lookupType(label:  "Address") )
+        return(self.lookupType(label:  "Address")!)
         }
         
     public var bucket: Type
         {
-        return(self.lookupType(label:  "Bucket") )
+        return(self.lookupType(label:  "Bucket")!)
         }
         
     public var generic: Type
         {
-        return(self.lookupType(label:  "GenericClass") )
+        return(self.lookupType(label:  "GenericClass")!)
         }
         
     public var genericInstance: Type
         {
-        return(self.lookupType(label:  "GenericClassInstance") )
+        return(self.lookupType(label:  "GenericClassInstance")!)
         }
         
     public var enumerationCase: Type
         {
-        return(self.lookupType(label:  "EnumerationCase") )
+        return(self.lookupType(label:  "EnumerationCase")!)
         }
         
     public var behavior: Type
         {
-        return(self.lookupType(label:  "Behavior") )
+        return(self.lookupType(label:  "Behavior")!)
         }
         
     public var tuple: Type
         {
-        return(self.lookupType(label:  "Tuple") )
+        return(self.lookupType(label:  "Tuple")!)
         }
         
     public var dateTime: Type
         {
-        return(self.lookupType(label:  "DateTime") )
+        return(self.lookupType(label:  "DateTime")!)
         }
         
     public var iterable: Type
         {
-        return(self.lookupType(label:  "Iterable") )
+        return(self.lookupType(label:  "Iterable")!)
         }
         
     public var magnitude: Type
         {
-        return(self.lookupType(label:  "Magnitude") )
+        return(self.lookupType(label:  "Magnitude")!)
         }
         
     public var classParameter: Type
         {
-        return(self.lookupType(label:  "ClassParameter") )
+        return(self.lookupType(label:  "ClassParameter")!)
         }
         
     public var moduleType: Type
         {
-        return(self.lookupType(label:  "Module") )
+        return(self.lookupType(label:  "Module")!)
         }
         
     public var opcode: Type
         {
-        return(self.lookupType(label:  "Opcode") )
+        return(self.lookupType(label:  "Opcode")!)
         }
         
     public var instruction: Type
         {
-        return(self.lookupType(label:  "Instruction") )
+        return(self.lookupType(label:  "Instruction")!)
         }
         
     public var closure: Type
         {
-        return(self.lookupType(label:  "Closure") )
+        return(self.lookupType(label:  "Closure")!)
         }
         
     public var character: Type
         {
-        return(self.lookupType(label:  "Character") )
+        return(self.lookupType(label:  "Character")!)
         }
         
     public var dateComponent: Type
         {
-        return(self.lookupType(label:  "DateComponent") )
+        return(self.lookupType(label:  "DateComponent")!)
         }
         
     public var timeComponent: Type
         {
-        return(self.lookupType(label:  "TimeComponent") )
+        return(self.lookupType(label:  "TimeComponent")!)
         }
         
     public var variadicParameter: Type
         {
-        return(self.lookupType(label:  "VariadicParameter") )
+        return(self.lookupType(label:  "VariadicParameter")!)
         }
         
     public var enumeration: Type
         {
-        return(self.lookupType(label:  "Enumeration") )
+        return(self.lookupType(label:  "Enumeration")!)
         }
         
     public var treeNode: Type
         {
-        return(self.lookupType(label:  "TreeNode") )
+        return(self.lookupType(label:  "TreeNode")!)
         }
         
     public var literal: Type
         {
-        return(self.lookupType(label:  "Literal") )
+        return(self.lookupType(label:  "Literal")!)
         }
         
     public var operand: Type
         {
-        return(self.lookupType(label:  "Operand") )
+        return(self.lookupType(label:  "Operand")!)
         }
         
     public var slotType: Type
         {
-        return(self.lookupType(label:  "SlotType") )
+        return(self.lookupType(label:  "SlotType")!)
         }
         
     public var set: Type
         {
-        return(self.lookupType(label:  "Set") )
+        return(self.lookupType(label:  "Set")!)
         }
         
     public var objectClass: Type
         {
-        return(self.lookupType(label:  "ObjectClass") )
+        return(self.lookupType(label:  "ObjectClass")!)
         }
         
     public var instructionBlock: Type
         {
-        return(self.lookupType(label:  "InstructionBlock") )
+        return(self.lookupType(label:  "InstructionBlock")!)
         }
         
     public var enumerationCaseInstance: Type
         {
-        return(self.lookupType(label:  "EnumerationCaseInstance") )
+        return(self.lookupType(label:  "EnumerationCaseInstance")!)
         }
         
     public var virtualMachine: TypeClass
@@ -368,6 +368,7 @@ public class ArgonModule: SystemModule
         
     public func initialize()
         {
+        TopModule.shared._argonModule = self
         self.initTypes()
         self.initMetaclasses()
         self.initBaseMethods()
@@ -412,14 +413,16 @@ public class ArgonModule: SystemModule
         super.encode(with: coder)
         }
         
-    public override func lookupType(label: Label) -> Type
+    public override func lookupType(label: Label) -> Type?
         {
-        let someSymbols = self.allSymbols.filter{$0.label == label}.compactMap{$0 as? Type}
-        if someSymbols.isEmpty
+        for symbol in self.allSymbols
             {
-            fatalError()
+            if symbol.label == label,let aSymbol = symbol as? Type
+                {
+                return(aSymbol)
+                }
             }
-        return(someSymbols[0])
+        return(nil)
         }
         
     private func initTypes()
@@ -882,6 +885,30 @@ public class ArgonModule: SystemModule
         for symbol in self.allSymbols
             {
             if symbol.index == index
+                {
+                return(symbol)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func lookupMethod(label: Label) -> ArgonWorks.Method?
+        {
+        for symbol in self.allSymbols
+            {
+            if symbol.isMethod && symbol.label == label
+                {
+                return(symbol as? ArgonWorks.Method)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func lookup(label: Label) -> Symbol?
+        {
+        for symbol in self.allSymbols
+            {
+            if symbol.label == label
                 {
                 return(symbol)
                 }

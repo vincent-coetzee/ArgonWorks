@@ -25,7 +25,8 @@ class SourceTextView: NSTextView
         let characterIndex = text.distance(from: text.startIndex,to: index) - 1
         let glyphIndex = self.layoutManager!.glyphIndexForCharacter(at: characterIndex)
         let range = NSRange(location: glyphIndex,length: 1)
-        let rect = self.layoutManager!.boundingRect(forGlyphRange: range, in: self.textContainer!)
+        var rect = self.layoutManager!.boundingRect(forGlyphRange: range, in: self.textContainer!)
+        rect.size.width = max(rect.size.width,self.bounds.size.width - 4)
         return(rect)
         }
     }

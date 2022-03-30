@@ -14,8 +14,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Token.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "753"
-            endingLineNumber = "753"
+            startingLineNumber = "756"
+            endingLineNumber = "756"
             landmarkName = "appendIssue(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "ArgonWorks/Compiler and Phases/Token.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "758"
-            endingLineNumber = "758"
+            startingLineNumber = "761"
+            endingLineNumber = "761"
             landmarkName = "appendIssues(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -39,16 +39,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "35303FB9-ABA8-4A95-A69F-F8CB8BBD47E7"
+            uuid = "46BD2744-6BE6-4276-AF60-FFBE46186520"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "ArgonWorks/User Interface/Argon Project Browser/BrowserEditorView.swift"
+            filePath = "ArgonWorks/User Interface/Argon Project Browser/Project Items and Views/Project.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "126"
-            endingLineNumber = "126"
-            landmarkName = "toggleAnnotation(_:)"
+            startingLineNumber = "99"
+            endingLineNumber = "99"
+            landmarkName = "update(aspect:with:from:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

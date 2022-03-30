@@ -135,6 +135,8 @@ public struct Location:Equatable,CustomStringConvertible,Hashable
         
     public static let zero = Location(line:0,lineStart:0,lineStop:0,tokenStart:0,tokenStop:0)
     
+    public static let one = Location(line: 1,lineStart: 0,lineStop: 0,tokenStart: 0,tokenStop: 0)
+    
     public var range: NSRange
         {
         let length = max(0,self.tokenStop - self.tokenStart)

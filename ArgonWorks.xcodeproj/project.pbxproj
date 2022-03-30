@@ -12,6 +12,7 @@
 		BF05643A2715D925005E7688 /* ArgonArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0564392715D925005E7688 /* ArgonArchiver.swift */; };
 		BF05643C2715DA79005E7688 /* ImportUnarchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF05643B2715DA79005E7688 /* ImportUnarchiver.swift */; };
 		BF0564422715F8E5005E7688 /* ImportExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0564412715F8E5005E7688 /* ImportExpression.swift */; };
+		BF0739A427F06CA600AD9701 /* BarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0739A327F06CA600AD9701 /* BarView.swift */; };
 		BF08A07F27AF469F00B24E53 /* TypeUnion.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF08A07E27AF469F00B24E53 /* TypeUnion.swift */; };
 		BF08A08127AF855100B24E53 /* GlobalSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF08A08027AF855100B24E53 /* GlobalSlot.swift */; };
 		BF122B2E272413EC00B53083 /* EditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF122B2D272413EC00B53083 /* EditorViewController.swift */; };
@@ -23,7 +24,7 @@
 		BF1337F4274150BC006CE4C9 /* StandardMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1337F3274150BC006CE4C9 /* StandardMethodInstance.swift */; };
 		BF1337F6274150DB006CE4C9 /* MethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1337F5274150DB006CE4C9 /* MethodInstance.swift */; };
 		BF171C0A27ED2C1D00CC55BB /* SourceTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF171C0927ED2C1D00CC55BB /* SourceTextView.swift */; };
-		BF171C0C27ED5BDF00CC55BB /* TextCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF171C0B27ED5BDF00CC55BB /* TextCellView.swift */; };
+		BF171C0C27ED5BDF00CC55BB /* IconLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF171C0B27ED5BDF00CC55BB /* IconLabelView.swift */; };
 		BF171C0E27EE01DA00CC55BB /* ProjectVersionStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF171C0D27EE01DA00CC55BB /* ProjectVersionStateView.swift */; };
 		BF178A6D271028FD00AE2D7F /* T3ABuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF178A6C271028FD00AE2D7F /* T3ABuffer.swift */; };
 		BF178A6F2710291B00AE2D7F /* T3ALabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF178A6E2710291B00AE2D7F /* T3ALabel.swift */; };
@@ -66,10 +67,13 @@
 		BF4937E32753930F00A9BF9F /* Visitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4937E22753930F00A9BF9F /* Visitor.swift */; };
 		BF4937E527539A0300A9BF9F /* TestVisitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4937E427539A0300A9BF9F /* TestVisitor.swift */; };
 		BF4937E72753A13F00A9BF9F /* Displayable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4937E62753A13F00A9BF9F /* Displayable.swift */; };
+		BF4AF39E27F1973C00C56245 /* OutlineItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4AF39D27F1973C00C56245 /* OutlineItem.swift */; };
+		BF4AF3A027F1975700C56245 /* OutlineItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4AF39F27F1975700C56245 /* OutlineItemView.swift */; };
+		BF4AF3A227F1979300C56245 /* SymbolHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4AF3A127F1979300C56245 /* SymbolHolder.swift */; };
+		BF4AF3A427F197C300C56245 /* ConcreteOutlineItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4AF3A327F197C300C56245 /* ConcreteOutlineItemView.swift */; };
+		BF4AF3A627F1D3E700C56245 /* ProjectElementItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4AF3A527F1D3E700C56245 /* ProjectElementItemView.swift */; };
 		BF4C48C127CA5E56008A2F53 /* Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4C48C027CA5E56008A2F53 /* Token.swift */; };
 		BF4C48C727CAE78E008A2F53 /* PlaceholderSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4C48C627CAE78E008A2F53 /* PlaceholderSymbol.swift */; };
-		BF4DAB3E27E9AE520059221E /* FramedButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4DAB3D27E9AE520059221E /* FramedButton.swift */; };
-		BF4DAB4027E9B6440059221E /* TitlebarToolbarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4DAB3F27E9B6440059221E /* TitlebarToolbarViewController.swift */; };
 		BF506AB427CAF33D00F560D1 /* RowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF506AB327CAF33D00F560D1 /* RowView.swift */; };
 		BF50EC92271AE6A8007C20C1 /* URL+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF50EC91271AE6A8007C20C1 /* URL+Extensions.swift */; };
 		BF570F1A279ED2E90010DF39 /* TreeNodePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF570F19279ED2E90010DF39 /* TreeNodePointer.swift */; };
@@ -81,7 +85,6 @@
 		BF5E6896277CED1D00DF2281 /* ConversionMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E6895277CED1D00DF2281 /* ConversionMethodInstance.swift */; };
 		BF5E8EC527D88BB100983911 /* ElementChangeLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E8EC427D88BB100983911 /* ElementChangeLog.swift */; };
 		BF5E8EC727D88D1500983911 /* SemanticVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E8EC627D88D1500983911 /* SemanticVersion.swift */; };
-		BF5E8EC927D897B000983911 /* FileSlice.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E8EC827D897B000983911 /* FileSlice.swift */; };
 		BF60DFC427023E3600734AC3 /* NativeCType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC327023E3600734AC3 /* NativeCType.swift */; };
 		BF60DFC62702633D00734AC3 /* NSImage+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */; };
 		BF6132B3276F630400AB6E67 /* SymbolRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6132B2276F630400AB6E67 /* SymbolRegistry.swift */; };
@@ -236,7 +239,6 @@
 		BFC1ED8826CFFAD5009B7C34 /* Name.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED7F26CFFAD5009B7C34 /* Name.swift */; };
 		BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */; };
 		BFC1ED8A26CFFAD5009B7C34 /* ArgonDateTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8126CFFAD5009B7C34 /* ArgonDateTime.swift */; };
-		BFC1ED8C26CFFAD5009B7C34 /* SymbolHolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */; };
 		BFC1EDD526CFFADC009B7C34 /* Constant.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8E26CFFADC009B7C34 /* Constant.swift */; };
 		BFC1EDD626CFFADC009B7C34 /* ContainerSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED8F26CFFADC009B7C34 /* ContainerSymbol.swift */; };
 		BFC1EDD726CFFADC009B7C34 /* Argument.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1ED9026CFFADC009B7C34 /* Argument.swift */; };
@@ -329,6 +331,7 @@
 		BF0564392715D925005E7688 /* ArgonArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArgonArchiver.swift; sourceTree = "<group>"; };
 		BF05643B2715DA79005E7688 /* ImportUnarchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportUnarchiver.swift; sourceTree = "<group>"; };
 		BF0564412715F8E5005E7688 /* ImportExpression.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportExpression.swift; sourceTree = "<group>"; };
+		BF0739A327F06CA600AD9701 /* BarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarView.swift; sourceTree = "<group>"; };
 		BF08A07E27AF469F00B24E53 /* TypeUnion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypeUnion.swift; sourceTree = "<group>"; };
 		BF08A08027AF855100B24E53 /* GlobalSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalSlot.swift; sourceTree = "<group>"; };
 		BF122B2D272413EC00B53083 /* EditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorViewController.swift; sourceTree = "<group>"; };
@@ -340,7 +343,7 @@
 		BF1337F3274150BC006CE4C9 /* StandardMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandardMethodInstance.swift; sourceTree = "<group>"; };
 		BF1337F5274150DB006CE4C9 /* MethodInstance.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MethodInstance.swift; sourceTree = "<group>"; };
 		BF171C0927ED2C1D00CC55BB /* SourceTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceTextView.swift; sourceTree = "<group>"; };
-		BF171C0B27ED5BDF00CC55BB /* TextCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextCellView.swift; sourceTree = "<group>"; };
+		BF171C0B27ED5BDF00CC55BB /* IconLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IconLabelView.swift; sourceTree = "<group>"; };
 		BF171C0D27EE01DA00CC55BB /* ProjectVersionStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectVersionStateView.swift; sourceTree = "<group>"; };
 		BF178A6C271028FD00AE2D7F /* T3ABuffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = T3ABuffer.swift; sourceTree = "<group>"; };
 		BF178A6E2710291B00AE2D7F /* T3ALabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = T3ALabel.swift; sourceTree = "<group>"; };
@@ -383,10 +386,13 @@
 		BF4937E22753930F00A9BF9F /* Visitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Visitor.swift; sourceTree = "<group>"; };
 		BF4937E427539A0300A9BF9F /* TestVisitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestVisitor.swift; sourceTree = "<group>"; };
 		BF4937E62753A13F00A9BF9F /* Displayable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Displayable.swift; sourceTree = "<group>"; };
+		BF4AF39D27F1973C00C56245 /* OutlineItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineItem.swift; sourceTree = "<group>"; };
+		BF4AF39F27F1975700C56245 /* OutlineItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutlineItemView.swift; sourceTree = "<group>"; };
+		BF4AF3A127F1979300C56245 /* SymbolHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolHolder.swift; sourceTree = "<group>"; };
+		BF4AF3A327F197C300C56245 /* ConcreteOutlineItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcreteOutlineItemView.swift; sourceTree = "<group>"; };
+		BF4AF3A527F1D3E700C56245 /* ProjectElementItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectElementItemView.swift; sourceTree = "<group>"; };
 		BF4C48C027CA5E56008A2F53 /* Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Token.swift; sourceTree = "<group>"; };
 		BF4C48C627CAE78E008A2F53 /* PlaceholderSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderSymbol.swift; sourceTree = "<group>"; };
-		BF4DAB3D27E9AE520059221E /* FramedButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FramedButton.swift; sourceTree = "<group>"; };
-		BF4DAB3F27E9B6440059221E /* TitlebarToolbarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitlebarToolbarViewController.swift; sourceTree = "<group>"; };
 		BF506AB327CAF33D00F560D1 /* RowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowView.swift; sourceTree = "<group>"; };
 		BF50EC91271AE6A8007C20C1 /* URL+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extensions.swift"; sourceTree = "<group>"; };
 		BF570F19279ED2E90010DF39 /* TreeNodePointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeNodePointer.swift; sourceTree = "<group>"; };
@@ -398,7 +404,6 @@
 		BF5E6895277CED1D00DF2281 /* ConversionMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionMethodInstance.swift; sourceTree = "<group>"; };
 		BF5E8EC427D88BB100983911 /* ElementChangeLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElementChangeLog.swift; sourceTree = "<group>"; };
 		BF5E8EC627D88D1500983911 /* SemanticVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SemanticVersion.swift; sourceTree = "<group>"; };
-		BF5E8EC827D897B000983911 /* FileSlice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSlice.swift; sourceTree = "<group>"; };
 		BF60DFC327023E3600734AC3 /* NativeCType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCType.swift; sourceTree = "<group>"; };
 		BF60DFC52702633D00734AC3 /* NSImage+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSImage+Extensions.swift"; sourceTree = "<group>"; };
 		BF6132B2276F630400AB6E67 /* SymbolRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolRegistry.swift; sourceTree = "<group>"; };
@@ -569,7 +574,6 @@
 		BFC1ED7F26CFFAD5009B7C34 /* Name.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Name.swift; sourceTree = "<group>"; };
 		BFC1ED8026CFFAD5009B7C34 /* PrivacyScope.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivacyScope.swift; sourceTree = "<group>"; };
 		BFC1ED8126CFFAD5009B7C34 /* ArgonDateTime.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ArgonDateTime.swift; sourceTree = "<group>"; };
-		BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SymbolHolder.swift; sourceTree = "<group>"; };
 		BFC1ED8E26CFFADC009B7C34 /* Constant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constant.swift; sourceTree = "<group>"; };
 		BFC1ED8F26CFFADC009B7C34 /* ContainerSymbol.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContainerSymbol.swift; sourceTree = "<group>"; };
 		BFC1ED9026CFFADC009B7C34 /* Argument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Argument.swift; sourceTree = "<group>"; };
@@ -703,16 +707,29 @@
 			path = "Code Generation";
 			sourceTree = "<group>";
 		};
+		BF4AF39C27F1971900C56245 /* Outliners */ = {
+			isa = PBXGroup;
+			children = (
+				BF4AF3A327F197C300C56245 /* ConcreteOutlineItemView.swift */,
+				BF4AF39D27F1973C00C56245 /* OutlineItem.swift */,
+				BF4AF39F27F1975700C56245 /* OutlineItemView.swift */,
+				BF67DCCC27DE7E58008D0933 /* Outliner.swift */,
+				BF4AF3A127F1979300C56245 /* SymbolHolder.swift */,
+			);
+			path = Outliners;
+			sourceTree = "<group>";
+		};
 		BF781AF527D767CA00590E67 /* Project Items and Views */ = {
 			isa = PBXGroup;
 			children = (
 				BF1E3F3327D63617000A3D80 /* Project.swift */,
+				BF781AEF27D7675600590E67 /* ProjectElementItem.swift */,
+				BF4AF3A527F1D3E700C56245 /* ProjectElementItemView.swift */,
+				BF781AF327D767B000590E67 /* ProjectGroupItem.swift */,
 				BF781AE927D766E600590E67 /* ProjectItem.swift */,
 				BF781AEB27D7671700590E67 /* ProjectItemView.swift */,
-				BF781AED27D7673E00590E67 /* ProjectSourceItemView.swift */,
-				BF781AEF27D7675600590E67 /* ProjectElementItem.swift */,
 				BF781AF127D7678500590E67 /* ProjectSourceItem.swift */,
-				BF781AF327D767B000590E67 /* ProjectGroupItem.swift */,
+				BF781AED27D7673E00590E67 /* ProjectSourceItemView.swift */,
 				BF171C0D27EE01DA00CC55BB /* ProjectVersionStateView.swift */,
 				BF78A62C27EF2B4B00D47522 /* VersionState.swift */,
 			);
@@ -1046,7 +1063,6 @@
 				BF870604270F4F4500C28345 /* StackFrame.swift */,
 				BFA4FFD9276CF03A0097EF92 /* StaticString.swift */,
 				BF5BBFCE270759F300C6E708 /* Storable.swift */,
-				BFC1ED8326CFFAD5009B7C34 /* SymbolHolder.swift */,
 				BF9685DE276DBA40000C77CE /* SystemScope.swift */,
 				BF179A1B271D5FCD00A07626 /* SystemSymbolPlaceholder.swift */,
 				BF20EB0026D98EB700163948 /* TemporaryLocalScope.swift */,
@@ -1196,28 +1212,26 @@
 		BFFA623527CA3B31003D8D58 /* Argon Project Browser */ = {
 			isa = PBXGroup;
 			children = (
-				BF5E8EC427D88BB100983911 /* ElementChangeLog.swift */,
-				BF781AF527D767CA00590E67 /* Project Items and Views */,
 				BFFA623827CA3D35003D8D58 /* ArgonBrowserViewController.swift */,
+				BFCF837E27D6DA2B005E9BC3 /* Attribute.swift */,
+				BF0739A327F06CA600AD9701 /* BarView.swift */,
 				BFDD0CDF27D36B310027717C /* BrowserEditorView.swift */,
+				BFA3E54C27E350E100D7CB03 /* ButtonBar.swift */,
+				BF78A62E27EF9E7E00D47522 /* CustomView.swift */,
+				BF5E8EC427D88BB100983911 /* ElementChangeLog.swift */,
+				BF171C0B27ED5BDF00CC55BB /* IconLabelView.swift */,
 				BF2BBE7127D235010003F482 /* LayoutFrame.swift */,
+				BFDA88D327E4BE58000AAEFA /* LayoutLayerView.swift */,
+				BF4AF39C27F1971900C56245 /* Outliners */,
+				BFA3E54E27E3CC0000D7CB03 /* PaddedTextLabel.swift */,
+				BF781AF527D767CA00590E67 /* Project Items and Views */,
 				BF506AB327CAF33D00F560D1 /* RowView.swift */,
+				BF5E8EC627D88D1500983911 /* SemanticVersion.swift */,
+				BFCF837C27D6D9C9005E9BC3 /* SourceRecord.swift */,
+				BF171C0927ED2C1D00CC55BB /* SourceTextView.swift */,
 				BFDD0CDD27D36B060027717C /* SyntaxAnnotation.swift */,
 				BFDD0CDB27D36ACD0027717C /* SyntaxAnnotationView.swift */,
-				BFCF837C27D6D9C9005E9BC3 /* SourceRecord.swift */,
-				BFCF837E27D6DA2B005E9BC3 /* Attribute.swift */,
-				BF5E8EC627D88D1500983911 /* SemanticVersion.swift */,
-				BF5E8EC827D897B000983911 /* FileSlice.swift */,
-				BF67DCCC27DE7E58008D0933 /* Outliner.swift */,
 				BF67DCCE27DF3000008D0933 /* ToolbarView.swift */,
-				BFA3E54C27E350E100D7CB03 /* ButtonBar.swift */,
-				BFA3E54E27E3CC0000D7CB03 /* PaddedTextLabel.swift */,
-				BFDA88D327E4BE58000AAEFA /* LayoutLayerView.swift */,
-				BF4DAB3D27E9AE520059221E /* FramedButton.swift */,
-				BF4DAB3F27E9B6440059221E /* TitlebarToolbarViewController.swift */,
-				BF171C0927ED2C1D00CC55BB /* SourceTextView.swift */,
-				BF171C0B27ED5BDF00CC55BB /* TextCellView.swift */,
-				BF78A62E27EF9E7E00D47522 /* CustomView.swift */,
 			);
 			path = "Argon Project Browser";
 			sourceTree = "<group>";
@@ -1314,7 +1328,6 @@
 				BF178A6D271028FD00AE2D7F /* T3ABuffer.swift in Sources */,
 				BF78A92027E9191D00262614 /* DependentSet.swift in Sources */,
 				BF570F1A279ED2E90010DF39 /* TreeNodePointer.swift in Sources */,
-				BFC1ED8C26CFFAD5009B7C34 /* SymbolHolder.swift in Sources */,
 				BF68B09F275BEFE400B8E33D /* InfixExpression.swift in Sources */,
 				BF68B099275BB85900B8E33D /* ClassSlot.swift in Sources */,
 				BFEFA9C9276B530600894140 /* StackSegment.swift in Sources */,
@@ -1359,6 +1372,7 @@
 				BFA7A9AD27AD8EC300043BC2 /* AddressFuture.swift in Sources */,
 				BF1D3FFB2714D4DF00B83C19 /* VisualTokenizer.swift in Sources */,
 				BFC1ED2026CFFAA7009B7C34 /* LocalSlotExpression.swift in Sources */,
+				BF0739A427F06CA600AD9701 /* BarView.swift in Sources */,
 				BF24EDA42705B6F7004D76E9 /* Double+Extensions.swift in Sources */,
 				BF357F112787F4060092B860 /* TypeModule.swift in Sources */,
 				BFE55439272734F100CB8AD3 /* AssociatedValueInductionExpression.swift in Sources */,
@@ -1376,7 +1390,6 @@
 				BF43CAFF274C0C4F00DB4B0F /* Sequence+Extensions.swift in Sources */,
 				BFC1EDD926CFFADC009B7C34 /* Closure.swift in Sources */,
 				BFA4FFDA276CF03A0097EF92 /* StaticString.swift in Sources */,
-				BF5E8EC927D897B000983911 /* FileSlice.swift in Sources */,
 				BF122B3527245A7E00B53083 /* FileItem.swift in Sources */,
 				BFC38360279C41250091FB39 /* BucketPointer.swift in Sources */,
 				BFC1ECFC26CFFA9F009B7C34 /* DynamicLibrary.swift in Sources */,
@@ -1416,6 +1429,7 @@
 				BFEFA9D1276B562B00894140 /* ArrayPointer.swift in Sources */,
 				BFC1ED4726CFFAB1009B7C34 /* LetBlock.swift in Sources */,
 				BF4937E12753796A00A9BF9F /* TypeFunction.swift in Sources */,
+				BF4AF3A227F1979300C56245 /* SymbolHolder.swift in Sources */,
 				BFC1ED1826CFFAA7009B7C34 /* UnaryExpression.swift in Sources */,
 				BF78A61C27EF28AF00D47522 /* ValueModel.swift in Sources */,
 				BFC1EE1D26CFFAE7009B7C34 /* String+Extensions.swift in Sources */,
@@ -1424,6 +1438,7 @@
 				BF1A1BF826FA783F00B7967F /* ModuleHolder.swift in Sources */,
 				BF122B33272456E200B53083 /* AssemblyCellView.swift in Sources */,
 				BFC1ED6026CFFABA009B7C34 /* TokenRenderer.swift in Sources */,
+				BF4AF3A027F1975700C56245 /* OutlineItemView.swift in Sources */,
 				BFEFA9D3276B563600894140 /* StringPointer.swift in Sources */,
 				BFEFA9C1276B52B400894140 /* WordPointer.swift in Sources */,
 				BF7AD2D027AC896700E446FF /* InstructionBuffer.swift in Sources */,
@@ -1442,6 +1457,7 @@
 				BFFF07AD274EB47800F1E13F /* CompilerIssue.swift in Sources */,
 				BF8213D0272C500C00F08E22 /* Scope.swift in Sources */,
 				BFDD0CDE27D36B060027717C /* SyntaxAnnotation.swift in Sources */,
+				BF4AF39E27F1973C00C56245 /* OutlineItem.swift in Sources */,
 				BFEFA9BF276B529800894140 /* UInt16Pointer.swift in Sources */,
 				BF7345DA27E1E97F0007E3C4 /* SpaceSegment.swift in Sources */,
 				BFD625022769F5E40089B901 /* Addressable.swift in Sources */,
@@ -1473,6 +1489,7 @@
 				BF78A61A27EF289400D47522 /* Model.swift in Sources */,
 				BFC1ED7426CFFAC0009B7C34 /* NullReporter.swift in Sources */,
 				BF7F97C327C0E86900E9E046 /* MethodSignature.swift in Sources */,
+				BF4AF3A427F197C300C56245 /* ConcreteOutlineItemView.swift in Sources */,
 				BFEFA9BD276B527D00894140 /* UnsafeMutablePointer+Extensions.swift in Sources */,
 				BFC1EE1C26CFFAE7009B7C34 /* NSColor+Extensions.swift in Sources */,
 				BFC1ED4126CFFAB1009B7C34 /* ClosureBlock.swift in Sources */,
@@ -1496,6 +1513,7 @@
 				BFDDB06E27189DCF00786847 /* Operator.swift in Sources */,
 				BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */,
 				BFC1ED6426CFFABA009B7C34 /* SemanticAnalyzer.swift in Sources */,
+				BF4AF3A627F1D3E700C56245 /* ProjectElementItemView.swift in Sources */,
 				BF60DFC427023E3600734AC3 /* NativeCType.swift in Sources */,
 				BFC1ED6B26CFFABA009B7C34 /* AddressAllocator.swift in Sources */,
 				BFBF1479270521E100C3AABF /* EntryBasicBlock.swift in Sources */,
@@ -1503,9 +1521,8 @@
 				BFA00EBD27B1320F006FB28D /* PeepholeOptimizer.swift in Sources */,
 				BF08A08127AF855100B24E53 /* GlobalSlot.swift in Sources */,
 				BF1337F6274150DB006CE4C9 /* MethodInstance.swift in Sources */,
-				BF4DAB3E27E9AE520059221E /* FramedButton.swift in Sources */,
 				BF1E3F3427D63617000A3D80 /* Project.swift in Sources */,
-				BF171C0C27ED5BDF00CC55BB /* TextCellView.swift in Sources */,
+				BF171C0C27ED5BDF00CC55BB /* IconLabelView.swift in Sources */,
 				BFEFA9C3276B52D700894140 /* ManagedSegment.swift in Sources */,
 				BFC1ED6926CFFABA009B7C34 /* CodeGenerator.swift in Sources */,
 				BFC1EC8226CFF9E9009B7C34 /* AppDelegate.swift in Sources */,
@@ -1600,7 +1617,6 @@
 				BF5E8EC527D88BB100983911 /* ElementChangeLog.swift in Sources */,
 				BFC1EDD526CFFADC009B7C34 /* Constant.swift in Sources */,
 				BF43CAFD274C0C2900DB4B0F /* MethodInvocationExpression.swift in Sources */,
-				BF4DAB4027E9B6440059221E /* TitlebarToolbarViewController.swift in Sources */,
 				BFC1ED2326CFFAA7009B7C34 /* LiteralExpression.swift in Sources */,
 				BF7AD2D227ACC99500E446FF /* TemplateMethodInstance.swift in Sources */,
 				BF08A07F27AF469F00B24E53 /* TypeUnion.swift in Sources */,

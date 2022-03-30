@@ -25,24 +25,32 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             }
         }
         
+    public var itemKey: Int!
+    public var primarySymbol: Symbol!
     public var attributes = Attributes()
     public var versionState: VersionState = .added
+    public unowned var elementItem: ProjectElementItem!
     
     public var issues = CompilerIssues()
         {
         didSet
             {
-            self.changed(aspect: "issueCount",with: self.issues.count)
+            let warnings = self.issues.filter{$0.isWarning}.count
+            let errors = self.issues.filter{!$0.isWarning}.count
+            self.changed(aspect: "warningCount",with: warnings)
+            self.changed(aspect: "errorCount",with: errors)
             }
         }
     
     public override init()
         {
         self.versionState = .added
+        super.init()
         }
         
     required public init?(coder: NSCoder)
         {
+        self.elementItem = coder.decodeObject(forKey: "elementItem") as? ProjectElementItem
         self.text = coder.decodeObject(forKey: "text") as! String
         self.attributes = coder.decodeObject(forKey: "attributes") as! Attributes
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
@@ -50,6 +58,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         
     public func encode(with coder:NSCoder)
         {
+        coder.encode(self.elementItem,forKey: "elementItem")
         coder.encode(self.text,forKey:"text")
         coder.encode(self.attributes,forKey: "attributes")
         coder.encodeCompilerIssues(self.issues,forKey: "issues")
@@ -58,16 +67,67 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
     public func appendIssue(_ issue: CompilerIssue)
         {
         self.issues.append(issue)
-        self.changed(aspect: "issueCount",with: self.issues.count)
+        self.issuesChanged()
+        }
+        
+    internal func issuesChanged()
+        {
+        let aProject = self.elementItem.project
+        let issues = aProject.allIssues
+        let errorCount = issues.filter{!$0.isWarning}.count
+        let warningCount = issues.filter{$0.isWarning}.count
+        aProject.changed(aspect: "warningCount",with: warningCount,from: aProject)
+        aProject.changed(aspect: "errorCount",with: errorCount,from: aProject)
+        self.changed(aspect: "warningCount",with: self.issues.filter{$0.isWarning}.count,from: self)
+        self.changed(aspect: "errorCount",with: self.issues.filter{!$0.isWarning}.count,from: self)
         }
         
     public func value(forAspect: String) -> Any?
         {
-        if forAspect == "issueCount"
+        if forAspect == "warningCount"
             {
-            return(self.issues.count)
+            return(self.issues.filter{$0.isWarning}.count)
+            }
+        if forAspect == "errorCount"
+            {
+            return(self.issues.filter{!$0.isWarning}.count)
+            }
+        if forAspect == "lineCount"
+            {
+            return(self.text.components(separatedBy:"\n").count)
             }
         return(nil)
+        }
+        
+    public func compilationDidSucceed(_ browserEditorView: BrowserEditorView,symbolValue: SymbolValue,affectedSymbols: Symbols)
+        {
+        self.elementItem.symbolValue = symbolValue
+        }
+        
+    public func compilationDidFail(_ browserEditorView: BrowserEditorView,issues: CompilerIssues)
+        {
+        }
+        
+    public func sourceDidChange(_ sourceEditorView: BrowserEditorView)
+        {
+        self.text = sourceEditorView.sourceString
+        let lineCount = self.text.components(separatedBy: "\n").count
+        self.changed(aspect: "lineCount",with: lineCount,from: self)
+        }
+        
+    public func sourceEditingDidBegin(_ browserEditorView: BrowserEditorView)
+        {
+        }
+        
+    public func sourceEditingDidEnd(_ browserEditorView: BrowserEditorView)
+        {
+        }
+        
+    public func compilationWillStart(_ browserEditorView: BrowserEditorView)
+        {
+        self.issues = []
+        self.issuesChanged()
+        self.text = browserEditorView.sourceString
         }
     }
     

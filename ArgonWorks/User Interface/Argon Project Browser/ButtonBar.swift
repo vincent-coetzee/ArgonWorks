@@ -7,16 +7,8 @@
 
 import Cocoa
 
-public class ButtonBar: NSView
+public class ButtonBar: BarView
     {
-    public var backgroundColor: NSColor?
-        {
-        didSet
-            {
-            self.layer!.backgroundColor = self.backgroundColor?.cgColor
-            }
-        }
-        
     private static let kButtonWidth:CGFloat = 16
     private static let kButtonSpacing:CGFloat = 2
     
@@ -26,22 +18,21 @@ public class ButtonBar: NSView
     private var rawImages = Array<NSImage>()
     private var buttonsByTag = Dictionary<String,NSButton>()
     
-    public override init(frame: NSRect)
+    public init(frame: NSRect)
         {
-        super.init(frame: frame)
-        self.wantsLayer = true
+        super.init()
+        self.drawsHorizontalBorder = true
+        self.horizontalBorderColor = .argonDarkGray
         }
     
     required init?(coder: NSCoder)
         {
         super.init(coder: coder)
-        self.wantsLayer = true
         }
     
     public override func awakeFromNib()
         {
         super.awakeFromNib()
-        self.wantsLayer = true
         }
         
     public func appendButton(tag: String,image: NSImage,toolTip: String,target: Any,action: Selector)

@@ -37,9 +37,8 @@ public class ProjectSourceItemView: ProjectItemView
         {
         super.layout()
         let width = self.bounds.size.width
-        let lineHeight = self.item.controller.sourceOutlinerFont.lineHeight
-        let height = self.bounds.size.height - lineHeight
-        self.editorView.frame = NSRect(x: 0,y: lineHeight,width: width,height: height)
+        let height = self.bounds.size.height
+        self.editorView.frame = NSRect(x: 0,y: 0,width: width,height: height)
         }
     }
     

@@ -68,7 +68,7 @@ extension UserDefaults
         }
     }
     
-class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate,TokenHandler
+class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate
     {
     private static let kWindowFrameKey = "EditorViewControllerWindowFrame"
     private static let kWindowURLKey = "EditorViewControllerWindowURL"
@@ -118,7 +118,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
                 self.editorView.textStorage?.setAttributedString(mutableString)
 //                self.tokenizer.update(self.editorView.string)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                if let node = Compiler(source: self.editorView.string,tokenHandler: self).compile()
+                if let node = Compiler(source: self.editorView.string,tokenHandler: nil).compile()
                     {
                     self.currentItem.appendItem(SymbolItem(symbol: node))
                     }
@@ -416,7 +416,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
 //                self.tokenizer.update(self.editorView.string)
 //                UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                let node = Compiler(source: self.editorView.string,tokenHandler: self).compile()
+                let node = Compiler(source: self.editorView.string,tokenHandler: nil).compile()
                 self.currentItem.appendItem(SymbolItem(symbol: node!))
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
@@ -490,7 +490,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.editorView.string,tokenHandler: self)
+                let aCompiler = Compiler(source: self.editorView.string,tokenHandler: nil)
                 if let module = aCompiler.compile()
                     {
                     do
@@ -532,7 +532,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
     @IBAction func onCompileFile(_ sender: Any?)
         {
         self.resetReporting()
-        let aCompiler = Compiler(source: self.editorView.string,tokenHandler: self)
+        let aCompiler = Compiler(source: self.editorView.string,tokenHandler: nil)
         _ = aCompiler.compile()
         }
     }

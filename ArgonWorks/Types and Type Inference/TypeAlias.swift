@@ -56,6 +56,16 @@ public class TypeAlias:Type
 //        return(true)
 //        }
         
+    public override var isClassType: Bool
+        {
+        self.type.isClassType
+        }
+        
+    public override var isEnumerationType: Bool
+        {
+        self.type.isEnumerationType
+        }
+        
     public override var mangledName: String
         {
         return(self.type.mangledName)

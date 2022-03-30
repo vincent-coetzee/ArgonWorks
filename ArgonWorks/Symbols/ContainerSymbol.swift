@@ -186,9 +186,9 @@ public class ContainerSymbol:Symbol
         }
         
         
-    public func lookupMethod(label: Label) -> Method?
+    public func lookupMethod(label: Label) -> ArgonWorks.Method?
         {
-        for aSymbol in self.symbols.compactMap({$0 as? Method})
+        for aSymbol in self.symbols.compactMap({$0 as? ArgonWorks.Method})
             {
             if aSymbol.label == label
                 {

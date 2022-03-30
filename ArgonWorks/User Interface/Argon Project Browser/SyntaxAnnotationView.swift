@@ -93,6 +93,13 @@ public class SyntaxAnnotationView: NSView
         
     public func appendAnnotation(_ issue: CompilerIssue)
         {
+        for anAnnotation in self.annotations
+            {
+            if anAnnotation.issue.location.line == issue.location.line
+                {
+                return
+                }
+            }
         let offset = self.lineHeight * CGFloat(issue.location.line)
         let rect = NSRect(x: 5,y:self.bounds.size.height - offset,width: lineHeight,height: lineHeight)
         let annotation = SyntaxAnnotation(issue: issue, frame: rect)

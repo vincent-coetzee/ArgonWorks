@@ -66,6 +66,7 @@ public class Project: ProjectGroupItem,Dependent
         {
         self.targetType = .none
         self.module = Module(label: label)
+        TopModule.shared.addSymbol(self.module)
         super.init(label: label)
         self.icon = NSImage(named: "IconProject")!
         self.icon.isTemplate = true
@@ -95,13 +96,33 @@ public class Project: ProjectGroupItem,Dependent
         
     public func update(aspect: String, with: Any?, from: Model)
         {
+        print("halt")
         }
     
+    public func changeHeight(inOutliner outliner: NSOutlineView)
+        {
+        let someItems = self.allItems
+        var indexSet = IndexSet()
+        for anItem in someItems
+            {
+            let index = outliner.row(forItem: anItem)
+            if index != -1
+                {
+                indexSet.insert(index)
+                }
+            }
+        outliner.noteHeightOfRows(withIndexesChanged: indexSet)
+        }
+        
     public override func value(forAspect aspect: String) -> Any?
         {
-        if aspect == "issueCount"
+        if aspect == "warningCount"
             {
-            return(self.allIssues.count)
+            return(self.allIssues.filter{$0.isWarning}.count)
+            }
+        else if aspect == "errorCount"
+            {
+            return(self.allIssues.filter{!$0.isWarning}.count)
             }
         else if aspect == "label"
             {

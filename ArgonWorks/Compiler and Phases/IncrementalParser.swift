@@ -35,6 +35,8 @@ public class IncrementalParser: CompilerPass
     internal var scopeStack = Stack<Scope>()
     private var statics = Array<StaticObject>()
     internal var tokenHandler: TokenHandler?
+    private var wereIssues = false
+    
     internal var tokenKind: TokenKind = .none
         {
         didSet
@@ -116,7 +118,20 @@ public class IncrementalParser: CompilerPass
         
     private func appendIssue(at: Location,message: String)
         {
+        self.wereIssues = true
         self.currentScope.appendIssue(at: at,message: message)
+        }
+        
+    private func appendIssue(_ message: String)
+        {
+        self.wereIssues = true
+        self.tokenHandler?.issueAdded(token: self.token,issue: self.token.appendIssue(message))
+        }
+        
+    private func appendIssue(to someToken: Token,message: String)
+        {
+        self.wereIssues = true
+        self.tokenHandler?.issueAdded(token: someToken,issue: someToken.appendIssue(message))
         }
         
     internal func pushContext(_ scope: Scope)
@@ -385,40 +400,53 @@ public class IncrementalParser: CompilerPass
         
     public func parseSymbol(from source: String,in module: Module) throws -> Symbol?
         {
-        print("parseSymbol")
         self.scopeStack = Stack<Scope>()
-        self.currentScope = module
+        self.pushContext(CompilationContext(module: module))
         self.tokenSource = TokenHolder(tokens:TokenStream(source: source, withComments: true).allTokens(withComments: true))
         self.commonInit()
-        self.token = Token(location: .zero)
+        self.token = Token(location: .one)
         try self.nextToken()
-        if !self.token.isKeyword
+        do
             {
-            self.token.appendIssue(at: self.token.location,message: "Keyword expected.")
-            }
-        else
-            {
-            switch(self.token.keyword)
+            if !self.token.isKeyword
                 {
-                case .MODULE:
-                    try self.parseModule(into: module)
-                case .CLASS:
-                    try self.parseClass()
-                case .METHOD:
-                    try self.parseMethodInstance()
-                case .PRIMITIVE:
-                    try self.parsePrimitiveMethod()
-                case .TYPE:
-                    try self.parseTypeAlias()
-                case .MAIN:
-                    try self.parseMainMethod()
-                case .SLOT:
-                    let slot = try self.parseSlot()
-                    module.addSymbol(slot)
-                default:
-                    self.token.appendIssue(at: self.token.location,message: "\(self.token.keyword) is not a valid keyword in this position.")
+                throw(CompilerError("Keyword expected."))
+                }
+            else
+                {
+                switch(self.token.keyword)
+                    {
+                    case .MODULE:
+                        try self.parseModule(into: module)
+                    case .CLASS:
+                        try self.parseClass()
+                    case .METHOD:
+                        try self.parseMethodInstance()
+                    case .PRIMITIVE:
+                        try self.parsePrimitiveMethod()
+                    case .TYPE:
+                        try self.parseTypeAlias()
+                    case .MAIN:
+                        try self.parseMainMethod()
+                    case .SLOT:
+                        let slot = try self.parseSlot()
+                        module.addSymbol(slot)
+                    default:
+                        self.token.appendIssue(at: self.token.location,message: "\(self.token.keyword) is not a valid keyword in this position.")
+                    }
                 }
             }
+        catch let error as CompilerError
+            {
+            self.popContext()
+            throw(error)
+            }
+        catch
+            {
+            self.popContext()
+            throw(CompilerError("Unknown error"))
+            }
+        self.popContext()
         return(nil)
         }
         
@@ -865,6 +893,7 @@ public class IncrementalParser: CompilerPass
     internal func parseEnumeration() throws -> (TypeEnumeration,StandardMethodInstance,StandardMethodInstance)
         {
 //        self.startClip()
+        self.wereIssues = false
         try self.nextToken()
         let location = self.token.location
         let label = try self.parseLabel()
@@ -1238,6 +1267,7 @@ public class IncrementalParser: CompilerPass
     @discardableResult
     internal func parseClass() throws -> TypeClass
         {
+        self.wereIssues = false
         try self.nextToken()
         let location = self.token.location
         self.errors = CompilerError()
@@ -1249,7 +1279,7 @@ public class IncrementalParser: CompilerPass
         if let oldClass = self.currentScope.lookup(label: label) as? TypeClass
             {
             aClass = oldClass
-            self.errors.appendIssue(at: self.lastToken.location,message: "A class with label '\(label)' is already defined.")
+            self.appendIssue("A class with label '\(label)' is already defined.")
             classExists = true
             }
         if self.token.isLeftBrocket
@@ -1290,7 +1320,7 @@ public class IncrementalParser: CompilerPass
                     {
                     if superClass.superclassHierarchy.contains(aClass)
                         {
-                        self.errors.appendIssue(at: self.lastToken.location,message: "'\(superClass.label)' is an ancestor of '\(label)' therefore it can not be added as a superclass of '\(label)'.")
+                        self.appendIssue(to: self.lastToken,message: "'\(superClass.label)' is an ancestor of '\(label)' therefore it can not be added as a superclass of '\(label)'.")
                         }
                     else
                         {
@@ -1299,7 +1329,7 @@ public class IncrementalParser: CompilerPass
                     }
                 else
                     {
-                    self.errors.appendIssue(at: self.lastToken.location,message: "'\(aSuper.label)' is not a class and can therefore not be a superclass of '\(label)'.")
+                    self.appendIssue(to: self.lastToken,message: "'\(aSuper.label)' is not a class and can therefore not be a superclass of '\(label)'.")
                     }
                 }
             while self.token.isComma
@@ -1317,7 +1347,7 @@ public class IncrementalParser: CompilerPass
                     let slot = try self.parseSlot()
                     if aClass.allInstanceSlotsContainsSlotWithLabel(slot.label)
                         {
-                        self.errors.appendIssue(at: self.lastToken.location,message: "'\(label)' can not have a slot labeled '\(slot.label)' because it inherits one with that label.")
+                        self.appendIssue(to: self.lastToken,message: "'\(label)' can not have a slot labeled '\(slot.label)' because it inherits one with that label.")
                         }
                     else
                         {
@@ -1332,7 +1362,7 @@ public class IncrementalParser: CompilerPass
                         let someType = aClass.type as! TypeClass
                         if someType.allInstanceSlotsContainsSlotWithLabel(slot.label)
                             {
-                            self.errors.appendIssue(at: self.lastToken.location,message: "'\(someType.label)' can not have a slot labeled '\(slot.label)' because it inherits one with that label.")
+                            self.appendIssue(to: self.lastToken,message: "'\(someType.label)' can not have a slot labeled '\(slot.label)' because it inherits one with that label.")
                             }
                         else
                             {
@@ -1351,11 +1381,15 @@ public class IncrementalParser: CompilerPass
                         }
                     }
                 }
+            if !self.token.isRightBrace
+                {
+                self.appendIssue("'}' expected but '\(self.token)' was found.")
+                }
             }
         self.addSymbol(aClass.metaclass)
         aClass.layoutObjectSlots()
         aClass.metaclass.layoutObjectSlots()
-        if !self.errors.isEmpty
+        if self.wereIssues
             {
             throw(errors)
             }
@@ -3390,10 +3424,8 @@ public class IncrementalParser: CompilerPass
         handler.source = self.source?.substring(with: start..<stop + 1) ?? ""
         }
         
-    public func parse(source: String,tokenHandler: TokenHandler,inModule aModule: Module) throws -> SymbolValue
+    public func parse(source: String,tokenHandler: TokenHandler,inContext context: CompilationContext) throws -> SymbolValue
         {
-        let context = CompilationContext(parentScope: self.currentScope)
-        context.setModule(aModule)
         self.pushContext(context)
         let tokens = TokenStream(source: source).allTokens(withComments: true)
         self.tokenSource = TokenHolder(tokens: tokens.filter{!$0.isWhitespace})
@@ -3419,7 +3451,7 @@ public class IncrementalParser: CompilerPass
                 else if self.token.isSlot
                     {
                     let slot = try self.parseModuleSlot()
-                    aModule.addSymbol(slot)
+                    self.currentScope.addSymbol(slot)
                     result = .moduleSlot(slot)
                     }
                 else if self.token.isType

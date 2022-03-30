@@ -10,6 +10,7 @@ import Cocoa
 public protocol TokenHandler
     {
     func kindChanged(token: Token)
+    func issueAdded(token: Token,issue: CompilerIssue)
     }
     
 public class Token:CustomStringConvertible
@@ -738,9 +739,11 @@ public class Token:CustomStringConvertible
         self.location = location
         }
         
-    public func appendIssue(_ message: String)
+    public func appendIssue(_ message: String)  -> CompilerIssue
         {
-        self.issues.append(CompilerIssue(location: self.location,message: message))
+        let issue = CompilerIssue(location: self.location,message: message)
+        self.issues.append(issue)
+        return(issue)
         }
         
     public func appendIssue(at: Location,message: String,isWarning: Bool = false)

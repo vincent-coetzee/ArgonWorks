@@ -15,6 +15,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        "\(Swift.type(of: self))"
 //        }
         
+    public var parentSymbol: Symbol?
+        {
+        self.module
+        }
+        
     public var classLabel: String
         {
         "\(Swift.type(of: self)) \(self.label)"
@@ -401,11 +406,10 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
     public var type: Type!
     public var place: Instruction.Operand = .none
     public private(set) var memoryAddress: Address = 0
-//    public var container: Container = .none
     public private(set) var module: Module!
     public var ancestors = Symbols()
-//    public var source: String = ""
     public var isSystemType = false
+    public var interfaceKey: Int = 0
     
     public required init(label: Label)
         {

@@ -283,6 +283,11 @@ public class TypeClass: TypeConstructor
         return(self.label.polynomialRollingHash << 13 | genericsHash)
         }
         
+    public override var isClassType: Bool
+        {
+        true
+        }
+        
     public override var layoutSlotCount: Int
         {
         self.layoutSlots.count

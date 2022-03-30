@@ -752,19 +752,19 @@ public class Module:ContainerSymbol,Scope
                 return(symbol as? Type)
                 }
             }
-        return(nil)
+        return(self.module.lookupType(label: label))
         }
         
-    public override func lookupMethod(label: Label) -> Method?
+    public override func lookupMethod(label: Label) -> ArgonWorks.Method?
         {
         for symbol in self.allSymbols
             {
             if symbol.isMethod && symbol.label == label
                 {
-                return(symbol as? Method)
+                return(symbol as? ArgonWorks.Method)
                 }
             }
-        return(nil)
+        return(self.module.lookupMethod(label: label))
         }
     }
 

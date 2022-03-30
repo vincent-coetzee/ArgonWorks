@@ -18,31 +18,36 @@ public protocol SourceDelegate
     
 public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnnotationViewDelegate
     {
-    public var source: SourceRecord!
+    public var sourceRecord: SourceRecord!
         {
         didSet
             {
-            self.textView.string = self.source.text
-            self.annotationView.lineCount = self.source.lineCount
+            self.textView.string = self.sourceRecord.text
+            self.annotationView.lineCount = self.sourceRecord.lineCount
             self.textView.textStorage?.beginEditing()
-            for attribute in self.source.attributes
+            for attribute in self.sourceRecord.attributes
                 {
                 let range = attribute.range
-                if range.location + range.length < self.source.text.count
+                if range.location + range.length < self.sourceRecord.text.count
                     {
                     self.textView.textStorage?.setAttributes([.foregroundColor: attribute.color,.font: self.font], range: attribute.range)
                     }
                 }
             self.textView.textStorage?.endEditing()
-            for issue in self.source.issues
+            for issue in self.sourceRecord.issues
                 {
                 self.annotationView.appendAnnotation(issue)
                 }
-            self.lineCount = self.source.text.components(separatedBy: "\n").count
+            self.lineCount = self.sourceRecord.text.components(separatedBy: "\n").count
             self.textDidChange(Notification(name: Notification.Name(rawValue: "")))
             }
         }
 
+    public var sourceString: String
+        {
+        self.textView.string
+        }
+        
     public var gutterColor: NSColor = NSColor.white
         {
         didSet
@@ -76,27 +81,20 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
             }
         }
         
-//    private let textScrollView: NSScrollView
     private let textView: SourceTextView
     private let annotationView: SyntaxAnnotationView
     public var incrementalParser: IncrementalParser!
-    public var sourceDelegate: SourceDelegate?
     private let systemClassNames = ArgonModule.shared.systemClassNames!
     public var sourceItem: ProjectSourceItem!
     public var activeAnnotations = Dictionary<Int,CALayer>()
     
     init()
         {
-//        let scrollView = SourceTextView.scrollableTextView()
-//        self.textScrollView = scrollView
         self.textView = SourceTextView(frame: .zero)
         self.textView.translatesAutoresizingMaskIntoConstraints = false
         self.annotationView = SyntaxAnnotationView(gutterWidth: 50)
         self.annotationView.translatesAutoresizingMaskIntoConstraints = false
         super.init(frame: .zero)
-//        self.textScrollView.hasVerticalScroller = false
-//        self.textScrollView.hasHorizontalScroller = true
-//        self.textScrollView.autohidesScrollers = true
         self.textView.isEditable = true
         self.textView.wantsLayer = true
         self.annotationView.delegate = self
@@ -130,13 +128,9 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
             self.activeAnnotations[line] = nil
             return
             }
-//        let lineHeight = self.font.lineHeight
-//        let offset = CGFloat(line - 1) * lineHeight
-//        let lineText = self.textView.string.line(at: line - 1)
-//        let width = NSAttributedString(string: lineText,attributes: [.font: self.font]).size().width
         let newLayer = CATextLayer()
         newLayer.string = annotation.issue.message
-        newLayer.backgroundColor = NSColor.argonNeonPink.cgColor
+        newLayer.backgroundColor = annotation.issue.isWarning ? NSColor.argonBrightYellowCrayola.cgColor : NSColor.argonNeonPink.cgColor
         newLayer.foregroundColor = NSColor.black.cgColor
         newLayer.frame = self.textView.endOfLineRect(forLine: line)
         newLayer.font = self.font
@@ -147,49 +141,39 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         
     @IBAction func textViewLostFocus(_ any: Any)
         {
-        self.annotationView.isHidden = true
-        self.needsLayout = true
-        self.sourceDelegate?.sourceEditingDidEnd(self)
+        self.sourceRecord.sourceEditingDidEnd(self)
         }
         
     @objc public func textViewGainedFocus(_ any: Any)
         {
-        self.sourceDelegate?.sourceEditingDidBegin(self)
+        self.sourceRecord.sourceEditingDidBegin(self)
         }
         
     public func textDidChange(_ notification: Notification)
         {
         self.annotationView.resetAnnotations()
-        self.source.issues = []
-        let aProject = self.sourceItem.project
-        aProject.changed(aspect: "issueCount",with: aProject.allIssues.count,from: aProject)
-        self.source.text = self.textView.string
+        self.sourceRecord.sourceDidChange(self)
+        self.sourceRecord.compilationWillStart(self)
         let module = self.sourceItem.project.module
         do
             {
-            let result = try self.incrementalParser.parse(source: self.textView.string, tokenHandler: self,inModule: module)
-            self.sourceItem.symbolValue = result
+            let context = CompilationContext(module: module)
+            let result = try self.incrementalParser.parse(source: self.textView.string, tokenHandler: self,inContext: context)
+            self.sourceRecord.compilationDidSucceed(self,symbolValue: result,affectedSymbols: context.allSymbols)
             }
         catch let error as CompilerError
             {
+            self.sourceRecord.compilationDidFail(self,issues: error.issues)
             for issue in error.issues
                 {
                 self.annotationView.appendAnnotation(issue)
                 }
-            self.source.issues = error.issues
-            aProject.changed(aspect: "issueCount",with: aProject.allIssues.count,from: aProject)
             }
         catch
             {
             }
-        self.annotationView.lineCount = self.source.lineCount
-        self.sourceDelegate?.sourceDidChange(self)
-        }
-        
-    public func appendIssue(_ issue: CompilerIssue)
-        {
-        self.annotationView.appendAnnotation(issue)
-        self.source.appendIssue(issue)
+        self.annotationView.lineCount = self.sourceRecord.lineCount
+        self.sourceItem.sourceDidChange(self)
         }
         
     public override func layout()
@@ -197,27 +181,19 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         super.layout()
         let width = self.bounds.width - self.annotationView.gutterWidth
         let height = self.bounds.size.height
-        if !self.annotationView.isHidden
-            {
-            self.annotationView.frame = NSRect(x: 0,y:0, width: self.annotationView.gutterWidth,height: height)
-            self.textView.frame = NSRect(x: self.annotationView.gutterWidth,y:0,width: width,height: height)
-            }
-        else
-            {
-            self.textView.frame = NSRect(x: 0,y:0,width: width,height: height)
-            }
+        self.annotationView.frame = NSRect(x: 0,y:0, width: self.annotationView.gutterWidth,height: height)
+        let lineHeight = self.sourceItem.controller.sourceOutlinerFont.lineHeight
+        self.textView.frame = NSRect(x: self.annotationView.gutterWidth,y:lineHeight,width: width,height: height - lineHeight)
+        }
+        
+    public func issueAdded(token: Token,issue: CompilerIssue)
+        {
+        self.annotationView.appendAnnotation(issue)
+        self.sourceRecord.appendIssue(issue)
         }
         
     public func kindChanged(token: Token)
         {
-        if !token.issues.isEmpty
-            {
-            for issue in token.issues
-                {
-                self.annotationView.appendAnnotation(issue)
-                self.source.issues.append(issue)
-                }
-            }
         let kind = token.kind
         var localAttributes:[NSAttributedString.Key:Any] = [.foregroundColor: NSColor.white,.font: self.font]
         switch(kind)
@@ -287,9 +263,8 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
                 localAttributes[.foregroundColor] = NSColor.magenta
             }
             self.textView.textStorage?.beginEditing()
-            self.source.attributes.append(Attribute(color: localAttributes[.foregroundColor] as! NSColor,range: token.location.range))
+            self.sourceRecord.attributes.append(Attribute(color: localAttributes[.foregroundColor] as! NSColor,range: token.location.range))
             self.textView.textStorage?.setAttributes(localAttributes, range: token.location.range)
-            print("TOKEN IS \(token) RANGE IS \(token.location.range)")
             self.textView.textStorage?.endEditing()
         }
     }

@@ -207,7 +207,7 @@ public class MethodInstance: Function
         
     public override var iconName: String
         {
-        "IconMethodInstance"
+        "IconMethod"
         }
         
     public var isSystemMethodInstance: Bool

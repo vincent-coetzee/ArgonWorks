@@ -443,15 +443,19 @@ public class TokenStream:Equatable, TokenSource
 //            {
 //            return(invisible)
 //            }
+        self.startIndex = self.characterOffset
+        self.tokenStart = self.characterOffset
+        if self.digits.contains(self.currentChar)
+            {
+            return(self.scanNumber())
+            }
         ///
         ///
         /// Check to see if this is that odd case of a "</" occurring, handle
         /// it if it is
         ///
         ///
-        self.startIndex = self.characterOffset
-        self.tokenStart = self.characterOffset
-        if self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.peekChar(at:1))
+        else if self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.peekChar(at:1))
             {
             self.nextChar()
             return(OperatorToken(string:"<",location: self.sourceLocation()))
@@ -524,45 +528,14 @@ public class TokenStream:Equatable, TokenSource
                 self.nextChar()
                 string = string.replacingOccurrences(of: "\n", with: " ")
                 string = string.replacingOccurrences(of: "\t", with: " ")
-//                return(.note(string,location: self.sourceLocation()))
                 fatalError()
                 }
             }
-        //
-        // Is it a directive
-        //
-//        else if self.currentChar == "%"
-//            {
-//            self.nextChar()
-//            if letters.contains(self.currentChar)
-//                {
-//                self.currentString = ""
-//                while letters.contains(self.currentChar)
-//                    {
-//                    self.currentString += String(self.currentChar)
-//                    self.nextChar()
-//                    }
-//                return(.directive(self.currentString,location: self.sourceLocation()))
-//                }
-//            else
-//                {
-//                self.rewindChar()
-//                return(self.scanSymbol())
-//                }
-//            }
-        //
-        // Is it a number
-        //
         else if self.currentChar == "-" && self.peekChar(at: 0) == ">"
             {
             self.nextChar()
             self.nextChar()
             return(OperatorToken(string:"->",location: self.sourceLocation()))
-            }
-        else if digits.contains(self.currentChar)
-            {
-            let number = self.scanNumber()
-            return(number)
             }
         //
         // Is it a string
@@ -803,7 +776,7 @@ public class TokenStream:Equatable, TokenSource
             sign = -1
             self.nextChar()
             }
-        if self.currentChar == "0"
+        if self.currentChar == "0" && (self.peekChar(at: 0) == "x" || self.peekChar(at: 0) == "b")
             {
             self.nextChar()
             if self.currentChar == "x"
@@ -814,10 +787,7 @@ public class TokenStream:Equatable, TokenSource
                 {
                 return(self.scanBinaryNumber())
                 }
-            else
-                {
-                self.rewindChar()
-                }
+            fatalError("Scanner error")
             }
         repeat
             {

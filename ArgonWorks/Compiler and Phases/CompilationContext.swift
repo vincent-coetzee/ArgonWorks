@@ -7,31 +7,12 @@
 
 import Foundation
 
-public class CompilationContext: ContainerSymbol,Scope
+public class CompilationContext: Module
     {
-    public var parentScope: Scope?
-    
-    public var enclosingMethodInstance: MethodInstance
+    public init(module: Module)
         {
-        self.parentScope!.enclosingMethodInstance
-        }
-    
-    public func lookupType(label: Label) -> Type?
-        {
-        for aType in self.allSymbols.compactMap({$0 as? Type})
-            {
-            if aType.label == label
-                {
-                return(aType)
-                }
-            }
-        return(self.parentScope?.lookupType(label: label))
-        }
-    
-    public init(parentScope: Scope)
-        {
-        self.parentScope = parentScope
         super.init(label: "")
+        self.setModule(module)
         }
         
     public required init(label: Label)

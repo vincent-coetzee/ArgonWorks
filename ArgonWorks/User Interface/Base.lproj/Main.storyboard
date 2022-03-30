@@ -735,7 +735,7 @@
                 </windowController>
                 <customObject id="L5G-44-R4n" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1871" y="-123"/>
+            <point key="canvasLocation" x="1323" y="-125"/>
         </scene>
         <!--Argon Browser View Controller-->
         <scene sceneID="XKV-09-fyv">
@@ -752,11 +752,8 @@
                                         <rect key="frame" x="0.0" y="0.0" width="286" height="735"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
-                                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="sg9-bB-Fxa">
+                                            <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sg9-bB-Fxa">
                                                 <rect key="frame" x="0.0" y="710" width="323" height="25"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="25" id="nCd-3D-Qsc"/>
-                                                </constraints>
                                             </customView>
                                         </subviews>
                                         <constraints>
@@ -770,11 +767,8 @@
                                         <rect key="frame" x="287" y="0.0" width="1029" height="735"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
-                                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="fLp-uU-BfK" customClass="ToolbarView" customModule="ArgonWorks" customModuleProvider="target">
+                                            <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fLp-uU-BfK" customClass="ToolbarView" customModule="ArgonWorks" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="710" width="992" height="25"/>
-                                                <constraints>
-                                                    <constraint firstAttribute="height" constant="25" id="IHA-uA-sA9"/>
-                                                </constraints>
                                             </customView>
                                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qnf-y2-2gL">
                                                 <rect key="frame" x="0.0" y="0.0" width="992" height="710"/>
@@ -879,7 +873,6 @@
                                             <constraint firstAttribute="trailing" secondItem="fLp-uU-BfK" secondAttribute="trailing" id="MIT-YV-e58"/>
                                             <constraint firstItem="qnf-y2-2gL" firstAttribute="leading" secondItem="WES-yJ-dzD" secondAttribute="leading" id="NRd-kn-yKN"/>
                                             <constraint firstItem="fLp-uU-BfK" firstAttribute="top" secondItem="WES-yJ-dzD" secondAttribute="top" id="S1T-Yu-rgD"/>
-                                            <constraint firstItem="qnf-y2-2gL" firstAttribute="top" secondItem="WES-yJ-dzD" secondAttribute="top" constant="25" id="akZ-bw-p9f"/>
                                             <constraint firstItem="fLp-uU-BfK" firstAttribute="leading" secondItem="WES-yJ-dzD" secondAttribute="leading" id="xRz-wD-KO1"/>
                                         </constraints>
                                     </customView>
@@ -900,6 +893,7 @@
                     <connections>
                         <outlet property="leftView" destination="0zM-k7-54l" id="T08-Xy-75M"/>
                         <outlet property="outliner" destination="PHq-bR-m8Y" id="Bdx-Xh-dsV"/>
+                        <outlet property="rightView" destination="WES-yJ-dzD" id="yKk-ie-gh9"/>
                         <outlet property="toolbar" destination="fLp-uU-BfK" id="zS7-tQ-lxP"/>
                     </connections>
                 </viewController>

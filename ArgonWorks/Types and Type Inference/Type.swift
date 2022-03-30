@@ -145,6 +145,16 @@ public class Type: Symbol,Displayable,UserDisplayable
         fatalError()
         }
         
+    public var isClassType: Bool
+        {
+        false
+        }
+        
+    public var isEnumerationType: Bool
+        {
+        false
+        }
+        
     public var subtypes: Types
         {
         []
