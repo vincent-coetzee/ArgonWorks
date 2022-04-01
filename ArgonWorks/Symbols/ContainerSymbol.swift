@@ -186,7 +186,7 @@ public class ContainerSymbol:Symbol
         }
         
         
-    public func lookupMethod(label: Label) -> ArgonWorks.Method?
+    public override func lookupMethod(label: Label) -> ArgonWorks.Method?
         {
         for aSymbol in self.symbols.compactMap({$0 as? ArgonWorks.Method})
             {
@@ -250,6 +250,23 @@ public class ContainerSymbol:Symbol
 //            }
 //        return(self.module?.lookup(name: name))
 //        }
+        
+    public func removeSymbol(withItemKey: Int)
+        {
+        var symbolsToBeRemoved = Symbols()
+        for symbol in self.symbols
+            {
+            if symbol.itemKey == withItemKey
+                {
+                symbolsToBeRemoved.append(symbol)
+                }
+            }
+        for symbol in symbolsToBeRemoved
+            {
+            let index = self.symbols.firstIndex(of: symbol)!
+            self.symbols.remove(at: index)
+            }
+        }
         
     public override func lookupN(label: Label) -> Symbols?
         {

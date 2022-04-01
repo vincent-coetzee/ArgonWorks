@@ -401,7 +401,6 @@ public class TypeClass: TypeConstructor
     public override func withGenerics(_ types: Types) -> Type
         {
         let newClass = Self(label: self.label,isSystem: self.isSystemType,generics: types)
-        newClass.ancestors.append(self)
         newClass.setModule(self.module)
 //        newClass.container = self.container
         newClass.setIndex(self.index.keyByIncrementingMinor())
@@ -411,6 +410,7 @@ public class TypeClass: TypeConstructor
         newClass.supertypes = self.supertypes
         newClass.instanceSlots = self.instanceSlots
         newClass.layoutSlots = self.layoutSlots
+        newClass.issues = self.issues
         newClass.makeMetaclass()
         newClass.configureMetaclass()
         return(newClass)
@@ -440,6 +440,23 @@ public class TypeClass: TypeConstructor
         return(self)
         }
         
+    public override func removeFromParentSymbol()
+        {
+        super.removeFromParentSymbol()
+        for aClass in self.superclasses
+            {
+            aClass.removeSubclass(self)
+            }
+        }
+        
+    public override func insertInHierarchy()
+        {
+        for aClass in self.superclasses
+            {
+            aClass.addSubtype(self)
+            }
+        }
+        
     public func addSupertype(_ type: Type)
         {
         guard !self.supertypes.contains(type) else
@@ -448,6 +465,24 @@ public class TypeClass: TypeConstructor
             }
         self.supertypes.append(type)
         type.addSubtype(self)
+        }
+        
+    public func addSuperclassWithoutUpdatingSuperclass(_ type: Type)
+        {
+        guard !self.supertypes.contains(type) else
+            {
+            return
+            }
+        self.supertypes.append(type)
+        }
+        
+    public func removeSubclass(_ typeClass: TypeClass)
+        {
+        if self.subtypes.contains(typeClass)
+            {
+            let index = self.subtypes.firstIndex(of: typeClass)!
+            self.subtypes.remove(at: index)
+            }
         }
         
     public override func addSubtype(_ type: Type)
@@ -548,6 +583,13 @@ public class TypeClass: TypeConstructor
         
     public override func lookup(label: Label) -> Symbol?
         {
+        for generic in self.generics
+            {
+            if generic.label == label
+                {
+                return(generic)
+                }
+            }
         if label.hasPrefix("_")
             {
             for slot in self.layoutSlots
@@ -573,7 +615,7 @@ public class TypeClass: TypeConstructor
                 return(slot)
                 }
             }
-        return(nil)
+        return(self.module.lookup(label: label))
         }
         
     public override func addInstanceSlot(_ slot: Slot)

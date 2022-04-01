@@ -51,6 +51,11 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         nil
         }
         
+    public var module: Module
+        {
+        self.parentItem!.module
+        }
+        
     public var project: Project
         {
         if self.isProject
@@ -83,12 +88,20 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
     public var icon: NSImage!
     public var iconTint: NSColor = .white
     public var itemKey: Int = 0
+    public var validActions: BrowserActionSet = []
     
     init(label: Label)
         {
         self.label = label
         self.icon = NSImage(named:"IconCircle")!
         self.icon.isTemplate = true
+        super.init()
+        self.validActions = self.initValidActions()
+        }
+        
+    public func initValidActions() -> BrowserActionSet
+        {
+        [.deleteItemAction,.loadAction,.saveAction,.leftSidebarAction,.rightSidebarAction,.buildAction,.searchAction,.settingsAction]
         }
         
     public func setController(_ controller: ArgonBrowserViewController)
@@ -103,6 +116,8 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         self.icon = coder.decodeObject(forKey: "icon") as? NSImage
         self.iconTint = coder.decodeObject(forKey: "iconTint") as! NSColor
         self.itemKey = coder.decodeInteger(forKey: "itemKey")
+        super.init()
+        self.validActions = self.initValidActions()
         }
         
     public func value(forAspect: String) -> Any?

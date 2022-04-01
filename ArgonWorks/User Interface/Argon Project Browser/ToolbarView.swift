@@ -9,6 +9,31 @@ import Cocoa
 
 public class ToolbarView: BarView
     {
+    public var target: AnyObject?
+        {
+        didSet
+            {
+            if let aTarget = self.target
+                {
+                for button in self.allButtons
+                    {
+                    button.target = aTarget
+                    }
+                }
+            }
+        }
+        
+    public var enabledValueModel: ValueModel = ValueHolder(value: nil)
+        {
+        didSet
+            {
+            for button in self.allButtons
+                {
+                button.enabledValueModel = self.enabledValueModel
+                }
+            }
+        }
+        
     public override func awakeFromNib()
         {
         super.awakeFromNib()
@@ -19,20 +44,19 @@ public class ToolbarView: BarView
         self.addTextLabel(atEdge: .left, key: "errors", valueModel: ValueHolder(value: "0 errors"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
         self.addTextLabel(atEdge: .left, key: "records", valueModel: ValueHolder(value: "1 record"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
         self.addSpacer(atEdge: .right,key: "edge",ofWidth: 10)
-        self.addActionButton(atEdge: .right,key: "settings",image: NSImage(named: "IconSettings")!,toolTip: "Configure...",target: self,action: #selector(self.someAction))
+        self.addActionButton(browserAction: .settingsAction,atEdge: .right,key: "settings",image: NSImage(named: "IconSettings")!,toolTip: "Configure...",target: self,action: #selector(ArgonBrowserViewController.onSettings))
         self.addSpacer(atEdge: .right,key: "edge+1",ofWidth: 20)
-        self.addActionButton(atEdge: .right,key: "add",image: NSImage(named: "IconAdd")!,toolTip: "Add Record",target: self,action: #selector(self.someAction))
-        self.addActionButton(atEdge: .right,key: "delete",image: NSImage(named: "IconDelete")!,toolTip: "Delete Record",target: self,action: #selector(self.someAction))
+        self.addActionButton(browserAction: .newSymbolAction,atEdge: .right,key: "add",image: NSImage(named: "IconAdd")!,toolTip: "Add Record",target: self,action: #selector(ArgonBrowserViewController.onNewSymbol))
+        self.addActionButton(browserAction: .deleteItemAction,atEdge: .right,key: "delete",image: NSImage(named: "IconDelete")!,toolTip: "Delete Record",target: self,action: #selector(ArgonBrowserViewController.onDeleteItem))
         self.addSpacer(atEdge: .right,key: "firstSpace",ofWidth: 20)
-        self.addActionButton(atEdge: .right,key: "module",image: NSImage(named: "IconModule")!,toolTip: "New Module",target: self,action: #selector(self.someAction))
-        self.addActionButton(atEdge: .right,key: "comment",image: NSImage(named: "IconFile")!,toolTip: "New Comment",target: self,action: #selector(self.someAction))
-        self.addActionButton(atEdge: .right,key: "slot",image: NSImage(named: "IconSlot")!,toolTip: "New Module Slot",target: self,action: #selector(self.someAction))
-        self.addActionButton(atEdge: .right,key: "group",image: NSImage(named: "IconGroup")!,toolTip: "New Group",target: self,action: #selector(self.someAction))
+        self.addActionButton(browserAction: .newModuleAction,atEdge: .right,key: "module",image: NSImage(named: "IconModule")!,toolTip: "New Module",target: self,action: #selector(ArgonBrowserViewController.onNewModule))
+        self.addActionButton(browserAction: .newCommentAction,atEdge: .right,key: "comment",image: NSImage(named: "IconFile")!,toolTip: "New Comment",target: self,action: #selector(ArgonBrowserViewController.onNewComment))
+        self.addActionButton(browserAction: .newGroupAction,atEdge: .right,key: "group",image: NSImage(named: "IconGroup")!,toolTip: "New Group",target: self,action: #selector(ArgonBrowserViewController.onNewGroup))
         self.addSpacer(atEdge: .right,key: "secondSpace",ofWidth: 20)
-        self.addActionButton(atEdge: .right,key: "load",image: NSImage(named: "IconLoad")!,toolTip: "Open Project...",target: self,action: #selector(self.someAction))
-        self.addActionButton(atEdge: .right,key: "save",image: NSImage(named: "IconSave")!,toolTip: "Save Project...",target: self,action: #selector(self.someAction))
+        self.addActionButton(browserAction: .loadAction,atEdge: .right,key: "load",image: NSImage(named: "IconLoad")!,toolTip: "Open Project...",target: self,action: #selector(ArgonBrowserViewController.onLoad))
+        self.addActionButton(browserAction: .saveAction,atEdge: .right,key: "save",image: NSImage(named: "IconSave")!,toolTip: "Save Project...",target: self,action: #selector(ArgonBrowserViewController.onSave))
         self.addSpacer(atEdge: .right,key: "thirdSpace",ofWidth: 20)
-        self.addActionButton(atEdge: .right,key: "build",image: NSImage(named: "IconBuild")!,toolTip: "Build Project",target: self,action: #selector(self.someAction))
+        self.addActionButton(browserAction: .buildAction,atEdge: .right,key: "build",image: NSImage(named: "IconBuild")!,toolTip: "Build Project",target: self,action: #selector(ArgonBrowserViewController.onBuild))
         self.drawsHorizontalBorder = true
         self.horizontalBorderColor = .argonDarkGray
         }
@@ -42,8 +66,28 @@ public class ToolbarView: BarView
         }
     }
 
-public class ToolbarButton: NSButton,Control
+public class ToolbarButton: NSButton,Control,Dependent
     {
+    public let dependentKey = DependentSet.nextDependentKey
+    
+    public var enabledValueModel: ValueModel = ValueHolder(value: true)
+        {
+        willSet
+            {
+            self.enabledValueModel.removeDependent(self)
+            }
+        didSet
+            {
+            self.enabledValueModel.addDependent(self)
+            if let value = self.enabledValueModel.value as? BrowserActionSet
+                {
+                self.isEnabled = value.contains(self.browserAction)
+                }
+            }
+        }
+        
+    public var browserAction = BrowserActionSet(rawValue: 0)
+    
     public var valueModel: ValueModel = ValueHolder(value: "")
     
     public var key: String = ""
@@ -69,5 +113,13 @@ public class ToolbarButton: NSButton,Control
         self.bounds = newBounds
         super.draw(rect)
         self.bounds = oldBounds
+        }
+        
+    public func update(aspect: String,with argument: Any?,from sender: Model)
+        {
+        if aspect == "value" && sender.dependentKey == self.enabledValueModel.dependentKey
+            {
+            self.isEnabled = (argument as? BrowserActionSet)?.contains(self.browserAction) ?? false
+            }
         }
     }

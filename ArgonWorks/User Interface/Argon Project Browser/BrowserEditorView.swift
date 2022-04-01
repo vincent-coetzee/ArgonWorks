@@ -158,15 +158,15 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         do
             {
             let context = CompilationContext(module: module)
-            let result = try self.incrementalParser.parse(source: self.textView.string, tokenHandler: self,inContext: context)
-            self.sourceRecord.compilationDidSucceed(self,symbolValue: result,affectedSymbols: context.allSymbols)
-            }
-        catch let error as CompilerError
-            {
-            self.sourceRecord.compilationDidFail(self,issues: error.issues)
-            for issue in error.issues
+            let result = try self.incrementalParser.parse(itemKey: self.sourceItem.elementItem.itemKey,source: self.textView.string, tokenHandler: self,inContext: context)
+            if result.hasIssues
                 {
-                self.annotationView.appendAnnotation(issue)
+                self.sourceRecord.compilationDidFail(self,issues: result.issues)
+                self.appendIssues(result.issues)
+                }
+            else
+                {
+                self.sourceRecord.compilationDidSucceed(self,symbolValue: result,affectedSymbols: context.allSymbols,inModule: self.sourceItem.module)
                 }
             }
         catch
@@ -176,6 +176,13 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         self.sourceItem.sourceDidChange(self)
         }
         
+    private func appendIssues(_ issues: CompilerIssues)
+        {
+        for issue in issues
+            {
+            self.annotationView.appendAnnotation(issue)
+            }
+        }
     public override func layout()
         {
         super.layout()

@@ -9,6 +9,11 @@ import Foundation
 
 public class CompilationContext: Module
     {
+    public override var enclosingModule: Module
+        {
+        self.module
+        }
+        
     public init(module: Module)
         {
         super.init(label: "")

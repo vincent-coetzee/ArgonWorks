@@ -148,7 +148,8 @@ public struct Location:Equatable,CustomStringConvertible,Hashable
     public let tokenStop: Int
     public let lineStart: Int
     public let lineStop: Int
-
+    public var itemKey: Int?
+    
     public init(line:Int,lineStart:Int,lineStop:Int,tokenStart:Int,tokenStop:Int)
         {
         self.line = line

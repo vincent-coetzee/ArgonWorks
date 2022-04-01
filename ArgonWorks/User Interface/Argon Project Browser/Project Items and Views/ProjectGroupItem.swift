@@ -75,6 +75,13 @@ public class ProjectGroupItem: ProjectItem
         return(self.items.firstIndex(of: item))
         }
         
+    public override func initValidActions() -> BrowserActionSet
+        {
+        var set = super.initValidActions()
+        set.insert([.newSymbolAction,.newModuleAction,.newGroupAction,.newCommentAction])
+        return(set)
+        }
+        
     public override func addItem(_ item: ProjectItem)
         {
         self.items.append(item)

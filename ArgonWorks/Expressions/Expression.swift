@@ -155,9 +155,16 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         self.type = ArgonModule.shared.void
         }
         
-    public func addDeclaration(_ location:Location)
+    public func addDeclaration(itemKey: Int, location aLocation:Location)
         {
+        var location = aLocation
+        location.itemKey = itemKey
         self.locations.append(.declaration(location))
+        }
+        
+    public func addDeclaration(_ location: Location)
+        {
+        self.addDeclaration(itemKey: 0,location: location)
         }
         
     public func addReference(_ location:Location)

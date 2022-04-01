@@ -64,6 +64,16 @@ public class MethodInstanceBlock: Block
         return(found.isEmpty ? nil : found)
         }
         
+    public override func appendIssue(_ issue: CompilerIssue)
+        {
+        self.methodInstance.appendIssue(issue)
+        }
+        
+    public override func appendIssue(at: Location,message: String,isWarning: Bool = false)
+        {
+        self.methodInstance.appendIssue(at: at,message: message,isWarning: isWarning)
+        }
+        
 //    public override func lookupN(name: Name) -> Symbols?
 //        {
 //        if name.isRooted

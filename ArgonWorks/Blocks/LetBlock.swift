@@ -104,7 +104,6 @@ public class LetBlock: Block
         newBlock.rhs = substitution.substitute(self.rhs)
         newBlock.type = substitution.substitute(self.type)
         newBlock.locations = self.locations
-        newBlock.issues = self.issues
         return(newBlock)
         }
         

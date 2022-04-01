@@ -187,16 +187,6 @@ public class Invocable: Symbol,Scope,StackFrame
         copy.cName = self.cName
         return(copy)
         }
-        
-    public func lookupMethod(label: Label) -> Method?
-        {
-        self.module.lookupMethod(label: label)
-        }
-        
-    public func lookupType(label: Label) -> Type?
-        {
-        self.module.lookupType(label: label)
-        }
     }
     
 public class SingleParameterInvokable: Symbol

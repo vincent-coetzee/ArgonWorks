@@ -29,7 +29,6 @@ public class ForBlock: Block
             }
         forBlock.type = self.type.freshTypeVariable(inContext: context)
         forBlock.locations = self.locations
-        forBlock.issues = self.issues
         return(forBlock as! Self)
         }
         
@@ -44,7 +43,6 @@ public class ForBlock: Block
             }
         forBlock.type = substitution.substitute(self.type)
         forBlock.locations = self.locations
-        forBlock.issues = self.issues
         return(forBlock as! Self)
         }
 

@@ -25,7 +25,14 @@ public class ProjectElementItemView: ProjectItemView
         var image = NSImage(named: "IconMarker")!
         image.isTemplate = true
         self.warningCounter = IconLabelView(imageValueModel: ValueHolder(value: image), imageEdge: .left, valueModel: valueModel)
-        self.warningCounter.iconTintColor = NSColor.argonCheese
+        sourceModel = AspectAdaptor(on: elementItem.sourceItem.sourceRecord,aspect: "warningCount")
+        valueModel = Transformer(model: sourceModel)
+            {
+            incoming -> NSColor in
+            let value = incoming as! Int
+            return(value == 0 ? NSColor.argonNeonGreen : NSColor.argonSizzlingRed)
+            }
+        self.warningCounter.iconTintColorValueModel = valueModel
         sourceModel = AspectAdaptor(on: elementItem.sourceItem.sourceRecord,aspect: "errorCount")
         valueModel = Transformer(model: sourceModel)
             {
@@ -34,7 +41,14 @@ public class ProjectElementItemView: ProjectItemView
             return("\(value) error" + (value == 1 ? "" : "s"))
             }
         self.errorCounter = IconLabelView(imageValueModel: ValueHolder(value: image), imageEdge: .left, valueModel: valueModel)
-        self.errorCounter.iconTintColor = NSColor.argonSizzlingRed
+        sourceModel = AspectAdaptor(on: elementItem.sourceItem.sourceRecord,aspect: "errorCount")
+        valueModel = Transformer(model: sourceModel)
+            {
+            incoming -> NSColor in
+            let value = incoming as! Int
+            return(value == 0 ? NSColor.argonNeonGreen : NSColor.argonSizzlingRed)
+            }
+        self.errorCounter.iconTintColorValueModel = valueModel
         sourceModel = AspectAdaptor(on: elementItem.sourceItem.sourceRecord,aspect: "lineCount")
         valueModel = Transformer(model: sourceModel)
             {
@@ -42,10 +56,10 @@ public class ProjectElementItemView: ProjectItemView
             let value = incoming as! Int
             return("\(value) line" + (value == 1 ? "" : "s"))
             }
-        image = NSImage(named: "IconEmpty")!
+        image = NSImage(named: "IconSlot")!
         image.isTemplate = true
         self.lineCounter = IconLabelView(imageValueModel: ValueHolder(value: image), imageEdge: .left, valueModel: valueModel)
-        self.lineCounter.iconTintColor = NSColor.argonNeonGreen
+        self.lineCounter.iconTintColor = NSColor.argonFulvous
         super.init(frame: frame)
         }
         

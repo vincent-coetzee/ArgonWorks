@@ -35,14 +35,30 @@ public class IconLabelView: CustomView,Control,Dependent
             }
         }
         
-    public var iconTintColor: NSColor = NSColor.white
+    public var iconTintColorValueModel: ValueModel = ValueHolder(value: NSColor.white)
         {
+        willSet
+            {
+            self.iconTintColorValueModel.removeDependent(self)
+            }
         didSet
             {
-            var image = self.imageValueModel.value as? NSImage
-            image?.isTemplate = true
-            image = image?.image(withTintColor: self.iconTintColor)
-            self.imageLayer.contents = image
+            self.iconTintColorValueModel.addDependent(self)
+            self.iconTintColor = self.iconTintColorValueModel.value as? NSColor
+            }
+        }
+        
+    public var iconTintColor: NSColor?
+        {
+        didSet
+                {
+            if let color = self.iconTintColor
+                {
+                var image = self.imageValueModel.value as? NSImage
+                image?.isTemplate = true
+                image = image?.image(withTintColor: color)
+                self.imageLayer.contents = image
+                }
             }
         }
         
@@ -157,12 +173,20 @@ public class IconLabelView: CustomView,Control,Dependent
         if aspect == "value" && sender.dependentKey == self.imageValueModel.dependentKey
             {
             self.imageLayer.contents = self.image
+            self.invalidateIntrinsicContentSize()
             self.needsLayout =  true
             self.needsDisplay = true
             }
         else if aspect == "value" && sender.dependentKey == self.valueModel.dependentKey
             {
             self.textLayer.string = self.text
+            self.invalidateIntrinsicContentSize()
+            self.needsLayout =  true
+            self.needsDisplay = true
+            }
+        else if aspect == "value" && sender.dependentKey == self.iconTintColorValueModel.dependentKey
+            {
+            self.iconTintColor = self.iconTintColorValueModel.value as? NSColor
             self.needsLayout =  true
             self.needsDisplay = true
             }

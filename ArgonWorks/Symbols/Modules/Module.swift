@@ -12,6 +12,11 @@ public var AddressTable = Dictionary<IdentityKey,Address>()
 
 public class Module:ContainerSymbol,Scope
     {
+    public override var enclosingModule: Module
+        {
+        return(self)
+        }
+        
     public var enclosingMethodInstance: MethodInstance
         {
         fatalError()
@@ -743,7 +748,7 @@ public class Module:ContainerSymbol,Scope
         self.place = temporary
         }
         
-    public func lookupType(label: Label) -> Type?
+    public override func lookupType(label: Label) -> Type?
         {
         for symbol in self.allSymbols
             {

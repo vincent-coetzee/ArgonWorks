@@ -39,6 +39,7 @@ public class Method: Symbol
     public func addMethodInstance(_ methodInstance: MethodInstance)
         {
         self.instances.append(methodInstance)
+        methodInstance.argonMethod = self
         }
         
     public func methodWithout(methodInstance: MethodInstance) -> Method
@@ -53,6 +54,7 @@ public class Method: Symbol
     public func appendMethodInstance(_ instance: MethodInstance)
         {
         self.instances.append(instance)
+        instance.argonMethod = self
         }
         
     public override func display(indent: String)

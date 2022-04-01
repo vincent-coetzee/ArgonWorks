@@ -24,6 +24,11 @@ public class Project: ProjectGroupItem,Dependent
         true
         }
         
+    public override var module: Module
+        {
+        self._module
+        }
+        
     public enum TargetType: Int
         {
         case module
@@ -60,13 +65,13 @@ public class Project: ProjectGroupItem,Dependent
     public var path: String?
     public var _nextItemKey = 1001
     public var basePath: String!
-    public var module: Module
+    public var _module: Module
     
     public override init(label: Label)
         {
         self.targetType = .none
-        self.module = Module(label: label)
-        TopModule.shared.addSymbol(self.module)
+        self._module = Module(label: label)
+        TopModule.shared.addSymbol(self._module)
         super.init(label: label)
         self.icon = NSImage(named: "IconProject")!
         self.icon.isTemplate = true
@@ -79,7 +84,7 @@ public class Project: ProjectGroupItem,Dependent
         self.targetType = TargetType(rawValue: coder.decodeInteger(forKey: "targetType"))!
         self.hasBeenSavedOnce = coder.decodeBool(forKey: "hasBeenSavedOnce")
         self.path = coder.decodeObject(forKey: "path") as? String
-        self.module = coder.decodeObject(forKey: "module") as! Module
+        self._module = coder.decodeObject(forKey: "module") as! Module
         self._nextItemKey = coder.decodeInteger(forKey: "nextItemKey")
         super.init(coder: coder)
         }
@@ -89,9 +94,16 @@ public class Project: ProjectGroupItem,Dependent
         coder.encode(self.targetType.rawValue,forKey: "targetType")
         coder.encode(self.hasBeenSavedOnce,forKey: "hasBeenSavedOnce")
         coder.encode(self.path,forKey: "path")
-        coder.encode(self.module,forKey: "module")
+        coder.encode(self._module,forKey: "module")
         coder.encode(self._nextItemKey,forKey: "nextItemKey")
         super.encode(with: coder)
+        }
+        
+    public override func initValidActions() -> BrowserActionSet
+        {
+        var set = super.initValidActions()
+        set.remove(.deleteItemAction)
+        return(set)
         }
         
     public func update(aspect: String, with: Any?, from: Model)
@@ -99,6 +111,13 @@ public class Project: ProjectGroupItem,Dependent
         print("halt")
         }
     
+    public override func labelChanged(to aLabel: Label)
+        {
+        self.label = aLabel
+        self._module.setLabel(aLabel)
+        self.changed(aspect: "label",with: self.label,from: self)
+        }
+        
     public func changeHeight(inOutliner outliner: NSOutlineView)
         {
         let someItems = self.allItems

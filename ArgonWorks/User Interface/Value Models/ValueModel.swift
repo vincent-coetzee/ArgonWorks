@@ -14,6 +14,11 @@ public protocol ValueModel: Model
     
 extension ValueModel
     {
+    public var booleanValue: Bool?
+        {
+        self.value as? Bool
+        }
+        
     public var stringValue: String?
         {
         self.value as? String

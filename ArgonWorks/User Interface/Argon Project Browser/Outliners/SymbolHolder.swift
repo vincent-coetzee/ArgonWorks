@@ -7,74 +7,10 @@
 
 import Cocoa
 
+
+        
 public class SymbolHolder: OutlineItem
     {
-    public enum SymbolHolderContext
-        {
-        case `default`
-        case classes
-        case enumerations
-        case modules
-        case constants
-        case methods
-        
-        public func isSymbolExpandable(_ symbol: Symbol) -> Bool
-            {
-            switch(self)
-                {
-                case .default:
-                    return(false)
-                case .classes:
-                    return(symbol is TypeClass)
-                case .enumerations:
-                    return(symbol is TypeEnumeration)
-                case .modules:
-                    return(symbol is Module || symbol is TypeClass)
-                case .constants:
-                    return(false)
-                case .methods:
-                    return(symbol is Method)
-                }
-            }
-            
-        public func children(forSymbol: Symbol) -> Symbols
-            {
-            switch(self)
-                {
-                case .default:
-                    return([])
-                case .classes:
-                    if let aClass = forSymbol as? TypeClass
-                        {
-                        let slots = aClass.instanceSlots.sorted{$0.label < $1.label}
-                        let subclasses = aClass.subtypes.map{$0 as! TypeClass}.sorted{$0.label < $1.label}
-                        return(slots + subclasses)
-                        }
-                    return([])
-                case .enumerations:
-                    if let enumeration = forSymbol as? TypeEnumeration
-                        {
-                        return(enumeration.cases.sorted{$0.label < $1.label})
-                        }
-                    return([])
-                case .modules:
-                    if let module = forSymbol as? Module
-                        {
-                        return(module.allSymbols.sorted{$0.label < $1.label})
-                        }
-                    return([])
-                case .constants:
-                    return([])
-                case .methods:
-                    if let  method = forSymbol as? Method
-                        {
-                        return(method.instances.sorted{$0.displayString < $1.displayString})
-                        }
-                    return([])
-                }
-            }
-        }
-        
     public var identityKey: Int
         {
         self.symbol.identityHash
@@ -191,10 +127,10 @@ public class SymbolHolder: OutlineItem
         
     public var symbol: Symbol
     private var symbolChildren: Symbols?
-    private let context: SymbolHolderContext
+    private let context: OutlinerContext
     public unowned var parentItem: OutlineItem?
     
-    init(symbol: Symbol,context: SymbolHolderContext = .default,parent: OutlineItem? = nil)
+    init(symbol: Symbol,context: OutlinerContext,parent: OutlineItem? = nil)
         {
         self.symbol = symbol
         self.context = context

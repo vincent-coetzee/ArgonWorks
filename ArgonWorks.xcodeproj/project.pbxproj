@@ -77,6 +77,7 @@
 		BF506AB427CAF33D00F560D1 /* RowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF506AB327CAF33D00F560D1 /* RowView.swift */; };
 		BF50EC92271AE6A8007C20C1 /* URL+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF50EC91271AE6A8007C20C1 /* URL+Extensions.swift */; };
 		BF570F1A279ED2E90010DF39 /* TreeNodePointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF570F19279ED2E90010DF39 /* TreeNodePointer.swift */; };
+		BF581C8427F78585003E6173 /* BrowserAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF581C8327F78585003E6173 /* BrowserAction.swift */; };
 		BF5BBFCF270759F300C6E708 /* Storable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5BBFCE270759F300C6E708 /* Storable.swift */; };
 		BF5D1335278CBB6000BFC46B /* PrimitiveVectorTable.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5D1334278CBB6000BFC46B /* PrimitiveVectorTable.swift */; };
 		BF5DE38327A57B8500198F20 /* RegisterFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5DE38227A57B8500198F20 /* RegisterFile.swift */; };
@@ -133,7 +134,6 @@
 		BF7AD2D227ACC99500E446FF /* TemplateMethodInstance.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7AD2D127ACC99500E446FF /* TemplateMethodInstance.swift */; };
 		BF7AECCD27921E6B00E6D6EE /* Character+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7AECCC27921E6B00E6D6EE /* Character+Extensions.swift */; };
 		BF7F97C327C0E86900E9E046 /* MethodSignature.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF7F97C227C0E86900E9E046 /* MethodSignature.swift */; };
-		BF80CBC527D3F84100FEFBA9 /* OldIncrementalParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF80CBC427D3F84100FEFBA9 /* OldIncrementalParser.swift */; };
 		BF8213D0272C500C00F08E22 /* Scope.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8213CF272C500C00F08E22 /* Scope.swift */; };
 		BF8511EE275FE7930080AD71 /* PrimitiveBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8511ED275FE7930080AD71 /* PrimitiveBlock.swift */; };
 		BF8589BF27BE2F6F001D8685 /* TypeMetaclass.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8589BE27BE2F6F001D8685 /* TypeMetaclass.swift */; };
@@ -277,6 +277,8 @@
 		BFC1EE3326CFFAF6009B7C34 /* LineNumberTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */; };
 		BFC3835E279C23100091FB39 /* MethodInstanceSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC3835D279C23100091FB39 /* MethodInstanceSet.swift */; };
 		BFC38360279C41250091FB39 /* BucketPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC3835F279C41250091FB39 /* BucketPointer.swift */; };
+		BFC9F3CD27F59EEE00437DF6 /* SymbolValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC9F3CC27F59EEE00437DF6 /* SymbolValue.swift */; };
+		BFC9F3CF27F616E700437DF6 /* ProjectModuleItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFC9F3CE27F616E700437DF6 /* ProjectModuleItem.swift */; };
 		BFCCAFFB26F97550000B3B74 /* UUID+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */; };
 		BFCCAFFF26F9893C000B3B74 /* NSCoder+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCCAFFE26F9893C000B3B74 /* NSCoder+Extensions.swift */; };
 		BFCE12C7270018B700DCB8A2 /* NSView+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCE12C6270018B700DCB8A2 /* NSView+Extensions.swift */; };
@@ -396,6 +398,7 @@
 		BF506AB327CAF33D00F560D1 /* RowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RowView.swift; sourceTree = "<group>"; };
 		BF50EC91271AE6A8007C20C1 /* URL+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extensions.swift"; sourceTree = "<group>"; };
 		BF570F19279ED2E90010DF39 /* TreeNodePointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TreeNodePointer.swift; sourceTree = "<group>"; };
+		BF581C8327F78585003E6173 /* BrowserAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAction.swift; sourceTree = "<group>"; };
 		BF5BBFCE270759F300C6E708 /* Storable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storable.swift; sourceTree = "<group>"; };
 		BF5D1334278CBB6000BFC46B /* PrimitiveVectorTable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimitiveVectorTable.swift; sourceTree = "<group>"; };
 		BF5DE38227A57B8500198F20 /* RegisterFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterFile.swift; sourceTree = "<group>"; };
@@ -453,7 +456,6 @@
 		BF7AD2D127ACC99500E446FF /* TemplateMethodInstance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemplateMethodInstance.swift; sourceTree = "<group>"; };
 		BF7AECCC27921E6B00E6D6EE /* Character+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Character+Extensions.swift"; sourceTree = "<group>"; };
 		BF7F97C227C0E86900E9E046 /* MethodSignature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MethodSignature.swift; sourceTree = "<group>"; };
-		BF80CBC427D3F84100FEFBA9 /* OldIncrementalParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OldIncrementalParser.swift; sourceTree = "<group>"; };
 		BF8213CF272C500C00F08E22 /* Scope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scope.swift; sourceTree = "<group>"; };
 		BF8511ED275FE7930080AD71 /* PrimitiveBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimitiveBlock.swift; sourceTree = "<group>"; };
 		BF8589BE27BE2F6F001D8685 /* TypeMetaclass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypeMetaclass.swift; sourceTree = "<group>"; };
@@ -612,6 +614,8 @@
 		BFC1EE2826CFFAF6009B7C34 /* LineNumberTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineNumberTextView.swift; sourceTree = "<group>"; };
 		BFC3835D279C23100091FB39 /* MethodInstanceSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MethodInstanceSet.swift; sourceTree = "<group>"; };
 		BFC3835F279C41250091FB39 /* BucketPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BucketPointer.swift; sourceTree = "<group>"; };
+		BFC9F3CC27F59EEE00437DF6 /* SymbolValue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymbolValue.swift; sourceTree = "<group>"; };
+		BFC9F3CE27F616E700437DF6 /* ProjectModuleItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectModuleItem.swift; sourceTree = "<group>"; };
 		BFCCAFF626F921E8000B3B74 /* ArgonWorx.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = ArgonWorx.entitlements; sourceTree = "<group>"; };
 		BFCCAFFA26F97550000B3B74 /* UUID+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UUID+Extensions.swift"; sourceTree = "<group>"; };
 		BFCCAFFE26F9893C000B3B74 /* NSCoder+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSCoder+Extensions.swift"; sourceTree = "<group>"; };
@@ -732,6 +736,7 @@
 				BF781AED27D7673E00590E67 /* ProjectSourceItemView.swift */,
 				BF171C0D27EE01DA00CC55BB /* ProjectVersionStateView.swift */,
 				BF78A62C27EF2B4B00D47522 /* VersionState.swift */,
+				BFC9F3CE27F616E700437DF6 /* ProjectModuleItem.swift */,
 			);
 			path = "Project Items and Views";
 			sourceTree = "<group>";
@@ -872,6 +877,7 @@
 		BFC1ECA626CFFA9F009B7C34 /* Execution */ = {
 			isa = PBXGroup;
 			children = (
+				BFC9F3CC27F59EEE00437DF6 /* SymbolValue.swift */,
 				BFD625012769F5E40089B901 /* Addressable.swift */,
 				BFEFA9D0276B562B00894140 /* ArrayPointer.swift */,
 				BFF1D93A27B5526900EE78EB /* BlockPointer.swift */,
@@ -996,7 +1002,6 @@
 				BF3A46DF2717316400D1E7C7 /* SemanticTokenRenderer.swift */,
 				BF48383F27C3846600E700FD /* TokenWrapper.swift */,
 				BF4C48C027CA5E56008A2F53 /* Token.swift */,
-				BF80CBC427D3F84100FEFBA9 /* OldIncrementalParser.swift */,
 				BFDD7CB127ED016B0050ACC7 /* CompilationContext.swift */,
 				BFDD7CB327ED0EA20050ACC7 /* IncrementalParser.swift */,
 			);
@@ -1232,6 +1237,7 @@
 				BFDD0CDD27D36B060027717C /* SyntaxAnnotation.swift */,
 				BFDD0CDB27D36ACD0027717C /* SyntaxAnnotationView.swift */,
 				BF67DCCE27DF3000008D0933 /* ToolbarView.swift */,
+				BF581C8327F78585003E6173 /* BrowserAction.swift */,
 			);
 			path = "Argon Project Browser";
 			sourceTree = "<group>";
@@ -1445,7 +1451,6 @@
 				BF171C0A27ED2C1D00CC55BB /* SourceTextView.swift in Sources */,
 				BF1E8BDB27498DBA002C7B3B /* TypeContext.swift in Sources */,
 				BFC1EDE026CFFADC009B7C34 /* Function.swift in Sources */,
-				BF80CBC527D3F84100FEFBA9 /* OldIncrementalParser.swift in Sources */,
 				BF179A20271D829700A07626 /* PrimitiveMethodInstance.swift in Sources */,
 				BFC1ED8526CFFAD5009B7C34 /* ArgonDate.swift in Sources */,
 				BFC1ED6626CFFABA009B7C34 /* Optimizer.swift in Sources */,
@@ -1476,6 +1481,7 @@
 				BFC1ED8426CFFAD5009B7C34 /* Location.swift in Sources */,
 				BF50EC92271AE6A8007C20C1 /* URL+Extensions.swift in Sources */,
 				BFDD7CB427ED0EA20050ACC7 /* IncrementalParser.swift in Sources */,
+				BFC9F3CD27F59EEE00437DF6 /* SymbolValue.swift in Sources */,
 				BFC1EE0B26CFFADC009B7C34 /* MainModule.swift in Sources */,
 				BF122B3927248E6500B53083 /* FileItemCellView.swift in Sources */,
 				BF122B372724714B00B53083 /* Date+Extensions.swift in Sources */,
@@ -1490,6 +1496,7 @@
 				BFC1ED7426CFFAC0009B7C34 /* NullReporter.swift in Sources */,
 				BF7F97C327C0E86900E9E046 /* MethodSignature.swift in Sources */,
 				BF4AF3A427F197C300C56245 /* ConcreteOutlineItemView.swift in Sources */,
+				BF581C8427F78585003E6173 /* BrowserAction.swift in Sources */,
 				BFEFA9BD276B527D00894140 /* UnsafeMutablePointer+Extensions.swift in Sources */,
 				BFC1EE1C26CFFAE7009B7C34 /* NSColor+Extensions.swift in Sources */,
 				BFC1ED4126CFFAB1009B7C34 /* ClosureBlock.swift in Sources */,
@@ -1547,6 +1554,7 @@
 				BFD46FCB27A6732800330CF3 /* DictionaryPointer.swift in Sources */,
 				BFC1ED8926CFFAD5009B7C34 /* PrivacyScope.swift in Sources */,
 				BFC1ED6C26CFFABA009B7C34 /* Parser.swift in Sources */,
+				BFC9F3CF27F616E700437DF6 /* ProjectModuleItem.swift in Sources */,
 				BFC1ED1626CFFAA7009B7C34 /* MakeTerm.swift in Sources */,
 				BFEFA9C7276B52FA00894140 /* StaticSegment.swift in Sources */,
 				BF0563F927155D65005E7688 /* TokenSource.swift in Sources */,

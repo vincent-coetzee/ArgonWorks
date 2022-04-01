@@ -15,6 +15,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        "\(Swift.type(of: self))"
 //        }
         
+    public var enclosingModule: Module
+        {
+        self.module
+        }
+        
     public var parentSymbol: Symbol?
         {
         self.module
@@ -407,14 +412,14 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
     public var place: Instruction.Operand = .none
     public private(set) var memoryAddress: Address = 0
     public private(set) var module: Module!
-    public var ancestors = Symbols()
+//    public var ancestors = Symbols()
     public var isSystemType = false
-    public var interfaceKey: Int = 0
+    public var itemKey: Int?
     
     public required init(label: Label)
         {
         super.init(label: label)
-        self.ancestors.append(self)
+//        self.ancestors.append(self)
         }
         
     public required init?(coder: NSCoder)
@@ -422,6 +427,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        #if DEBUG
 //        print("START DECODE SYMBOL")
 //        #endif
+        self.itemKey = coder.decodeInteger(forKey: "itemKey")
         self.wasAddressAllocationDone = coder.decodeBool(forKey: "wasAddressAllocationDone")
         self.wasMemoryLayoutDone = coder.decodeBool(forKey: "wasMemoryLayoutDone")
         self.wasSlotLayoutDone = coder.decodeBool(forKey: "wasSlotLayoutDone")
@@ -442,6 +448,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        #if DEBUG
 //        print("ENCODE SYMBOL \(self.label)")
 //        #endif
+        coder.encode(self.itemKey,forKey: "itemKey")
         coder.encode(self.wasAddressAllocationDone,forKey: "wasAddressAllocationDone")
         coder.encode(self.wasMemoryLayoutDone,forKey: "wasMemoryLayoutDone")
         coder.encode(self.wasSlotLayoutDone,forKey: "wasSlotLayoutDone")
@@ -461,6 +468,10 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
             return(self.label == second.label && self.module == second.module)
             }
         return(super.isEqual(object))
+        }
+        
+    public func insertInHierarchy()
+        {
         }
         
     public func removeFromParentSymbol()
@@ -731,96 +742,23 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public func lookup(label: Label) -> Symbol?
         {
-        fatalError("lookup should not be called on a \(Swift.type(of: self)).")
+        self.module.lookup(label: label)
         }
-        
-//    public func lookup(name: Name) -> Symbol?
-//        {
-//        if name.isRooted
-//            {
-//            if name.count == 1
-//                {
-//                return(nil)
-//                }
-//            if let start = TopModule.shared.lookup(label: name.first)
-//                {
-//                if name.count == 2
-//                    {
-//                    return(start)
-//                    }
-//                if let symbol = start.lookup(name: name.withoutFirst)
-//                    {
-//                    return(symbol)
-//                    }
-//                }
-//            }
-//        if name.isEmpty
-//            {
-//            return(nil)
-//            }
-//        else if name.count == 1
-//            {
-//            if let symbol = self.lookup(label: name.first)
-//                {
-//                return(symbol)
-//                }
-//            }
-//        else if let start = self.lookup(label: name.first)
-//            {
-//            if let symbol = (start as? Scope)?.lookup(lab: name.withoutFirst)
-//                {
-//                return(symbol)
-//                }
-//            }
-//        return(self.module?.lookup(name: name))
-//        }
-//
+
     public func lookupN(label: Label) -> Symbols?
         {
         return(self.module?.lookupN(label: label))
         }
         
-//    public func lookupN(name: Name) -> Symbols?
-//        {
-//        if name.isRooted
-//            {
-//            if name.count == 1
-//                {
-//                return(nil)
-//                }
-//            if let start = TopModule.shared.lookupN(label: name.first)
-//                {
-//                if name.count == 2
-//                    {
-//                    return(start.nilIfEmpty)
-//                    }
-//                if let symbol = (start.first)?.lookupN(name: name.withoutFirst)
-//                    {
-//                    return(symbol.nilIfEmpty)
-//                    }
-//                }
-//            return(nil)
-//            }
-//        if name.isEmpty
-//            {
-//            return(nil)
-//            }
-//        else if name.count == 1
-//            {
-//            if let symbol = self.lookupN(label: name.first)
-//                {
-//                return(symbol.nilIfEmpty)
-//                }
-//            }
-//        else if let start = self.lookupN(label: name.first)
-//            {
-//            if let symbol = start.first?.lookupN(name: name.withoutFirst)
-//                {
-//                return(symbol.nilIfEmpty)
-//                }
-//            }
-//        return(self.module?.lookupN(name: name))
-//        }
+    public func lookupType(label: Label) -> Type?
+        {
+        self.module.lookupType(label: label)
+        }
+        
+    public func lookupMethod(label: Label) -> ArgonWorks.Method?
+        {
+        self.module.lookupMethod(label: label)
+        }
         
     public func layoutObjectSlots()
         {
@@ -841,7 +779,6 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         {
         }
         
-        
    public func allocateAddresses(using: AddressAllocator)
         {
         self.wasAddressAllocationDone = true
@@ -855,6 +792,12 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         self.install(inContext: allocator.payload)
         }
         
+    public func addDeclaration(itemKey: Int,location aLocation: Location)
+        {
+        var location = aLocation
+        location.itemKey = itemKey
+        self.addDeclaration(location)
+        }
     public func addDeclaration(_ location:Location)
         {
         for index in 0..<self.locations.count
@@ -872,6 +815,13 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
 //        {
 //        fatalError("This should have been overridden")
 //        }
+        
+    public func addReference(itemKey: Int,location: Location)
+        {
+        var aLocation = location
+        aLocation.itemKey = itemKey
+        self.locations.append(.reference(aLocation))
+        }
         
     public func addReference(_ location:Location)
         {

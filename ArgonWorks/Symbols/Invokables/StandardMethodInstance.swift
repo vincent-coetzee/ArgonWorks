@@ -36,9 +36,7 @@ public class StandardMethodInstance: MethodInstance
         
     public override var allIssues: CompilerIssues
         {
-        var myIssues = self.issues
-        myIssues.append(contentsOf: self.block.allIssues)
-        return(myIssues)
+        self.issues
         }
         
 //    public override var instructions: Array<Instruction>

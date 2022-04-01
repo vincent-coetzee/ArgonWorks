@@ -15,6 +15,11 @@ public class BarView: CustomView
         case right
         }
         
+    public var allButtons: Array<ToolbarButton>
+        {
+        self.controlsByKey.values.compactMap{$0 as? ToolbarButton}
+        }
+        
     public override var textFont: NSFont
         {
         didSet
@@ -119,10 +124,11 @@ public class BarView: CustomView
         self.controlsByKey[key] = space
         }
         
-    public func addActionButton(atEdge: ViewEdge,key: String,image: NSImage,toolTip: String,target: Any,action: Selector)
+    public func addActionButton(browserAction: BrowserActionSet,atEdge: ViewEdge,key: String,image: NSImage,toolTip: String,target: Any,action: Selector)
         {
         image.isTemplate = true
         let button = ToolbarButton(image: image.image(withTintColor: NSColor.argonMidGray), target: target, action: action)
+        button.browserAction = browserAction
         button.toolTip = toolTip
         button.insets = NSEdgeInsets(top: 2, left: 1, bottom: 2, right: 1)
         button.cell?.isBezeled = false
@@ -142,8 +148,8 @@ public class BarView: CustomView
             self.nextRightAnchor = button.leadingAnchor
             }
         button.widthAnchor.constraint(equalToConstant: width).isActive = true
-        button.topAnchor.constraint(equalTo: self.topAnchor,constant: 4).isActive = true
-        button.bottomAnchor.constraint(equalTo: self.bottomAnchor,constant: -4).isActive = true
+        button.topAnchor.constraint(equalTo: self.topAnchor,constant: 3).isActive = true
+        button.bottomAnchor.constraint(equalTo: self.bottomAnchor,constant: -3).isActive = true
         self.controlsByKey[key] = button
         }
     }

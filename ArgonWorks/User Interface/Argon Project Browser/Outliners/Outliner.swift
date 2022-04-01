@@ -7,6 +7,103 @@
 
 import Cocoa
 
+public enum OutlinerContext
+    {
+    case `default`
+    case classes
+    case enumerations
+    case modules
+    case constants
+    case methods
+    
+    public func isSymbolExpandable(_ symbol: Symbol) -> Bool
+        {
+        switch(self)
+            {
+            case .default:
+                return(false)
+            case .classes:
+                return(symbol is TypeClass)
+            case .enumerations:
+                return(symbol is TypeEnumeration)
+            case .modules:
+                return(symbol is Module || symbol is TypeClass)
+            case .constants:
+                return(false)
+            case .methods:
+                return(symbol is Method)
+            }
+        }
+        
+    public func parentSymbols(forSymbol: Symbol) -> Symbols?
+        {
+        switch(self)
+            {
+            case .default:
+                fatalError()
+            case .classes:
+                if let aClass = forSymbol as? TypeClass
+                    {
+                    return(aClass.superclasses)
+                    }
+                return(nil)
+            case .enumerations:
+                return(nil)
+            case .modules:
+                if let instance = forSymbol as? MethodInstance
+                    {
+                    return([instance.argonMethod])
+                    }
+                return(forSymbol.module.isNil ? nil : [forSymbol.module!])
+            case .constants:
+                return(nil)
+            case .methods:
+                if let instance = forSymbol as? MethodInstance
+                    {
+                    return([instance.argonMethod])
+                    }
+                return(nil)
+            }
+        }
+        
+    public func children(forSymbol: Symbol) -> Symbols
+        {
+        switch(self)
+            {
+            case .default:
+                return([])
+            case .classes:
+                if let aClass = forSymbol as? TypeClass
+                    {
+                    let slots = aClass.instanceSlots.sorted{$0.label < $1.label}
+                    let subclasses = aClass.subtypes.map{$0 as! TypeClass}.sorted{$0.label < $1.label}
+                    return(slots + subclasses)
+                    }
+                return([])
+            case .enumerations:
+                if let enumeration = forSymbol as? TypeEnumeration
+                    {
+                    return(enumeration.cases.sorted{$0.label < $1.label})
+                    }
+                return([])
+            case .modules:
+                if let module = forSymbol as? Module
+                    {
+                    return(module.allSymbols.sorted{$0.label < $1.label})
+                    }
+                return([])
+            case .constants:
+                return([])
+            case .methods:
+                if let  method = forSymbol as? Method
+                    {
+                    return(method.instances.sorted{$0.displayString < $1.displayString})
+                    }
+                return([])
+            }
+        }
+    }
+    
 public class Outliner: NSViewController
     {
     public var rootItems: OutlineItems = []
@@ -21,11 +118,12 @@ public class Outliner: NSViewController
             }
         }
     
-    public var font: NSFont!
+    public var font: NSFont = NSFont(name: "SunSans-SemiBold",size: 10)!
         {
         didSet
             {
             self.outlineView.font = self.font
+            self.outlineView.reloadData()
             }
         }
         
@@ -42,6 +140,9 @@ public class Outliner: NSViewController
     private let outlineView: NSOutlineView
     private var tag: String
     public var topConstraint: NSLayoutConstraint!
+    public var context: OutlinerContext!
+    private var isActive = false
+    private var wasActive = false
     
     public init(tag: String)
         {
@@ -75,6 +176,7 @@ public class Outliner: NSViewController
         
     public func loseActiveController(inController controller: ArgonBrowserViewController)
         {
+        self.isActive = false
         self.scrollView.removeFromSuperview()
         controller.leftController = nil
         }
@@ -85,6 +187,8 @@ public class Outliner: NSViewController
         self.bindEdgesToEdgesOfView(controller.leftView,withHeight: controller.toolbarHeight)
         controller.leftController = self
         controller.buttonBar.highlightButton(atTag: self.tag)
+        self.isActive = true
+        self.wasActive = true
         }
         
     public func bindEdgesToEdgesOfView(_ aView: NSView,withHeight height: CGFloat)
@@ -105,7 +209,6 @@ public class Outliner: NSViewController
         {
         self.scrollView.autohidesScrollers = true
         self.scrollView.translatesAutoresizingMaskIntoConstraints = false
-//        self.outlineView.translatesAutoresizingMaskIntoConstraints = false
         self.outlineView.frame = self.scrollView.bounds
         self.outlineView.headerView = nil
         self.scrollView.drawsBackground = true
@@ -119,10 +222,8 @@ public class Outliner: NSViewController
         self.outlineView.addTableColumn(column)
         self.scrollView.hasHorizontalScroller = false
         self.scrollView.hasVerticalScroller = true
-        self.font = NSFont(name: "SunSans-SemiBold",size: 10)!
-        self.outlineView.rowHeight = 14
+        self.outlineView.rowHeight = self.font.lineHeight
         self.outlineView.intercellSpacing = NSSize(width: 0,height: 0)
-//        self.scrollView.contentInsets = NSEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
         self.outlineView.style = .plain
         self.scrollView.borderType = .noBorder
         self.scrollView.drawsBackground = false
@@ -149,23 +250,63 @@ public class Outliner: NSViewController
         if let item = self.outlineItemsByKey[symbol.identityHash]
             {
             let parent = self.outlineView.parent(forItem: item)
+            if parent.isNil
+                {
+                var index = 0
+                while index < self.rootItems.count
+                    {
+                    if (self.rootItems[index] as! SymbolHolder).symbol.identityHash == symbol.identityHash
+                        {
+                        self.rootItems.remove(at: index)
+                        break
+                        }
+                    index += 1
+                    }
+                }
+            guard self.wasActive else
+                {
+                return
+                }
             let childIndex = self.outlineView.childIndex(forItem: item)
             self.outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parent, withAnimation: .slideUp)
+            self.outlineItemsByKey[symbol.identityHash] = nil
             }
         }
         
     public func insertSymbol(_ symbol: Symbol)
         {
-        if let parentSymbol = symbol.parentSymbol,let parent = self.outlineItemsByKey[parentSymbol.identityHash]
+        if let parentSymbols = self.context.parentSymbols(forSymbol: symbol)
             {
-            let index = parent.insertionIndex(forSymbol: symbol)
-            self.outlineView.insertItems(at: IndexSet(integer: index), inParent: parent)
+            guard self.wasActive else
+                {
+                return
+                }
+            for aParent in parentSymbols
+                {
+                if let parent = self.outlineItemsByKey[aParent.identityHash]
+                    {
+                    let index = parent.insertionIndex(forSymbol: symbol)
+                    self.outlineView.insertItems(at: IndexSet(integer: index), inParent: parent)
+                    }
+                else
+                    {
+                    fatalError("Could not find parent item")
+                    }
+                }
             }
         else
             {
-            let newItem = SymbolHolder(symbol: symbol)
+            let newItem = SymbolHolder(symbol: symbol,context: self.context)
+            self.outlineItemsByKey[symbol.identityHash] = newItem
             self.rootItems.append(newItem)
-            self.outlineView.reloadItem(nil)
+            guard self.wasActive else
+                {
+                return
+                }
+            self.rootItems = self.rootItems.sorted{$0.label < $1.label}
+            let labels = self.rootItems.map{$0.label}
+            let index = labels.firstIndex(of: symbol.label)!
+            self.outlineView.insertItems(at: IndexSet(integer: index),inParent: nil,withAnimation: .slideDown)
             }
         }
     }
@@ -226,7 +367,7 @@ extension Outliner: NSOutlineViewDelegate
         let entry = item as! OutlineItem
         let view = entry.makeView(for: self)
         view.outlineItem = entry
-        view.font = self.font.isNil ? NSFont(name: "SunSans-SemiBold",size: 10)! : self.font!
+        view.font = self.font
         return(view)
         }
         

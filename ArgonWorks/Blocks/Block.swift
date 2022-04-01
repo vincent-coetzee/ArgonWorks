@@ -49,16 +49,6 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         return(abs(Int(bitPattern: word)))
         }
 
-    public var allIssues: CompilerIssues
-        {
-        var myIssues = self.issues
-        for block in self.blocks
-            {
-            myIssues.append(contentsOf: block.allIssues)
-            }
-        return(myIssues)
-        }
-        
     public var isEmpty: Bool
         {
         self.blocks.isEmpty
@@ -108,7 +98,6 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     internal var localSymbols = Symbols()
     internal var source: String?
     public private(set) var index = IdentityKey.nextKey()
-    public var issues: CompilerIssues = []
     private var nextLocalSlotOffset = 0
     private var nextParameterOffset = 16
     public var ancestors = Blocks()
@@ -127,7 +116,6 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
         self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
         self.type = coder.decodeObject(forKey: "type") as! Type
-        self.issues = coder.decodeCompilerIssues(forKey: "issues")
         self.source = coder.decodeObject(forKey: "source") as? String
         }
     
@@ -142,7 +130,6 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         coder.encode(self.nextLocalSlotOffset,forKey: "nextLocalSlotOffset")
         coder.encode(self.nextParameterOffset,forKey: "nextParameterOffset")
         coder.encode(self.type,forKey: "type")
-        coder.encodeCompilerIssues(self.issues,forKey: "issues")
         coder.encode(self.source,forKey: "source")
         }
         
@@ -150,6 +137,26 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
 //        {
 //        self.container = .scope(scope!)
 //        }
+        
+    public func appendIssue(_ issues: CompilerIssue)
+        {
+        self.parentBlock?.appendIssue(issues)
+        }
+        
+    public func appendIssue(at: Location,message: String)
+        {
+        self.parentBlock?.appendIssue(at: at,message: message,isWarning: false)
+        }
+        
+    public func appendIssue(at: Location,message: String,isWarning: Bool = false)
+        {
+        self.parentBlock?.appendIssue(at: at,message: message,isWarning: isWarning)
+        }
+        
+    public func appendWarningIssue(at: Location,message: String)
+        {
+        self.parentBlock?.appendIssue(at: at,message: message,isWarning: true)
+        }
         
     public func lookupMethod(label: Label) -> Method?
         {
@@ -159,16 +166,6 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
     public func removeSymbol(_ symbol: Symbol)
         {
         fatalError()
-        }
-        
-    public func appendIssue(at: Location, message: String)
-        {
-        self.issues.append(CompilerIssue(location: at,message: message))
-        }
-    
-    public func appendWarningIssue(at: Location, message: String)
-        {
-        self.issues.append(CompilerIssue(location: at,message: message,isWarning: true))
         }
         
     public func addSymbol(_ symbol: Symbol)
@@ -228,22 +225,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         parameter.offset = self.nextParameterOffset
         self.nextLocalSlotOffset += 8
         }
-        
-    public func appendIssue(at: Location,message: String,isWarning:Bool = false)
-        {
-        self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
-        }
-        
-    public func appendIssues(_ issues: CompilerIssues)
-        {
-        self.issues.append(contentsOf: issues)
-        }
-        
-    public func appendIssue(_ issue: CompilerIssue)
-        {
-        self.issues.append(issue)
-        }
-        
+
     public func lookupN(label: Label) -> Symbols?
         {
         var found = Symbols()
@@ -415,13 +397,27 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         return(newBlock)
         }
         
-    public func addDeclaration(_ location:Location)
+    public func addDeclaration(itemKey: Int,location aLocation:Location)
         {
+        var location = aLocation
+        location.itemKey = itemKey
         self.locations.append(.declaration(location))
+        }
+        
+    public func addDeclaration(_ location: Location)
+        {
+        self.addDeclaration(itemKey: 0,location: location)
         }
         
     public func addReference(_ location:Location)
         {
+        self.locations.append(.reference(location))
+        }
+        
+    public func addReference(itemKey: Int,location aLocation:Location)
+        {
+        var location = aLocation
+        location.itemKey = itemKey
         self.locations.append(.reference(location))
         }
         

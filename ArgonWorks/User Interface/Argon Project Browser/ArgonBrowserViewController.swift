@@ -9,6 +9,8 @@ import Cocoa
 
 public class ArgonBrowserViewController: NSViewController,Dependent
     {
+    private let selectedItemValueModel = ValueHolder(value: nil)
+    
     @IBOutlet internal var outliner: NSOutlineView!
     @IBOutlet private var toolbar: ToolbarView!
     @IBOutlet internal var leftView: NSView!
@@ -23,8 +25,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     public var incrementalParser: IncrementalParser!
     public var sourceOutlinerFont: NSFont!
     private var draggingItems: Array<ProjectItem>?
-    private var hierarchyItems = Dictionary<Int,SymbolHolder>()
-    private var hierarchyItemsByHash = Dictionary<Int,SymbolHolder>()
     internal var buttonBar: ButtonBar!
     private let classesController = Outliner(tag: "classes")
     private let enumerationController = Outliner(tag: "enumerations")
@@ -35,7 +35,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private var baseRowHeight: CGFloat = 14
     private var toolbarHeightConstraint: NSLayoutConstraint!
     private var buttonBarHeightConstraint: NSLayoutConstraint!
-    
     public private(set) var toolbarHeight: CGFloat = 0
     
     public override func viewDidLoad()
@@ -47,8 +46,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.rootItem.controller = self
         self.incrementalParser = IncrementalParser()
         self.outliner.registerForDraggedTypes([.string])
-        self.hierarchyItemsByHash[ArgonModule.shared.identityHash] = SymbolHolder(symbol: ArgonModule.shared)
-        self.hierarchyItemsByHash[self.rootItem.module.identityHash] = SymbolHolder(symbol: self.rootItem.module)
         self.configureOutlinerMenu()
         self.setProjectLabel()
         self.configureDependencies()
@@ -117,6 +114,16 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             return(label)
             }
         self.toolbar.control(atKey: "records")!.valueModel = adaptor
+        adaptor = Transformer(model: self.selectedItemValueModel)
+            {
+            incoming in
+            if let value = incoming as? ProjectItem
+                {
+                return(value.validActions)
+                }
+            return(BrowserActionSet(rawValue: 0))
+            }
+        self.toolbar.enabledValueModel = adaptor
         }
         
     public override func viewDidAppear()
@@ -152,15 +159,20 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         {
         self.leftView.wantsLayer = true
         self.leftView.layer?.backgroundColor = NSColor.argonDarkerGray.cgColor
+        self.classesController.context = .classes
         self.classesController.rootItems = [SymbolHolder(symbol: ArgonModule.shared.object,context: .classes)]
         self.classesController.backgroundColor = NSColor.argonMidGray
-        self.enumerationController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0,context: .enumerations)}
+        self.enumerationController.context = .enumerations
+        self.enumerationController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0,context: .enumerations)}.sorted{$0.label < $1.label}
         self.enumerationController.backgroundColor = NSColor.argonMidGray
-        self.constantsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0,context: .constants)}
+        self.constantsController.context = .constants
+        self.constantsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0,context: .constants)}.sorted{$0.label < $1.label}
         self.constantsController.backgroundColor = NSColor.argonMidGray
-        self.methodsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0,context: .methods)}
+        self.methodsController.context = .methods
+        self.methodsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0,context: .methods)}.sorted{$0.label < $1.label}
         self.methodsController.backgroundColor = NSColor.argonMidGray
-        self.modulesController.rootItems = TopModule.shared.allSymbols.map{SymbolHolder(symbol: $0,context: .modules)}
+        self.modulesController.context = .modules
+        self.modulesController.rootItems = TopModule.shared.allSymbols.map{SymbolHolder(symbol: $0,context: .modules)}.sorted{$0.label < $1.label}
         self.modulesController.backgroundColor = NSColor.argonMidGray
         self.classesController.becomeActiveController(inController: self)
         }
@@ -181,6 +193,42 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         bar.topAnchor.constraint(equalTo: self.leftView.topAnchor).isActive = true
         self.buttonBarHeightConstraint = bar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
         self.buttonBarHeightConstraint.isActive = true
+        }
+        
+    @IBAction public func onSettings(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onBuild(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onLoad(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onSave(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onNewSymbol(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onNewGroup(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onNewComment(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onDeleteItem(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onNewModule(_ sender: Any?)
+        {
         }
         
     @IBAction public func onClassesClicked(_ any: Any?)
@@ -290,26 +338,26 @@ public class ArgonBrowserViewController: NSViewController,Dependent
                         }
                     else if (symbol as! TypeAlias).isEnumerationType
                         {
-                        self.enumerationController.removeSymbol(symbol)
+                        self.enumerationController.insertSymbol(symbol)
                         }
                     else
                         {
                         fatalError("TypeAlias case not handled.")
                         }
                 case is TypeClass:
-                    self.classesController.removeSymbol(symbol)
+                    self.classesController.insertSymbol(symbol)
                 case is TypeEnumeration:
-                    self.enumerationController.removeSymbol(symbol)
+                    self.enumerationController.insertSymbol(symbol)
                 case is Constant:
-                    self.constantsController.removeSymbol(symbol)
+                    self.constantsController.insertSymbol(symbol)
                 case is Method:
-                    self.methodsController.removeSymbol(symbol)
+                    self.methodsController.insertSymbol(symbol)
                 case is Module:
                     break
                 default:
                     fatalError("Case not handled \(symbol)")
                 }
-            self.modulesController.removeSymbol(symbol)
+            self.modulesController.insertSymbol(symbol)
             }
         self.classesController.endUpdates()
         self.modulesController.endUpdates()
@@ -320,9 +368,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     public func setProjectLabel()
         {
-        let holder = self.hierarchyItemsByHash[self.rootItem.module.identityHash]
         self.rootItem.module.setLabel(self.rootItem.label)
-        self.hierarchyItemsByHash[self.rootItem.module.identityHash] = holder
         self.view.window?.title = "Argon Browser [\(self.rootItem.label)]"
 //        self.hierarchyOutliner.reloadItem(holder)
         }
@@ -505,6 +551,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         if !self.outliner.isItemExpanded(forItem)
             {
             self.outliner.expandItem(forItem)
+            self.outliner.expandItem(item)
             }
         }
         
@@ -618,20 +665,18 @@ extension ArgonBrowserViewController: NSOutlineViewDelegate
             return(entry.height)
             }
         }
-//    public func outlineViewSelectionDidChange(_ notification: Notification)
-//        {
-//        let selectedRow = self.outliner.selectedRow
-//        if selectedRow == -1
-//            {
-//            self.selectedItem = nil
-//            }
-//        else
-//            {
-//            self.selectedItem = (self.outliner.item(atRow: selectedRow) as! BrowserViewItem)
-//            let source = selectedItem!.symbol.source
-//            self.editor.string = source
-//            }
-//        }
+    public func outlineViewSelectionDidChange(_ notification: Notification)
+        {
+        let selectedRow = self.outliner.selectedRow
+        if selectedRow == -1
+            {
+            self.selectedItemValueModel.value = nil
+            }
+        else
+            {
+            self.selectedItemValueModel.value = (self.outliner.item(atRow: selectedRow) as? ProjectItem)
+            }
+        }
         
     public func outlineView(_ outlineView: NSOutlineView, shouldEdit tableColumn: NSTableColumn?, item: Any) -> Bool
         {

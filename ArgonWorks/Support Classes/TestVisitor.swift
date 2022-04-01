@@ -17,7 +17,6 @@ public class IssueVisitor: Visitor
         
     public func accept(_ block: Block) throws
         {
-        self.allIssues.append(contentsOf: block.issues)
         }
     
     public func accept(_ symbol: Symbol) throws

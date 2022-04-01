@@ -25,7 +25,6 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             }
         }
         
-    public var itemKey: Int!
     public var primarySymbol: Symbol!
     public var attributes = Attributes()
     public var versionState: VersionState = .added
@@ -99,13 +98,25 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         return(nil)
         }
         
-    public func compilationDidSucceed(_ browserEditorView: BrowserEditorView,symbolValue: SymbolValue,affectedSymbols: Symbols)
+    public func compilationDidSucceed(_ browserEditorView: BrowserEditorView,symbolValue: SymbolValue,affectedSymbols: Symbols,inModule module: Module)
         {
         self.elementItem.symbolValue = symbolValue
+        var symbols = Set(affectedSymbols)
+        symbols.insert(symbolValue.symbol)
+        for symbol in symbols
+            {
+            module.addSymbol(symbol)
+            symbol.setModule(module)
+            symbol.insertInHierarchy()
+            }
+        self.affectedSymbols = Array(symbols)
+        self.elementItem.controller.insertSymbolsInHierarchies(self.affectedSymbols)
         }
         
     public func compilationDidFail(_ browserEditorView: BrowserEditorView,issues: CompilerIssues)
         {
+        self.issues = issues
+        self.issuesChanged()
         }
         
     public func sourceDidChange(_ sourceEditorView: BrowserEditorView)
@@ -128,6 +139,12 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         self.issues = []
         self.issuesChanged()
         self.text = browserEditorView.sourceString
+        for symbol in self.affectedSymbols
+            {
+            symbol.removeFromParentSymbol()
+            }
+        self.elementItem.controller.removeSymbolsFromHierarchies(self.affectedSymbols)
+        self.affectedSymbols = []
         }
     }
     

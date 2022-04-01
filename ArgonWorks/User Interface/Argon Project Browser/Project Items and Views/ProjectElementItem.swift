@@ -48,28 +48,28 @@ public class ProjectElementItem: ProjectItem
                     self.iconTint = instance.iconTint
                     self.updateCellViews(string: self.attributedString(self.label,highlight: instance.label,inColor: self.iconTint))
                     self.sourceItem.sourceRecord.primarySymbol = instance
-                    instance.interfaceKey = self.itemKey
-                case .enumeration(let enumeration,_,_):
+                    instance.itemKey = self.itemKey
+                case .enumeration(let enumeration):
                     self.label = "Enumeration \(enumeration.label)"
                     self.icon = enumeration.icon
                     self.iconTint = enumeration.iconTint
                     self.updateCellViews(string: self.attributedString(self.label,highlight: enumeration.label,inColor: self.iconTint))
                     self.sourceItem.sourceRecord.primarySymbol = enumeration
-                    enumeration.interfaceKey = self.itemKey
+                    enumeration.itemKey = self.itemKey
                 case .class(let aClass):
                     self.icon = aClass.icon
                     self.iconTint = aClass.iconTint
                     self.label = "Class \(aClass.label)"
                     self.updateCellViews(string: self.attributedString(self.label,highlight: aClass.label,inColor: self.iconTint))
                     self.sourceItem.sourceRecord.primarySymbol = aClass
-                    aClass.interfaceKey = self.itemKey
+                    aClass.itemKey = self.itemKey
                 case .typeAlias(let aType):
                     self.label = "Type \(aType.label)"
                     self.icon = aType.icon
                     self.iconTint = aType.iconTint
                     self.updateCellViews(string: self.attributedString(self.label,highlight: aType.label,inColor: self.iconTint))
                     self.sourceItem.sourceRecord.primarySymbol = aType
-                    aType.interfaceKey = self.itemKey
+                    aType.itemKey = self.itemKey
                 default:
                     break
                 }
@@ -89,14 +89,6 @@ public class ProjectElementItem: ProjectItem
         
     internal let sourceItem: ProjectSourceItem
     private var previousSource: String = ""
-    
-    public override var itemKey: Int
-        {
-        didSet
-            {
-            self.sourceItem.sourceRecord.itemKey = self.itemKey
-            }
-        }
     
     public override init(label: Label)
         {

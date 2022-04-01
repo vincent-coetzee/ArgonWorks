@@ -161,6 +161,13 @@ public class TypeEnumeration: TypeConstructor
         
     public override func lookup(label: Label) -> Symbol?
         {
+        for generic in self.generics
+            {
+            if generic.label == label
+                {
+                return(generic)
+                }
+            }
         for aCase in self.cases
             {
             if aCase.label == label
@@ -249,7 +256,6 @@ public class TypeEnumeration: TypeConstructor
     public override func withGenerics(_ types: Types) -> Type
         {
         let newClass = TypeEnumeration(label: self.label,isSystem: self.isSystemType,generics: types)
-        newClass.ancestors.append(self)
         newClass.setModule(self.module)
 //        newClass.container = self.container
         newClass.setIndex(self.index.keyByIncrementingMinor())

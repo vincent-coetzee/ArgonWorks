@@ -52,7 +52,7 @@ public class ButtonBar: BarView
         self.buttonsByTag[tag] = button
         }
         
-    public  override func layout()
+    public override func layout()
         {
         super.layout()
         let width = CGFloat(self.buttons.count) * Self.kButtonWidth + Self.kButtonSpacing * CGFloat(self.buttons.count - 1)
