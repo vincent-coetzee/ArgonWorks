@@ -9,7 +9,7 @@ import Cocoa
 
 public class ProjectItemView: NSTableCellView,NSTextFieldDelegate
     {
-    public var item: ProjectItem!
+    public unowned var item: ProjectItem!
     public let viewImage: NSImageView
     public let viewText: NSTextField
     public var font:NSFont!

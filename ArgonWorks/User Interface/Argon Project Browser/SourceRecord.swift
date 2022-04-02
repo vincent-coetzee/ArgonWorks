@@ -24,7 +24,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             self.versionState = .modified
             }
         }
-        
+    public private(set) var previousText: String = ""
     public var primarySymbol: Symbol!
     public var attributes = Attributes()
     public var versionState: VersionState = .added
@@ -49,14 +49,21 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         
     required public init?(coder: NSCoder)
         {
+        self.primarySymbol = coder.decodeObject(forKey: "primarySymbol") as? Symbol
+        self.affectedSymbols = coder.decodeObject(forKey: "affectedSymbols") as! Symbols
         self.elementItem = coder.decodeObject(forKey: "elementItem") as? ProjectElementItem
         self.text = coder.decodeObject(forKey: "text") as! String
         self.attributes = coder.decodeObject(forKey: "attributes") as! Attributes
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
+        super.init()
+        self.previousText = self.text
+        self.versionState = .none
         }
         
     public func encode(with coder:NSCoder)
         {
+        coder.encode(self.primarySymbol,forKey: "primarySymbol")
+        coder.encode(self.affectedSymbols,forKey: "affectedSymbols")
         coder.encode(self.elementItem,forKey: "elementItem")
         coder.encode(self.text,forKey:"text")
         coder.encode(self.attributes,forKey: "attributes")
@@ -122,8 +129,22 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
     public func sourceDidChange(_ sourceEditorView: BrowserEditorView)
         {
         self.text = sourceEditorView.sourceString
+        self.versionState = self.versionState(forState: self.versionState,forText: self.text)
         let lineCount = self.text.components(separatedBy: "\n").count
         self.changed(aspect: "lineCount",with: lineCount,from: self)
+        }
+        
+    private func versionState(forState: VersionState,forText: String) -> VersionState
+        {
+        if forState.isAddedState
+            {
+            return(.added)
+            }
+        if forText != self.previousText
+            {
+            return(.modified)
+            }
+        return(forState)
         }
         
     public func sourceEditingDidBegin(_ browserEditorView: BrowserEditorView)

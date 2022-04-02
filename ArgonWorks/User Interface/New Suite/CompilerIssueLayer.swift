@@ -18,7 +18,7 @@ public class CompilerIssueMessageLayer: CALayer
         self.textLayer = CATextLayer()
         super.init()
         self.textLayer.string = issue.message
-        self.backgroundColor = issue.isWarning ? Palette.shared.warningColor.cgColor : Palette.shared.errorColor.cgColor
+//        self.backgroundColor = issue.isWarning ? Palette.shared.warningColor.cgColor : Palette.shared.errorColor.cgColor
         self.textLayer.foregroundColor = NSColor.black.cgColor
         self.textLayer.font = "Menlo" as CFTypeRef
         self.textLayer.fontSize = 10

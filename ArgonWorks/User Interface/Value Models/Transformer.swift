@@ -40,9 +40,9 @@ public class Transformer: ValueModel,Dependent
         
     public func update(aspect: String,with argument: Any?,from aModel: Model)
         {
-        if aspect == "value" && argument.isNotNil
+        if aspect == "value"
             {
-            let newValue = self.closure(argument!)
+            let newValue = self.closure(argument)
             self.lastValue = newValue
             self.changed(aspect: "value",with: newValue,from: self)
             }

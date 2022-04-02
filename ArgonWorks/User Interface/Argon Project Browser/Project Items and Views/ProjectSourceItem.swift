@@ -17,9 +17,8 @@ public class ProjectSourceItem: ProjectItem
             }
         }
         
-    public var elementItem: ProjectElementItem!
+    public unowned var elementItem: ProjectElementItem!
     public var sourceRecord: SourceRecord
-    public var affectedSymbolIdentities = Array<Int>()
     
     public override init(label: Label)
         {
@@ -33,6 +32,7 @@ public class ProjectSourceItem: ProjectItem
         self.sourceRecord = coder.decodeObject(forKey: "sourceRecord") as! SourceRecord
         self.elementItem = coder.decodeObject(forKey: "elementItem") as? ProjectElementItem
         super.init(coder: coder)
+        self.versionState = self.sourceRecord.versionState
         }
         
     public override func encode(with coder:NSCoder)

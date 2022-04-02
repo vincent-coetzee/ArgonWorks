@@ -9,7 +9,7 @@ import Cocoa
 
 class ProjectVersionStateView: NSTableCellView
     {
-    public var item: ProjectItem!
+    public weak var item: ProjectItem!
         {
         didSet
             {

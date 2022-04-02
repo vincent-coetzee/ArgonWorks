@@ -178,6 +178,16 @@ public class TypeEnumeration: TypeConstructor
         return(self.module.lookup(label: label))
         }
         
+    public override var identityHash: Int
+        {
+        var hash = super.identityHash
+        for aType in self.generics
+            {
+            hash = hash << 13 ^ aType.identityHash
+            }
+        return(hash)
+        }
+        
     public func caseIndex(forSymbol: Argon.Symbol) -> Int?
         {
         for aCase in self.cases
@@ -185,6 +195,27 @@ public class TypeEnumeration: TypeConstructor
             if aCase.symbol == forSymbol
                 {
                 return(aCase.caseIndex)
+                }
+            }
+        return(nil)
+        }
+        
+    public override func lookup(name inName: Name) -> Symbol?
+        {
+        if inName.isEmpty
+            {
+            return(nil)
+            }
+        let first = inName.car
+        for symbol in self.cases
+            {
+            if symbol.symbol.withoutHash() == first
+                {
+                if inName.isEmpty
+                    {
+                    return(symbol)
+                    }
+                return(nil)
                 }
             }
         return(nil)

@@ -36,6 +36,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private var toolbarHeightConstraint: NSLayoutConstraint!
     private var buttonBarHeightConstraint: NSLayoutConstraint!
     public private(set) var toolbarHeight: CGFloat = 0
+    private var fileWrapper: FileWrapper!
     
     public override func viewDidLoad()
         {
@@ -73,6 +74,8 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.outliner.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         self.outliner.tableColumn(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "VersionState"))!.width = 14
         NotificationCenter.default.addObserver(self, selector: #selector(self.outlinerFrameChanged), name: NSOutlineView.frameDidChangeNotification, object: self.outliner)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.recordDidExpand), name: NSOutlineView.itemDidExpandNotification, object: self.outliner)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.recordDidCollapse), name: NSOutlineView.itemDidCollapseNotification, object: self.outliner)
         self.buttonBar.backgroundColor = NSColor.argonBlack20
         self.toolbar.backgroundColor = NSColor.argonBlack20
         self.buttonBar.backgroundColor = NSColor.argonBlack20
@@ -231,6 +234,18 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         {
         }
         
+    @IBAction public func recordDidExpand(_ notification: Notification)
+        {
+        let record = notification.userInfo!["NSObject"] as! ProjectItem
+        record.isExpanded = true
+        }
+        
+    @IBAction public func recordDidCollapse(_ notification: Notification)
+        {
+        let record = notification.userInfo!["NSObject"] as! ProjectItem
+        record.isExpanded = false
+        }
+        
     @IBAction public func onClassesClicked(_ any: Any?)
         {
         self.leftController?.loseActiveController(inController: self)
@@ -370,112 +385,15 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         {
         self.rootItem.module.setLabel(self.rootItem.label)
         self.view.window?.title = "Argon Browser [\(self.rootItem.label)]"
-//        self.hierarchyOutliner.reloadItem(holder)
         }
-        
-//    public func setHeading(_ heading: String)
-//        {
-//        self.toolbar.label = heading
-//        self.toolbar.font = self.font.withPointSize(24).boldFont()
-//        }
-        
+
     public func setProject(_ project: Project)
         {
         self.rootItem = project
         project.setController(self)
-//        self.toolbar.label = project.label
         self.outliner.reloadData()
         }
         
-    public func updateHierarchy(itemKey: Int,symbolValue: SymbolValue)
-        {
-//        if case SymbolValue.issue = symbolValue
-//            {
-//            return
-//            }
-//        if let item = self.hierarchyItems[itemKey]
-//            {
-//            switch(symbolValue)
-//                {
-//                case .class(let aClass):
-//                    item.symbol = aClass
-//                    hierarchyOutliner.itemChanged(item)
-//                case .module(let module):
-//                    item.symbol = module
-//                    hierarchyOutliner.itemChanged(item)
-//                case .enumeration(let enumeration,_,_):
-//                    item.symbol = enumeration
-//                    hierarchyOutliner.itemChanged(item)
-//                case .typeAlias(let alias):
-//                    item.symbol = alias
-//                    hierarchyOutliner.itemChanged(item)
-//                case .primitive(let primitive):
-//                    item.symbol = primitive
-//                    hierarchyOutliner.itemChanged(item)
-//                case .methodInstance(let instance):
-//                    item.symbol = instance
-//                    hierarchyOutliner.itemChanged(item)
-//                default:
-//                    break
-//                }
-//            }
-//        else
-//            {
-//            switch(symbolValue)
-//                {
-//                case .class(let aClass):
-//                    let newItem = SymbolHolder(symbol: aClass)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[aClass.identifierHash] = newItem
-//                    let module = aClass.module!
-//                    let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                    self.hierarchyOutliner.addItem(newItem,in: parent)
-//                case .module(let module):
-//                    let newItem = SymbolHolder(symbol: module)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[module.identifierHash] = newItem
-//                    if let module = module.module
-//                        {
-//                        let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                        self.hierarchyOutliner.addItem(newItem,in: parent)
-//                        }
-//                    else
-//                        {
-//                        self.hierarchyOutliner.addItem(newItem,in: nil)
-//                        }
-//                case .enumeration(let enumeration,_,_):
-//                    let newItem = SymbolHolder(symbol: enumeration)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[enumeration.identifierHash] = newItem
-//                    let module = enumeration.module!
-//                    let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                    self.hierarchyOutliner.addItem(newItem,in: parent)
-//                case .typeAlias(let alias):
-//                    let newItem = SymbolHolder(symbol: alias)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[alias.identifierHash] = newItem
-//                    let module = alias.module!
-//                    let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                    self.hierarchyOutliner.addItem(newItem,in: parent)
-//                case .primitive(let primitive):
-//                    let newItem = SymbolHolder(symbol: primitive)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[primitive.identifierHash] = newItem
-//                    let module = primitive.module!
-//                    let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                    self.hierarchyOutliner.addItem(newItem,in: parent)
-//                case .methodInstance(let instance):
-//                    let newItem = SymbolHolder(symbol: instance)
-//                    self.hierarchyItems[itemKey] = newItem
-//                    self.hierarchyItemsByHash[instance.identifierHash] = newItem
-//                    let module = instance.module!
-//                    let parent = self.hierarchyItemsByHash[module.identifierHash]!
-//                    self.hierarchyOutliner.addItem(newItem,in: parent)
-//                default:
-//                    break
-//                }
-//            }
-        }
         
     @IBAction func outlinerDoubleClicked(_ any: Any?)
         {
@@ -613,23 +531,86 @@ public class ArgonBrowserViewController: NSViewController,Dependent
 
     public func saveProject()
         {
-        if self.rootItem.hasBeenSavedOnce
+        var alert: NSAlert!
+        do
             {
-            let path = self.rootItem.path!
-            NSKeyedArchiver.archiveRootObject(self.rootItem, toFile: path)
-            return
+            if self.rootItem.hasBeenSavedOnce
+                {
+                if let wrappers = self.fileWrapper.fileWrappers?.values
+                    {
+                    for wrapper in wrappers
+                        {
+                        self.fileWrapper.removeFileWrapper(wrapper)
+                        }
+                    }
+                try self.updateAndWriteProject(self.fileWrapper,to: self.rootItem.url!)
+                return
+                }
+            let panel = NSSavePanel()
+            panel.allowedFileTypes = ["arpro"]
+            panel.message = "Please select the name and destination for this project."
+            panel.nameFieldLabel = "Enter the name of the file"
+            panel.nameFieldStringValue = self.rootItem.label
+            if panel.runModal() == .OK
+                {
+                self.rootItem.url = panel.url!
+                self.rootItem.hasBeenSavedOnce = true
+                self.fileWrapper = FileWrapper(directoryWithFileWrappers: [:])
+                try self.updateAndWriteProject(self.fileWrapper,to: self.rootItem.url!)
+                return
+                }
             }
-        let panel = NSSavePanel()
-        panel.allowedFileTypes = ["arpro"]
-        panel.message = "Please select the name and destination for this pro0ject."
-        panel.nameFieldLabel = "Enter the name of the file"
-        panel.nameFieldStringValue = self.rootItem.label
-        if panel.runModal() == .OK
+        catch let error as CompilerIssue
             {
-            let url = panel.url!
-            self.rootItem.path = url.path
-            self.rootItem.hasBeenSavedOnce = true
-            NSKeyedArchiver.archiveRootObject(self.rootItem, toFile: self.rootItem.path!)
+            alert = NSAlert()
+            alert.informativeText = "There was an error while serializing the project data."
+            alert.messageText = "Unable to save project data."
+            }
+        catch let error
+            {
+            alert = NSAlert(error: error)
+            }
+        alert.icon = NSImage(named: "AppIcon")!
+        alert.alertStyle = .critical
+        alert.runModal()
+        }
+        
+    private func updateAndWriteProject(_ fileWrapper: FileWrapper,to url: URL) throws
+        {
+        if let mainData = try? NSKeyedArchiver.archivedData(withRootObject: self.rootItem, requiringSecureCoding: false)
+            {
+            let classesData = try? NSKeyedArchiver.archivedData(withRootObject: self.classesController.rootItems,requiringSecureCoding: false)
+            let enumerationData = try? NSKeyedArchiver.archivedData(withRootObject: self.enumerationController.rootItems,requiringSecureCoding: false)
+            let constantsData = try? NSKeyedArchiver.archivedData(withRootObject: self.constantsController.rootItems,requiringSecureCoding: false)
+            let methodData = try? NSKeyedArchiver.archivedData(withRootObject: self.methodsController.rootItems,requiringSecureCoding: false)
+            let moduleData = try? NSKeyedArchiver.archivedData(withRootObject: self.modulesController.rootItems,requiringSecureCoding: false)
+            if classesData.isNil || enumerationData.isNil || constantsData.isNil || methodData.isNil || moduleData.isNil
+                {
+                throw(CompilerIssue(location: .zero,message: "Unable to marshal project data for writing."))
+
+                }
+            var wrappers = Dictionary<String,FileWrapper>()
+            wrappers["main.bin"] = FileWrapper(regularFileWithContents: mainData)
+            wrappers["classes.bin"] = FileWrapper(regularFileWithContents: classesData!)
+            wrappers["enumerations.bin"] = FileWrapper(regularFileWithContents: enumerationData!)
+            wrappers["constants.bin"] = FileWrapper(regularFileWithContents: constantsData!)
+            wrappers["methods.bin"] = FileWrapper(regularFileWithContents: methodData!)
+            wrappers["modules.bin"] = FileWrapper(regularFileWithContents: moduleData!)
+            let wrapper = FileWrapper(directoryWithFileWrappers: wrappers)
+            do
+                {
+                try wrapper.write(to: url,options: [.withNameUpdating],originalContentsURL: nil)
+                }
+            catch let error as NSError
+                {
+                let alert = NSAlert(error: error)
+                alert.informativeText = "ArgonWorks was unable to write out the project data."
+                alert.messageText = "ArgonWorks could not write the serialized project data to disk. Please try again later."
+                alert.icon = NSImage(named: "AppIcon")!
+                alert.alertStyle = .critical
+                alert.runModal()
+                return
+                }
             }
         }
     }
@@ -696,7 +677,7 @@ extension ArgonBrowserViewController: NSOutlineViewDelegate
         
     public func outlineView(_ outlineView: NSOutlineView,rowViewForItem anItem: Any) -> NSTableRowView?
         {
-        let view = RowView(selectionColor: NSColor.controlAccentColor)
+        let view = RowView(selectionColorIdentifier: .recordSelectionColor)
         return(view)
         }
     }

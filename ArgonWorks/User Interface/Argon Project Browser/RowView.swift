@@ -9,14 +9,14 @@ import Cocoa
 
 public class RowView:NSTableRowView
     {
-    private let selectionColor:NSColor
+    private let selectionColorIdentifier: StyleIdentifier
     public var indent:CGFloat = 0
     public var drawsLines = false
     public var lineColor = NSColor.white
     
-    init(selectionColor:NSColor)
+    init(selectionColorIdentifier: StyleIdentifier)
         {
-        self.selectionColor = selectionColor
+        self.selectionColorIdentifier = selectionColorIdentifier
         super.init(frame: .zero)
         }
     
@@ -29,7 +29,7 @@ public class RowView:NSTableRowView
         if self.selectionHighlightStyle != .none
             {
             let selectionRect = self.bounds
-            self.selectionColor.setFill()
+            Palette.shared.color(for: self.selectionColorIdentifier).setFill()
             let selectionPath = NSBezierPath.init(roundedRect: selectionRect, xRadius: 0, yRadius: 0)
             selectionPath.fill()
             }

@@ -43,28 +43,10 @@ public class Project: ProjectGroupItem,Dependent
         return(key)
         }
         
-    public class func open(atPath: String) throws -> Project
-        {
-        var isDirectory:ObjCBool = false
-        if !(FileManager.default.fileExists(atPath: atPath, isDirectory: &isDirectory) && isDirectory.boolValue)
-            {
-            throw(CompilerIssue(message: "The file at '\(atPath)' is not a valid project file."))
-            }
-        let itemsPath = (atPath as NSString).appendingPathComponent("items.bin")
-        if !FileManager.default.fileExists(atPath: itemsPath)
-            {
-            throw(CompilerIssue(message: "The project file at '\(atPath)' is not a valid Argon project file."))
-            }
-        let project = NSKeyedUnarchiver.unarchiveObject(withFile: itemsPath) as! Project
-        project.basePath = atPath
-        return(project)
-        }
-        
     public var targetType: TargetType = .none
     public var hasBeenSavedOnce = false
-    public var path: String?
+    public var url: URL?
     public var _nextItemKey = 1001
-    public var basePath: String!
     public var _module: Module
     
     public override init(label: Label)
@@ -75,7 +57,7 @@ public class Project: ProjectGroupItem,Dependent
         super.init(label: label)
         self.icon = NSImage(named: "IconProject")!
         self.icon.isTemplate = true
-        self.iconTint = SyntaxColorPalette.projectColor
+        self.iconTintIdentifier = .projectColor
         self.itemKey = 1000
         }
         
@@ -83,7 +65,7 @@ public class Project: ProjectGroupItem,Dependent
         {
         self.targetType = TargetType(rawValue: coder.decodeInteger(forKey: "targetType"))!
         self.hasBeenSavedOnce = coder.decodeBool(forKey: "hasBeenSavedOnce")
-        self.path = coder.decodeObject(forKey: "path") as? String
+        self.url = coder.decodeObject(forKey: "url") as? URL
         self._module = coder.decodeObject(forKey: "module") as! Module
         self._nextItemKey = coder.decodeInteger(forKey: "nextItemKey")
         super.init(coder: coder)
@@ -93,7 +75,7 @@ public class Project: ProjectGroupItem,Dependent
         {
         coder.encode(self.targetType.rawValue,forKey: "targetType")
         coder.encode(self.hasBeenSavedOnce,forKey: "hasBeenSavedOnce")
-        coder.encode(self.path,forKey: "path")
+        coder.encode(self.url,forKey: "url")
         coder.encode(self._module,forKey: "module")
         coder.encode(self._nextItemKey,forKey: "nextItemKey")
         super.encode(with: coder)
@@ -162,31 +144,5 @@ public class Project: ProjectGroupItem,Dependent
         menu.addItem(withTitle: "New Symbol", action: #selector(ArgonBrowserViewController.onNewSymbolClicked), keyEquivalent: "").target = forTarget
         menu.addItem(withTitle: "New Module", action: #selector(ArgonBrowserViewController.onNewModuleClicked), keyEquivalent: "").target = forTarget
         menu.addItem(withTitle: "New Group", action: #selector(ArgonBrowserViewController.onNewGroupClicked), keyEquivalent: "").target = forTarget
-        }
-        
-    public func updateProjectBundle(withSource source: String,forItem key: Int)
-        {
-        }
-        
-    public func save()
-        {
-        if self.hasBeenSavedOnce
-            {
-            let path = self.path!
-            NSKeyedArchiver.archiveRootObject(self, toFile: path)
-            return
-            }
-        let panel = NSSavePanel()
-        panel.allowedFileTypes = ["arpro"]
-        panel.message = "Please select the name and destination for this project."
-        panel.nameFieldLabel = "Enter the name of the file"
-        panel.nameFieldStringValue = self.label
-        if panel.runModal() == .OK
-            {
-            let url = panel.url!
-            self.path = url.path
-            self.hasBeenSavedOnce = true
-            NSKeyedArchiver.archiveRootObject(self, toFile: self.path!)
-            }
         }
     }

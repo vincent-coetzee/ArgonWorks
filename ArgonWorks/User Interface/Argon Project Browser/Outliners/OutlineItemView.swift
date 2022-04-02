@@ -10,7 +10,6 @@ import Cocoa
 public protocol OutlineItemView: AnyObject
     {
     var outlineItem: OutlineItem? { get set }
-    var font: NSFont { get set }
     }
     
 public typealias OutlineItemNSView = OutlineItemView & NSView

@@ -18,7 +18,7 @@ public protocol SourceDelegate
     
 public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnnotationViewDelegate
     {
-    public var sourceRecord: SourceRecord!
+    public weak var sourceRecord: SourceRecord!
         {
         didSet
             {
@@ -85,7 +85,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
     private let annotationView: SyntaxAnnotationView
     public var incrementalParser: IncrementalParser!
     private let systemClassNames = ArgonModule.shared.systemClassNames!
-    public var sourceItem: ProjectSourceItem!
+    public weak var sourceItem: ProjectSourceItem!
     public var activeAnnotations = Dictionary<Int,CALayer>()
     
     init()
@@ -95,6 +95,8 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         self.annotationView = SyntaxAnnotationView(gutterWidth: 50)
         self.annotationView.translatesAutoresizingMaskIntoConstraints = false
         super.init(frame: .zero)
+        self.textView.font = Palette.shared.font(for: .editorFont)
+        self.textView.backgroundColor = Palette.shared.color(for: .editorBackgroundColor)
         self.textView.isEditable = true
         self.textView.wantsLayer = true
         self.annotationView.delegate = self
@@ -202,7 +204,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
     public func kindChanged(token: Token)
         {
         let kind = token.kind
-        var localAttributes:[NSAttributedString.Key:Any] = [.foregroundColor: NSColor.white,.font: self.font]
+        var localAttributes:[NSAttributedString.Key:Any] = [.foregroundColor: Palette.shared.color(for: .editorTextColor),.font: Palette.shared.font(for: .editorFont)]
         switch(kind)
             {
             case .none:

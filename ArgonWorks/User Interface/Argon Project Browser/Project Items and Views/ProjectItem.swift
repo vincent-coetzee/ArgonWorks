@@ -7,6 +7,11 @@
 
 import Cocoa
 
+public struct WeakTableCellView
+    {
+    public weak var tableCellView: NSTableCellView?
+    }
+    
 public class ProjectItem: NSObject,NSCoding,AspectModel
     {
     public static let kIconHeight:CGFloat = 12
@@ -81,14 +86,18 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
             self.changed(aspect: "versionState",with: self.versionState,from: self)
             }
         }
-    public var parentItem: ProjectItem?
-    internal var cellViews = Dictionary<NSUserInterfaceItemIdentifier,NSTableCellView>()
+    public unowned var parentItem: ProjectItem?
+    internal var cellViews = Dictionary<NSUserInterfaceItemIdentifier,WeakTableCellView>()
     public var controller: ArgonBrowserViewController!
     public var height: CGFloat = 0
     public var icon: NSImage!
-    public var iconTint: NSColor = .white
+    public var iconTintIdentifier: StyleIdentifier = .none
+    public var textColorIdentifier: StyleIdentifier = .recordTextColor
+    public var backgroundColorIdentifier: StyleIdentifier = .recordBackgroundColor
+    public var fontIdentifier: StyleIdentifier = .recordTextFont
     public var itemKey: Int = 0
     public var validActions: BrowserActionSet = []
+    public var isExpanded = false
     
     init(label: Label)
         {
@@ -114,8 +123,12 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         self.label = coder.decodeObject(forKey: "label") as! String
         self.parentItem = coder.decodeObject(forKey: "parentItem") as? ProjectItem
         self.icon = coder.decodeObject(forKey: "icon") as? NSImage
-        self.iconTint = coder.decodeObject(forKey: "iconTint") as! NSColor
+        self.iconTintIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "iconTint")!)!
+        self.textColorIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "textColor")!)!
+        self.backgroundColorIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "backgroundColor")!)!
+        self.fontIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "font")!)!
         self.itemKey = coder.decodeInteger(forKey: "itemKey")
+        self.isExpanded = coder.decodeBool(forKey: "isExpanded")
         super.init()
         self.validActions = self.initValidActions()
         }
@@ -152,8 +165,12 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         coder.encode(self.label,forKey: "label")
         coder.encode(self.parentItem,forKey: "parentItem")
         coder.encode(self.icon,forKey: "icon")
-        coder.encode(self.iconTint,forKey: "iconTint")
+        coder.encode(self.iconTintIdentifier.rawValue,forKey: "iconTint")
+        coder.encode(self.textColorIdentifier.rawValue,forKey: "textColor")
+        coder.encode(self.backgroundColorIdentifier.rawValue,forKey: "backgroundColor")
+        coder.encode(self.fontIdentifier.rawValue,forKey: "font")
         coder.encode(self.itemKey,forKey: "itemKey")
+        coder.encode(self.isExpanded,forKey: "isExpanded")
         }
         
     public func insertItems(_ items: Array<ProjectItem>,atIndex index:Int)
@@ -189,12 +206,12 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         
     public func makeCellView(inOutliner outliner: NSOutlineView,forColumn columnIdentifier: NSUserInterfaceItemIdentifier) -> NSTableCellView?
         {
-        if let view = self.cellViews[columnIdentifier]
+        if let holder = self.cellViews[columnIdentifier]
             {
-            return(view)
+            return(holder.tableCellView)
             }
         let view = self._makeCellView(inOutliner: outliner,forColumn: columnIdentifier)
-        self.cellViews[columnIdentifier] = view
+        self.cellViews[columnIdentifier] = WeakTableCellView(tableCellView: view)
         return(view)
         }
         
@@ -204,12 +221,12 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
             {
             let view = ProjectItemView(frame: .zero)
             view.item = self
-            view.font = self.controller.sourceOutlinerFont
+            view.font = Palette.shared.font(for: self.fontIdentifier)
             view.viewText.stringValue = self.label
-            view.viewText.textColor = NSColor.white
+            view.viewText.textColor = Palette.shared.color(for: self.textColorIdentifier)
             view.viewImage.image = self.icon
             view.viewImage.image!.isTemplate = true
-            view.viewImage.contentTintColor = self.iconTint
+            view.viewImage.contentTintColor = Palette.shared.color(for: self.iconTintIdentifier)
             return(view)
             }
         else if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "VersionState")
@@ -228,14 +245,14 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         
     public func height(inWidth: CGFloat) -> CGFloat
         {
-        let stringSize = self.measureString(self.label,withFont: self.controller.sourceOutlinerFont,inWidth: inWidth)
+        let stringSize = self.measureString(self.label,withFont: Palette.shared.font(for: self.fontIdentifier),inWidth: inWidth)
         let height = stringSize.height
         return(height)
         }
         
     public func measureString(_ string: String,withFont: NSFont,inWidth width:CGFloat) -> NSSize
         {
-        let attributedString = NSAttributedString(string: string,attributes:[.font: withFont,.foregroundColor: NSColor.white])
+        let attributedString = NSAttributedString(string: string,attributes:[.font: withFont,.foregroundColor: Palette.shared.color(for: self.textColorIdentifier)])
         let size = NSSize(width: width,height: .infinity)
         let rect = attributedString.boundingRect(with: size, options: .usesLineFragmentOrigin)
         return(rect.size)

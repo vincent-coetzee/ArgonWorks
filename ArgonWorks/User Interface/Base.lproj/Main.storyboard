@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="20037"/>
-        <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -61,23 +60,12 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="File" id="bib-Uj-vzu">
                                     <items>
-                                        <menuItem title="Argon Editor" keyEquivalent="n" id="Was-JA-tGl">
-                                            <connections>
-                                                <action selector="openArgonBrowser:" target="Ady-hI-5gd" id="aMW-FQ-v4j"/>
-                                                <segue destination="41J-K5-aci" kind="show" id="q2K-cI-aGR"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Argon Browser" keyEquivalent="p" id="JOR-SX-s59">
                                             <connections>
                                                 <segue destination="WtR-hF-r9P" kind="show" id="dQN-O1-qGa"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="cZ5-KF-5u2"/>
-                                        <menuItem title="Open…" keyEquivalent="o" id="IAo-SY-fd9">
-                                            <connections>
-                                                <action selector="onOpenDocument:" target="Ady-hI-5gd" id="Ywn-Mm-gVc"/>
-                                            </connections>
-                                        </menuItem>
                                         <menuItem title="Open Project" id="A7M-5d-JlH">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
@@ -735,7 +723,7 @@
                 </windowController>
                 <customObject id="L5G-44-R4n" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1323" y="-125"/>
+            <point key="canvasLocation" x="1162" y="-103"/>
         </scene>
         <!--Argon Browser View Controller-->
         <scene sceneID="XKV-09-fyv">
@@ -900,115 +888,6 @@
                 <customObject id="zTA-15-78q" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="2252" y="-110"/>
-        </scene>
-        <!--Window Controller-->
-        <scene sceneID="RtZ-lX-Wyw">
-            <objects>
-                <windowController id="41J-K5-aci" sceneMemberID="viewController">
-                    <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="TxJ-31-rfm">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="555" y="611" width="480" height="270"/>
-                        <rect key="screenRect" x="0.0" y="0.0" width="3200" height="1775"/>
-                        <view key="contentView" id="Dlx-hV-YnT">
-                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                        </view>
-                        <toolbar key="toolbar" implicitIdentifier="3B864513-FD59-4A19-991B-CD7AA64F720C" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="cmm-fN-vzw">
-                            <allowedToolbarItems>
-                                <toolbarItem implicitItemIdentifier="NSToolbarShowFontsItem" id="jBo-wP-Dor"/>
-                                <toolbarItem implicitItemIdentifier="NSToolbarPrintItem" id="Esd-2F-0va"/>
-                                <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="h4m-6t-vC3"/>
-                                <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="BKO-sh-Ecr"/>
-                                <toolbarItem implicitItemIdentifier="084B08BD-8B19-4A8F-9F68-9CCA84BA7B80" label="New" paletteLabel="New" tag="-1" bordered="YES" id="rRv-wm-Dbw">
-                                    <imageReference key="image" image="doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
-                                    <size key="minSize" width="29" height="25"/>
-                                    <size key="maxSize" width="29" height="25"/>
-                                    <connections>
-                                        <action selector="onNewFile:" target="hXe-wT-Ffw" id="rlN-2d-V5w"/>
-                                    </connections>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="DAE89D2E-A740-40FA-AC7C-069A236164F2" label="Open" paletteLabel="Open" tag="-1" bordered="YES" id="ehJ-i3-L2M">
-                                    <imageReference key="image" image="arrow.up.doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
-                                    <size key="minSize" width="29" height="25"/>
-                                    <size key="maxSize" width="29" height="25"/>
-                                    <connections>
-                                        <action selector="onOpenFile:" target="hXe-wT-Ffw" id="fGt-m9-8OS"/>
-                                    </connections>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="04656662-2DC6-4F87-BCCE-589659C91E72" label="Save" paletteLabel="Save" tag="-1" bordered="YES" id="lm6-AF-bqd">
-                                    <imageReference key="image" image="arrow.down.doc" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
-                                    <size key="minSize" width="29" height="25"/>
-                                    <size key="maxSize" width="29" height="25"/>
-                                    <connections>
-                                        <action selector="onSaveFile:" target="hXe-wT-Ffw" id="IMf-gI-7g8"/>
-                                    </connections>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="3F4132FA-3352-4C5B-9DA3-C92DD0A581BA" label="Compile" paletteLabel="Compile" tag="-1" bordered="YES" id="pN9-mz-yZn">
-                                    <imageReference key="image" image="gearshape.2" catalog="system" symbolScale="large" renderingMode="hierarchical-single"/>
-                                    <size key="minSize" width="37" height="25"/>
-                                    <size key="maxSize" width="37" height="25"/>
-                                    <connections>
-                                        <action selector="onCompileFile:" target="hXe-wT-Ffw" id="ayi-5c-TuX"/>
-                                    </connections>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="D2107724-E1C1-489F-A132-748A9A04F1F6" label="Objects" paletteLabel="Objects" tag="-1" bordered="YES" id="okG-OX-a6d">
-                                    <imageReference key="image" image="shippingbox" catalog="system" symbolScale="large" renderingMode="hierarchical"/>
-                                    <size key="minSize" width="32" height="25"/>
-                                    <size key="maxSize" width="32" height="25"/>
-                                    <connections>
-                                        <action selector="onSaveObjectFile:" target="hXe-wT-Ffw" id="Ocv-iW-4LG"/>
-                                    </connections>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="D58D5E4F-7135-4334-8F57-3FE175310525" label="Run" paletteLabel="Run" tag="-1" bordered="YES" id="Xtm-4P-zi0">
-                                    <imageReference key="image" image="bolt.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
-                                        <hierarchicalColors>
-                                            <color red="1" green="0.039215686270000001" blue="0.42745098040000001" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
-                                            <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
-                                        </hierarchicalColors>
-                                    </imageReference>
-                                    <size key="minSize" width="32" height="25"/>
-                                    <size key="maxSize" width="32" height="25"/>
-                                </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="E12771CE-75C9-4FA5-AC5E-4F444C5FECF4" label="Debug" paletteLabel="Debug" tag="-1" bordered="YES" id="SyN-A1-RbL">
-                                    <imageReference key="image" image="ant.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
-                                        <hierarchicalColors>
-                                            <color red="1" green="0.039215686270000001" blue="0.42745098040000001" alpha="1" colorSpace="calibratedRGB"/>
-                                            <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
-                                            <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
-                                        </hierarchicalColors>
-                                    </imageReference>
-                                    <size key="minSize" width="32" height="25"/>
-                                    <size key="maxSize" width="32" height="25"/>
-                                </toolbarItem>
-                            </allowedToolbarItems>
-                            <defaultToolbarItems>
-                                <toolbarItem reference="pN9-mz-yZn"/>
-                                <toolbarItem reference="h4m-6t-vC3"/>
-                                <toolbarItem reference="Xtm-4P-zi0"/>
-                                <toolbarItem reference="SyN-A1-RbL"/>
-                                <toolbarItem reference="h4m-6t-vC3"/>
-                                <toolbarItem reference="okG-OX-a6d"/>
-                                <toolbarItem reference="lm6-AF-bqd"/>
-                                <toolbarItem reference="ehJ-i3-L2M"/>
-                                <toolbarItem reference="rRv-wm-Dbw"/>
-                                <toolbarItem reference="h4m-6t-vC3"/>
-                                <toolbarItem reference="Esd-2F-0va"/>
-                                <toolbarItem reference="jBo-wP-Dor"/>
-                            </defaultToolbarItems>
-                        </toolbar>
-                        <connections>
-                            <outlet property="delegate" destination="41J-K5-aci" id="HFx-fS-MLD"/>
-                        </connections>
-                    </window>
-                    <connections>
-                        <segue destination="5Nr-v2-P0E" kind="relationship" relationship="window.shadowedContentViewController" id="adi-ZM-RwW"/>
-                    </connections>
-                </windowController>
-                <customObject id="hXe-wT-Ffw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1186" y="-99"/>
         </scene>
         <!--Editor View Controller-->
         <scene sceneID="6E4-gj-yaX">
@@ -1224,13 +1103,4 @@
             <point key="canvasLocation" x="1094.5" y="789.5"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="ant.circle" catalog="system" width="20" height="20"/>
-        <image name="arrow.down.doc" catalog="system" width="18" height="21"/>
-        <image name="arrow.up.doc" catalog="system" width="18" height="21"/>
-        <image name="bolt.circle" catalog="system" width="20" height="20"/>
-        <image name="doc" catalog="system" width="18" height="21"/>
-        <image name="gearshape.2" catalog="system" width="26" height="21"/>
-        <image name="shippingbox" catalog="system" width="21" height="21"/>
-    </resources>
 </document>

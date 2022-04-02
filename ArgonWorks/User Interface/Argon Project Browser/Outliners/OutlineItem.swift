@@ -9,10 +9,12 @@ import Cocoa
 
 public protocol OutlineItem: AnyObject
     {
+    var isExpanded: Bool { get set }
     var parentItem: OutlineItem? { get }
     var identityKey: Int { get }
     var isSystemItem: Bool { get }
-    var iconTint: NSColor { get }
+    var iconTintIdentifier: StyleIdentifier { get }
+    var textColorIdentifier: StyleIdentifier { get }
     var childCount: Int { get }
     var label: String { get }
     var icon: NSImage { get }

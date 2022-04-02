@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public enum OutlinerContext
+public enum OutlinerContext: Int
     {
     case `default`
     case classes
@@ -118,7 +118,7 @@ public class Outliner: NSViewController
             }
         }
     
-    public var font: NSFont = NSFont(name: "SunSans-SemiBold",size: 10)!
+    public var font: NSFont = Palette.shared.font(for: .textFont)
         {
         didSet
             {
@@ -160,6 +160,7 @@ public class Outliner: NSViewController
         self.outlineView = NSOutlineView(frame: .zero)
         super.init(nibName: nil,bundle: nil)
         self.initViews()
+        self.initDependencies()
         }
         
     public override func loadView()
@@ -223,11 +224,29 @@ public class Outliner: NSViewController
         self.scrollView.hasHorizontalScroller = false
         self.scrollView.hasVerticalScroller = true
         self.outlineView.rowHeight = self.font.lineHeight
-        self.outlineView.intercellSpacing = NSSize(width: 0,height: 0)
+        self.outlineView.intercellSpacing = NSSize(width: 0,height: 2)
         self.outlineView.style = .plain
         self.scrollView.borderType = .noBorder
         self.scrollView.drawsBackground = false
         self.outlineView.backgroundColor = NSColor.argonBlack70
+        }
+        
+    private func initDependencies()
+        {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.itemDidExpand), name: NSOutlineView.itemDidExpandNotification, object: self.outlineView)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.itemDidCollapse), name: NSOutlineView.itemDidCollapseNotification, object: self.outlineView)
+        }
+        
+   @IBAction public func itemDidExpand(_ notification: Notification)
+        {
+        let record = notification.userInfo!["NSObject"] as! OutlineItem
+        record.isExpanded = true
+        }
+        
+    @IBAction public func itemDidCollapse(_ notification: Notification)
+        {
+        let record = notification.userInfo!["NSObject"] as! OutlineItem
+        record.isExpanded = false
         }
         
     public func beginUpdates()
@@ -367,13 +386,12 @@ extension Outliner: NSOutlineViewDelegate
         let entry = item as! OutlineItem
         let view = entry.makeView(for: self)
         view.outlineItem = entry
-        view.font = self.font
         return(view)
         }
         
     public func outlineView(_ outlineView: NSOutlineView,rowViewForItem anItem: Any) -> NSTableRowView?
         {
-        let view = RowView(selectionColor: NSColor.controlAccentColor)
+        let view = RowView(selectionColorIdentifier: .rowSelectionColor)
         return(view)
         }
     }

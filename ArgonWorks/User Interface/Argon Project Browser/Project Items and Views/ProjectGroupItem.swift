@@ -52,7 +52,7 @@ public class ProjectGroupItem: ProjectItem
         super.init(label: label)
         self.icon = NSImage(named: "IconGroup")!
         self.icon.isTemplate = true
-        self.iconTint = NSColor.argonLime
+        self.iconTintIdentifier = .groupColor
         }
         
     public required init?(coder: NSCoder)

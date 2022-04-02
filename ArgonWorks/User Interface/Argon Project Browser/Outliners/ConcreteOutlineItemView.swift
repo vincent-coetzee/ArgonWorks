@@ -9,14 +9,6 @@ import Cocoa
 
 public class ConcreteOutlineItemView: NSTableCellView,OutlineItemView
     {
-    public var font: NSFont = NSFont.systemFont(ofSize: 10)
-        {
-        didSet
-            {
-            self.textView.font = self.font
-            }
-        }
-        
     public var outlineItem: OutlineItem?
         {
         didSet
@@ -54,15 +46,16 @@ public class ConcreteOutlineItemView: NSTableCellView,OutlineItemView
     private func update()
         {
         self.textView.stringValue = self.outlineItem!.label
+        self.textView.font = Palette.shared.font(for: .textFont)
         self.iconView.image = self.outlineItem!.icon
         self.iconView.image!.isTemplate = true
-        self.iconView.contentTintColor = self.outlineItem!.iconTint
+        self.iconView.contentTintColor = Palette.shared.color(for: self.outlineItem!.iconTintIdentifier)
         self.systemView.isHidden = !self.outlineItem!.isSystemItem
         if self.outlineItem!.isSystemItem
             {
             self.systemView.image = NSImage(named: "IconSystem")!
             self.systemView.image!.isTemplate = true
-            self.systemView.contentTintColor = NSColor.argonNeonPink
+            self.systemView.contentTintColor = Palette.shared.color(for: .systemTypeColor)
             }
         }
         
@@ -70,9 +63,9 @@ public class ConcreteOutlineItemView: NSTableCellView,OutlineItemView
         {
         super.layout()
         let height = self.bounds.size.height
-        self.iconView.frame = NSRect(x: height,y: 0,width: height,height: height).insetBy(dx: 1, dy: 2)
-        self.systemView.frame = NSRect(x: 0,y:0,width: height,height: height).insetBy(dx: 1,dy: 2)
-        let font = self.textView.font
+        self.iconView.frame = NSRect(x: height,y: 0,width: height,height: height).insetBy(dx: 1, dy: 0)
+        self.systemView.frame = NSRect(x: 0,y:0,width: height,height: height).insetBy(dx: 1,dy: 0)
+        let font = Palette.shared.font(for: .textFont)
         let string = self.textView.stringValue
         let size = NSAttributedString(string: string,attributes: [.font: font]).size()
         let delta = (height - size.height) / 2

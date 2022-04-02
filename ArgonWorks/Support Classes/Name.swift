@@ -176,6 +176,16 @@ public struct Name:CustomStringConvertible,Comparable,Hashable
         return(self.components.first!.string)
         }
         
+    public var car: String
+        {
+        self.first
+        }
+        
+    public var cdr: Name
+        {
+        self.withoutFirst
+        }
+        
     public var last: Label
         {
         return(self.components.last!.string)

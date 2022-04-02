@@ -308,6 +308,16 @@ public class TypeClass: TypeConstructor
         "IconClass"
         }
         
+    public override var identityHash: Int
+        {
+        var hash = super.identityHash
+        for aType in self.generics
+            {
+            hash = hash << 13 ^ aType.identityHash
+            }
+        return(hash)
+        }
+        
     public override var iconTint: NSColor
         {
         SyntaxColorPalette.classColor
@@ -396,6 +406,27 @@ public class TypeClass: TypeConstructor
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
         coder.encode(self.metaclass,forKey: "metaclassClass")
         super.encode(with: coder)
+        }
+        
+    public override func lookup(name inName: Name) -> Symbol?
+        {
+        if inName.isEmpty
+            {
+            return(nil)
+            }
+        let first = inName.car
+        for symbol in self.instanceSlots
+            {
+            if symbol.label == first
+                {
+                if inName.isEmpty
+                    {
+                    return(symbol)
+                    }
+                return(nil)
+                }
+            }
+        return(nil)
         }
         
     public override func withGenerics(_ types: Types) -> Type

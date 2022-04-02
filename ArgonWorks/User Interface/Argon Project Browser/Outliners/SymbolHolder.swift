@@ -6,10 +6,8 @@
 //
 
 import Cocoa
-
-
         
-public class SymbolHolder: OutlineItem
+public class SymbolHolder: NSObject,NSCoding,OutlineItem
     {
     public var identityKey: Int
         {
@@ -21,39 +19,44 @@ public class SymbolHolder: OutlineItem
         self.symbol.isSystemType
         }
         
-    public var iconTint: NSColor
+    public var textColorIdentifier: StyleIdentifier
+        {
+        .textColor
+        }
+        
+    public var iconTintIdentifier: StyleIdentifier
         {
         if self.symbol is TypeClass
             {
-            return(SyntaxColorPalette.classColor)
+            return(.classColor)
             }
         else if self.symbol is TypeEnumeration || self.symbol is EnumerationCase
             {
-            return(SyntaxColorPalette.enumerationColor)
+            return(.enumerationColor)
             }
         else if self.symbol is Method || self.symbol is MethodInstance
             {
-            return(SyntaxColorPalette.methodColor)
+            return(.methodColor)
             }
         else if self.symbol is TypeAlias
             {
-            return(SyntaxColorPalette.typeColor)
+            return(.typeColor)
             }
         else if self.symbol is Constant
             {
-            return(SyntaxColorPalette.constantColor)
+            return(.constantColor)
             }
         else if symbol is Slot
             {
-            return(SyntaxColorPalette.slotColor)
+            return(.slotColor)
             }
         else if symbol is Module
             {
-            return(SyntaxColorPalette.identifierColor)
+            return(.identifierColor)
             }
         else
             {
-            return(NSColor.white)
+            return(.defaultColor)
             }
         }
     
@@ -129,12 +132,29 @@ public class SymbolHolder: OutlineItem
     private var symbolChildren: Symbols?
     private let context: OutlinerContext
     public unowned var parentItem: OutlineItem?
+    public var isExpanded = false
     
+    public required init?(coder: NSCoder)
+        {
+        self.context = OutlinerContext(rawValue: coder.decodeInteger(forKey: "context"))!
+        self.parentItem = coder.decodeObject(forKey: "parentItem") as? OutlineItem
+        self.isExpanded = coder.decodeBool(forKey: "isExpanded")
+        self.symbol = TopModule.shared.lookup(name: coder.decodeName(forKey: "symbolName"))!
+        }
+        
     init(symbol: Symbol,context: OutlinerContext,parent: OutlineItem? = nil)
         {
         self.symbol = symbol
         self.context = context
         self.parentItem = parent
+        }
+        
+    public func encode(with coder: NSCoder)
+        {
+        coder.encode(self.context.rawValue,forKey: "context")
+        coder.encode(self.parentItem,forKey: "parentItem")
+        coder.encode(self.isExpanded,forKey: "isExpanded")
+        coder.encodeName(self.symbol.fullName,forKey: "symbolName")
         }
         
     public func child(atIndex: Int) -> OutlineItem

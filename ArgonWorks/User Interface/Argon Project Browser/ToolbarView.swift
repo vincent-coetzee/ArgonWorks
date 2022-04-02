@@ -120,6 +120,7 @@ public class ToolbarButton: NSButton,Control,Dependent
         if aspect == "value" && sender.dependentKey == self.enabledValueModel.dependentKey
             {
             self.isEnabled = (argument as? BrowserActionSet)?.contains(self.browserAction) ?? false
+            print("ENABLE \(self.browserAction) \((argument as? BrowserActionSet)?.contains(self.browserAction) ?? false)")
             }
         }
     }

@@ -253,7 +253,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.editorView.isAutomaticQuoteSubstitutionEnabled = false
         self.editorView.isAutomaticDashSubstitutionEnabled = false
         self.editorView.isAutomaticTextReplacementEnabled = false
-        self.editorView.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
+//        self.editorView.selectionHighlightColor = Palette.shared.sourceSelectedLineHighlightColor
         }
         
     private func scrollToLineNumber(_ line: Int)

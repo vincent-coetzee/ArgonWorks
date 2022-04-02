@@ -333,96 +333,25 @@ extension NSCoder
         self.encode(symbol.rawValue,forKey: forKey)
         }
         
-//    public func decodeType(forKey: String) -> Type?
-//        {
-//        let flag = self.decodeInteger(forKey: forKey + "flag")
-//        if flag == -1
-//            {
-//            return(nil)
-//            }
-//        let kind = self.decodeInteger(forKey: forKey + "kind")
-//        switch(kind)
-//            {
-//            case(1):
-//                 return(Type.class(self.decodeObject(forKey: forKey + "class") as! Class))
-//            case(2):
-//                return(Type.enumeration(self.decodeObject(forKey: forKey + "enumeration") as! Enumeration))
-//            case(5):
-//                return(Type.methodInstance(self.decodeString(forKey: forKey + "name")!,self.decodeTypes(forKey: forKey + "types"),self.decodeType(forKey: forKey + "type")!))
-//            case(6):
-//                return(Type.unknown)
-//            case(7):
-//                return(Type.typeParameter(self.decodeObject(forKey:forKey + "genericClassParameter") as! TypeParameter))
-//            case(8):
-//                return(Type.genericClass(self.decodeObject(forKey:forKey + "genericClass") as! GenericClass))
-//            case(9):
-//                return(Type.genericClassInstance(self.decodeObject(forKey:forKey + "genericClassInstance") as! GenericClassInstance))
-//            default:
-//                fatalError("Invalid type kind - error in archive")
-//            }
-//        }
+    public func encodeVersionState(_ state: VersionState,forKey: String)
+        {
+        self.encode(state.rawValue,forKey: forKey + "versionState")
+        }
         
-//    public func decodeTypes(forKey: String) -> Types
-//        {
-//        let count = self.decodeInteger(forKey: forKey + "count")
-//        var types = Types()
-//        for index in 0..<count
-//            {
-//            types.append(self.decodeType(forKey: forKey + "type\(index)")!)
-//            }
-//        return(types)
-//        }
-//        
-//    public func encodeTypes(_ types: Types,forKey: String)
-//        {
-//        self.encode(types.count,forKey: forKey + "count")
-//        var index = 0
-//        for type in types
-//            {
-//            self.encodeType(type,forKey: forKey + "type\(index)")
-//            index += 1
-//            }
-//        }
+    public func decodeVersionState(forKey: String) -> VersionState
+        {
+        VersionState(rawValue: self.decodeObject(forKey: forKey + "versionState") as! String)!
+        }
         
-//    public func encodeType(_ type: Type?,forKey: String)
-//        {
-//        if type.isNil
-//            {
-//            self.encode(-1,forKey:forKey + "flag")
-//            return
-//            }
-//        else
-//            {
-//            self.encode(1,forKey: forKey + "flag")
-//            switch(type)
-//                {
-//                case .class(let aClass):
-//                    self.encode(1,forKey: forKey + "kind")
-//                    self.encode(aClass,forKey: forKey + "class")
-//                case .enumeration(let aClass):
-//                    self.encode(2,forKey: forKey + "kind")
-//                    self.encode(aClass,forKey: forKey + "enumeration")
-//                case .methodInstance(let name,let types,let type):
-//                    self.encode(5,forKey: forKey + "kind")
-//                    self.encode(name,forKey:forKey + "name")
-//                    self.encodeTypes(types,forKey: forKey + "types")
-//                    self.encodeType(type,forKey: forKey + "type")
-//                case .unknown:
-//                    self.encode(6,forKey: forKey + "kind")
-//                case .typeParameter(let aClass):
-//                    self.encode(7,forKey: forKey + "kind")
-//                    self.encode(aClass,forKey: forKey + "genericClassParameter")
-//                case .genericClass(let aClass):
-//                    self.encode(8,forKey: forKey + "kind")
-//                    self.encode(aClass,forKey: forKey + "genericClass")
-//                case .genericClassInstance(let aClass):
-//                    self.encode(9,forKey: forKey + "kind")
-//                    self.encode(aClass,forKey: forKey + "genericClassInstance")
-//                default:
-//                    fatalError("Should not happen")
-//                }
-//            }
-//        }
+    public func encodeName(_ name: Name,forKey: String)
+        {
+        name.encode(with: self,forKey: forKey)
+        }
+        
+    public func decodeName(forKey: String) -> Name
+        {
+        Name(coder: self,forKey: forKey)
+        }
         
     public func encodeDynamicLibrary(_ library: DynamicLibrary,forKey: String)
         {
@@ -434,24 +363,6 @@ extension NSCoder
         let string = self.decodeObject(forKey: forKey)
         return(string as? String)
         }
-        
-//    public func encodeParent(_ parent: Parent,forKey key: String)
-//        {
-//        switch(parent)
-//            {
-//            case .none:
-//                self.encode(0,forKey: key + "type")
-//            case .node(let node):
-//                self.encode(1,forKey: key + "type")
-//                self.encode(node,forKey: key + "node")
-//            case .block(let block):
-//                self.encode(2,forKey: key + "type")
-//                self.encode(block,forKey: key + "block")
-//            case .expression(let expression):
-//                self.encode(3,forKey: key + "type")
-//                self.encode(expression,forKey: key + "expression")
-//            }
-//        }
 
     public func decodeNodeLocations(forKey: String) -> NodeLocations
         {

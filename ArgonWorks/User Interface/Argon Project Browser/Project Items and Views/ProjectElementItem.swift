@@ -45,35 +45,34 @@ public class ProjectElementItem: ProjectItem
                 case .methodInstance(let instance):
                     self.label = "Method Instance \(instance.label)"
                     self.icon = instance.icon
-                    self.iconTint = instance.iconTint
-                    self.updateCellViews(string: self.attributedString(self.label,highlight: instance.label,inColor: self.iconTint))
+                    self.iconTintIdentifier = .methodColor
+                    self.updateCellViews(string: self.attributedString(self.label,highlight: instance.label,inColor: self.iconTintIdentifier))
                     self.sourceItem.sourceRecord.primarySymbol = instance
                     instance.itemKey = self.itemKey
                 case .enumeration(let enumeration):
                     self.label = "Enumeration \(enumeration.label)"
                     self.icon = enumeration.icon
-                    self.iconTint = enumeration.iconTint
-                    self.updateCellViews(string: self.attributedString(self.label,highlight: enumeration.label,inColor: self.iconTint))
+                    self.iconTintIdentifier = .enumerationColor
+                    self.updateCellViews(string: self.attributedString(self.label,highlight: enumeration.label,inColor: self.iconTintIdentifier))
                     self.sourceItem.sourceRecord.primarySymbol = enumeration
                     enumeration.itemKey = self.itemKey
                 case .class(let aClass):
                     self.icon = aClass.icon
-                    self.iconTint = aClass.iconTint
+                    self.iconTintIdentifier = .classColor
                     self.label = "Class \(aClass.label)"
-                    self.updateCellViews(string: self.attributedString(self.label,highlight: aClass.label,inColor: self.iconTint))
+                    self.updateCellViews(string: self.attributedString(self.label,highlight: aClass.label,inColor: self.iconTintIdentifier))
                     self.sourceItem.sourceRecord.primarySymbol = aClass
                     aClass.itemKey = self.itemKey
                 case .typeAlias(let aType):
                     self.label = "Type \(aType.label)"
                     self.icon = aType.icon
-                    self.iconTint = aType.iconTint
-                    self.updateCellViews(string: self.attributedString(self.label,highlight: aType.label,inColor: self.iconTint))
+                    self.iconTintIdentifier = .typeColor
+                    self.updateCellViews(string: self.attributedString(self.label,highlight: aType.label,inColor: self.iconTintIdentifier))
                     self.sourceItem.sourceRecord.primarySymbol = aType
                     aType.itemKey = self.itemKey
                 default:
                     break
                 }
-            self.controller.updateHierarchy(itemKey: self.itemKey,symbolValue: self.symbolValue)
             }
         }
         
@@ -88,7 +87,6 @@ public class ProjectElementItem: ProjectItem
         }
         
     internal let sourceItem: ProjectSourceItem
-    private var previousSource: String = ""
     
     public override init(label: Label)
         {
@@ -100,7 +98,7 @@ public class ProjectElementItem: ProjectItem
         self.sourceItem.elementItem = self
         self.icon = NSImage(named: "IconMarker")!
         self.icon.isTemplate = true
-        self.iconTint = SyntaxColorPalette.warningColor
+        self.iconTintIdentifier = .warningColor
         }
         
     public required init?(coder:NSCoder)
@@ -122,12 +120,12 @@ public class ProjectElementItem: ProjectItem
             {
             let view = ProjectElementItemView(frame: .zero,elementItem: self)
             view.item = self
-            view.font = self.controller.sourceOutlinerFont
+            view.font = Palette.shared.font(for: self.fontIdentifier)
             view.viewText.stringValue = self.label
-            view.viewText.textColor = NSColor.white
+            view.viewText.textColor = Palette.shared.color(for: self.textColorIdentifier)
             view.viewImage.image = self.icon
             view.viewImage.image!.isTemplate = true
-            view.viewImage.contentTintColor = self.iconTint
+            view.viewImage.contentTintColor = Palette.shared.color(for: self.iconTintIdentifier)
             return(view)
             }
         else
@@ -138,22 +136,22 @@ public class ProjectElementItem: ProjectItem
         
     private func updateCellViews(string attributedString: NSAttributedString)
         {
-        let cellView = self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")] as? ProjectItemView
+        let cellView = self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectItemView
         cellView?.viewText.attributedStringValue = attributedString
 //        cellView?.viewText.stringValue = attributedString.string
         self.icon.isTemplate = true
         cellView?.viewImage.image = self.icon
-        cellView?.viewImage.contentTintColor = self.iconTint
+        cellView?.viewImage.contentTintColor = Palette.shared.color(for: self.iconTintIdentifier)
         }
     
-    public func attributedString(_ string: String,highlight: String,inColor: NSColor) -> NSAttributedString
+    public func attributedString(_ string: String,highlight: String,inColor: StyleIdentifier) -> NSAttributedString
         {
         let range = string.range(of: highlight)!
         let start = string.distance(from: string.startIndex, to: range.lowerBound)
         let end = string.distance(from: string.startIndex,to: range.upperBound)
         let localRange = NSRange(location: start, length: end - start)
-        let attributedString = NSMutableAttributedString(string: string,attributes: [.font: self.controller.sourceOutlinerFont!,.foregroundColor: NSColor.white])
-        let attributes:[NSAttributedString.Key:Any] = [.foregroundColor: inColor]
+        let attributedString = NSMutableAttributedString(string: string,attributes: [.font: self.controller.sourceOutlinerFont!,.foregroundColor: Palette.shared.color(for: self.textColorIdentifier)])
+        let attributes:[NSAttributedString.Key:Any] = [.foregroundColor: Palette.shared.color(for: inColor)]
         attributedString.setAttributes(attributes,range: localRange)
         return(attributedString)
         }
@@ -166,14 +164,10 @@ public class ProjectElementItem: ProjectItem
         
     public func sourceEditingDidEnd(_ sourceItem: ProjectSourceItem)
         {
-        if self.previousSource != sourceItem.sourceRecord.text
-            {
-            self.markVersionState(as: .modified)
-            }
+        self.versionState = self.sourceItem.sourceRecord.versionState
         }
         
     public func sourceEditingDidBegin(_ sourceItem: ProjectSourceItem)
         {
-        self.previousSource = sourceItem.sourceRecord.text
         }
     }

@@ -125,44 +125,32 @@ public class TopModule: SystemModule
         return(found.isEmpty ? nil : found)
         }
         
-//    public override func lookup(name: Name) -> Symbol?
-//        {
-//        if name.isRooted
-//            {
-//            if name.count == 1
-//                {
-//                return(self)
-//                }
-//            if let start = self.lookup(label: name.first)
-//                {
-//                if name.count == 2
-//                    {
-//                    return(start)
-//                    }
-//                if let symbol = start.lookup(name: name.withoutFirst)
-//                    {
-//                    return(symbol)
-//                    }
-//                }
-//            }
-//        if name.isEmpty
-//            {
-//            return(nil)
-//            }
-//        else if name.count == 1
-//            {
-//            if let symbol = self.lookup(label: name.first)
-//                {
-//                return(symbol)
-//                }
-//            }
-//        else if let start = self.lookup(label: name.first)
-//            {
-//            if let symbol = start.lookup(name: name.withoutFirst)
-//                {
-//                return(symbol)
-//                }
-//            }
-//        return(nil)
-//        }
+    public override func lookup(name inName: Name) -> Symbol?
+        {
+        if !inName.isRooted
+            {
+            fatalError("Can not use non rooted name in TopModule.")
+            }
+        var name = inName.cdr
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        let first = name.car
+        for symbol in self.allSymbols
+            {
+            if symbol.label == first
+                {
+                if name.isEmpty
+                    {
+                    return(symbol)
+                    }
+                else
+                    {
+                    return(symbol.lookup(name: name.cdr))
+                    }
+                }
+            }
+        return(nil)
+        }
     }

@@ -268,6 +268,29 @@ public class ContainerSymbol:Symbol
             }
         }
         
+    public override func lookup(name inName: Name) -> Symbol?
+        {
+        if inName.isEmpty
+            {
+            return(nil)
+            }
+        var name = inName
+        let first = name.car
+        name = name.cdr
+        for symbol in self.symbols
+            {
+            if symbol.label == first
+                {
+                if name.isEmpty
+                    {
+                    return(symbol)
+                    }
+                return(symbol.lookup(name: name))
+                }
+            }
+        return(nil)
+        }
+        
     public override func lookupN(label: Label) -> Symbols?
         {
         let someSymbols = self.symbols.filter{$0.label == label}

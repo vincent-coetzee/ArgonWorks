@@ -32,7 +32,7 @@
 				<string>com.macsemantics.argon.module</string>
 			</array>
 			<key>LSTypeIsPackage</key>
-			<integer>0</integer>
+			<false/>
 			<key>NSDocumentClass</key>
 			<string>$(PRODUCT_MODULE_NAME).ModuleDocument</string>
 		</dict>
@@ -51,10 +51,6 @@
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>Argon Project File</string>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>ARGP</string>
-			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -64,7 +60,7 @@
 				<string>com.macsemantics.argon.project</string>
 			</array>
 			<key>LSTypeIsPackage</key>
-			<integer>1</integer>
+			<true/>
 			<key>NSDocumentClass</key>
 			<string>$(PRODUCT_MODULE_NAME).ProjectDocument</string>
 		</dict>
@@ -74,14 +70,17 @@
 		<dict>
 			<key>UTTypeConformsTo</key>
 			<array>
-				<string>public.text</string>
+				<string>com.apple.package</string>
 			</array>
 			<key>UTTypeDescription</key>
 			<string>Argon Project File</string>
 			<key>UTTypeIconFile</key>
 			<string>ProjectIcon</string>
 			<key>UTTypeIcons</key>
-			<dict/>
+			<dict>
+				<key>UTTypeIconBadgeName</key>
+				<string></string>
+			</dict>
 			<key>UTTypeIdentifier</key>
 			<string>com.macsemantics.argon.project</string>
 			<key>UTTypeTagSpecification</key>

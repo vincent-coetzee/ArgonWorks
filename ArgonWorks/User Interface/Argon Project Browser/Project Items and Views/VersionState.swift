@@ -29,8 +29,41 @@ public enum VersionState: String
             }
         }
         
+    public var isAddedState: Bool
+        {
+        switch(self)
+            {
+            case .added:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isModifiedState: Bool
+        {
+        switch(self)
+            {
+            case .modified:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isNoneState: Bool
+        {
+        switch(self)
+            {
+            case .none:
+                return(true)
+            default:
+                return(false)
+            }
+        }
+        
     public var iconTint: NSColor?
         {
-        NSColor.argonMidGray
+        Palette.shared.color(for: .versionColor)
         }
     }

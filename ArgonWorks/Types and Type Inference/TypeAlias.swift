@@ -35,27 +35,7 @@ public class TypeAlias:Type
         {
         fatalError()
         }
-        
-//    public override var isType: Bool
-//        {
-//        return(true)
-//        }
-//        
-//    public override var canBecomeAClass: Bool
-//        {
-//        return(self._type.canBecomeAClass)
-//        }
-        
-//    public override var canBecomeAType: Bool
-//        {
-//        return(true)
-//        }
-        
-//    public override var isTypeAlias: Bool
-//        {
-//        return(true)
-//        }
-        
+
     public override var isClassType: Bool
         {
         self.type.isClassType
@@ -64,6 +44,13 @@ public class TypeAlias:Type
     public override var isEnumerationType: Bool
         {
         self.type.isEnumerationType
+        }
+        
+    public override var identityHash: Int
+        {
+        var hash = super.identityHash
+        hash = hash << 13 ^ self.type.identityHash
+        return(hash)
         }
         
     public override var mangledName: String
@@ -93,9 +80,7 @@ public class TypeAlias:Type
     
     public required init?(coder: NSCoder)
         {
-//        print("START DECODE TYPE ALIAS")
         super.init(coder: coder)
-//        print("END DECODE TYPE ALIAS \(self.label)")
         }
         
     public required init(label: Label)
@@ -112,12 +97,7 @@ public class TypeAlias:Type
         {
         .typeAlias
         }
-//        
-//    public override func isElement(ofType: Group.ElementType) -> Bool
-//        {
-//        return(ofType == .type)
-//        }
-//
+
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let alias = TypeAlias(label: self.label)
