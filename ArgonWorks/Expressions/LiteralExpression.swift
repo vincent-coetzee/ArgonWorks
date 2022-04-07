@@ -239,31 +239,31 @@ public indirect enum Literal:Hashable,Displayable
        switch(self)
             {
             case .nil:
-                return(ArgonModule.shared.null)
+                return(context.nullType)
             case .integer:
-                return(ArgonModule.shared.integer)
+                return(context.integerType)
             case .float:
-                return(ArgonModule.shared.float)
+                return(context.floatType)
             case .byte:
-                return(ArgonModule.shared.byte)
+                return(context.byteType)
             case .character:
-                return(ArgonModule.shared.character)
+                return(context.characterType)
             case .string:
-                return(ArgonModule.shared.string)
+                return(context.stringType)
             case .boolean:
-                return(ArgonModule.shared.boolean)
+                return(context.booleanType)
             case .symbol:
-                return(ArgonModule.shared.symbol)
+                return(context.symbolType)
             case .array(let array):
                 return(array.type(inContext: context))
             case .class:
-                return(ArgonModule.shared.classType)
+                return(context.classType)
             case .module:
-                return(ArgonModule.shared.moduleType)
+                return(context.moduleType)
             case .enumeration(let enumeration):
                 return(TypeEnumeration(label: enumeration.label,generics: enumeration.generics))
             case .enumerationCase:
-                return(ArgonModule.shared.enumerationCase)
+                return(context.enumerationCaseType)
 //            case .method(let instance):
 //                return(TypeFunction(label: instance.fullName.displayString,method: instance))
 //                fatalError()
@@ -272,13 +272,13 @@ public indirect enum Literal:Hashable,Displayable
             case .constant(let constant):
                 return(constant.type)
             case .address:
-                return(ArgonModule.shared.integer)
+                return(context.integerType)
             case .date:
-                return(ArgonModule.shared.date)
+                return(context.dateType)
             case .dateTime:
-                return(ArgonModule.shared.dateTime)
+                return(context.dateTimeType)
             case .time:
-                return(ArgonModule.shared.time)
+                return(context.timeType)
             }
         }
         
@@ -543,17 +543,17 @@ public class LiteralExpression: Expression
        switch(self.literal)
             {
             case .nil:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.null,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.nullType,origin: .expression(self)))
             case .date:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.date,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.dateType,origin: .expression(self)))
             case .time:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.time,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.timeType,origin: .expression(self)))
             case .byte:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.byte,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.byteType,origin: .expression(self)))
             case .character:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.character,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.characterType,origin: .expression(self)))
             case .dateTime:
-                context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.dateTime,origin: .expression(self)))
+                context.append(TypeConstraint(left: self.type,right: context.dateTimeType,origin: .expression(self)))
             case .integer:
                 context.append(TypeConstraint(left: self.type,right: context.integerType,origin: .expression(self)))
             case .address:
@@ -592,17 +592,17 @@ public class LiteralExpression: Expression
         switch(self.literal)
             {
             case .nil:
-                self.type = ArgonModule.shared.null
+                self.type = context.nullType
             case .date:
-                self.type = ArgonModule.shared.date
+                self.type = context.dateType
             case .dateTime:
-                self.type = ArgonModule.shared.dateTime
+                self.type = context.dateTimeType
             case .time:
-                self.type = ArgonModule.shared.time
+                self.type = context.timeType
             case .byte:
-                self.type = ArgonModule.shared.byte
+                self.type = context.byteType
             case .character:
-                self.type = ArgonModule.shared.character
+                self.type = context.characterType
             case .integer:
                 self.type = context.integerType
             case .address:

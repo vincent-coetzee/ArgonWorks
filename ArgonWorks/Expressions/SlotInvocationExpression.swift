@@ -15,7 +15,7 @@ public class SlotInvocationExpression: Expression
         }
 
     private let slot: Slot
-    private let arguments: Arguments
+    private var arguments: Arguments
 
     required init?(coder: NSCoder)
         {
@@ -34,8 +34,9 @@ public class SlotInvocationExpression: Expression
     init(slot: Slot,arguments: Arguments)
         {
         self.slot = slot
-        self.arguments = arguments
+        self.arguments = []
         super.init()
+        self.arguments = arguments.map{$0.withContainer(.expression(self))}
         }
         
     public override func visit(visitor: Visitor) throws

@@ -47,7 +47,7 @@ public class TypeVariable: Type
         {
         get
             {
-            ArgonModule.shared.void
+            nil
             }
         set
             {

@@ -23,9 +23,14 @@ public class Function:Invocable,Displayable
         "IconFunction"
         }
         
+    public override init(label: Label,argonModule: ArgonModule)
+        {
+        super.init(label: label,argonModule: argonModule)
+        }
+        
     public required init(label: Label)
         {
-        super.init(label: label)
+        fatalError()
         }
         
     public required init?(coder: NSCoder)

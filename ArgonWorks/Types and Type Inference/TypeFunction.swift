@@ -57,10 +57,15 @@ public class TypeFunction: TypeConstructor
         super.init(coder: coder)
         }
         
+    init(label: Label,argonModule: ArgonModule)
+        {
+        self.returnType = argonModule.void
+        super.init(label: label)
+        }
+        
     required init(label: Label)
         {
-        self.returnType = ArgonModule.shared.void
-        super.init(label: label)
+        fatalError()
         }
         
     public override func encode(with coder: NSCoder)

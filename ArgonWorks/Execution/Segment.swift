@@ -229,10 +229,10 @@ public class Segment
         {
         let newSize = sizeInWords
         let extraSizeInBytes = self.align(newSize * MemoryLayout<Word>.size)
-        let blockAddress = self.allocateObject(ofType: ArgonModule.shared.block,extraSizeInBytes: Int(extraSizeInBytes))
-        let blockPointer = ClassBasedPointer(address: blockAddress,type: ArgonModule.shared.block)
-        blockPointer.setClass(ArgonModule.shared.block)
-        blockPointer.sizeInBytes = Word(ArgonModule.shared.block.instanceSizeInBytes) + extraSizeInBytes
+        let blockAddress = self.allocateObject(ofType: self.argonModule.block,extraSizeInBytes: Int(extraSizeInBytes))
+        let blockPointer = ClassBasedPointer(address: blockAddress,type: self.argonModule.block,argonModule: self.argonModule)
+        blockPointer.setClass(self.argonModule.block)
+        blockPointer.sizeInBytes = Word(self.argonModule.block.instanceSizeInBytes) + extraSizeInBytes
         blockPointer.hasBytes = true
         blockPointer.objectType = .block
         blockPointer.setInteger(0,atSlot: "count")
@@ -240,7 +240,7 @@ public class Segment
         blockPointer.setAddress(nil,atSlot: "nextBlock")
         blockPointer.setInteger(0,atSlot: "startIndex")
         blockPointer.setInteger(0,atSlot: "stopIndex")
-        let blockAfter = blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        let blockAfter = blockAddress + Word(self.argonModule.block.instanceSizeInBytes)
         memset(UnsafeMutableRawPointer(bitPattern: blockAfter),0,Int(extraSizeInBytes))
         return(blockAddress)
         }
@@ -249,15 +249,15 @@ public class Segment
         {
         let newSize = Int(self.align(size * Argon.kWordSizeInBytesInt) / Argon.kWordSizeInBytesWord)
         let blockAddress = self.allocateBlock(sizeInWords: newSize)
-        let vectorAddress = self.allocateObject(ofType: ArgonModule.shared.vector)
-        let pointer = ClassBasedPointer(address: vectorAddress, type: ArgonModule.shared.vector)
-        pointer.setClass(ArgonModule.shared.vector)
+        let vectorAddress = self.allocateObject(ofType: self.argonModule.vector)
+        let pointer = ClassBasedPointer(address: vectorAddress, type: self.argonModule.vector,argonModule: self.argonModule)
+        pointer.setClass(self.argonModule.vector)
         pointer.objectType = .vector
-        pointer.sizeInBytes = Word(ArgonModule.shared.vector.instanceSizeInBytes)
+        pointer.sizeInBytes = Word(self.argonModule.vector.instanceSizeInBytes)
         pointer.setAddress(blockAddress,atSlot: "block")
         pointer.setInteger(0,atSlot: "count")
         pointer.setInteger(newSize,atSlot: "size")
-        let blockPointer = ClassBasedPointer(address: blockAddress,type: ArgonModule.shared.block)
+        let blockPointer = ClassBasedPointer(address: blockAddress,type: self.argonModule.block,argonModule: self.argonModule)
         blockPointer.setInteger(0,atSlot: "count")
         blockPointer.setInteger(newSize,atSlot: "size")
         blockPointer.setAddress(nil,atSlot: "nextBlock")
@@ -269,7 +269,7 @@ public class Segment
     public func allocateInstructionBlock(for methodInstance: MethodInstance) -> Address
         {
         let bytesSize = methodInstance.instructionsSizeInBytes
-        let type = ArgonModule.shared.instructionBlock
+        let type = self.argonModule.instructionBlock
         let totalSize = self.align(type.instanceSizeInBytes + bytesSize + Argon.kWordSizeInBytesInt)
         let address = self.nextAddress
         self.nextAddress += totalSize
@@ -277,7 +277,7 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let objectPointer = ClassBasedPointer(address: address.cleanAddress,type: type)
+        let objectPointer = ClassBasedPointer(address: address.cleanAddress,type: type,argonModule: self.argonModule)
         objectPointer.tag = .header
         objectPointer.objectType = .instructionBlock
         objectPointer.setClass(type)
@@ -303,7 +303,7 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let objectPointer = ClassBasedPointer(address: address.cleanAddress,type: type)
+        let objectPointer = ClassBasedPointer(address: address.cleanAddress,type: type,argonModule: self.argonModule)
         objectPointer.tag = .header
         objectPointer.setClass(type)
         objectPointer.hasBytes = false
@@ -333,9 +333,9 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let stringPointer = SymbolPointer(address: address)
+        let stringPointer = SymbolPointer(address: address,argonModule: self.argonModule)
         stringPointer.string = string
-        let objectPointer = ClassBasedPointer(address: address,type: symbolType)
+        let objectPointer = ClassBasedPointer(address: address,type: symbolType,argonModule: self.argonModule)
         objectPointer.objectType = .symbol
         objectPointer.setClass(symbolType)
         objectPointer.sizeInBytes = totalSizeInBytes
@@ -350,7 +350,7 @@ public class Segment
         
     public func allocateBucket(nextBucketAddress: Address?,bucketValue: Address?,bucketKey: Word) -> Address
         {
-        let bucketType = ArgonModule.shared.bucket
+        let bucketType = self.argonModule.bucket
         let sizeInBytes = Self.alignWordToWord(Word(bucketType.instanceSizeInBytes))
         let address = Self.alignWordToWord(self.nextAddress)
         self.nextAddress = address + sizeInBytes
@@ -358,7 +358,7 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let objectPointer = ClassBasedPointer(address: address,type: bucketType)
+        let objectPointer = ClassBasedPointer(address: address,type: bucketType,argonModule: self.argonModule)
         objectPointer.objectType = .bucket
         objectPointer.setClass(bucketType)
         objectPointer.sizeInBytes = sizeInBytes
@@ -381,7 +381,7 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let stringPointer = StringPointer(address: address)
+        let stringPointer = StringPointer(address: address,argonModule: self.argonModule)
         stringPointer.setAddress(blockAddress,atSlot: "block")
         stringPointer.objectType = .string
         stringPointer.string = string
@@ -404,7 +404,7 @@ public class Segment
     public func allocateArray(size: Int,elements: Addresses) -> Address
         {
         assert(size >= elements.count,"Size of array must be >= elements.count")
-        let arrayType = ArgonModule.shared.array
+        let arrayType = self.argonModule.array
         let sizeInBytes = self.align(arrayType.instanceSizeInBytes,to: self.alignment)
         let blockAddress = self.allocateBlock(sizeInWords: size + 1)
         let address = self.nextAddress
@@ -413,7 +413,7 @@ public class Segment
             {
             fatalError("Size allocation exceeded in segment \(self.segmentType).")
             }
-        let arrayPointer = ClassBasedPointer(address: address,type: arrayType)
+        let arrayPointer = ClassBasedPointer(address: address,type: arrayType,argonModule: self.argonModule)
         arrayPointer.setAddress(blockAddress,atSlot: "block")
         arrayPointer.hasBytes = false
         arrayPointer.sizeInBytes = sizeInBytes
@@ -425,14 +425,14 @@ public class Segment
         arrayPointer.setClass(arrayType)
         arrayPointer.setInteger(elements.count,atSlot: "count")
         arrayPointer.setInteger(size,atSlot: "size")
-        let elementPointer = WordPointer(bitPattern: blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes))
+        let elementPointer = WordPointer(bitPattern: blockAddress + Word(self.argonModule.block.instanceSizeInBytes))
         var index = 0
         for element in elements
             {
             elementPointer[index] = element
             index += 1
             }
-        let blockPointer = ClassBasedPointer(address: blockAddress,type: ArgonModule.shared.block)
+        let blockPointer = ClassBasedPointer(address: blockAddress,type: self.argonModule.block,argonModule: self.argonModule)
         blockPointer.setInteger(elements.count,atSlot: "count")
         blockPointer.setInteger(size,atSlot: "size")
         blockPointer.setAddress(nil,atSlot: "nextBlock")
@@ -464,7 +464,7 @@ public class Segment
         let symbolAddress = self.allocateSymbol(symbol)
         let strings = ["one","two","three","four"]
         let arrayAddress = self.allocateArray(size: 4)
-        let arrayPointer = ArrayPointer(dirtyAddress: arrayAddress)!
+        let arrayPointer = ArrayPointer(dirtyAddress: arrayAddress,argonModule: self.argonModule)!
         for string in strings
             {
             let stringAddress = Word(pointer: self.allocateString(string))

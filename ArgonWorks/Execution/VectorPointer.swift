@@ -42,9 +42,9 @@ public class VectorPointer: ClassBasedPointer
     init(address: Address,segment: Segment)
         {
         self.segment = segment
-        super.init(address: address.cleanAddress,class: ArgonModule.shared.vector as! TypeClass)
+        super.init(address: address.cleanAddress,class: segment.argonModule.vector as! TypeClass,argonModule: segment.argonModule)
         self.blockAddress = self.address(atSlot: "block").cleanAddress
-        self.baseAddress = self.blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        self.baseAddress = self.blockAddress + Word(self.segment.argonModule.block.instanceSizeInBytes)
         self.blockPointer = WordPointer(bitPattern: self.baseAddress)
         }
         
@@ -77,9 +77,9 @@ public class VectorPointer: ClassBasedPointer
         {
         let newSize = self.size * 11 / 3
         let extraBytes = newSize * MemoryLayout<Word>.size
-        let newBlock = segment.allocateObject(ofType: ArgonModule.shared.block, extraSizeInBytes: extraBytes)
-        let newBaseAddress = newBlock + Word(ArgonModule.shared.block.instanceSizeInBytes)
-        let oldBaseAddress = self.address(atSlot: "block")! + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        let newBlock = segment.allocateObject(ofType: self.segment.argonModule.block, extraSizeInBytes: extraBytes)
+        let newBaseAddress = newBlock + Word(self.segment.argonModule.block.instanceSizeInBytes)
+        let oldBaseAddress = self.address(atSlot: "block")! + Word(self.segment.argonModule.block.instanceSizeInBytes)
         let size = self.size * Argon.kWordSizeInBytesInt
         memcpy(UnsafeMutableRawPointer(bitPattern: newBaseAddress),UnsafeMutableRawPointer(bitPattern: oldBaseAddress),size)
         self.setAddress(newBlock,atSlot: "block")

@@ -23,7 +23,7 @@ public class HandlerBlock: ClosureBlock
         {
         let realSymbols = self.symbols.map{generator.payload.symbolRegistry.registerSymbol($0)}
         let array = generator.payload.staticSegment.allocateArray(size: realSymbols.count)
-        let arrayPointer = ArrayPointer(dirtyAddress: array)!
+        let arrayPointer = ArrayPointer(dirtyAddress: array,argonModule: self.container.argonModule)!
         for aSymbol in realSymbols
             {
             arrayPointer.append(Word(integer: aSymbol))

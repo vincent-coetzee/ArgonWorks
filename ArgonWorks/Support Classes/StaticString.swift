@@ -40,6 +40,7 @@ public class StaticObject: NSObject,NSCoding
         "StaticObject()"
         }
 
+    internal var container: Container = .none
     internal var memoryAddress: Address = 0
     internal var wasAddressAllocationDone = false
     internal var wasMemoryLayoutDone = false
@@ -89,7 +90,7 @@ public class StaticString: StaticObject
         
     public override var sizeInBytes: Int
         {
-        (ArgonModule.shared.lookup(label: "String") as! Type).sizeInBytes
+        (self.container.argonModule.lookup(label: "String") as! Type).sizeInBytes
         }
         
     public override var extraSizeInBytes: Int
@@ -130,7 +131,7 @@ public class StaticString: StaticObject
         
     public override func type(inContext context: TypeContext) -> Type
         {
-        ArgonModule.shared.string
+        context.stringType
         }
     }
 
@@ -153,7 +154,7 @@ public class StaticSymbol: StaticString
         
     public override func type(inContext context: TypeContext) -> Type
         {
-        ArgonModule.shared.symbol
+        context.symbolType
         }
     }
 
@@ -249,7 +250,7 @@ public class StaticArray: StaticObject
     
     public override var sizeInBytes: Int
         {
-        (ArgonModule.shared.lookup(label: "Array") as! Type).sizeInBytes
+        (self.container.argonModule.lookup(label: "Array") as! Type).sizeInBytes
         }
         
     public override var extraSizeInBytes: Int
@@ -334,6 +335,6 @@ public class StaticArray: StaticObject
     public override func type(inContext context: TypeContext) -> Type
         {
         let elementType = self.elements.isEmpty ? context.freshTypeVariable() : self.elements.first!.type(inContext: context)!
-        return(ArgonModule.shared.array.withGenerics([elementType]))
+        return(context.arrayType.withGenerics([elementType]))
         }
     }

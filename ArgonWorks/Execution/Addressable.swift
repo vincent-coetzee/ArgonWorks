@@ -11,7 +11,7 @@ public protocol Addressable
     {
     var dirtyAddress: Address { get }
     var cleanAddress: Address { get }
-    init?(dirtyAddress: Address)
+    init?(dirtyAddress: Address,argonModule: ArgonModule)
     }
 
 public typealias Addressables = Array<Addressable>

@@ -60,14 +60,13 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="File" id="bib-Uj-vzu">
                                     <items>
-                                        <menuItem title="Argon Browser" keyEquivalent="p" id="JOR-SX-s59">
+                                        <menuItem title="Argon Browser" keyEquivalent="b" id="JOR-SX-s59">
                                             <connections>
                                                 <segue destination="WtR-hF-r9P" kind="show" id="dQN-O1-qGa"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="cZ5-KF-5u2"/>
-                                        <menuItem title="Open Project" id="A7M-5d-JlH">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                        <menuItem title="Open Project" keyEquivalent="o" id="A7M-5d-JlH">
                                             <connections>
                                                 <action selector="onOpenProject:" target="Voe-Tx-rLC" id="hwc-yt-Ta2"/>
                                             </connections>
@@ -337,21 +336,9 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <menu key="submenu" title="Argon" id="iih-mw-2nX">
                                     <items>
-                                        <menuItem title="Build" keyEquivalent="b" id="AQ8-MJ-QT0">
+                                        <menuItem title="Build" keyEquivalent="d" id="AQ8-MJ-QT0">
                                             <connections>
                                                 <action selector="undo:" target="Ady-hI-5gd" id="RYc-7R-h5K"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem title="Compile" keyEquivalent="i" id="0SE-0Q-oaU">
-                                            <connections>
-                                                <action selector="redo:" target="Ady-hI-5gd" id="Uvc-ex-XVz"/>
-                                            </connections>
-                                        </menuItem>
-                                        <menuItem isSeparatorItem="YES" id="QSR-Ye-ZLt"/>
-                                        <menuItem title="Export Carton" keyEquivalent="k" id="k4N-s5-IOs"/>
-                                        <menuItem title="Export Object" keyEquivalent="j" id="76c-AJ-5SH">
-                                            <connections>
-                                                <action selector="onSaveObject:" target="Ady-hI-5gd" id="t95-KJ-yox"/>
                                             </connections>
                                         </menuItem>
                                     </items>

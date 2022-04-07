@@ -51,6 +51,7 @@ public class ToolbarView: BarView
         self.addSpacer(atEdge: .right,key: "firstSpace",ofWidth: 20)
         self.addActionButton(browserAction: .newModuleAction,atEdge: .right,key: "module",image: NSImage(named: "IconModule")!,toolTip: "New Module",target: self,action: #selector(ArgonBrowserViewController.onNewModule))
         self.addActionButton(browserAction: .newCommentAction,atEdge: .right,key: "comment",image: NSImage(named: "IconFile")!,toolTip: "New Comment",target: self,action: #selector(ArgonBrowserViewController.onNewComment))
+        self.addActionButton(browserAction: .newImportAction,atEdge: .right,key: "import",image: NSImage(named: "IconImport")!,toolTip: "New Import",target: self,action: #selector(ArgonBrowserViewController.onNewImport))
         self.addActionButton(browserAction: .newGroupAction,atEdge: .right,key: "group",image: NSImage(named: "IconGroup")!,toolTip: "New Group",target: self,action: #selector(ArgonBrowserViewController.onNewGroup))
         self.addSpacer(atEdge: .right,key: "secondSpace",ofWidth: 20)
         self.addActionButton(browserAction: .loadAction,atEdge: .right,key: "load",image: NSImage(named: "IconLoad")!,toolTip: "Open Project...",target: self,action: #selector(ArgonBrowserViewController.onLoad))

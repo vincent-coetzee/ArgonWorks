@@ -40,6 +40,14 @@ public class EnumerationInstanceExpression: Expression
         self.caseSymbol = caseSymbol
         self.associatedValues = associatedValues
         super.init()
+        enumeration.container = .expression(self)
+        if associatedValues.isNotNil
+            {
+            for expression in associatedValues!
+                {
+                expression.container = .expression(self)
+                }
+            }
         }
         
     public override func visit(visitor: Visitor) throws
@@ -95,21 +103,21 @@ public class EnumerationInstanceExpression: Expression
             instance.add(lineNumber: location.line)
             }
         let temp1 = instance.nextTemporary
-        instance.add(.MAKE,.address(ArgonModule.shared.enumerationCaseInstance.memoryAddress),temp1)
+        instance.add(.MAKE,.address(generator.argonModule.enumerationCaseInstance.memoryAddress),temp1)
         let temp2 = instance.nextTemporary
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "enumeration").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(generator.argonModule.enumerationCaseInstance.classValue.instanceSlot(atLabel: "enumeration").offset)),temp2)
         instance.add(.STOREP,temp2,.address(self.enumeration.memoryAddress),.integer(0))
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "caseIndex").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(generator.argonModule.enumerationCaseInstance.classValue.instanceSlot(atLabel: "caseIndex").offset)),temp2)
         let caseIndex = self.enumeration.caseIndex(forSymbol: self.caseSymbol)!
         instance.add(.STOREP,.integer(Argon.Integer(caseIndex)),temp2,.integer(0))
         instance.add(.MOVE,temp1,temp2)
-        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.classValue.instanceSlot(atLabel: "associatedValueCount").offset)),temp2)
+        instance.add(.i64,.ADD,temp2,.integer(Argon.Integer(generator.argonModule.enumerationCaseInstance.classValue.instanceSlot(atLabel: "associatedValueCount").offset)),temp2)
         instance.add(.STOREP,.integer(Argon.Integer(self.associatedValues?.count ?? 0)),temp2,.integer(0))
         if let values = self.associatedValues
             {
-            instance.add(.i64,.ADD,temp1,.integer(Argon.Integer(ArgonModule.shared.enumerationCaseInstance.instanceSizeInBytes)),temp2)
+            instance.add(.i64,.ADD,temp1,.integer(Argon.Integer(generator.argonModule.enumerationCaseInstance.instanceSizeInBytes)),temp2)
             for value in values
                 {
                 try value.emitCode(into: instance,using: generator)

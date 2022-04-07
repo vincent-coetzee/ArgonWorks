@@ -90,7 +90,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
     private var warningItem = WarningGroupItem()
     private var issues = Array<IssueItem>()
     private let font = NSFont(name: "Menlo",size: 11)!
-    private let systemClassNames = ArgonModule.shared.systemClassNames!
+    private let systemClassNames = Array<String>()
     
     override func viewDidLoad()
         {
@@ -99,35 +99,35 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.initEditing()
         }
 
-    override func viewDidAppear()
-        {
-        super.viewDidAppear()
-        self.view.window?.delegate = self
-        let defaults = UserDefaults.standard
-        if let rectangle = defaults.rectangle(forKey: Self.kWindowFrameKey)
-            {
-            self.view.window!.setFrame(rectangle,display: true,animate: true)
-            }
-        if let name = defaults.string(forKey: Self.kWindowURLKey)
-            {
-            self.currentSourceFileURL = URL(string: name)
-            if let url = currentSourceFileURL,let string = try? String(contentsOf: url)
-                {
-                self.resetReporting()
-                let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
-                self.editorView.textStorage?.setAttributedString(mutableString)
-//                self.tokenizer.update(self.editorView.string)
-                self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                if let node = Compiler(source: self.editorView.string,tokenHandler: nil).compile()
-                    {
-                    self.currentItem.appendItem(SymbolItem(symbol: node))
-                    }
-                self.outliner.reloadData()
-                self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
-
-                }
-            }
-        }
+//    override func viewDidAppear()
+//        {
+//        super.viewDidAppear()
+//        self.view.window?.delegate = self
+//        let defaults = UserDefaults.standard
+//        if let rectangle = defaults.rectangle(forKey: Self.kWindowFrameKey)
+//            {
+//            self.view.window!.setFrame(rectangle,display: true,animate: true)
+//            }
+//        if let name = defaults.string(forKey: Self.kWindowURLKey)
+//            {
+//            self.currentSourceFileURL = URL(string: name)
+//            if let url = currentSourceFileURL,let string = try? String(contentsOf: url)
+//                {
+//                self.resetReporting()
+//                let mutableString = NSMutableAttributedString(string: string,attributes: [.font: NSFont(name: "Menlo",size: 11)!,.foregroundColor: NSColor.lightGray])
+//                self.editorView.textStorage?.setAttributedString(mutableString)
+////                self.tokenizer.update(self.editorView.string)
+//                self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
+//                if let node = Compiler(source: self.editorView.string,argonModule: ArgonModule.shared,tokenHandler: nil).compile()
+//                    {
+//                    self.currentItem.appendItem(SymbolItem(symbol: node))
+//                    }
+//                self.outliner.reloadData()
+//                self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
+//
+//                }
+//            }
+//        }
         
     public func windowWillResize(_ window: NSWindow,to size: NSSize) -> NSSize
         {
@@ -416,8 +416,8 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
 //                self.tokenizer.update(self.editorView.string)
 //                UserDefaults.standard.setValue(url.absoluteString,forKey: .currentSourceFileURL)
                 self.view.window?.title = "ArgonBrowser [ \(self.currentSourceFileURL!.path) ]"
-                let node = Compiler(source: self.editorView.string,tokenHandler: nil).compile()
-                self.currentItem.appendItem(SymbolItem(symbol: node!))
+//                let node = Compiler(source: self.editorView.string,argonModule: ArgonModule.shared,tokenHandler: nil).compile()
+//                self.currentItem.appendItem(SymbolItem(symbol: node!))
                 self.outliner.reloadData()
                 self.updateStatusBar("LOADED \(self.currentSourceFileURL!.path)")
                 }
@@ -490,15 +490,15 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             {
             if let theUrl = panel.url
                 {
-                let aCompiler = Compiler(source: self.editorView.string,tokenHandler: nil)
+                let aCompiler = Compiler(source: self.editorView.string,argonModule: ArgonModule(instanceNumber: 1),tokenHandler: nil)
                 if let module = aCompiler.compile()
                     {
                     do
                         {
-                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date())
+//                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date())
 //                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
-                        let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
-                        try data.write(to: theUrl)
+//                        let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
+//                        try data.write(to: theUrl)
 //                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
 //                        print("\(exporter.swappedImportedSymbolNames.count) imported symbols swapped.")
 //                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
@@ -532,7 +532,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
     @IBAction func onCompileFile(_ sender: Any?)
         {
         self.resetReporting()
-        let aCompiler = Compiler(source: self.editorView.string,tokenHandler: nil)
+        let aCompiler = Compiler(source: self.editorView.string,argonModule: ArgonModule(instanceNumber: 1),tokenHandler: nil)
         _ = aCompiler.compile()
         }
     }

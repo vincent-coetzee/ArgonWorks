@@ -54,7 +54,7 @@ public class ForBlock: Block
             {
             block.initializeType(inContext: context)
             }
-        self.type = ArgonModule.shared.void
+        self.type = context.voidType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -65,8 +65,8 @@ public class ForBlock: Block
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
-        let iterable = ArgonModule.shared.iterable.withGenerics([self.inductionSlot.type])
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
+        let iterable = context.iterableType.withGenerics([self.inductionSlot.type])
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: iterable,origin: .block(self)))
         if let elementsType = self.elements.type as? TypeConstructor
             {
@@ -92,10 +92,10 @@ public class ForBlock: Block
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        let collectionClass = ArgonModule.shared.collection
+        let collectionClass = context.collectionType
         context.append(SubTypeConstraint(subtype: self.elements.type,supertype: collectionClass.withGenerics([self.inductionSlot.type]),origin: .block(self)))
-        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: ArgonModule.shared.iterable,origin: .block(self)))
-        self.type = ArgonModule.shared.void
+        context.append(SubTypeConstraint(subtype: self.elements.type,supertype: context.iterableType,origin: .block(self)))
+        self.type = context.voidType
         }
         
     public override func display(indent: String)
@@ -117,7 +117,7 @@ public class ForBlock: Block
             }
 //        buffer.add(.ENTER,.integer(1),.none,.none)
         try self.elements.emitValueCode(into: buffer,using: using)
-        let type = ArgonModule.shared.iterable
+        let type = using.argonModule.iterable
         let temporary = buffer.nextTemporary
         buffer.add(.CAST,self.elements.place,.address(type.memoryAddress),temporary)
         }

@@ -76,12 +76,14 @@ public class BlockPointer: ClassBasedPointer
         
     private var dataPointer: WordPointer
     private var bytePointer: BytePointer
+    private let argonModule: ArgonModule
     
-    public init(address: Address)
+    public init(address: Address,argonModule: ArgonModule)
         {
-        self.dataPointer = WordPointer(bitPattern: address + Word(ArgonModule.shared.block.instanceSizeInBytes))
-        self.bytePointer = BytePointer(bitPattern: address + Word(ArgonModule.shared.block.instanceSizeInBytes))
-        super.init(address: address,class: ArgonModule.shared.block as! TypeClass)
+        self.argonModule = argonModule
+        self.dataPointer = WordPointer(bitPattern: address + Word(argonModule.block.instanceSizeInBytes))
+        self.bytePointer = BytePointer(bitPattern: address + Word(argonModule.block.instanceSizeInBytes))
+        super.init(address: address,class: argonModule.block as! TypeClass,argonModule: argonModule)
         }
         
     public func append(_ word: Word)

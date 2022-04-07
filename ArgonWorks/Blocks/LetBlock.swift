@@ -24,6 +24,8 @@ public class LetBlock: Block
         self.lhs = lhs
         self.rhs = rhs
         super.init()
+        lhs.container = .block(self)
+        rhs.container = .block(self)
         }
         
     public required init?(coder: NSCoder)

@@ -29,6 +29,8 @@ public class EnumerationDecompositionExpression: Expression
         self.slotNames = slotNames
         self.value = value
         super.init()
+        enumeration.container = .expression(self)
+        value.container = .expression(self)
         }
         
     public required init?(coder: NSCoder)
@@ -101,7 +103,7 @@ public class EnumerationDecompositionExpression: Expression
             context.append(TypeConstraint(left: slot.type,right: aCase.associatedTypes[index],origin: .expression(self)))
             index += 1
             }
-        context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.boolean,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.type,right: context.booleanType,origin: .expression(self)))
         }
         
     public override func emitCode(into instance: InstructionBuffer, using generator: CodeGenerator) throws
@@ -112,7 +114,7 @@ public class EnumerationDecompositionExpression: Expression
             }
         try self.value.emitAddressCode(into: instance,using: generator)
         let caseIndex = self.enumeration.caseIndex(forSymbol: self.symbol)!
-        let aClass = ArgonModule.shared.enumerationCaseInstance as! TypeClass
+        let aClass = generator.argonModule.enumerationCaseInstance as! TypeClass
         let temp = instance.nextTemporary
         // LOAD VALUE OF slot.caseIndex INTO temp
         instance.add(.LOADP,self.value.place,.integer(Argon.Integer(aClass.instanceSlot(atLabel: "caseIndex").offset)),temp)

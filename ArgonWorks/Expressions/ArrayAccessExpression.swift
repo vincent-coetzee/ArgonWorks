@@ -34,6 +34,8 @@ public class ArrayAccessExpression: Expression
         self.index = coder.decodeObject(forKey: "index") as! Expression
         self.isLValue = coder.decodeBool(forKey: "isLValue")
         super.init(coder: coder)
+        self.array.container = .expression(self)
+        self.index.container = .expression(self)
         }
 
     public override func encode(with coder:NSCoder)
@@ -87,9 +89,9 @@ public class ArrayAccessExpression: Expression
         {
         self.array.initializeTypeConstraints(inContext: context)
         self.index.initializeTypeConstraints(inContext: context)
-        let arrayType = ArgonModule.shared.array.withGenerics([self.type])
+        let arrayType = context.arrayType.withGenerics([self.type])
         context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.index.type,right: ArgonModule.shared.integer,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
         if self.array.type is TypeConstructor
             {
             context.append(TypeConstraint(left: self.type,right: (self.array.type as! TypeConstructor).generics[0],origin: .expression(self)))
@@ -108,9 +110,9 @@ public class ArrayAccessExpression: Expression
             {
             self.type = context.freshTypeVariable()
             }
-        let arrayType = ArgonModule.shared.array.withGenerics([self.type])
+        let arrayType = context.arrayType.withGenerics([self.type])
         context.append(TypeConstraint(left: self.array.type,right: arrayType,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.index.type,right: ArgonModule.shared.integer,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.index.type,right: context.integerType,origin: .expression(self)))
         }
 
     public override func initializeType(inContext context: TypeContext)

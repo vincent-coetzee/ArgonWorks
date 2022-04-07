@@ -65,9 +65,20 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         self.children.count
         }
         
-    private var children: Symbols
+    private var children: Array<SymbolHolder>
         {
-        self.context.children(forSymbol: self.symbol)
+        if self.isExpandable
+            {
+            if self.holderKids.isNil
+                {
+                self.holderKids = self.context.children(forSymbol: self.symbol).map{SymbolHolder(symbol: $0,context: self.context,parent: self)}
+                }
+            }
+        else
+            {
+            self.holderKids = []
+            }
+        return(self.holderKids!)
         }
         
     public var labels: Array<Label>
@@ -129,7 +140,7 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         }
         
     public var symbol: Symbol
-    private var symbolChildren: Symbols?
+    private var holderKids: Array<SymbolHolder>?
     private let context: OutlinerContext
     public unowned var parentItem: OutlineItem?
     public var isExpanded = false
@@ -139,7 +150,8 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         self.context = OutlinerContext(rawValue: coder.decodeInteger(forKey: "context"))!
         self.parentItem = coder.decodeObject(forKey: "parentItem") as? OutlineItem
         self.isExpanded = coder.decodeBool(forKey: "isExpanded")
-        self.symbol = TopModule.shared.lookup(name: coder.decodeName(forKey: "symbolName"))!
+        self.symbol = coder.decodeObject(forKey: "symbol") as! Symbol
+        self.holderKids = coder.decodeObject(forKey: "kids") as? Array<SymbolHolder>
         }
         
     init(symbol: Symbol,context: OutlinerContext,parent: OutlineItem? = nil)
@@ -149,17 +161,38 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         self.parentItem = parent
         }
         
+    public func expandIfNeeded(inOutliner outliner: NSOutlineView)
+        {
+        if self.isExpanded
+            {
+            outliner.expandItem(self)
+            if self.childCount > 0
+                {
+                for item in self.children
+                    {
+                    item.expandIfNeeded(inOutliner: outliner)
+                    }
+                }
+            }
+        }
+        
+    public func invalidateChildren()
+        {
+        self.holderKids = nil
+        }
+        
     public func encode(with coder: NSCoder)
         {
         coder.encode(self.context.rawValue,forKey: "context")
         coder.encode(self.parentItem,forKey: "parentItem")
         coder.encode(self.isExpanded,forKey: "isExpanded")
-        coder.encodeName(self.symbol.fullName,forKey: "symbolName")
+        coder.encode(self.symbol,forKey: "symbol")
+        coder.encode(self.holderKids,forKey: "kids")
         }
         
     public func child(atIndex: Int) -> OutlineItem
         {
-        return(SymbolHolder(symbol: self.children[atIndex],context: self.context,parent: self))
+        self.children[atIndex]
         }
         
     public func makeView(for outliner: Outliner) -> OutlineItemNSView
@@ -171,6 +204,12 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         
     public func insertionIndex(forSymbol: Symbol) -> Int
         {
-        return(self.labels.firstIndex(of: forSymbol.label)!)
+        if let index = self.labels.firstIndex(of: forSymbol.label)
+            {
+            return(index)
+            }
+        return(0)
         }
     }
+
+public typealias SymbolHolders = Array<SymbolHolder>

@@ -27,22 +27,22 @@ public struct VMPayload: ExecutionContext
         
     private var _symbolRegistry: SymbolRegistry!
     
-    init()
+    init(argonModule: ArgonModule)
         {
-        self.stackSegment = try! StackSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.staticSegment = try! StaticSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.managedSegment = try! ManagedSegment(memorySize: .megabytes(25),argonModule: ArgonModule.shared)
-        self.codeSegment = try! CodeSegment(memorySize: .megabytes(50),argonModule: ArgonModule.shared)
+        self.stackSegment = try! StackSegment(memorySize: .megabytes(25),argonModule: argonModule)
+        self.staticSegment = try! StaticSegment(memorySize: .megabytes(25),argonModule: argonModule)
+        self.managedSegment = try! ManagedSegment(memorySize: .megabytes(25),argonModule: argonModule)
+        self.codeSegment = try! CodeSegment(memorySize: .megabytes(50),argonModule: argonModule)
         self.primitiveTable = try! PrimitiveVectorTable()
         self._symbolRegistry = SymbolRegistry(context: self)
         }
         
-    init(nullSegmentSize: MemorySize = .megabytes(10),stackSegmentSize: MemorySize = .megabytes(25),staticSegmentSize:MemorySize = .megabytes(25),managedSegmentSize: MemorySize = .megabytes(50),codeSegmentSize: MemorySize = .megabytes(25))
+    init(argonModule: ArgonModule,nullSegmentSize: MemorySize = .megabytes(10),stackSegmentSize: MemorySize = .megabytes(25),staticSegmentSize:MemorySize = .megabytes(25),managedSegmentSize: MemorySize = .megabytes(50),codeSegmentSize: MemorySize = .megabytes(25))
         {
-        self.stackSegment = try! StackSegment(memorySize: stackSegmentSize,argonModule: ArgonModule.shared)
-        self.staticSegment = try! StaticSegment(memorySize: staticSegmentSize,argonModule: ArgonModule.shared)
-        self.managedSegment = try! ManagedSegment(memorySize: managedSegmentSize,argonModule: ArgonModule.shared)
-        self.codeSegment = try! CodeSegment(memorySize: codeSegmentSize,argonModule: ArgonModule.shared)
+        self.stackSegment = try! StackSegment(memorySize: stackSegmentSize,argonModule: argonModule)
+        self.staticSegment = try! StaticSegment(memorySize: staticSegmentSize,argonModule: argonModule)
+        self.managedSegment = try! ManagedSegment(memorySize: managedSegmentSize,argonModule: argonModule)
+        self.codeSegment = try! CodeSegment(memorySize: codeSegmentSize,argonModule: argonModule)
         self.primitiveTable = try! PrimitiveVectorTable()
         self._symbolRegistry = SymbolRegistry(context: self)
         }
@@ -78,7 +78,7 @@ public struct VMPayload: ExecutionContext
         {
         let types = module.allSymbols.compactMap{$0 as? Type}.sorted{$0.label < $1.label}
         let array = self.staticSegment.allocateArray(size: types.count, elements: Addresses())
-        let pointer = ArrayPointer(dirtyAddress: array)!
+        let pointer = ArrayPointer(dirtyAddress: array,argonModule: self.codeSegment.argonModule)!
         for type in types
             {
             pointer.append(type.memoryAddress)
@@ -94,7 +94,7 @@ public struct VMPayload: ExecutionContext
         module.install(inContext: self)
         let types = module.allSymbols.compactMap{$0 as? Type}
         let array = self.staticSegment.allocateArray(size: types.count, elements: Addresses())
-        let pointer = ArrayPointer(dirtyAddress: array)!
+        let pointer = ArrayPointer(dirtyAddress: array,argonModule: self.codeSegment.argonModule)!
         for type in types
             {
             pointer.append(type.memoryAddress)
@@ -102,7 +102,7 @@ public struct VMPayload: ExecutionContext
         self.clientModuleTypes = array
         let instances = module.allSymbols.compactMap{$0 as? MethodInstance}
         let methods = self.staticSegment.allocateArray(size: instances.count, elements: Addresses())
-        let methodPointer = ArrayPointer(dirtyAddress: methods)!
+        let methodPointer = ArrayPointer(dirtyAddress: methods,argonModule: self.codeSegment.argonModule)!
         for instance in instances
             {
             methodPointer.append(instance.memoryAddress)

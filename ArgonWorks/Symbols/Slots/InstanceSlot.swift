@@ -7,18 +7,10 @@
 
 import Foundation
 
-public class InstanceSlot: Slot
+public class InstanceSlot: MemberSlot
     {
-    public var `class`:TypeClass!
-        
-    public override var isSystemSymbol: Bool
-        {
-        return(self.class.isSystemSymbol)
-        }
-        
     public required init?(coder: NSCoder)
         {
-        self.class = coder.decodeObject(forKey: "class") as? TypeClass
         super.init(coder: coder)
         }
     
@@ -27,6 +19,11 @@ public class InstanceSlot: Slot
         super.init(label: label)
         }
     
+    public init(label: Label,type: Type)
+        {
+        super.init(labeled: label,ofType: type)
+        }
+        
     required init(labeled: Label, ofType: Type)
         {
         super.init(label: labeled)
@@ -35,7 +32,8 @@ public class InstanceSlot: Slot
     
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(self.class,forKey: "class")
         super.encode(with: coder)
         }
     }
+
+public typealias InstanceSlots = Array<InstanceSlot>

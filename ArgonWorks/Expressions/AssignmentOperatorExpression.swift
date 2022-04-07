@@ -45,6 +45,8 @@ public class AssignmentOperatorExpression: Expression
         self.lhs = lhs
         self.operationName = operation
         super.init()
+        rhs.container = .expression(self)
+        lhs.container = .expression(self)
         }
         
     public override func visit(visitor: Visitor) throws

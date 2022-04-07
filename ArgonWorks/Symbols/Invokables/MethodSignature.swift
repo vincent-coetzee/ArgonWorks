@@ -55,27 +55,27 @@ public struct MethodSignature: Equatable
         
     public let label: String
     private var tags: ParameterTags
-    private let returnType: Type
+    private var returnType: Type
     
-    init(methodInstance: MethodInstance)
+    init(methodInstance: MethodInstance,argonModule: ArgonModule)
         {
         self.label = methodInstance.label
         self.tags = methodInstance.parameters.map{$0.isHidden ? .hidden($0.type) : .tag($0.tag!,$0.type)}
         self.returnType = methodInstance.returnType
         }
         
-    init(label: Label,parameters: Array<ParameterTuple>,returnType: Type = ArgonModule.shared.void)
+    init(label: Label,parameters: Array<ParameterTuple>,returnType: Type? = nil,argonModule: ArgonModule)
         {
         self.label = label
         self.tags = parameters.map{$0.0.isNil ? .hidden($0.1) : .tag($0.0!,$0.1)}
-        self.returnType = returnType
+        self.returnType = returnType.isNil ? argonModule.void : returnType!
         }
         
-    init(label: Label,parameters: ParameterTuple...,returnType: Type = ArgonModule.shared.void)
+    init(label: Label,parameters: ParameterTuple...,returnType: Type? = nil,argonModule: ArgonModule)
         {
         self.label = label
         self.tags = parameters.map{$0.0.isNil ? .hidden($0.1) : .tag($0.0!,$0.1)}
-        self.returnType = returnType
+        self.returnType = returnType.isNil ? argonModule.void : returnType!
         }
         
     public func isEquivalent(_ rhs: MethodSignature) -> Bool

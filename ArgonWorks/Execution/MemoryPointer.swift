@@ -23,7 +23,7 @@ public class MemoryPointer
         {
         if self.header.objectType == .string
             {
-            return(Word(integer: StringPointer(address: self.address).string.polynomialRollingHash))
+            return(Word(integer: StringPointer(address: self.address,argonModule: self.argonModule).string.polynomialRollingHash))
             }
         let start = self.slots["hash"]!.offset / 8
         let size = self.header.sizeInWords
@@ -46,9 +46,11 @@ public class MemoryPointer
     let wordPointer: WordPointer
     var classPointer: ClassPointer!
     var slots = Dictionary<String,SlotPointer>()
+    let argonModule: ArgonModule
     
-    init(address: Address)
+    init(address: Address,argonModule: ArgonModule)
         {
+        self.argonModule = argonModule
         self.header = Header(atAddress: address.cleanAddress)
         self.address = address.cleanAddress
         self.wordPointer = WordPointer(bitPattern: address.cleanAddress)
@@ -57,10 +59,10 @@ public class MemoryPointer
         
     private func loadClass()
         {
-        self.classPointer = ClassPointer(address: self.wordPointer[2])
+        self.classPointer = ClassPointer(address: self.wordPointer[2],argonModule: self.argonModule)
         if let array = self.classPointer?.slotsPointer
             {
-            for pointer in array.compactMap({SlotPointer(address: $0)})
+            for pointer in array.compactMap({SlotPointer(address: $0,argonModule: argonModule)})
                 {
                 self.slots[pointer.namePointer!.string] = pointer
                 }

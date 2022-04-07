@@ -18,7 +18,7 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            StringPointer(address: self.address(atSlot: "name")!)
+            StringPointer(address: self.address(atSlot: "name")!,argonModule: self.argonModule)
             }
         set
             {
@@ -90,7 +90,7 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            ArrayPointer(dirtyAddress: self.address(atSlot: "slots")!)
+            ArrayPointer(dirtyAddress: self.address(atSlot: "slots")!,argonModule: self.argonModule)
             }
         set
             {
@@ -102,7 +102,7 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            ClassPointer(address: self.address(atSlot: "superclass").cleanAddress)
+            ClassPointer(address: self.address(atSlot: "superclass").cleanAddress,argonModule: self.argonModule)
             }
         set
             {
@@ -114,7 +114,7 @@ public class ClassPointer: ClassBasedPointer
         {
         get
             {
-            ArrayPointer(dirtyAddress: self.address(atSlot: "subclasses")!)
+            ArrayPointer(dirtyAddress: self.address(atSlot: "subclasses")!,argonModule: self.argonModule)
             }
         set
             {
@@ -122,8 +122,11 @@ public class ClassPointer: ClassBasedPointer
             }
         }
         
-    public init(address: Address)
+    private let argonModule: ArgonModule
+    
+    public init(address: Address,argonModule: ArgonModule)
         {
-        super.init(address: address.cleanAddress,class: ArgonModule.shared.classType as! TypeClass)
+        self.argonModule = argonModule
+        super.init(address: address.cleanAddress,class: argonModule.classType as! TypeClass,argonModule: argonModule)
         }
     }

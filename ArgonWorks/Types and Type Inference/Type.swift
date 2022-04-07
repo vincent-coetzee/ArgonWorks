@@ -249,18 +249,17 @@ public class Type: Symbol,Displayable,UserDisplayable
         super.init(label: label)
         }
         
-    init()
-        {
-        fatalError()
-        super.init(label: "")
-        }
-        
     required init?(coder: NSCoder)
         {
         print("START DECODE TYPE")
         self._flags = TypeFlags(rawValue: UInt16(coder.decodeInteger(forKey: "flags")))
         super.init(coder: coder)
         print("END DECODE TYPE")
+        }
+        
+    public func patchClass(topModule: TopModule) -> Type
+        {
+        fatalError()
         }
         
     public func isSubclass(of: Type) -> Bool
@@ -334,17 +333,17 @@ public class Type: Symbol,Displayable,UserDisplayable
         self
         }
         
-    public func addLayoutSlot(_ slot: Slot)
+    public func addLayoutSlot(_ slot: LayoutSlot)
         {
         fatalError()
         }
         
-    public func addInstanceSlot(_ slot: Slot)
+    public func addInstanceSlot(_ slot: InstanceSlot)
         {
         fatalError()
         }
         
-    public func addClassSlot(_ slot: Slot)
+    public func addClassSlot(_ slot: ClassSlot)
         {
         fatalError()
         }

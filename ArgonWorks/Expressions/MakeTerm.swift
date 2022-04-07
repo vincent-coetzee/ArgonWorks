@@ -42,10 +42,11 @@ public class MakeTerm: Expression
 
     public init(type: Type,arguments: Arguments)
         {
-        self.arguments = arguments
+        self.arguments = []
         self.madeType = type
         super.init()
         self.type = type
+        self.arguments = arguments.map{$0.withContainer(Container.expression(self))}
         }
         
     public override func display(indent: String)

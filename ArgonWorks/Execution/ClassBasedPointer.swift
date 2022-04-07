@@ -19,7 +19,7 @@ public class ClassBasedPointer
         let address = self.address(atSlot: "name")
         if address.isNotNil
             {
-            let stringPointer = StringPointer(address: address!)
+            let stringPointer = StringPointer(address: address!,argonModule: self.argonModule)
             return(stringPointer.string == "Class")
             }
         return(false)
@@ -138,7 +138,7 @@ public class ClassBasedPointer
         {
         get
             {
-            return(ClassPointer(address: self.classAddress))
+            return(ClassPointer(address: self.classAddress,argonModule: self.argonModule))
             }
         set
             {
@@ -163,14 +163,16 @@ public class ClassBasedPointer
     internal let wordPointer: WordPointer
     private let header: Header
     private var indexCache: Dictionary<Label,Int> = [:]
+    private var argonModule: ArgonModule
     
-    convenience init(address: Address,type: Type)
+    convenience init(address: Address,type: Type,argonModule: ArgonModule)
         {
-        self.init(address: address,class: (type as! TypeClass))
+        self.init(address: address,class: (type as! TypeClass),argonModule: argonModule)
         }
         
-    init(address: Address,class aClass: TypeClass)
+    init(address: Address,class aClass: TypeClass,argonModule: ArgonModule)
         {
+        self.argonModule = argonModule
         self.someClass = aClass
         self.someAddress = address.cleanAddress
         self.wordPointer = WordPointer(bitPattern: address.cleanAddress)

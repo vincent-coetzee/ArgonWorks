@@ -112,12 +112,17 @@ public class Invocable: Symbol,Scope,StackFrame
         super.init(coder: coder)
         }
         
-    required init(label:Label)
+    init(label:Label,argonModule: ArgonModule)
         {
         self.cName = ""
         self.parameters = Parameters()
-        self.returnType = ArgonModule.shared.void
+        self.returnType = argonModule.void
         super.init(label: label)
+        }
+        
+    public required init(label: Label)
+        {
+        fatalError()
         }
         
     public override func encode(with coder: NSCoder)

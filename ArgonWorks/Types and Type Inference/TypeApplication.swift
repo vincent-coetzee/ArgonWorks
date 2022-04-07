@@ -54,12 +54,17 @@ public class TypeApplication: Type
         self.types = coder.decodeObject(forKey: "types") as! Types
         super.init(coder: coder)
         }
-        
+    
     required init(label: Label)
         {
+        fatalError()
+        }
+        
+    init(label: Label,argonModule: ArgonModule)
+        {
         self.types = []
-        self.function = TypeFunction(label: "", types: [], returnType: ArgonModule.shared.void)
-        super.init()
+        self.function = TypeFunction(label: "", types: [], returnType: argonModule.void)
+        super.init(label: label)
         }
         
     public override func encode(with coder: NSCoder)

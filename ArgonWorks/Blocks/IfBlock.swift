@@ -28,6 +28,7 @@ public class IfBlock: Block
         {
         self.condition = condition
         super.init()
+        condition.container = .block(self)
         }
         
     public required init?(coder: NSCoder)
@@ -95,7 +96,7 @@ public class IfBlock: Block
             block.initializeTypeConstraints(inContext: context)
             }
         self.elseBlock?.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.condition.type,right: ArgonModule.shared.boolean,origin: .block(self)))
+        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
         }
         
     public override func visit(visitor: Visitor) throws

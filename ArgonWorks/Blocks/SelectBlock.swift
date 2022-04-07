@@ -18,6 +18,7 @@ public class SelectBlock: Block
         self.value = value
         whenBlocks = Array<WhenBlock>()
         super.init()
+        value.container = .block(self)
         }
         
     public required init?(coder: NSCoder)

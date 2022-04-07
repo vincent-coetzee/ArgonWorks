@@ -49,12 +49,13 @@ public class ProjectItemView: NSTableCellView,NSTextFieldDelegate
         self.viewImage.leadingAnchor.constraint(equalTo: self.leadingAnchor).isActive = true
         self.viewImage.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
         self.viewImage.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
-        self.viewImage.widthAnchor.constraint(equalTo: self.heightAnchor,constant: 3).isActive = true
+        self.viewImage.widthAnchor.constraint(equalTo: self.heightAnchor).isActive = true
         self.viewText.leadingAnchor.constraint(equalTo: self.viewImage.trailingAnchor,constant: 4).isActive = true
         self.viewTextTrailingConstraint = self.viewText.trailingAnchor.constraint(equalTo: self.trailingAnchor)
         self.viewTextTrailingConstraint.isActive = true
-        self.viewText.topAnchor.constraint(equalTo: self.topAnchor).isActive = true
-        self.viewText.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
+        let font = Palette.shared.font(for: .recordTextFont)
+        self.viewText.centerYAnchor.constraint(equalTo: self.viewImage.centerYAnchor).isActive = true
+//        self.viewText.bottomAnchor.constraint(equalTo: self.bottomAnchor).isActive = true
         self.viewText.backgroundColor = .red
         }
         

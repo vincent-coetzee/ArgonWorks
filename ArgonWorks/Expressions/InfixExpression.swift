@@ -17,6 +17,8 @@ public class InfixExpression: OperatorExpression
         self.lhs = lhs
         self.rhs = rhs
         super.init(operatorLabel: operatorLabel,operators:  operators)
+        self.lhs.container = .expression(self)
+        self.rhs.container = .expression(self)
         }
         
     public override var displayString: String

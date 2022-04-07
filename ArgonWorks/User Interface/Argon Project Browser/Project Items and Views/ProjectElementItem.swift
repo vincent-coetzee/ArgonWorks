@@ -25,12 +25,7 @@ public class ProjectElementItem: ProjectItem
         {
         [self,self.sourceItem]
         }
-        
-    public var filename: String
-        {
-        "Element\(self.itemKey).bin"
-        }
-        
+
     public override var isElement: Bool
         {
         true
@@ -154,6 +149,14 @@ public class ProjectElementItem: ProjectItem
         let attributes:[NSAttributedString.Key:Any] = [.foregroundColor: Palette.shared.color(for: inColor)]
         attributedString.setAttributes(attributes,range: localRange)
         return(attributedString)
+        }
+        
+    public override func expandIfNeeded(inOutliner outliner: NSOutlineView)
+        {
+        if self.isExpanded
+            {
+            outliner.expandItem(self.sourceItem)
+            }
         }
         
     public override func child(atIndex:Int) -> ProjectItem

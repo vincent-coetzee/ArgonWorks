@@ -21,7 +21,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private var rootItem: Project = Project(label: "Project")
     private var tokenColors = Dictionary<TokenColor,NSColor>()
     internal var font = NSFont(name: "Menlo",size: 12)!
-    private let systemClassNames = ArgonModule.shared.systemClassNames!
+//    private let systemClassNames = ArgonModule.shared.systemClassNames!
     public var incrementalParser: IncrementalParser!
     public var sourceOutlinerFont: NSFont!
     private var draggingItems: Array<ProjectItem>?
@@ -37,7 +37,13 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private var buttonBarHeightConstraint: NSLayoutConstraint!
     public private(set) var toolbarHeight: CGFloat = 0
     private var fileWrapper: FileWrapper!
+    private var browsingContext = BrowsingContext()
     
+    public var argonModule: ArgonModule
+        {
+        self.browsingContext.argonModule
+        }
+        
     public override func viewDidLoad()
         {
         super.viewDidLoad()
@@ -45,8 +51,9 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.baseRowHeight = self.font.lineHeight
         self.sourceOutlinerFont = self.font
         self.rootItem.controller = self
-        self.incrementalParser = IncrementalParser()
         self.outliner.registerForDraggedTypes([.string])
+        self.browsingContext.project = self.rootItem
+        self.initCompiler()
         self.configureOutlinerMenu()
         self.setProjectLabel()
         self.configureDependencies()
@@ -56,12 +63,25 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.configureLeftView()
         }
         
+    private func initCompiler()
+        {
+        let (topModule,argonModule) = TopModule.initSystem()
+        self.browsingContext.topModule = topModule
+        self.browsingContext.argonModule = argonModule
+        topModule.addSymbol(self.rootItem.module)
+        self.incrementalParser = IncrementalParser()
+        self.incrementalParser.topModule = topModule
+        self.incrementalParser.argonModule = argonModule
+        Token.systemClassNames = self.browsingContext.argonModule.allClasses.map{$0.label}
+        }
+        
     private func configureToolbar()
         {
         self.toolbarHeight = self.sourceOutlinerFont.lineHeight + 4 + 4 + 2 + 2
         self.toolbarHeightConstraint = self.toolbar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
         self.toolbarHeightConstraint.isActive = true
         self.outliner.topAnchor.constraint(equalTo: self.toolbar.bottomAnchor).isActive = true
+        self.toolbar.target = self
         }
         
     private func configureOutliner()
@@ -141,6 +161,14 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             {
             self.setProjectLabel()
             }
+        if aspect == "value" && from.dependentKey == self.classesController.selectionValueModel.dependentKey
+            {
+            let symbolHolder = with as! SymbolHolder
+            if symbolHolder.symbol.itemKey.isNotNil
+                {
+                
+                }
+            }
         }
         
     @objc public func outlinerFrameChanged(_ sender: Any?)
@@ -163,20 +191,24 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.leftView.wantsLayer = true
         self.leftView.layer?.backgroundColor = NSColor.argonDarkerGray.cgColor
         self.classesController.context = .classes
-        self.classesController.rootItems = [SymbolHolder(symbol: ArgonModule.shared.object,context: .classes)]
+        self.classesController.rootItems = [SymbolHolder(symbol: self.browsingContext.argonModule.object,context: .classes)]
         self.classesController.backgroundColor = NSColor.argonMidGray
         self.enumerationController.context = .enumerations
-        self.enumerationController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0,context: .enumerations)}.sorted{$0.label < $1.label}
+        self.enumerationController.rootItems = self.browsingContext.argonModule.allSymbols.compactMap{$0 as? TypeEnumeration}.map{SymbolHolder(symbol: $0,context: .enumerations)}.sorted{$0.label < $1.label}
         self.enumerationController.backgroundColor = NSColor.argonMidGray
         self.constantsController.context = .constants
-        self.constantsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0,context: .constants)}.sorted{$0.label < $1.label}
+        self.constantsController.rootItems = self.browsingContext.argonModule.allSymbols.compactMap{$0 as? Constant}.map{SymbolHolder(symbol: $0,context: .constants)}.sorted{$0.label < $1.label}
         self.constantsController.backgroundColor = NSColor.argonMidGray
         self.methodsController.context = .methods
-        self.methodsController.rootItems = ArgonModule.shared.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0,context: .methods)}.sorted{$0.label < $1.label}
+        self.methodsController.rootItems = self.browsingContext.argonModule.allSymbols.compactMap{$0 as? Method}.map{SymbolHolder(symbol: $0,context: .methods)}.sorted{$0.label < $1.label}
         self.methodsController.backgroundColor = NSColor.argonMidGray
         self.modulesController.context = .modules
-        self.modulesController.rootItems = TopModule.shared.allSymbols.map{SymbolHolder(symbol: $0,context: .modules)}.sorted{$0.label < $1.label}
+        self.modulesController.rootItems = self.browsingContext.topModule.allSymbols.map{SymbolHolder(symbol: $0,context: .modules)}.sorted{$0.label < $1.label}
         self.modulesController.backgroundColor = NSColor.argonMidGray
+        self.classesController.selectionValueModel.addDependent(self)
+        self.enumerationController.selectionValueModel.addDependent(self)
+        self.modulesController.selectionValueModel.addDependent(self)
+        self.methodsController.selectionValueModel.addDependent(self)
         self.classesController.becomeActiveController(inController: self)
         }
         
@@ -216,21 +248,112 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     @IBAction public func onNewSymbol(_ sender: Any?)
         {
+       let row = self.outliner.selectedRow
+        guard row != -1 else
+            {
+            NSSound.beep()
+            return
+            }
+        let item = ProjectElementItem(label: "Symbol")
+        item.controller = self
+        let forItem = self.outliner.item(atRow: row) as! ProjectItem
+        forItem.addItem(item)
+        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
+        self.outliner.beginUpdates()
+        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideDown)
+        self.outliner.endUpdates()
+        if !self.outliner.isItemExpanded(forItem)
+            {
+            self.outliner.expandItem(forItem)
+            self.outliner.expandItem(item)
+            }
         }
         
     @IBAction public func onNewGroup(_ sender: Any?)
         {
+        let row = self.outliner.selectedRow
+        guard row != -1 else
+            {
+            NSSound.beep()
+            return
+            }
+        let item = ProjectGroupItem(label: "Group")
+        item.controller = self
+        let forItem = self.outliner.item(atRow: row) as! ProjectItem
+        forItem.addItem(item)
+        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
+        self.outliner.beginUpdates()
+        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideUp)
+        self.outliner.endUpdates()
+        if !self.outliner.isItemExpanded(forItem)
+            {
+            self.outliner.expandItem(forItem)
+            }
         }
         
     @IBAction public func onNewComment(_ sender: Any?)
         {
+        let row = self.outliner.selectedRow
+        guard row != -1 else
+            {
+            NSSound.beep()
+            return
+            }
+        let item = ProjectCommentItem(label: "")
+        item.controller = self
+        let forItem = self.outliner.item(atRow: row) as! ProjectItem
+        forItem.addItem(item)
+        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
+        self.outliner.beginUpdates()
+        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideDown)
+        self.outliner.endUpdates()
+        if !self.outliner.isItemExpanded(forItem)
+            {
+            self.outliner.expandItem(forItem)
+            self.outliner.expandItem(item)
+            }
+        }
+        
+    @IBAction public func onNewImport(_ sender: Any?)
+        {
+        let row = self.outliner.selectedRow
+        guard row != -1 else
+            {
+            NSSound.beep()
+            return
+            }
+        let item = ProjectImportItem(label: NSHomeDirectory() + "/SomeModule.armod")
+        item.controller = self
+        let forItem = self.outliner.item(atRow: row) as! ProjectItem
+        forItem.addItem(item)
+        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
+        self.outliner.beginUpdates()
+        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideDown)
+        self.outliner.endUpdates()
+        if !self.outliner.isItemExpanded(forItem)
+            {
+            self.outliner.expandItem(forItem)
+            self.outliner.expandItem(item)
+            }
         }
         
     @IBAction public func onDeleteItem(_ sender: Any?)
         {
         }
         
+    @IBAction public func onSearch(_ sender: Any?)
+        {
+        }
+        
     @IBAction public func onNewModule(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onToggleLeftSidebar(_ sender: Any?)
+        {
+        }
+        
+    @IBAction public func onToggleRightSidebar(_ sender: Any?)
         {
         }
         
@@ -387,14 +510,48 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.view.window?.title = "Argon Browser [\(self.rootItem.label)]"
         }
 
-    public func setProject(_ project: Project)
+    public func loadProject(fromURL url: URL)
         {
-        self.rootItem = project
-        project.setController(self)
-        self.outliner.reloadData()
+        do
+            {
+            try self.fileWrapper = FileWrapper(url: url,options: [.immediate,.withoutMapping])
+            if let mainData = self.fileWrapper.fileWrappers?["main.arbin"]?.regularFileContents
+                {
+                if let context = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(mainData) as? BrowsingContext
+                    {
+                    context.topModule.setArgonModule(context.argonModule)
+                    context.topModule.patchSymbols()
+                    self.browsingContext = context
+                    self.rootItem = context.project
+                    context.project.setController(self)
+                    self.outliner.reloadData()
+                    self.configureDependencies()
+                    self.classesController.rootItems = context.classesRootItems
+                    self.enumerationController.rootItems = context.enumerationsRootItems
+                    self.constantsController.rootItems = context.constantsRootItems
+                    self.methodsController.rootItems = context.methodsRootItems
+                    self.modulesController.rootItems = context.modulesRootItems
+                    self.expandExpandedItems()
+                    }
+                }
+            }
+        catch let error as NSError
+            {
+            let alert = NSAlert(error: error)
+            alert.alertStyle = .critical
+            alert.icon = NSImage(named: "AppIcon")!
+            alert.runModal()
+            }
         }
         
-        
+    private func expandExpandedItems()
+        {
+        self.rootItem.expandIfNeeded(inOutliner: self.outliner)
+        self.classesController.expandItemsIfNeeded()
+        self.modulesController.expandItemsIfNeeded()
+        self.enumerationController.expandItemsIfNeeded()
+        self.methodsController.expandItemsIfNeeded()
+        }
     @IBAction func outlinerDoubleClicked(_ any: Any?)
         {
         let row = self.outliner.clickedRow
@@ -577,35 +734,26 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     private func updateAndWriteProject(_ fileWrapper: FileWrapper,to url: URL) throws
         {
-        if let mainData = try? NSKeyedArchiver.archivedData(withRootObject: self.rootItem, requiringSecureCoding: false)
+        self.browsingContext.classesRootItems = self.classesController.rootItems as? SymbolHolders
+        self.browsingContext.modulesRootItems = self.modulesController.rootItems as? SymbolHolders
+        self.browsingContext.constantsRootItems = self.constantsController.rootItems as? SymbolHolders
+        self.browsingContext.enumerationsRootItems = self.enumerationController.rootItems as? SymbolHolders
+        self.browsingContext.methodsRootItems = self.methodsController.rootItems as? SymbolHolders
+        if let mainData = try? NSKeyedArchiver.archivedData(withRootObject: self.browsingContext)
             {
-            let classesData = try? NSKeyedArchiver.archivedData(withRootObject: self.classesController.rootItems,requiringSecureCoding: false)
-            let enumerationData = try? NSKeyedArchiver.archivedData(withRootObject: self.enumerationController.rootItems,requiringSecureCoding: false)
-            let constantsData = try? NSKeyedArchiver.archivedData(withRootObject: self.constantsController.rootItems,requiringSecureCoding: false)
-            let methodData = try? NSKeyedArchiver.archivedData(withRootObject: self.methodsController.rootItems,requiringSecureCoding: false)
-            let moduleData = try? NSKeyedArchiver.archivedData(withRootObject: self.modulesController.rootItems,requiringSecureCoding: false)
-            if classesData.isNil || enumerationData.isNil || constantsData.isNil || methodData.isNil || moduleData.isNil
-                {
-                throw(CompilerIssue(location: .zero,message: "Unable to marshal project data for writing."))
-
-                }
             var wrappers = Dictionary<String,FileWrapper>()
-            wrappers["main.bin"] = FileWrapper(regularFileWithContents: mainData)
-            wrappers["classes.bin"] = FileWrapper(regularFileWithContents: classesData!)
-            wrappers["enumerations.bin"] = FileWrapper(regularFileWithContents: enumerationData!)
-            wrappers["constants.bin"] = FileWrapper(regularFileWithContents: constantsData!)
-            wrappers["methods.bin"] = FileWrapper(regularFileWithContents: methodData!)
-            wrappers["modules.bin"] = FileWrapper(regularFileWithContents: moduleData!)
+            wrappers["main.arbin"] = FileWrapper(regularFileWithContents: mainData)
             let wrapper = FileWrapper(directoryWithFileWrappers: wrappers)
             do
                 {
-                try wrapper.write(to: url,options: [.withNameUpdating],originalContentsURL: nil)
+                try wrapper.write(to: url,options: [.withNameUpdating,.atomic],originalContentsURL: url)
+                try FileManager.default.setAttributes([.extensionHidden : true] , ofItemAtPath: url.path)
                 }
             catch let error as NSError
                 {
                 let alert = NSAlert(error: error)
-                alert.informativeText = "ArgonWorks was unable to write out the project data."
-                alert.messageText = "ArgonWorks could not write the serialized project data to disk. Please try again later."
+//                alert.informativeText = "ArgonWorks was unable to write out the project data."
+//                alert.messageText = "ArgonWorks could not write the serialized project data to disk. Please try again later."
                 alert.icon = NSImage(named: "AppIcon")!
                 alert.alertStyle = .critical
                 alert.runModal()

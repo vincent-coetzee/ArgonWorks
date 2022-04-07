@@ -11,5 +11,5 @@ public protocol Pointer
     {
     var dirtyAddress: Address { get }
     var cleanAddress: Address { get }
-    init?(dirtyAddress: Address)
+    init?(dirtyAddress: Address,argonModule: ArgonModule)
     }

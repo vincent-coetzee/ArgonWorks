@@ -75,7 +75,7 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
         set
             {
             self.setAddress(newValue,atSlot: "block")
-            let offset = newValue!.cleanAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+            let offset = newValue!.cleanAddress + Word(self.argonModule.block.instanceSizeInBytes)
             self.elementPointer = WordPointer(bitPattern: offset)
             }
         }
@@ -85,15 +85,17 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
         self.integer(atSlot: "size")
         }
         
+    internal var argonModule: ArgonModule
     internal var elementPointer: WordPointer!
     
-    public required init?(dirtyAddress: Word)
+    public required init?(dirtyAddress: Word,argonModule: ArgonModule)
         {
+        self.argonModule = argonModule
         self.elementPointer = WordPointer(bitPattern: 1)
-        super.init(address: dirtyAddress.cleanAddress,class: ArgonModule.shared.array as! TypeClass)
+        super.init(address: dirtyAddress.cleanAddress,class: self.argonModule.array as! TypeClass,argonModule: argonModule)
         if let blockAddress = self.address(atSlot: "block")
             {
-            let offset = blockAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+            let offset = blockAddress + Word(self.argonModule.block.instanceSizeInBytes)
             self.elementPointer = WordPointer(bitPattern: offset)
             }
         }
@@ -138,7 +140,7 @@ public class ArrayPointer: ClassBasedPointer,Collection,Pointer
     public static func test(inSegment segment: Segment)
         {
         let array1 = segment.allocateArray(size: 15)
-        let pointer1 = ArrayPointer(dirtyAddress: array1)!
+        let pointer1 = ArrayPointer(dirtyAddress: array1,argonModule: segment.argonModule)!
         for index in 0..<15
             {
             pointer1[index] = Word(integer: index)

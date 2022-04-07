@@ -24,6 +24,15 @@ public class LoopBlock: Block
         self.endExpression = end
         self.updateExpressions = update
         super.init()
+        for expression in start
+            {
+            expression.container = .block(self)
+            }
+        end.container = .block(self)
+        for expression in update
+            {
+            expression.container = .block(self)
+            }
         }
         
     public required init?(coder: NSCoder)
@@ -75,7 +84,7 @@ public class LoopBlock: Block
             expression.initializeTypeConstraints(inContext: context)
             }
         self.endExpression.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: self.endExpression.type,right: ArgonModule.shared.boolean,origin: .block(self)))
+        context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
         for block in self.blocks
             {
             block.initializeTypeConstraints(inContext: context)

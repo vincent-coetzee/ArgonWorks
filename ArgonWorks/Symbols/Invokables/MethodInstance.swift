@@ -76,7 +76,7 @@ public class MethodInstance: Function
         
     public var methodSignature: MethodSignature
         {
-        MethodSignature(methodInstance: self)
+        MethodSignature(methodInstance: self,argonModule: self.container.argonModule)
         }
         
     public var methodSelectorString: String
@@ -145,7 +145,7 @@ public class MethodInstance: Function
         
     public override var sizeInBytes: Int
         {
-        return(ArgonModule.shared.methodInstance.instanceSizeInBytes)
+        return(self.container.argonModule.methodInstance.instanceSizeInBytes)
         }
         
     public override var argonHash: Int
@@ -259,12 +259,17 @@ public class MethodInstance: Function
         super.init(coder: coder)
         }
     
-    public required init(label: Label)
+    public override  init(label: Label,argonModule: ArgonModule)
         {
         self.codeBuffer = InstructionBuffer()
-        super.init(label: label)
+        super.init(label: label,argonModule: argonModule)
         }
     
+    public required init(label: Label)
+        {
+        fatalError()
+        }
+        
     public override func encode(with coder:NSCoder)
         {
         coder.encode(self.isGenericMethod,forKey: "isGeneric")
@@ -335,8 +340,8 @@ public class MethodInstance: Function
             }
         self.wasMemoryLayoutDone = true
         let segment = context.segment(for: self)
-        let methodInstanceType = ArgonModule.shared.lookup(label: "MethodInstance") as! Type
-        let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType)
+        let methodInstanceType = self.container.argonModule.lookup(label: "MethodInstance") as! Type
+        let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType,argonModule: self.container.argonModule)
         instancePointer.setClass(methodInstanceType)
         instancePointer.flipCount = 0
         instancePointer.hasBytes = false
@@ -350,12 +355,12 @@ public class MethodInstance: Function
             {
             fatalError("Parent of method instance should be a module but is not.")
             }
-        let parameterType = ArgonModule.shared.parameter
-        if let parmArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.parameters.count,elements: Array<Address>()))
+        let parameterType = self.container.argonModule.parameter
+        if let parmArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.parameters.count,elements: Array<Address>()),argonModule: self.container.argonModule)
             {
             for parm in self.parameters
                 {
-                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofType: parameterType, extraSizeInBytes: 0),type: parameterType)
+                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofType: parameterType, extraSizeInBytes: 0),type: parameterType,argonModule: self.container.argonModule)
                 parmPointer.setAddress(segment.allocateString(parm.label),atSlot: "tag")
                 parmPointer.setBoolean(parm.isVisible,atSlot: "tagIsShown")
                 parmPointer.setBoolean(parm.isVariadic,atSlot: "isVariadic")
@@ -368,7 +373,7 @@ public class MethodInstance: Function
             }
         let blockAddress = context.codeSegment.allocateInstructionBlock(for: self)
         instancePointer.setAddress(blockAddress,atSlot: "instructionBlock")
-        let instructionsAddress = blockAddress + Word(ArgonModule.shared.instructionBlock.instanceSizeInBytes)
+        let instructionsAddress = blockAddress + Word(self.container.argonModule.instructionBlock.instanceSizeInBytes)
         instancePointer.setAddress(instructionsAddress,atSlot: "instructionAddress")
         instancePointer.setInteger(self.codeBuffer.count,atSlot: "instructionCount")
         var wordPointer = WordPointer(bitPattern: instructionsAddress)
@@ -390,7 +395,7 @@ public class MethodInstance: Function
         
     public func matches(_ signature: MethodSignature) -> Bool
         {
-        MethodSignature(methodInstance: self) == signature
+        MethodSignature(methodInstance: self,argonModule: self.container.argonModule) == signature
         }
         
     public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool

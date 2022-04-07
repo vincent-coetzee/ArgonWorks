@@ -18,9 +18,9 @@ public class SlotGetter
         self.objectType = type
         }
         
-    public func returns(_ type: Type) -> SlotAccessorMethodInstance
+    public func returns(_ type: Type,_ argonModule: ArgonModule) -> SlotAccessorMethodInstance
         {
-        let instance = SlotAccessorMethodInstance(label: self.label,classType: objectType)
+        let instance = SlotAccessorMethodInstance(label: self.label,classType: objectType,argonModule: argonModule)
         instance.parameters = [Parameter(label: "object", relabel: nil, type: self.objectType, isVisible: false, isVariadic: false)]
         instance.returnType = type
         instance.type = type
@@ -38,11 +38,11 @@ public class SlotAccessorMethodInstance: MethodInstance
     private let slot: Slot
     private let classType: Type
     
-    init(slot: Slot,classType: Type)
+    init(slot: Slot,classType: Type,argonModule: ArgonModule)
         {
         self.slot = slot
         self.classType = classType
-        super.init(label: slot.label)
+        super.init(label: slot.label,argonModule: argonModule)
         self.parameters = [Parameter(label: "object", relabel: nil, type: classType, isVisible: false, isVariadic: false)]
         self.returnType = slot.type
         }
@@ -54,11 +54,11 @@ public class SlotAccessorMethodInstance: MethodInstance
         super.init(coder: coder)
         }
         
-    public required init(label: Label,classType: Type)
+    public required init(label: Label,classType: Type,argonModule: ArgonModule)
         {
         self.slot = Slot(label: label)
         self.classType = classType
-        super.init(label: label)
+        super.init(label: label,argonModule: argonModule)
         }
     
     public required init(label: Label) {
@@ -74,14 +74,14 @@ public class SlotAccessorMethodInstance: MethodInstance
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let instance = SlotAccessorMethodInstance(slot: self.slot,classType: substitution.substitute(self.classType))
+        let instance = SlotAccessorMethodInstance(slot: self.slot,classType: substitution.substitute(self.classType),argonModule: self.container.argonModule)
         instance.returnType = substitution.substitute(self.returnType)
         return(instance as! Self)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let instance = SlotAccessorMethodInstance(slot: self.slot.freshTypeVariable(inContext: context),classType: self.classType.freshTypeVariable(inContext: context))
+        let instance = SlotAccessorMethodInstance(slot: self.slot.freshTypeVariable(inContext: context),classType: self.classType.freshTypeVariable(inContext: context),argonModule: self.container.argonModule)
         instance.returnType = self.returnType.freshTypeVariable(inContext: context)
         instance.type = self.type.freshTypeVariable(inContext: context)
         return(instance as! Self)

@@ -11,7 +11,7 @@ public class TreeNodePointer: ClassBasedPointer
     {
     public var stringKey: String
         {
-        return(StringPointer(address: self.keyAddress!).string)
+        return(StringPointer(address: self.keyAddress!,argonModule: self.argonModule).string)
         }
         
     public var keyAddress: Address?
@@ -114,7 +114,7 @@ public class TreeNodePointer: ClassBasedPointer
         {
         if let address = self.leftNodeAddress,address != 0
             {
-            return(TreeNodePointer(dirtyAddress: address))
+            return(TreeNodePointer(dirtyAddress: address,argonModule: self.argonModule))
             }
         return(nil)
         }
@@ -123,19 +123,23 @@ public class TreeNodePointer: ClassBasedPointer
         {
         if let address = self.rightNodeAddress,address != 0
             {
-            return(TreeNodePointer(dirtyAddress: address))
+            return(TreeNodePointer(dirtyAddress: address,argonModule: self.argonModule))
             }
         return(nil)
         }
         
-    public init(address: Address)
+    private let argonModule: ArgonModule
+    
+    public init(address: Address,argonModule: ArgonModule)
         {
-        super.init(address: address,class: ArgonModule.shared.treeNode as! TypeClass)
+        self.argonModule = argonModule
+        super.init(address: address,class: argonModule.treeNode as! TypeClass,argonModule: argonModule)
         }
         
-    public init(dirtyAddress: Address)
+    public init(dirtyAddress: Address,argonModule: ArgonModule)
         {
-        super.init(address: dirtyAddress.cleanAddress,class: ArgonModule.shared.treeNode as! TypeClass)
+        self.argonModule = argonModule
+        super.init(address: dirtyAddress.cleanAddress,class: argonModule.treeNode as! TypeClass,argonModule: argonModule)
         }
         
     public func deleteNode(forKey: String) -> Address?
@@ -293,7 +297,7 @@ public class TreeNodePointer: ClassBasedPointer
         
     public func value(forKey key: String) -> Address?
         {
-        let stringKey = StringPointer(address: self.keyAddress!).string
+        let stringKey = StringPointer(address: self.keyAddress!,argonModule: self.argonModule).string
         if stringKey == key
             {
             return(self.valueAddress)
@@ -302,7 +306,7 @@ public class TreeNodePointer: ClassBasedPointer
             {
             if let leftAddress = self.leftNodeAddress
                 {
-                return(TreeNodePointer(address: leftAddress).value(forKey: key))
+                return(TreeNodePointer(address: leftAddress,argonModule: self.argonModule).value(forKey: key))
                 }
             return(nil)
             }
@@ -310,7 +314,7 @@ public class TreeNodePointer: ClassBasedPointer
             {
             if let rightAddress = self.rightNodeAddress
                 {
-                return(TreeNodePointer(address: rightAddress).value(forKey: key))
+                return(TreeNodePointer(address: rightAddress,argonModule: self.argonModule).value(forKey: key))
                 }
             return(nil)
             }
@@ -351,7 +355,7 @@ public class TreeNodePointer: ClassBasedPointer
         
     public func nodeNearestKey(_ key: String) -> TreeNodePointer
         {
-        let stringPointer = StringPointer(address: self.keyAddress!)
+        let stringPointer = StringPointer(address: self.keyAddress!,argonModule: self.argonModule)
         let stringKey = stringPointer.string
         if stringKey == key
             {
@@ -363,7 +367,7 @@ public class TreeNodePointer: ClassBasedPointer
                 {
                 return(self)
                 }
-            return(TreeNodePointer(dirtyAddress: self.leftNodeAddress!).nodeNearestKey(key))
+            return(TreeNodePointer(dirtyAddress: self.leftNodeAddress!,argonModule: self.argonModule).nodeNearestKey(key))
             }
         if key > stringKey
             {
@@ -371,14 +375,14 @@ public class TreeNodePointer: ClassBasedPointer
                 {
                 return(self)
                 }
-            return(TreeNodePointer(dirtyAddress: self.rightNodeAddress!).nodeNearestKey(key))
+            return(TreeNodePointer(dirtyAddress: self.rightNodeAddress!,argonModule: self.argonModule).nodeNearestKey(key))
             }
         return(self)
         }
         
     public func nodeAtKey(_ key: String) -> TreeNodePointer?
         {
-        let stringKey = StringPointer(address: self.keyAddress!).string
+        let stringKey = StringPointer(address: self.keyAddress!,argonModule: self.argonModule).string
 //        print("NODE \(self.someAddress)")
 //        print("NODE KEY = \(stringKey)")
 //        print("COMPARING \(key) WITH \(stringKey)")
@@ -395,7 +399,7 @@ public class TreeNodePointer: ClassBasedPointer
                 return(nil)
                 }
 //            print("RETURNING LEFT")
-            return(TreeNodePointer(dirtyAddress: self.leftNodeAddress!).nodeAtKey(key))
+            return(TreeNodePointer(dirtyAddress: self.leftNodeAddress!,argonModule: self.argonModule).nodeAtKey(key))
             }
         if key > stringKey
             {
@@ -405,7 +409,7 @@ public class TreeNodePointer: ClassBasedPointer
                 return(nil)
                 }
 //            print("RETURNING RIGHT")
-            return(TreeNodePointer(dirtyAddress: self.rightNodeAddress!).nodeAtKey(key))
+            return(TreeNodePointer(dirtyAddress: self.rightNodeAddress!,argonModule: self.argonModule).nodeAtKey(key))
             }
         return(nil)
         }
@@ -414,26 +418,26 @@ public class TreeNodePointer: ClassBasedPointer
         {
         if self.leftNodeAddress.isNotNil
             {
-            TreeNodePointer(dirtyAddress: self.leftNodeAddress!).printNode()
+            TreeNodePointer(dirtyAddress: self.leftNodeAddress!,argonModule: self.argonModule).printNode()
             }
-        let stringPointer = StringPointer(address: self.keyAddress!)
+        let stringPointer = StringPointer(address: self.keyAddress!,argonModule: self.argonModule)
         print("NODE KEY: \(stringPointer.string)")
         if self.rightNodeAddress.isNotNil
             {
-            TreeNodePointer(dirtyAddress: self.rightNodeAddress!).printNode()
+            TreeNodePointer(dirtyAddress: self.rightNodeAddress!,argonModule: self.argonModule).printNode()
             }
         }
         
     @discardableResult
     public func setValue(_ value: Address,forKey key:String,inSegment: Segment) -> TreeNodePointer
         {
-        let keyString = StringPointer(address: self.keyAddress!).string
+        let keyString = StringPointer(address: self.keyAddress!,argonModule: self.argonModule).string
         if key < keyString
             {
             if self.leftNodeAddress.isNil
                 {
-                let address = inSegment.allocateObject(ofType: ArgonModule.shared.treeNode, extraSizeInBytes: 0)
-                let pointer = TreeNodePointer(dirtyAddress: address)
+                let address = inSegment.allocateObject(ofType: self.argonModule.treeNode, extraSizeInBytes: 0)
+                let pointer = TreeNodePointer(dirtyAddress: address,argonModule: self.argonModule)
                 pointer.keyAddress = inSegment.allocateString(key)
                 pointer.leftNodeAddress = nil
                 pointer.rightNodeAddress = nil
@@ -445,7 +449,7 @@ public class TreeNodePointer: ClassBasedPointer
                 }
             else
                 {
-                let thisPointer = TreeNodePointer(dirtyAddress: self.leftNodeAddress!)
+                let thisPointer = TreeNodePointer(dirtyAddress: self.leftNodeAddress!,argonModule: self.argonModule)
                 let pointer = thisPointer.setValue(value,forKey: key,inSegment: inSegment)
                 thisPointer.height = max(thisPointer.leftNodePointer?.height ?? 0,thisPointer.rightNodePointer?.height ?? 0) + 1
                 return(pointer)
@@ -455,8 +459,8 @@ public class TreeNodePointer: ClassBasedPointer
             {
             if self.rightNodeAddress.isNil
                 {
-                let address = inSegment.allocateObject(ofType: ArgonModule.shared.treeNode, extraSizeInBytes: 0)
-                let pointer = TreeNodePointer(dirtyAddress: address)
+                let address = inSegment.allocateObject(ofType: self.argonModule.treeNode, extraSizeInBytes: 0)
+                let pointer = TreeNodePointer(dirtyAddress: address,argonModule: self.argonModule)
                 pointer.keyAddress = inSegment.allocateString(key)
                 pointer.leftNodeAddress = nil
                 pointer.rightNodeAddress = nil
@@ -468,7 +472,7 @@ public class TreeNodePointer: ClassBasedPointer
                 }
             else
                 {
-                let thisPointer = TreeNodePointer(dirtyAddress: self.rightNodeAddress!)
+                let thisPointer = TreeNodePointer(dirtyAddress: self.rightNodeAddress!,argonModule: self.argonModule)
                 let pointer = thisPointer.setValue(value,forKey: key,inSegment: inSegment)
                 thisPointer.height = max(thisPointer.leftNodePointer?.height ?? 0,thisPointer.rightNodePointer?.height ?? 0) + 1
                 return(pointer)
@@ -487,7 +491,7 @@ public class TreeNodePointer: ClassBasedPointer
         
     public func audit(indent: String)
         {
-        print("\(indent)\(StringPointer(address: self.keyAddress!).string)")
+        print("\(indent)\(StringPointer(address: self.keyAddress!,argonModule: self.argonModule).string)")
         print("\(indent)LEFT HEIGHT : \(self.leftNodePointer?.height ?? 0)")
         print("\(indent)RIGHT HEIGHT: \(self.rightNodePointer?.height ?? 0)")
         print("\(indent)THIS HEIGHT : \(self.height)")

@@ -15,6 +15,7 @@ public class PostfixExpression: OperatorExpression
         {
         self.lhs = lhs
         super.init(operatorLabel: operatorLabel,operators: operators)
+        lhs.container = .expression(self)
         }
         
     public required init?(coder: NSCoder)

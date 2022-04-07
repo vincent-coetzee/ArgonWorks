@@ -26,6 +26,7 @@ public class MethodInstanceBlock: Block
         {
         self.methodInstance = methodInstance
         super.init()
+        self.container = .symbol(methodInstance)
         }
         
         required init()

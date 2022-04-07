@@ -32,6 +32,7 @@ public class ClassExpression: Expression
         {
         self.expression = expression
         super.init()
+        expression.container = .expression(self)
         }
         
     public override func visit(visitor: Visitor) throws
@@ -44,7 +45,7 @@ public class ClassExpression: Expression
     public override func initializeType(inContext context: TypeContext)
         {
         self.expression.initializeType(inContext: context)
-        self.type = ArgonModule.shared.classType
+        self.type = context.classType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

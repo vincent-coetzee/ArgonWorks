@@ -16,6 +16,7 @@ public class ExpressionBlock: Block
         {
         self.expression = expression
         super.init()
+        expression.container = .block(self)
         }
         
     public required init?(coder: NSCoder)

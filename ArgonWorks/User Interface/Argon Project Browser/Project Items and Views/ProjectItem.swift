@@ -98,6 +98,12 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
     public var itemKey: Int = 0
     public var validActions: BrowserActionSet = []
     public var isExpanded = false
+        {
+        didSet
+            {
+            self.updateViews()
+            }
+        }
     
     init(label: Label)
         {
@@ -133,6 +139,14 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         self.validActions = self.initValidActions()
         }
         
+    private func updateViews()
+        {
+        if !self.isExpanded
+            {
+            self.height = 0
+            }
+        }
+        
     public func value(forAspect: String) -> Any?
         {
         if forAspect == "label"
@@ -157,6 +171,10 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         }
         
     public func removeItem(_ item: ProjectItem)
+        {
+        }
+        
+    public func expandIfNeeded(inOutliner: NSOutlineView)
         {
         }
         
@@ -206,9 +224,9 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         
     public func makeCellView(inOutliner outliner: NSOutlineView,forColumn columnIdentifier: NSUserInterfaceItemIdentifier) -> NSTableCellView?
         {
-        if let holder = self.cellViews[columnIdentifier]
+        if let view = self.cellViews[columnIdentifier]?.tableCellView
             {
-            return(holder.tableCellView)
+            return(view)
             }
         let view = self._makeCellView(inOutliner: outliner,forColumn: columnIdentifier)
         self.cellViews[columnIdentifier] = WeakTableCellView(tableCellView: view)
@@ -246,7 +264,7 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
     public func height(inWidth: CGFloat) -> CGFloat
         {
         let stringSize = self.measureString(self.label,withFont: Palette.shared.font(for: self.fontIdentifier),inWidth: inWidth)
-        let height = stringSize.height
+        let height = max(stringSize.height,Palette.shared.float(for: .recordIconHeight))
         return(height)
         }
         
@@ -260,7 +278,11 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         
     public func updateMenu(_ menu: NSMenu,forTarget: ArgonBrowserViewController)
         {
-        menu.addItem(withTitle: "Delete", action: #selector(ArgonBrowserViewController.onDeleteClicked), keyEquivalent: "").target = forTarget
+        self.validActions.adjustBrowserActionMenu(menu)
+        for item in menu.items
+            {
+            item.target = forTarget
+            }
         }
     }
 

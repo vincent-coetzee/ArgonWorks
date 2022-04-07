@@ -77,7 +77,7 @@ public class EnumerationCase:Symbol
         
     public override var sizeInBytes: Int
         {
-        let type = ArgonModule.shared.enumerationCase
+        let type = self.container.argonModule.enumerationCase
         return(type.instanceSizeInBytes)
         }
         
@@ -194,8 +194,8 @@ public class EnumerationCase:Symbol
             }
         self.wasMemoryLayoutDone = true
         let segment = allocator.segment(for: self.segmentType)
-        let enumCaseType = ArgonModule.shared.enumerationCase
-        let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType)
+        let enumCaseType = self.container.argonModule.enumerationCase
+        let enumCasePointer = ClassBasedPointer(address: self.memoryAddress,type: enumCaseType,argonModule: self.container.argonModule)
         enumCasePointer.setClass(enumCaseType)
         self.symbolIndex = allocator.payload.symbolRegistry.registerSymbol(self.symbol)
         enumCasePointer.setInteger(self.symbolIndex,atSlot: "symbol")
@@ -206,7 +206,7 @@ public class EnumerationCase:Symbol
             }
         else
             {
-            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.associatedTypes.count))
+            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.associatedTypes.count),argonModule: segment.argonModule)
                 {
                 for type in self.associatedTypes
                     {

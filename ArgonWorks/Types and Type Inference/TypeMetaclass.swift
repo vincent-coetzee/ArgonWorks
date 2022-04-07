@@ -35,12 +35,12 @@ public class TypeMetaclass: TypeClass
         
     public override var sizeInBytes: Int
         {
-        ArgonModule.shared.metaclassType.instanceSizeInBytes
+        self.container.argonModule.metaclassType.instanceSizeInBytes
         }
         
     public override var classType: TypeClass
         {
-        ArgonModule.shared.metaclassType as! TypeClass
+        self.container.argonModule.metaclassType as! TypeClass
         }
         
     public override var objectType: Argon.ObjectType
@@ -70,13 +70,13 @@ public class TypeMetaclass: TypeClass
     @discardableResult
     public override func makeMetaclass() -> TypeClass
         {
-        self.metaclass = ArgonModule.shared.metaclassType as? TypeClass
+        self.metaclass = self.container.argonModule.metaclassType as? TypeClass
         self.type = self.metaclass
         return(self.metaclass as! TypeClass)
         }
         
-    public override func configureMetaclass()
+    public override func configureMetaclass(argonModule: ArgonModule)
         {
-        self.metaclass.type = ArgonModule.shared.metaclassType
+        self.metaclass.type = argonModule.metaclassType
         }
     }

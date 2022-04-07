@@ -259,23 +259,23 @@ public struct Argon
         
     private static var typeTable = Dictionary<Int,Type>()
     
-    @discardableResult
-    public static func addType(_ type: Type) -> Type
-        {
-        if let oldType = Self.typeTable[type.argonHash]
-            {
-            print("FOUND OLD TYPE \(oldType)")
-            return(oldType)
-            }
-        print("ADDING NEW TYPE \(type)")
-        Self.typeTable[type.argonHash] = type
-        return(type)
-        }
+//    @discardableResult
+//    public static func addType(_ type: Type) -> Type
+//        {
+//        if let oldType = Self.typeTable[type.argonHash]
+//            {
+//            print("FOUND OLD TYPE \(oldType)")
+//            return(oldType)
+//            }
+//        print("ADDING NEW TYPE \(type)")
+//        Self.typeTable[type.argonHash] = type
+//        return(type)
+//        }
         
-    public static func typeAtKey(_ key: Int) -> Type?
-        {
-        Self.typeTable[key]
-        }
+//    public static func typeAtKey(_ key: Int) -> Type?
+//        {
+//        Self.typeTable[key]
+//        }
         
     public static func resetStatics()
         {

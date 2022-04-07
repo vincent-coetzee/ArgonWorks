@@ -69,6 +69,14 @@ public class TypeContext
             return(variable)
             }
             
+        public func freshTypeVariable(withId id: Int) -> TypeVariable
+            {
+            let variable = TypeVariable(index: id)
+            self.typeVariableIndex = max(self.typeVariableIndex + 1,id + 1)
+            self.typeVariables[variable.id] = variable
+            return(variable)
+            }
+            
         public func hasType(atIndex:Int) -> Bool
             {
             let value = self.typeVariables[atIndex]
@@ -255,7 +263,20 @@ public class TypeContext
                 return(newSymbol)
                 }
             let newSlot = slot.substitute(from: self)
-            newSlot.owningClass = slot.owningClass
+            newSlot.type = self.substitute(slot.type)
+            newSlot.offset = slot.offset
+            self.symbols[slot.argonHash] = newSlot
+            return(newSlot)
+            }
+            
+        public func substitute(_ slot: MemberSlot) -> MemberSlot
+            {
+            if let newSymbol = self.symbols[slot.argonHash] as? MemberSlot
+                {
+                return(newSymbol)
+                }
+            let newSlot = slot.substitute(from: self)
+            newSlot.owningType = slot.owningClass
             newSlot.type = self.substitute(slot.type)
             newSlot.offset = slot.offset
             self.symbols[slot.argonHash] = newSlot
@@ -269,7 +290,6 @@ public class TypeContext
                 return(newSymbol)
                 }
             let newSlot = slot.substitute(from: self)
-            newSlot.owningClass = slot.owningClass
             newSlot.type = self.substitute(slot.type)
             newSlot.offset = slot.offset
             self.symbols[slot.argonHash] = newSlot
@@ -599,6 +619,7 @@ public class TypeContext
         }
         
     internal typealias Environment = Dictionary<Label,Type>
+    internal var argonModule: ArgonModule!
     
     public static let initialSubstitution = Substitution(typeContext: nil)
     
@@ -612,94 +633,124 @@ public class TypeContext
         self.initialSubstitution.freshTypeVariable(named: named)
         }
         
+    public static func freshTypeVariable(withId: Int) -> TypeVariable
+        {
+        self.initialSubstitution.freshTypeVariable(withId: withId)
+        }
+        
     public var objectType: Type
         {
-        ArgonModule.shared.object
+        self.argonModule.object
         }
         
     public var objectClassType: Type
         {
-        ArgonModule.shared.objectClass
+        self.argonModule.objectClass
         }
         
     public var voidType: Type
         {
-        ArgonModule.shared.void
+        self.argonModule.void
+        }
+    
+    public var collectionType: Type
+        {
+        self.argonModule.collection
         }
         
     public var arrayType: Type
         {
-        ArgonModule.shared.array
+        self.argonModule.array
         }
         
     public var integerType: Type
         {
-        ArgonModule.shared.integer
+        self.argonModule.integer
         }
         
     public var uIntegerType: Type
         {
-        ArgonModule.shared.uInteger
+        self.argonModule.uInteger
         }
         
     public var stringType: Type
         {
-        ArgonModule.shared.string
+        self.argonModule.string
         }
         
     public var booleanType: Type
         {
-        ArgonModule.shared.boolean
+        self.argonModule.boolean
         }
         
     public var byteType: Type
         {
-        ArgonModule.shared.byte
+        self.argonModule.byte
         }
         
     public var characterType: Type
         {
-        ArgonModule.shared.character
+        self.argonModule.character
+        }
+        
+    public var dateType: Type
+        {
+        self.argonModule.date
+        }
+        
+    public var timeType: Type
+        {
+        self.argonModule.time
+        }
+        
+    public var dateTimeType: Type
+        {
+        self.argonModule.dateTime
+        }
+        
+    public var metaclassType: Type
+        {
+        self.argonModule.metaclassType
         }
         
     public var floatType: Type
         {
-        ArgonModule.shared.float
+        self.argonModule.float
         }
         
     public var symbolType: Type
         {
-        ArgonModule.shared.symbol
+        self.argonModule.symbol
         }
         
     public var nullType: Type
         {
-        ArgonModule.shared.null
+        self.argonModule.null
         }
         
     public var moduleType: Type
         {
-        ArgonModule.shared.moduleType
+        self.argonModule.moduleType
         }
         
     public var iterableType: Type
         {
-        ArgonModule.shared.iterable
+        self.argonModule.iterable
         }
         
     public var classType: Type
         {
-        ArgonModule.shared.classType
+        self.argonModule.classType
         }
 
     public var functionType: Type
         {
-        ArgonModule.shared.function
+        self.argonModule.function
         }
         
     public var enumerationCaseType: Type
         {
-        ArgonModule.shared.enumerationCase
+        self.argonModule.enumerationCase
         }
         
 //    private let scope: Scope

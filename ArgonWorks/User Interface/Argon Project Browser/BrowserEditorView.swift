@@ -84,7 +84,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
     private let textView: SourceTextView
     private let annotationView: SyntaxAnnotationView
     public var incrementalParser: IncrementalParser!
-    private let systemClassNames = ArgonModule.shared.systemClassNames!
+    private let systemClassNames = Array<String>()
     public weak var sourceItem: ProjectSourceItem!
     public var activeAnnotations = Dictionary<Int,CALayer>()
     
@@ -159,7 +159,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         let module = self.sourceItem.project.module
         do
             {
-            let context = CompilationContext(module: module)
+            let context = CompilationContext(module: module,argonModule: self.sourceItem.controller.argonModule)
             let result = try self.incrementalParser.parse(itemKey: self.sourceItem.elementItem.itemKey,source: self.textView.string, tokenHandler: self,inContext: context)
             if result.hasIssues
                 {
@@ -168,6 +168,11 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
                 }
             else
                 {
+                let symbols = context.allSymbols
+                for symbol in symbols
+                    {
+                    symbol.setModule(self.sourceItem.module)
+                    }
                 self.sourceRecord.compilationDidSucceed(self,symbolValue: result,affectedSymbols: context.allSymbols,inModule: self.sourceItem.module)
                 }
             }
@@ -191,8 +196,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
         let width = self.bounds.width - self.annotationView.gutterWidth
         let height = self.bounds.size.height
         self.annotationView.frame = NSRect(x: 0,y:0, width: self.annotationView.gutterWidth,height: height)
-        let lineHeight = self.sourceItem.controller.sourceOutlinerFont.lineHeight
-        self.textView.frame = NSRect(x: self.annotationView.gutterWidth,y:lineHeight,width: width,height: height - lineHeight)
+        self.textView.frame = NSRect(x: self.annotationView.gutterWidth,y:0,width: width,height: height)
         }
         
     public func issueAdded(token: Token,issue: CompilerIssue)
@@ -272,7 +276,7 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,SyntaxAnn
                 localAttributes[.foregroundColor] = NSColor.magenta
             }
             self.textView.textStorage?.beginEditing()
-            self.sourceRecord.attributes.append(Attribute(color: localAttributes[.foregroundColor] as! NSColor,range: token.location.range))
+            self.sourceRecord.attributes.append(TextAttribute(color: localAttributes[.foregroundColor] as! NSColor,range: token.location.range))
             self.textView.textStorage?.setAttributes(localAttributes, range: token.location.range)
             self.textView.textStorage?.endEditing()
         }

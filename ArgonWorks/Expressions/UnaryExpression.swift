@@ -22,6 +22,7 @@ public class UnaryExpression: Expression
         self.operationName = operation
         self.rhs = rhs
         super.init()
+        self.rhs.container = .expression(self)
         }
         
     required init?(coder: NSCoder)
@@ -87,19 +88,19 @@ public class UnaryExpression: Expression
         switch(self.operationName)
             {
             case "-":
-                if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger
+                if self.type == using.argonModule.integer || self.type == using.argonModule.uInteger
                     {
                     instance.add(.i64,.NEG,rhs.place,temp)
                     }
-                else if self.type == ArgonModule.shared.byte
+                else if self.type == using.argonModule.byte
                     {
                     instance.add(.i8,.NEG,rhs.place,temp)
                     }
-                else if self.type == ArgonModule.shared.character
+                else if self.type == using.argonModule.character
                     {
                     instance.add(.i16,.NEG,rhs.place,temp)
                     }
-                else if self.type == ArgonModule.shared.float
+                else if self.type == using.argonModule.float
                     {
                     instance.add(.f64,.NEG,rhs.place,temp)
                     }

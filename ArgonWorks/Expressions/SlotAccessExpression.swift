@@ -86,10 +86,10 @@ public class SlotAccessExpression: Expression
         try expression.emitValueCode(into: buffer,using: using)
         try self.receiver.emitAddressCode(into: buffer,using: using)
         let temporary = buffer.nextTemporary
-        if let slot = self.slot
+        if let slot = self.slot as? MemberSlot
             {
             let owningClass = slot.owningClass
-            let index = owningClass!.slotIndexCache[slot.label]!
+            let index = owningClass.slotIndexCache[slot.label]!
             buffer.add(.i64,.ADD,receiver.place,.integer(3 * Argon.kWordSizeInBytesInt),temporary)
             buffer.add(.LOADP,temporary,.integer(0),temporary)
             buffer.add(.LOADP,temporary,.integer(index * Argon.kWordSizeInBytesInt),temporary)
@@ -115,7 +115,7 @@ public class SlotAccessExpression: Expression
         try self.receiver.emitAddressCode(into: into,using: using)
         let temporary = into.nextTemporary
         let receiverType = self.receiver.type
-        if let slot = self.slot,let receiverClass = receiverType as? TypeClass
+        if let slot = self.slot as? MemberSlot,let receiverClass = receiverType as? TypeClass
             {
             let offset = receiverClass.offsetInObject(ofSlot: slot)
             into.add(.LOADP,self.receiver.place,.integer(Argon.Integer(offset)),temporary)

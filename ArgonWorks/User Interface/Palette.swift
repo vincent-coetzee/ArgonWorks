@@ -51,6 +51,9 @@ public enum StyleIdentifier: String
     case recordBackgroundColor
     case recordSelectionColor
     case versionColor
+    case lineColor
+    case recordIconHeight
+    case importColor
     }
     
 @dynamicMemberLookup
@@ -88,7 +91,7 @@ public class Palette
         self.styles[.functionColor] = NSColor.argonXSeaBlue
         self.styles[.booleanColor] = NSColor.argonBayside
         self.styles[.pathColor] = NSColor.argonZomp
-        self.styles[.groupColor] = NSColor.argonZomp
+        self.styles[.groupColor] = NSColor.argonCheese
         self.styles[.moduleColor] = NSColor.argonZomp
         self.styles[.projectColor] = NSColor.argonNeonPink
         self.styles[.slotColor] = NSColor.argonCoral
@@ -101,8 +104,25 @@ public class Palette
         self.styles[.recordTextFont] = NSFont(name: "SunSans-SemiBold",size: 11)!
         self.styles[.recordBackgroundColor] = NSColor.clear
         self.styles[.recordSelectionColor] = NSColor.argonDarkGray
-        self.styles[.versionColor] = NSColor.argonSunglow
+        self.styles[.versionColor] = NSColor.argonXIvory
         self.styles[.defaultColor] = NSColor.white
+        self.styles[.lineColor] = NSColor.argonWhite20
+        self.styles[.recordIconHeight] = self.font(for: .recordTextFont).lineHeight + 4
+        self.styles[.importColor] = NSColor.argonOpal
+        }
+        
+    public func setFont(_ font: NSFont,for identifier: StyleIdentifier)
+        {
+        self.styles[identifier] = font
+        if identifier == .recordTextFont
+            {
+            self.styles[.recordIconHeight] = font.lineHeight + 4
+            }
+        }
+        
+    public func float(for identifier: StyleIdentifier) -> CGFloat
+        {
+        self.styles[identifier] as! CGFloat
         }
         
     public func color(for identifier: StyleIdentifier) -> NSColor

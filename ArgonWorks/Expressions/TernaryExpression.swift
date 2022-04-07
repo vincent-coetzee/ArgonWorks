@@ -27,6 +27,9 @@ public class TernaryExpression: Expression
         self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
         self.mhs = coder.decodeObject(forKey: "mhs") as! Expression
         super.init(coder: coder)
+        self.lhs.container = .expression(self)
+        self.rhs.container = .expression(self)
+        self.mhs.container = .expression(self)
         }
         
     public override func encode(with coder: NSCoder)
@@ -76,7 +79,7 @@ public class TernaryExpression: Expression
         self.lhs.initializeTypeConstraints(inContext: context)
         self.mhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: ArgonModule.shared.boolean,right: self.lhs.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: context.booleanType,right: self.lhs.type,origin: .expression(self)))
         context.append(TypeConstraint(left: self.mhs.type,right: self.rhs.type,origin: .expression(self)))
         }
         

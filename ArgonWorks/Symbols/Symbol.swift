@@ -10,6 +10,11 @@ import AppKit
 
 public class Symbol:Node,VisitorReceiver,IssueHolder
     {
+    public var argonModule: ArgonModule
+        {
+        self.container.argonModule
+        }
+        
     public var enclosingModule: Module
         {
         self.module
@@ -389,6 +394,8 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
     public private(set) var module: Module!
     public var isSystemType = false
     public var itemKey: Int?
+    public var container: Container!
+    public var wasSymbolPatchingDone = false
     
     public required init(label: Label)
         {
@@ -397,7 +404,8 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public required init?(coder: NSCoder)
         {
-        self.itemKey = coder.decodeInteger(forKey: "itemKey")
+        let value = coder.decodeInteger(forKey: "itemKey")
+        self.itemKey = value == -1 ? nil : value
         self.wasAddressAllocationDone = coder.decodeBool(forKey: "wasAddressAllocationDone")
         self.wasMemoryLayoutDone = coder.decodeBool(forKey: "wasMemoryLayoutDone")
         self.wasSlotLayoutDone = coder.decodeBool(forKey: "wasSlotLayoutDone")
@@ -405,21 +413,22 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         self.memoryAddress = Address(coder.decodeInteger(forKey: "memoryAddress"))
         self.issues = coder.decodeCompilerIssues(forKey: "issues")
         self.isSystemType = coder.decodeBool(forKey: "isSystemType")
-        self.itemKey = coder.decodeInteger(forKey: "itemKey")
         self.module = coder.decodeObject(forKey: "module") as? Module
-        self.locations = coder.decodeSourceLocations(forKey: "symboloLocations")
+        self.locations = coder.decodeSourceLocations(forKey: "symbolLocations")
+        self.container = coder.decodeContainer(forKey: "container")
         super.init(coder: coder)
         }
         
     public override func encode(with coder:NSCoder)
         {
-        coder.encode(self.itemKey,forKey: "itemKey")
+        coder.encodeContainer(self.container,forKey: "container")
+        coder.encode(self.itemKey.isNil ? -1 : self.itemKey!,forKey: "itemKey")
         coder.encode(self.isSystemType,forKey: "isSystemType")
         coder.encode(self.wasAddressAllocationDone,forKey: "wasAddressAllocationDone")
         coder.encode(self.wasMemoryLayoutDone,forKey: "wasMemoryLayoutDone")
         coder.encode(self.wasSlotLayoutDone,forKey: "wasSlotLayoutDone")
         coder.encodeSourceLocations(self.locations,forKey: "symbolLocations")
-        coder.encode(self.type,forKey: "type")
+        coder.encode(self.type.isNil ? nil : TypeSurrogate(type: self.type!),forKey: "type")
         coder.encode(Int(self.memoryAddress),forKey: "memoryAddress")
         coder.encodeCompilerIssues(self.issues,forKey: "issues")
         coder.encode(self.module,forKey: "module")
@@ -437,6 +446,25 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public func insertInHierarchy()
         {
+        }
+        
+    public func postCompile(inSourceRecord sourceRecord: SourceRecord,inModule aModule: Module)
+        {
+        }
+        
+    public func patchSymbols(topModule: TopModule)
+        {
+        guard !self.wasSymbolPatchingDone else
+            {
+            return
+            }
+        self.wasSymbolPatchingDone = true
+        self.type = self.type?.patchType(topModule: topModule)
+        }
+        
+    public func patchType(topModule: TopModule) -> Type?
+        {
+        self as? Type
         }
         
     public func removeFromParentSymbol()

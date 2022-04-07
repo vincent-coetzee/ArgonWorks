@@ -10,6 +10,7 @@ import Foundation
 
 public class CodeGenerator: CompilerPass
     {
+    public var argonModule: ArgonModule!
     public let compiler: Compiler
     public var wasCancelled = false
     public let payload: VMPayload

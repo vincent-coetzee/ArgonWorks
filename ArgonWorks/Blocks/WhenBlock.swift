@@ -20,6 +20,7 @@ public class WhenBlock: Block
         {
         self.condition = condition
         super.init()
+        condition.container = .block(self)
         }
         
     public required init?(coder: NSCoder)

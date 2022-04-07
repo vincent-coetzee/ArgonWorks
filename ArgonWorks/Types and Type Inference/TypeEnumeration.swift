@@ -334,8 +334,8 @@ public class TypeEnumeration: TypeConstructor
             }
         self.wasMemoryLayoutDone = true
         let segment = allocator.segment(for: self.segmentType)
-        let enumType = ArgonModule.shared.enumeration
-        let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType)
+        let enumType = allocator.argonModule.enumeration
+        let enumPointer = ClassBasedPointer(address: self.memoryAddress,type: enumType,argonModule: self.container.argonModule)
         enumPointer.objectType = .enumeration
         enumPointer.setClass(enumType)
         enumPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
@@ -345,7 +345,7 @@ public class TypeEnumeration: TypeConstructor
             }
         else
             {
-            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.generics.count))
+            if let arrayPointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.generics.count),argonModule: self.container.argonModule)
                 {
                 for type in self.generics
                     {
@@ -357,7 +357,7 @@ public class TypeEnumeration: TypeConstructor
             }
         enumPointer.setAddress(self.module!.memoryAddress,atSlot: "module")
         enumPointer.setAddress(self.rawType?.memoryAddress,atSlot: "rawType")
-        if let casePointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.cases.count))
+        if let casePointer = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.cases.count),argonModule: self.container.argonModule)
             {
             for aCase in self.cases
                 {
@@ -370,12 +370,21 @@ public class TypeEnumeration: TypeConstructor
 //        MemoryPointer.dumpMemory(atAddress: self.memoryAddress,count: 100)
         }
         
-    public func createRawValueMethod() -> MethodInstance
+    public override func setModule(_ aModule: Module)
         {
-        let rawValueInstance = PrimitiveMethodInstance(label: "rawValue")
+        super.setModule(aModule)
+        for aCase in self.cases
+            {
+            aCase.setModule(aModule)
+            }
+        }
+        
+    public func createRawValueMethod(argonModule: ArgonModule) -> MethodInstance
+        {
+        let rawValueInstance = PrimitiveMethodInstance(label: "rawValue",argonModule: argonModule)
         rawValueInstance.primitiveIndex = 200
         rawValueInstance.addParameterSlot(Parameter(label: "enumeration",type: self))
-        rawValueInstance.returnType = ArgonModule.shared.symbol
+        rawValueInstance.returnType = argonModule.symbol
         return(rawValueInstance)
         }
         

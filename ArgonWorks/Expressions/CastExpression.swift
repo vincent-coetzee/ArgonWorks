@@ -33,6 +33,7 @@ public class CastExpression: Expression
         self.expression = lhs
         super.init()
         self.type = rhs
+        self.expression.container = .expression(self)
         }
         
     public override func display(indent: String)

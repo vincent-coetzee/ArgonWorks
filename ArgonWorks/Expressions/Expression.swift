@@ -119,11 +119,14 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
     
     public var locations = SourceLocations()
     public internal(set) var _place: Instruction.Operand = .none
-    internal var type: Type = ArgonModule.shared.void
+    internal var type: Type
     public var issues = CompilerIssues()
+    public var container: Container = .none
     
     public override init()
         {
+        self.type = Type(label: "Dummy Expression Type")
+        super.init()
         }
         
     public required init?(coder: NSCoder)
@@ -143,7 +146,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public func initializeType(inContext context: TypeContext)
         {
-        self.type = ArgonModule.shared.void
+        self.type = context.voidType
         }
         
     public func initializeTypeConstraints(inContext context: TypeContext)
@@ -152,7 +155,7 @@ public class Expression: NSObject,NSCoding,VisitorReceiver
         
     public func inferType(inContext: TypeContext)
         {
-        self.type = ArgonModule.shared.void
+        self.type = inContext.voidType
         }
         
     public func addDeclaration(itemKey: Int, location aLocation:Location)

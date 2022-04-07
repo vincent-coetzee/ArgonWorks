@@ -13,7 +13,7 @@ public class SlotPointer: ClassBasedPointer
         {
         get
             {
-            StringPointer(address: self.address(atSlot: "name")!)
+            StringPointer(address: self.address(atSlot: "name")!,argonModule: self.argonModule)
             }
         set
             {
@@ -25,7 +25,7 @@ public class SlotPointer: ClassBasedPointer
         {
         get
             {
-            ClassBasedPointer(address: self.moduleAddress!,class: ArgonModule.shared.moduleType as! TypeClass)
+            ClassBasedPointer(address: self.moduleAddress!,class: self.argonModule.moduleType as! TypeClass,argonModule: self.argonModule)
             }
         set
             {
@@ -73,7 +73,7 @@ public class SlotPointer: ClassBasedPointer
         {
         get
             {
-            ClassBasedPointer(address: self.typeAddress!,class: ArgonModule.shared.type as! TypeClass)
+            ClassBasedPointer(address: self.typeAddress!,class: self.argonModule.type as! TypeClass,argonModule: self.argonModule)
             }
         set
             {
@@ -93,8 +93,11 @@ public class SlotPointer: ClassBasedPointer
             }
         }
         
-    init(address: Address)
+    private let argonModule: ArgonModule
+    
+    init(address: Address,argonModule: ArgonModule)
         {
-        super.init(address: address.cleanAddress,class: ArgonModule.shared.slot as! TypeClass)
+        self.argonModule = argonModule
+        super.init(address: address.cleanAddress,class: argonModule.slot as! TypeClass,argonModule: argonModule)
         }
     }

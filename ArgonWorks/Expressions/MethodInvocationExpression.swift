@@ -22,8 +22,10 @@ public class MethodInvocationExpression: Expression
     init(method: ArgonWorks.Method,arguments:Arguments)
         {
         self.method = method
-        self.arguments = arguments
+        self.arguments = []
         super.init()
+        method.container = .expression(self)
+        self.arguments = arguments.map{$0.withContainer(Container.expression(self))}
         }
         
     init(methodInstance: MethodInstance,arguments: Arguments)

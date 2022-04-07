@@ -30,6 +30,7 @@ public class ReturnBlock: Block
         {
         self.value = expression
         super.init()
+        value?.container = .block(self)
         }
     
     public required init?(coder: NSCoder)
@@ -76,7 +77,7 @@ public class ReturnBlock: Block
     public override func initializeType(inContext context: TypeContext)
         {
         self.value?.initializeType(inContext: context)
-        self.type = self.value.isNotNil ? self.value!.type : ArgonModule.shared.void
+        self.type = self.value.isNotNil ? self.value!.type : context.voidType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

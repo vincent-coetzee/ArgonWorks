@@ -134,10 +134,6 @@ public struct Name:CustomStringConvertible,Comparable,Hashable
             {
             return(Name())
             }
-        if self.components.first!.isRoot
-            {
-            return(Name(Array(self.components.dropFirst(2))))
-            }
         return(Name(Array(self.components.dropFirst(1))))
         }
         

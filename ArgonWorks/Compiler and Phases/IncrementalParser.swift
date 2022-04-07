@@ -26,12 +26,20 @@ public class IncrementalParser: CompilerPass
     public var wasCancelled = false
 //    private var isParsingLValue = false
     internal var tokenSource: TokenSource!
-    internal var currentScope: Scope = TopModule.shared
+    internal var currentScope: Scope!
     internal var scopeStack = Stack<Scope>()
     private var statics = Array<StaticObject>()
     internal var tokenHandler: TokenHandler?
     private var symbolStack = Stack<Symbol>()
     private var itemKey: Int = -1
+    internal var argonModule: ArgonModule!
+    internal var topModule: TopModule!
+        {
+        didSet
+            {
+            self.currentScope = self.topModule
+            }
+        }
     
     private var topSymbol: Symbol
         {
@@ -623,7 +631,7 @@ public class IncrementalParser: CompilerPass
             isGenericMethod = true
             }
         instance.parameters = try self.parseParameters()
-        instance.returnType = ArgonModule.shared.void
+        instance.returnType = self.argonModule.void
         if self.token.isRightArrow
             {
             try self.nextToken()
@@ -664,7 +672,7 @@ public class IncrementalParser: CompilerPass
             else if self.token.isPathLiteral
                 {
                 path = Importer.processPath(self.token.pathLiteral)
-                moduleLabel = Importer.tryLoadingPath(path,topModule: TopModule.shared,location: location)
+                moduleLabel = Importer.tryLoadingPath(path,topModule: self.topModule,location: location)
                 }
             try self.nextToken()
             }
@@ -691,7 +699,7 @@ public class IncrementalParser: CompilerPass
             {
             let importLabel = label.isNotNil ? label! : moduleLabel!
             let anImport = Importer(label: importLabel,path: path)
-            anImport.loadImportPath(topModule: TopModule.shared)
+            anImport.loadImportPath(topModule: self.topModule)
             firstToken.appendIssues(issues)
             self.currentScope.addSymbol(anImport)
             }
@@ -726,7 +734,7 @@ public class IncrementalParser: CompilerPass
         
     private func parseScopedSlot() throws -> ScopedSlot
         {
-        return(ScopedSlot(label:"Slot",type: ArgonModule.shared.integer.type))
+        return(ScopedSlot(label:"Slot",type: self.argonModule.integer.type))
         }
         
     private func parseHashString() throws -> String
@@ -762,7 +770,7 @@ public class IncrementalParser: CompilerPass
                 {
                 type.appendIssue(at: self.token.location,message: "There is already a symbol with label '\(type.label)' defined.")
                 }
-            var rawType = ArgonModule.shared.integer
+            var rawType = self.argonModule.integer
             type.addDeclaration(itemKey: self.itemKey,location: location)
             if self.token.isGluon
                 {
@@ -920,7 +928,7 @@ public class IncrementalParser: CompilerPass
 //            }
 //        var slot: Slot?
 //        let rawLabel = "_\(label)"
-//        let aSlot = CocoonSlot(rawLabel: rawLabel,label: label,type: type ?? ArgonModule.shared.void)
+//        let aSlot = CocoonSlot(rawLabel: rawLabel,label: label,type: type ?? self.argonModule.void)
 //        aSlot.addDeclaration(itemKey: self.itemKey,location: location)
 //        aSlot.writeBlock = writeBlock
 //        aSlot.readBlock = readBlock
@@ -969,7 +977,7 @@ public class IncrementalParser: CompilerPass
             typeWasDeclared = true
             }
         let slot = slotType.newSlot(label: label)
-        slot.type = type.isNil ? ArgonModule.shared.integer : type!
+        slot.type = type.isNil ? self.argonModule.integer : type!
         slot.addDeclaration(itemKey: self.itemKey,location: location)
         while self.token.isComma
             {
@@ -985,17 +993,20 @@ public class IncrementalParser: CompilerPass
                 {
                 self.topSymbol.appendIssue(at: location,message: "A symbol selector was expected.")
                 }
-            if theToken.isInitializer
+            if slotType == .instanceSlot
                 {
-                slot.slotInitializerSelector = self.token.symbolLiteral
-                }
-            else if theToken.isMandatory
-                {
-                slot.slotMandatorySelector = self.token.symbolLiteral
-                }
-            else
-                {
-                self.topSymbol.appendIssue(at: location,message: "'\(theToken.displayString)' is not a valid SLOT specializer.")
+                if theToken.isInitializer
+                    {
+                    (slot as! InstanceSlot).slotInitializerSelector = self.token.symbolLiteral
+                    }
+                else if theToken.isMandatory
+                    {
+                    (slot as! InstanceSlot).slotMandatorySelector = self.token.symbolLiteral
+                    }
+                else
+                    {
+                    self.topSymbol.appendIssue(at: location,message: "'\(theToken.displayString)' is not a valid SLOT specializer.")
+                    }
                 }
             try self.nextToken()
             }
@@ -1154,14 +1165,7 @@ public class IncrementalParser: CompilerPass
                 {
                 typeParameters = try self.parseGenericTypes()
                 }
-            if !classExists
-                {
-                aClass = TypeClass(label: label,generics: typeParameters)
-                }
-            else
-                {
-                aClass = aClass.withGenerics(typeParameters) as! TypeClass
-                }
+            aClass = TypeClass(label: label,generics: typeParameters)
             if classExists
                 {
                 aClass.appendIssue(at: location,message: "A class with label '\(label)' is already defined.")
@@ -1177,7 +1181,7 @@ public class IncrementalParser: CompilerPass
                 {
                 self.enclosingModule.addSymbol(aClass)
                 aClass.makeMetaclass()
-                aClass.configureMetaclass()
+                aClass.configureMetaclass(argonModule: self.argonModule)
                 }
             if self.token.isGluon
                 {
@@ -1206,7 +1210,7 @@ public class IncrementalParser: CompilerPass
                 }
             if aClass.superclasses.isEmpty
                 {
-                aClass.addSuperclassWithoutUpdatingSuperclass(ArgonModule.shared.object)
+                aClass.addSuperclassWithoutUpdatingSuperclass(self.argonModule.object)
                 }
             try self.parseBraces
                 {
@@ -1225,7 +1229,7 @@ public class IncrementalParser: CompilerPass
                             }
                         else
                             {
-                            aClass.addInstanceSlot(slot)
+                            aClass.addInstanceSlot(slot as! InstanceSlot)
                             }
                         }
                     else if self.token.isClass
@@ -1242,7 +1246,7 @@ public class IncrementalParser: CompilerPass
                                 {
                                 // these are class slots but class slots are actually instance slots on
                                 // the metaclass ( i.e. the class of this class ).
-                                someType.addInstanceSlot(slot)
+                                someType.addInstanceSlot(slot as! InstanceSlot)
                                 }
                             }
                         else
@@ -1261,7 +1265,7 @@ public class IncrementalParser: CompilerPass
                     }
                 }
             aClass.layoutObjectSlots()
-            aClass.metaclass.layoutObjectSlots()
+//            aClass.metaclass.layoutObjectSlots()
             aClass.itemKey = self.itemKey
             return(.class(aClass))
             }
@@ -1435,7 +1439,7 @@ public class IncrementalParser: CompilerPass
             }
         else
             {
-            let type = ArgonModule.shared.void
+            let type = self.argonModule.void
             self.topSymbol.appendIssue(at: location, message: "A type name was expected but \(self.token) was found.")
             return(type)
             }
@@ -1500,7 +1504,7 @@ public class IncrementalParser: CompilerPass
             {
             self.topSymbol.appendIssue(at: location,message: "A type was expected but the identifier '\(name)' was found instead.")
             try self.nextToken()
-            return(ArgonModule.shared.object)
+            return(self.argonModule.object)
             }
         }
         
@@ -1514,7 +1518,7 @@ public class IncrementalParser: CompilerPass
             self.cancelCompletion()
             return
             }
-        guard method.instanceWithTypes([aType],returnType: ArgonModule.shared.integer).isNotNil else
+        guard method.instanceWithTypes([aType],returnType: self.argonModule.integer).isNotNil else
             {
             let lowerName = aType.label.lowercased()
             let methodName = "hash(=\(lowerName)::\(aType.label)) -> Integer"
@@ -1743,7 +1747,7 @@ public class IncrementalParser: CompilerPass
                 {
                 instance.block.addParameterSlot(parameter)
                 }
-            instance.returnType = ArgonModule.shared.void
+            instance.returnType = self.argonModule.void
             if self.token.isRightArrow
                 {
                 try self.nextToken()
@@ -1773,7 +1777,7 @@ public class IncrementalParser: CompilerPass
                 try self.parseBlock(into: instance.block)
                 self.popContext()
                 }
-            if instance.returnType != ArgonModule.shared.void && !instance.block.hasInlineReturnBlock
+            if instance.returnType != self.argonModule.void && !instance.block.hasInlineReturnBlock
                 {
                 self.cancelCompletion()
                 instance.appendIssue(at: location,message: "This method has a return value but there is no RETURN statement in the body of the method.")
@@ -2488,7 +2492,7 @@ public class IncrementalParser: CompilerPass
     private func parseClosureTerm() throws -> Expression
         {
         let closure = Closure(label: Argon.nextName("1_CLOSURE"))
-        closure.returnType = ArgonModule.shared.void
+        closure.returnType = self.argonModule.void
         let location = self.token.location
         try self.parseBraces
             {
@@ -3123,7 +3127,7 @@ public class IncrementalParser: CompilerPass
         let tag = try self.parseLabel()
         var relabel:Label? = nil
         var isVariadic = false
-        var type:Type = ArgonModule.shared.void
+        var type:Type = self.argonModule.void
         if !self.token.isGluon && self.token.isIdentifier
             {
             relabel = try self.parseLabel()
@@ -3244,7 +3248,7 @@ public class IncrementalParser: CompilerPass
                     self.topSymbol.appendIssue(at: location,message: "The name of an induction variable to contain the symbol this handler is receiving was expected but \(self.token) was found.")
                     }
                 name = self.token.isIdentifier ? self.token.identifier : "VariableName"
-                handler.addParameter(label: name,type: ArgonModule.shared.symbol)
+                handler.addParameter(label: name,type: self.argonModule.symbol)
                 try self.nextToken()
                 }
             try self.parseBlock(into: handler)

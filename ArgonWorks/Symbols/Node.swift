@@ -78,6 +78,10 @@ public class Node:NSObject,NSCoding
     public func setLabel(_ label: Label)
         {
         self.label = label
+        if label == "Test"
+            {
+            print("halt")
+            }
         }
         
     public func setIndex(_ index: IdentityKey)

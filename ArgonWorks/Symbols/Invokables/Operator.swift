@@ -35,50 +35,50 @@ public struct ParameterReferenceType
     
 public class Operator: MethodInstance
     {
-    public static func `prefix`(_ label: Label,_ lhs: Type,_ returnType: Type) -> Operator
+    public static func `prefix`(_ label: Label,_ lhs: Type,_ returnType: Type,_ argonModule: ArgonModule) -> Operator
         {
         let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false)]
-        let method = Operator(label: label)
+        let method = Operator(label: label,argonModule: argonModule)
         method.parameters = parameters
         method.returnType = returnType
         method.operatorType = .prefix
         return(method)
         }
         
-    public static func `infix`(_ label: Label,_ lhs: Type,_ rhs: Type,_ returnType: Type) -> Operator
+    public static func `infix`(_ label: Label,_ lhs: Type,_ rhs: Type,_ returnType: Type,_ argonModule: ArgonModule) -> Operator
         {
         let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false),Parameter(label: "right", relabel: nil, type: rhs, isVisible: false, isVariadic: false)]
-        let method = Operator(label: label)
+        let method = Operator(label: label,argonModule: argonModule)
         method.parameters = parameters
         method.returnType = returnType
         method.operatorType = .infix
         return(method)
         }
         
-    public static func `postfix`(_ label: Label,_ lhs: Type,_ returnType: Type) -> Operator
+    public static func `postfix`(_ label: Label,_ lhs: Type,_ returnType: Type,_ argonModule: ArgonModule) -> Operator
         {
         let parameters = [Parameter(label: "left", relabel: nil, type: lhs, isVisible: false, isVariadic: false)]
-        let method = Operator(label: label)
+        let method = Operator(label: label,argonModule: argonModule)
         method.parameters = parameters
         method.returnType = returnType
         method.operatorType = .postfix
         return(method)
         }
         
-    public static func `infix`(_ label: Label,_ lhs: ParameterReferenceType,_ rhs: ParameterReferenceType,_ returnType: Type) -> Operator
+    public static func `infix`(_ label: Label,_ lhs: ParameterReferenceType,_ rhs: ParameterReferenceType,_ returnType: Type,_ argonModule: ArgonModule) -> Operator
         {
         let parameters = [Parameter(label: "left", relabel: nil, type: lhs.type, isVisible: false, isVariadic: false,referenceType: lhs.referenceType),Parameter(label: "right", relabel: nil, type: rhs.type, isVisible: false, isVariadic: false,referenceType: rhs.referenceType)]
-        let method = Operator(label: label)
+        let method = Operator(label: label,argonModule: argonModule)
         method.parameters = parameters
         method.returnType = returnType
         method.operatorType = .infix
         return(method)
         }
         
-    public static func `postfix`(_ label: Label,_ lhs: ParameterReferenceType,_ returnType: Type) -> Operator
+    public static func `postfix`(_ label: Label,_ lhs: ParameterReferenceType,_ returnType: Type,_ argonModule: ArgonModule) -> Operator
         {
         let parameters = [Parameter(label: "left", relabel: nil, type: lhs.type, isVisible: false, isVariadic: false,referenceType: lhs.referenceType)]
-        let method = Operator(label: label)
+        let method = Operator(label: label,argonModule: argonModule)
         method.parameters = parameters
         method.returnType = returnType
         method.operatorType = .postfix

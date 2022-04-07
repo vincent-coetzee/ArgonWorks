@@ -61,7 +61,7 @@ public class ComparisonExpression: BinaryExpression
         super.initializeType(inContext: context)
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = ArgonModule.shared.boolean
+        self.type = context.booleanType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)
@@ -69,7 +69,7 @@ public class ComparisonExpression: BinaryExpression
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
         context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.type,right: ArgonModule.shared.boolean,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.type,right: context.booleanType,origin: .expression(self)))
 //        if !self.methodInstances.isEmpty
 //            {
 //            let methodMatcher = MethodInstanceMatcher(typeContext: context,methodInstances: self.methodInstances, argumentExpressions: [self.lhs,self.rhs], reportErrors: true)

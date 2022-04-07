@@ -53,7 +53,6 @@ public class Project: ProjectGroupItem,Dependent
         {
         self.targetType = .none
         self._module = Module(label: label)
-        TopModule.shared.addSymbol(self._module)
         super.init(label: label)
         self.icon = NSImage(named: "IconProject")!
         self.icon.isTemplate = true
@@ -85,6 +84,7 @@ public class Project: ProjectGroupItem,Dependent
         {
         var set = super.initValidActions()
         set.remove(.deleteItemAction)
+        set.insert(.newImportAction)
         return(set)
         }
         
@@ -134,15 +134,5 @@ public class Project: ProjectGroupItem,Dependent
             return(self.itemCount)
             }
         return(super.value(forAspect: aspect))
-        }
-        
-    public override func updateMenu(_ menu: NSMenu,forTarget: ArgonBrowserViewController)
-        {
-        menu.addItem(withTitle: "Module", action: #selector(ArgonBrowserViewController.onModuleClicked), keyEquivalent: "").target = forTarget
-        menu.addItem(withTitle: "Carton", action: #selector(ArgonBrowserViewController.onCartonClicked), keyEquivalent: "").target = forTarget
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(withTitle: "New Symbol", action: #selector(ArgonBrowserViewController.onNewSymbolClicked), keyEquivalent: "").target = forTarget
-        menu.addItem(withTitle: "New Module", action: #selector(ArgonBrowserViewController.onNewModuleClicked), keyEquivalent: "").target = forTarget
-        menu.addItem(withTitle: "New Group", action: #selector(ArgonBrowserViewController.onNewGroupClicked), keyEquivalent: "").target = forTarget
         }
     }

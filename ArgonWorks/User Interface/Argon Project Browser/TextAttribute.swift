@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class Attribute: NSObject,NSCoding
+public class TextAttribute: NSObject,NSCoding
     {
     let color: NSColor
     let range: NSRange
@@ -32,4 +32,4 @@ public class Attribute: NSObject,NSCoding
         }
     }
     
-public typealias Attributes = Array<Attribute>
+public typealias Attributes = Array<TextAttribute>

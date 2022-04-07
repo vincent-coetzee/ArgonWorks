@@ -17,6 +17,8 @@ public class TypeTestingExpression: Expression
         self.lhs = lhs
         self.rhs = rhs
         super.init()
+        self.lhs.container = .expression(self)
+        self.rhs.container = .expression(self)
         }
         
     public required init?(coder: NSCoder)
@@ -45,7 +47,7 @@ public class TypeTestingExpression: Expression
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = ArgonModule.shared.boolean
+        self.type = context.booleanType
         }
         
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
@@ -69,8 +71,8 @@ public class TypeTestingExpression: Expression
         {
         self.lhs.initializeTypeConstraints(inContext: context)
         self.rhs.initializeTypeConstraints(inContext: context)
-        context.append(TypeConstraint(left: ArgonModule.shared.boolean,right: self.type,origin: .expression(self)))
-        context.append(TypeConstraint(left: self.rhs.type.type,right: ArgonModule.shared.metaclassType,origin: .expression(self)))
+        context.append(TypeConstraint(left: context.booleanType,right: self.type,origin: .expression(self)))
+        context.append(TypeConstraint(left: self.rhs.type.type,right: context.metaclassType,origin: .expression(self)))
         }
         
     public override func assign(from expression: Expression,into buffer: InstructionBuffer,using: CodeGenerator) throws

@@ -14,9 +14,9 @@ public class StringPointer: ClassBasedPointer
         return(lhs.string == rhs)
         }
         
-    public class func sizeInBytes() -> Int
+    public class func sizeInBytes(argonModule: ArgonModule) -> Int
         {
-        (ArgonModule.shared.string as! TypeClass).instanceSizeInBytes
+        (argonModule.string as! TypeClass).instanceSizeInBytes
         }
         
     public var count: Int
@@ -43,14 +43,17 @@ public class StringPointer: ClassBasedPointer
             }
         }
         
-    public init(address: Address)
+    internal let argonModule: ArgonModule
+    
+    public init(address: Address,argonModule: ArgonModule)
         {
-        super.init(address: address,class: ArgonModule.shared.string as! TypeClass)
+        self.argonModule = argonModule
+        super.init(address: address,class: argonModule.string as! TypeClass,argonModule: argonModule)
         }
         
     internal func storeString(_ string: String)
         {
-        let bytesAddress = self.address(atSlot: "block").cleanAddress + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        let bytesAddress = self.address(atSlot: "block").cleanAddress + Word(self.argonModule.block.instanceSizeInBytes)
         self.count = string.utf16.count
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
@@ -74,7 +77,7 @@ public class StringPointer: ClassBasedPointer
         
     internal func loadString() -> String
         {
-        let bytesAddress = self.address(atSlot: "block")! + Word(ArgonModule.shared.block.instanceSizeInBytes)
+        let bytesAddress = self.address(atSlot: "block")! + Word(self.argonModule.block.instanceSizeInBytes)
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0
         var number = 0
@@ -97,7 +100,7 @@ public class StringPointer: ClassBasedPointer
         {
         let string = "This is a test string which has a few number of characters in it."
         let stringAddress = segment.allocateString(string)
-        let stringPointer = StringPointer(address: stringAddress)
+        let stringPointer = StringPointer(address: stringAddress,argonModule: segment.argonModule)
         let count = string.count
         assert(stringPointer.count == count)
         assert(stringPointer.string == string)

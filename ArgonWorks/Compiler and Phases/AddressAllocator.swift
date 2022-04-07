@@ -15,17 +15,17 @@ public class AddressAllocator: CompilerPass
     public var payload: VMPayload
     public let argonModule: ArgonModule
     
-    init()
+    init(argonModule: ArgonModule)
         {
-        self.payload = VMPayload()
-        self.argonModule = ArgonModule.shared
+        self.argonModule = argonModule
+        self.payload = VMPayload(argonModule: argonModule)
         self.allocateArgonModule()
         }
         
     private func allocateArgonModule()
         {
-        ArgonModule.shared.allocateAddresses(using: self)
-        ArgonModule.shared.layoutInMemory(using: self)
+        self.argonModule.allocateAddresses(using: self)
+        self.argonModule.layoutInMemory(using: self)
         }
         
     public func cancelCompletion()

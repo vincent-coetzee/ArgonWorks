@@ -48,7 +48,7 @@ public class VirtualTable
         }
     }
     
-public class VirtualTableSlot: Slot
+public class VirtualTableSlot: LayoutSlot
     {
     public var virtualTable: VirtualTable!
     

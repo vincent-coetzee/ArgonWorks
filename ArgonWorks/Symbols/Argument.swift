@@ -9,6 +9,18 @@ import Foundation
 
 public struct Argument:Displayable
     {
+    public var container: Container
+        {
+        get
+            {
+            fatalError()
+            }
+        set
+            {
+            self.value.container = newValue
+            }
+        }
+        
     public var displayString: String
         {
         let aTag = self.tag ?? "="
@@ -21,6 +33,12 @@ public struct Argument:Displayable
         {
         self.tag = tag
         self.value = value
+        }
+        
+    public func withContainer(_ container: Container) -> Self
+        {
+        self.value.container = container
+        return(self)
         }
         
     public func freshTypeVariable(inContext: TypeContext) -> Argument

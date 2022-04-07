@@ -16,7 +16,7 @@ public class FunctionInvocationExpression: Expression
         }
         
     private let function: Function
-    private let arguments: Arguments
+    private var arguments: Arguments
 
     
     init(function:Function,arguments:Arguments)
@@ -24,6 +24,15 @@ public class FunctionInvocationExpression: Expression
         self.function = function
         self.arguments = arguments
         super.init()
+        function.container = .expression(self)
+        var newArguments = Arguments()
+        for argument in arguments
+            {
+            var newArgument = argument
+            newArgument.container = .expression(self)
+            newArguments.append(newArgument)
+            }
+        self.arguments = newArguments
         }
         
     required init?(coder: NSCoder)

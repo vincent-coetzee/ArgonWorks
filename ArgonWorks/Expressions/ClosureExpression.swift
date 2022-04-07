@@ -24,6 +24,7 @@ public class ClosureExpression: Expression
         self.closure = nil
         self.closureSlot = slot
         super.init()
+        self.closureSlot?.container = .expression(self)
         }
         
     public required init?(coder: NSCoder)

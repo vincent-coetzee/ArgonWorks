@@ -35,10 +35,6 @@ public class SystemSymbolPlaceholder: NSObject, NSCoding
         {
         if let importer = coder as? ImportUnarchiver
             {
-            if let object = Argon.typeAtKey(self.originalKey)
-                {
-                return(object)
-                }
             fatalError("Can not resolve system symbol \(self.originalKey) in topModule.")
             }
         return(self)

@@ -18,13 +18,24 @@ public class TopModule: SystemModule
     {
     public static func resetTopModule()
         {
+//        Node.resetUUIDs()
+//        Self.shared = nil
+//        Self.shared = TopModule(instanceNumber: 0)
+//        let argonModule = ArgonModule(instanceNumber: 0)
+//        Self.shared.addSymbol(argonModule)
+//        ArgonModule.shared = argonModule
+//        ArgonModule.shared.initialize()
+        }
+        
+    public static func initSystem() -> (TopModule,ArgonModule)
+        {
         Node.resetUUIDs()
-        Self.shared = nil
-        Self.shared = TopModule(instanceNumber: 0)
+        let topModule = TopModule(instanceNumber: 0)
         let argonModule = ArgonModule(instanceNumber: 0)
-        Self.shared.addSymbol(argonModule)
-        ArgonModule.shared = argonModule
-        ArgonModule.shared.initialize()
+        topModule._argonModule = argonModule
+        topModule.addSymbol(argonModule)
+        argonModule.initialize()
+        return((topModule,argonModule))
         }
         
     public static var shared: TopModule!
@@ -44,7 +55,7 @@ public class TopModule: SystemModule
         return(instances)
         }
         
-    public var argonModule: ArgonModule
+    public override var argonModule: ArgonModule
         {
         self._argonModule
         }
@@ -81,7 +92,7 @@ public class TopModule: SystemModule
 //        }
         
     
-    public var _argonModule: ArgonModule!
+    private var _argonModule: ArgonModule!
     
     required init?(coder: NSCoder)
         {
@@ -91,6 +102,11 @@ public class TopModule: SystemModule
     public required init(label: Label)
         {
         super.init(label: label)
+        }
+        
+    public func setArgonModule(_ argonModule: ArgonModule)
+        {
+        self._argonModule = argonModule
         }
         
     public override func lookup(label: Label) -> Symbol?
@@ -106,6 +122,11 @@ public class TopModule: SystemModule
     public override func lookupMethod(label: Label) -> ArgonWorks.Method?
         {
         self.argonModule.lookupMethod(label: label)
+        }
+        
+    public func relinkSupertypes()
+        {
+        self.relinkSupertypes(topModule: self)
         }
         
     public override func lookupN(label: Label) -> Symbols?
@@ -125,6 +146,14 @@ public class TopModule: SystemModule
         return(found.isEmpty ? nil : found)
         }
         
+    public func patchSymbols()
+        {
+        for symbol in self.allSymbols
+            {
+            symbol.patchSymbols(topModule: self)
+            }
+        }
+        
     public override func lookup(name inName: Name) -> Symbol?
         {
         if !inName.isRooted
@@ -137,6 +166,7 @@ public class TopModule: SystemModule
             return(nil)
             }
         let first = name.car
+        name = name.cdr
         for symbol in self.allSymbols
             {
             if symbol.label == first
@@ -147,7 +177,7 @@ public class TopModule: SystemModule
                     }
                 else
                     {
-                    return(symbol.lookup(name: name.cdr))
+                    return(symbol.lookup(name: name))
                     }
                 }
             }

@@ -91,7 +91,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         self.locations.declaration.isNil ? .zero : self.locations.declaration
         }
         
-//    public var container: Container = .none
+    public var container: Container = .none
     public var type: Type = TypeContext.freshTypeVariable()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
@@ -380,6 +380,7 @@ public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFram
         {
         self.blocks.append(block)
         block.parentBlock = self
+        block.container = .block(self)
         }
         
     public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws

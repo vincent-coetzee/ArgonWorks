@@ -70,6 +70,12 @@ public class StandardMethodInstance: MethodInstance
         super.encode(with: coder)
         }
         
+    public override init(label: Label,argonModule: ArgonModule)
+        {
+        super.init(label: label,argonModule: argonModule)
+        self.block = MethodInstanceBlock(methodInstance: self)
+        }
+        
     required init(label:Label)
         {
         super.init(label:label)

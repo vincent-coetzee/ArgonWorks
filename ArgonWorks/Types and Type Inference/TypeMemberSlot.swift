@@ -38,8 +38,13 @@ public class TypeMemberSlot: Type
     
     required init(label: Label)
         {
+        fatalError()
+        }
+        
+    init(label: Label,argonModule: ArgonModule)
+        {
         self.slotLabel = label
-        self.base = ArgonModule.shared.void
+        self.base = argonModule.void
         super.init(label: label)
         }
     

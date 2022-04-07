@@ -19,11 +19,16 @@ public class ArgonModule: SystemModule
     {
     public private(set) var systemClassNames: Array<String>!
     
-    public static var shared: ArgonModule!
+//    public static var shared: ArgonModule!
     
     public override var typeCode:TypeCode
         {
         .argonModule
+        }
+        
+    public override var argonModule: ArgonModule
+        {
+        self
         }
         
     public override var isArgonModule: Bool
@@ -368,7 +373,7 @@ public class ArgonModule: SystemModule
         
     public func initialize()
         {
-        TopModule.shared._argonModule = self
+//        TopModule.shared._argonModule = self
         self.initTypes()
         self.initMetaclasses()
         self.initBaseMethods()
@@ -404,7 +409,7 @@ public class ArgonModule: SystemModule
         {
         anEnum.isSystemType = true
         anEnum.flags([.kSystemTypeFlag])
-        self.addSymbol((anEnum as! TypeEnumeration).createRawValueMethod())
+//        self.addSymbol((anEnum as! TypeEnumeration).createRawValueMethod(argonModule: self))
         self.addSymbol(anEnum)
         }
         
@@ -533,7 +538,7 @@ public class ArgonModule: SystemModule
             }
         for aClass in list
             {
-            aClass.configureMetaclass()
+            aClass.configureMetaclass(argonModule: self)
             }
         for aClass in self.enumerations
             {
@@ -744,96 +749,96 @@ public class ArgonModule: SystemModule
 //        self.addSymbol(Postfix(label: "--").double(self,.generic("number"),.void),where: ("number",self.number)).prim(128))
 //
         let var1 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("+=",.byReference(var1),.byValue(var1),self.void).inline().where(.in(var1,[self.integer,self.float,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("+=",.byReference(var1),.byValue(var1),self.void,self).inline().where(.in(var1,[self.integer,self.float,self.uInteger,self.character,self.byte])))
         let var2 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("-=",.byReference(var2),.byValue(var2),self.void).inline().where(.in(var2,[self.integer,self.float,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("-=",.byReference(var2),.byValue(var2),self.void,self).inline().where(.in(var2,[self.integer,self.float,self.uInteger,self.character,self.byte])))
         let var3 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("*=",.byReference(var3),.byValue(var3),self.void).inline().where(.in(var3,[self.integer,self.float,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("*=",.byReference(var3),.byValue(var3),self.void,self).inline().where(.in(var3,[self.integer,self.float,self.uInteger,self.character,self.byte])))
         let var4 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("/=",.byReference(var4),.byValue(var4),self.void).inline().where(.in(var4,[self.integer,self.float,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("/=",.byReference(var4),.byValue(var4),self.void,self).inline().where(.in(var4,[self.integer,self.float,self.uInteger,self.character,self.byte])))
         let var5 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("&=",.byReference(var5),.byValue(var5),self.void).inline().where(.in(var5,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("&=",.byReference(var5),.byValue(var5),self.void,self).inline().where(.in(var5,[self.integer,self.uInteger,self.character,self.byte])))
         let var6 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("|=",.byReference(var6),.byValue(var6),self.void).inline().where(.in(var6,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("|=",.byReference(var6),.byValue(var6),self.void,self).inline().where(.in(var6,[self.integer,self.uInteger,self.character,self.byte])))
         let var7 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("^=",.byReference(var7),.byValue(var7),self.void).inline().where(.in(var7,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("^=",.byReference(var7),.byValue(var7),self.void,self).inline().where(.in(var7,[self.integer,self.uInteger,self.character,self.byte])))
         let var8 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("~=",.byReference(var8),.byValue(var8),self.void).inline().where(.in(var8,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("~=",.byReference(var8),.byValue(var8),self.void,self).inline().where(.in(var8,[self.integer,self.uInteger,self.character,self.byte])))
         let var9 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.postfix("++",.byReference(var9),self.void).inline().where(.in(var9,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.postfix("++",.byReference(var9),self.void,self).inline().where(.in(var9,[self.integer,self.uInteger,self.character,self.byte])))
         let var10 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.postfix("--",.byReference(var10),self.void).inline().where(.in(var10,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.postfix("--",.byReference(var10),self.void,self).inline().where(.in(var10,[self.integer,self.uInteger,self.character,self.byte])))
         let var11 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("<<=",.byReference(var11),.byValue(var11),self.void).inline().where(.in(var11,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("<<=",.byReference(var11),.byValue(var11),self.void,self).inline().where(.in(var11,[self.integer,self.uInteger,self.character,self.byte])))
         let var12 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix(">>=",.byReference(var12),.byValue(var12),self.void).inline().where(.in(var12,[self.integer,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix(">>=",.byReference(var12),.byValue(var12),self.void,self).inline().where(.in(var12,[self.integer,self.uInteger,self.character,self.byte])))
         let var13 = TypeContext.freshTypeVariable(named: "number")
-        self.addMethodInstance(Operator.infix("%=",.byReference(var13),.byValue(var13),self.void).inline().where(.in(var8,[self.integer,self.float,self.uInteger,self.character,self.byte])))
+        self.addMethodInstance(Operator.infix("%=",.byReference(var13),.byValue(var13),self.void,self).inline().where(.in(var8,[self.integer,self.float,self.uInteger,self.character,self.byte])))
         
-        self.addMethodInstance(Inline("class",self.object).returns(self.classType).classMethod())
-        self.addMethodInstance(Inline("address",("of",self.object)).returns(self.address).addressMethod())
+        self.addMethodInstance(Inline("class",self.object,self).returns(self.classType).classMethod(argonModule: self))
+        self.addMethodInstance(Inline("address",("of",self.object),self).returns(self.address).addressMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("Float",self.string).returns(self.float).stringToFloatMethod())
-        self.addMethodInstance(Inline("Character",self.string).returns(self.character).stringToCharacterMethod())
-        self.addMethodInstance(Inline("Byte",self.string).returns(self.byte).stringToByteMethod())
-        self.addMethodInstance(Inline("Integer",self.string).returns(self.integer).stringToIntegerMethod())
-        self.addMethodInstance(Inline("UInteger",self.string).returns(self.uInteger).stringToUIntegerMethod())
+        self.addMethodInstance(Inline("Float",self.string,self).returns(self.float).stringToFloatMethod(argonModule: self))
+        self.addMethodInstance(Inline("Character",self.string,self).returns(self.character).stringToCharacterMethod(argonModule: self))
+        self.addMethodInstance(Inline("Byte",self.string,self).returns(self.byte).stringToByteMethod(argonModule: self))
+        self.addMethodInstance(Inline("Integer",self.string,self).returns(self.integer).stringToIntegerMethod(argonModule: self))
+        self.addMethodInstance(Inline("UInteger",self.string,self).returns(self.uInteger).stringToUIntegerMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("Float",self.integer).returns(self.float).integerToFloatMethod())
-        self.addMethodInstance(Inline("Character",self.integer).returns(self.character).integerToCharacterMethod())
-        self.addMethodInstance(Inline("Byte",self.integer).returns(self.byte).integerToByteMethod())
-        self.addMethodInstance(Inline("String",self.integer).returns(self.integer).integerToStringMethod())
-        self.addMethodInstance(Inline("UInteger",self.integer).returns(self.uInteger).integerToUIntegerMethod())
+        self.addMethodInstance(Inline("Float",self.integer,self).returns(self.float).integerToFloatMethod(argonModule: self))
+        self.addMethodInstance(Inline("Character",self.integer,self).returns(self.character).integerToCharacterMethod(argonModule: self))
+        self.addMethodInstance(Inline("Byte",self.integer,self).returns(self.byte).integerToByteMethod(argonModule: self))
+        self.addMethodInstance(Inline("String",self.integer,self).returns(self.integer).integerToStringMethod(argonModule: self))
+        self.addMethodInstance(Inline("UInteger",self.integer,self).returns(self.uInteger).integerToUIntegerMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("String",self.float).returns(self.string).floatToStringMethod())
-        self.addMethodInstance(Inline("Character",self.float).returns(self.character).floatToCharacterMethod())
-        self.addMethodInstance(Inline("Byte",self.float).returns(self.byte).floatToByteMethod())
-        self.addMethodInstance(Inline("Integer",self.float).returns(self.integer).floatToIntegerMethod())
-        self.addMethodInstance(Inline("UInteger",self.float).returns(self.uInteger).floatToUIntegerMethod())
+        self.addMethodInstance(Inline("String",self.float,self).returns(self.string).floatToStringMethod(argonModule: self))
+        self.addMethodInstance(Inline("Character",self.float,self).returns(self.character).floatToCharacterMethod(argonModule: self))
+        self.addMethodInstance(Inline("Byte",self.float,self).returns(self.byte).floatToByteMethod(argonModule: self))
+        self.addMethodInstance(Inline("Integer",self.float,self).returns(self.integer).floatToIntegerMethod(argonModule: self))
+        self.addMethodInstance(Inline("UInteger",self.float,self).returns(self.uInteger).floatToUIntegerMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("String",self.byte).returns(self.string).byteToStringMethod())
-        self.addMethodInstance(Inline("Character",self.byte).returns(self.character).byteToCharacterMethod())
-        self.addMethodInstance(Inline("Float",self.byte).returns(self.float).byteToFloatMethod())
-        self.addMethodInstance(Inline("Integer",self.byte).returns(self.integer).byteToIntegerMethod())
-        self.addMethodInstance(Inline("UInteger",self.byte).returns(self.uInteger).byteToUIntegerMethod())
+        self.addMethodInstance(Inline("String",self.byte,self).returns(self.string).byteToStringMethod(argonModule: self))
+        self.addMethodInstance(Inline("Character",self.byte,self).returns(self.character).byteToCharacterMethod(argonModule: self))
+        self.addMethodInstance(Inline("Float",self.byte,self).returns(self.float).byteToFloatMethod(argonModule: self))
+        self.addMethodInstance(Inline("Integer",self.byte,self).returns(self.integer).byteToIntegerMethod(argonModule: self))
+        self.addMethodInstance(Inline("UInteger",self.byte,self).returns(self.uInteger).byteToUIntegerMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("String",self.character).returns(self.string).characterToStringMethod())
-        self.addMethodInstance(Inline("Byte",self.character).returns(self.character).characterToByteMethod())
-        self.addMethodInstance(Inline("Float",self.character).returns(self.float).characterToFloatMethod())
-        self.addMethodInstance(Inline("Integer",self.character).returns(self.integer).characterToIntegerMethod())
-        self.addMethodInstance(Inline("UInteger",self.character).returns(self.uInteger).characterToUIntegerMethod())
+        self.addMethodInstance(Inline("String",self.character,self).returns(self.string).characterToStringMethod(argonModule: self))
+        self.addMethodInstance(Inline("Byte",self.character,self).returns(self.character).characterToByteMethod(argonModule: self))
+        self.addMethodInstance(Inline("Float",self.character,self).returns(self.float).characterToFloatMethod(argonModule: self))
+        self.addMethodInstance(Inline("Integer",self.character,self).returns(self.integer).characterToIntegerMethod(argonModule: self))
+        self.addMethodInstance(Inline("UInteger",self.character,self).returns(self.uInteger).characterToUIntegerMethod(argonModule: self))
         
-        self.addMethodInstance(Inline("+",self.date,self.dateComponent).returns(self.date).addDateToDateComponent())
-        self.addMethodInstance(Inline("-",self.date,self.dateComponent).returns(self.date).subDateComponentFromDate())
-        self.addMethodInstance(Inline("+",self.time,self.timeComponent).returns(self.time).addTimeToTimeComponent())
-        self.addMethodInstance(Inline("-",self.time,self.timeComponent).returns(self.time).subTimeComponentFromTime())
-        self.addMethodInstance(Inline("+",self.dateTime,self.dateComponent).returns(self.dateTime).addDateTimeToComponent())
-        self.addMethodInstance(Inline("+",self.dateTime,self.timeComponent).returns(self.dateTime).addDateTimeToComponent())
-        self.addMethodInstance(Inline("-",self.dateTime,self.dateComponent).returns(self.dateTime).subComponentFromDateTime())
-        self.addMethodInstance(Inline("-",self.dateTime,self.timeComponent).returns(self.dateTime).subComponentFromDateTime())
-        self.addMethodInstance(Inline("-",self.date,self.date).returns(self.dateComponent).subDateFromDate())
-        self.addMethodInstance(Inline("-",self.time,self.time).returns(self.timeComponent).subTimeFromTime())
-        self.addMethodInstance(Inline("difference",("between",self.date),("and",self.date),("in",self.dateComponent)).returns(self.dateComponent).differenceBetweenDatesMethod())
-        self.addMethodInstance(Inline("difference",("between",self.time),("and",self.time),("in",self.timeComponent)).returns(self.timeComponent).differenceBetweenTimesMethod())
+        self.addMethodInstance(Inline("+",self.date,self.dateComponent,self).returns(self.date).addDateToDateComponent(argonModule: self))
+        self.addMethodInstance(Inline("-",self.date,self.dateComponent,self).returns(self.date).subDateComponentFromDate(argonModule: self))
+        self.addMethodInstance(Inline("+",self.time,self.timeComponent,self).returns(self.time).addTimeToTimeComponent(argonModule: self))
+        self.addMethodInstance(Inline("-",self.time,self.timeComponent,self).returns(self.time).subTimeComponentFromTime(argonModule: self))
+        self.addMethodInstance(Inline("+",self.dateTime,self.dateComponent,self).returns(self.dateTime).addDateTimeToComponent(argonModule: self))
+        self.addMethodInstance(Inline("+",self.dateTime,self.timeComponent,self).returns(self.dateTime).addDateTimeToComponent(argonModule: self))
+        self.addMethodInstance(Inline("-",self.dateTime,self.dateComponent,self).returns(self.dateTime).subComponentFromDateTime(argonModule: self))
+        self.addMethodInstance(Inline("-",self.dateTime,self.timeComponent,self).returns(self.dateTime).subComponentFromDateTime(argonModule: self))
+        self.addMethodInstance(Inline("-",self.date,self.date,self).returns(self.dateComponent).subDateFromDate(argonModule: self))
+        self.addMethodInstance(Inline("-",self.time,self.time,self).returns(self.timeComponent).subTimeFromTime(argonModule: self))
+        self.addMethodInstance(Inline("difference",self,("between",self.date),("and",self.date),("in",self.dateComponent)).returns(self.dateComponent).differenceBetweenDatesMethod(argonModule: self))
+        self.addMethodInstance(Inline("difference",self,("between",self.time),("and",self.time),("in",self.timeComponent)).returns(self.timeComponent).differenceBetweenTimesMethod(argonModule: self))
         
 //        let typeVariable = TypeContext.freshTypeVariable(named: "ELEMENT")
 //        self.addMethodInstance(Inline("append",("list",self.list.of(typeVariable)),("element",typeVariable)).listAppendMethod())
         
-        self.addMethodInstance(SlotGetter("date",on: self.dateTime).returns(self.date))
-        self.addMethodInstance(SlotGetter("time",on: self.dateTime).returns(self.time))
-        self.addMethodInstance(SlotGetter("characters",on: self.string).returns(self.array.of(self.character)))
-        self.addMethodInstance(SlotGetter("day",on: self.date).returns(self.integer))
-        self.addMethodInstance(SlotGetter("month",on: self.date).returns(self.string))
-        self.addMethodInstance(SlotGetter("monthIndex",on: self.date).returns(self.integer))
-        self.addMethodInstance(SlotGetter("year",on: self.date).returns(self.integer))
-        self.addMethodInstance(SlotGetter("hour",on: self.time).returns(self.integer))
-        self.addMethodInstance(SlotGetter("minute",on: self.time).returns(self.integer))
-        self.addMethodInstance(SlotGetter("second",on: self.time).returns(self.integer))
-        self.addMethodInstance(SlotGetter("millisecond",on: self.time).returns(self.integer))
+        self.addMethodInstance(SlotGetter("date",on: self.dateTime).returns(self.date,self))
+        self.addMethodInstance(SlotGetter("time",on: self.dateTime).returns(self.time,self))
+        self.addMethodInstance(SlotGetter("characters",on: self.string).returns(self.array.of(self.character),self))
+        self.addMethodInstance(SlotGetter("day",on: self.date).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("month",on: self.date).returns(self.string,self))
+        self.addMethodInstance(SlotGetter("monthIndex",on: self.date).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("year",on: self.date).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("hour",on: self.time).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("minute",on: self.time).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("second",on: self.time).returns(self.integer,self))
+        self.addMethodInstance(SlotGetter("millisecond",on: self.time).returns(self.integer,self))
         
-        self.addMethodInstance(PrimitiveMethodInstance.label("today","argument",self.date.type,ret: self.date).prim(200))
-        self.addMethodInstance(PrimitiveMethodInstance.label("now","argument",self.time.type,ret: self.time).prim(201))
-        self.addMethodInstance(PrimitiveMethodInstance.label("now","argument",self.dateTime.type,ret: self.dateTime).prim(202))
+        self.addMethodInstance(PrimitiveMethodInstance.label("today",self,"argument",self.date.type,ret: self.date).prim(200))
+        self.addMethodInstance(PrimitiveMethodInstance.label("now",self,"argument",self.time.type,ret: self.time).prim(201))
+        self.addMethodInstance(PrimitiveMethodInstance.label("now",self,"argument",self.dateTime.type,ret: self.dateTime).prim(202))
         }
         
     private func lookup(_ label: String) -> Symbol?

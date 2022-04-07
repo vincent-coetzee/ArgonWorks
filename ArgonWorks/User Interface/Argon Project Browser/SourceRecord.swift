@@ -118,6 +118,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             }
         self.affectedSymbols = Array(symbols)
         self.elementItem.controller.insertSymbolsInHierarchies(self.affectedSymbols)
+        symbolValue.symbol.postCompile(inSourceRecord: self,inModule: self.elementItem.module)
         }
         
     public func compilationDidFail(_ browserEditorView: BrowserEditorView,issues: CompilerIssues)

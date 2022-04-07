@@ -85,7 +85,7 @@ public class Method: Symbol
             {
             instance.initializeType(inContext: context)
             }
-        self.type = ArgonModule.shared.void
+        self.type = context.voidType
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

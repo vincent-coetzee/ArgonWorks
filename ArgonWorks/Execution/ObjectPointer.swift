@@ -138,7 +138,7 @@ public class ObjectPointer: Addressable,Pointer
         {
         get
             {
-            return(ClassPointer(address: self.classAddress!))
+            return(ClassPointer(address: self.classAddress!,argonModule: self.argonModule))
             }
         set
             {
@@ -163,9 +163,11 @@ public class ObjectPointer: Addressable,Pointer
     internal let _dirtyAddress: Word
     internal let _cleanAddress: Word
     internal let header: Header
+    private let argonModule: ArgonModule
     
-    public required init?(dirtyAddress: Word)
+    public required init?(dirtyAddress: Word,argonModule: ArgonModule)
         {
+        self.argonModule = argonModule
         if dirtyAddress.cleanAddress == 0
             {
             return(nil)

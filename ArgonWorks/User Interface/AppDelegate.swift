@@ -14,13 +14,6 @@ class AppDelegate: NSObject, NSApplicationDelegate
     {
     func applicationDidFinishLaunching(_ aNotification: Notification)
         {
-        let stringA = "Hello there this is a string which has some characters in it."
-        let stringB = "Hello this is a long but simple string which has some unicode characters in it."
-        let difference = stringB.difference(from: stringA).inferringMoves()
-        for diff in difference
-            {
-            print(diff)
-            }
         TopModule.resetTopModule()
 //        let set = BitSet()
 //        set.addBitField(named: "first",width: 63)
@@ -77,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //        print(assignmentExpression.rhs.type.displayString)
 //        let pointer = Word(object: 0)
 //        print(pointer.bitString)
-        let object = ArgonModule.shared.object
+//        let object = ArgonModule.shared.object
 //        let address:Word = 1000000000
 //        print(address.bitString)
 //        let word1 = Word(array: address)
@@ -85,105 +78,105 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //        let word2 = word1.cleanAddress
 //        print(word2.bitString)
 //        var allocator:AddressAllocator? = AddressAllocator()
-        ArgonModule.shared.layoutObjectSlots()
-        object.printLayout()
-        let array = ArgonModule.shared.array
-        array.printLayout()
-        let aClass = ArgonModule.shared.classType
-        aClass.printLayout()
-        let string = ArgonModule.shared.string
-        string.printLayout()
-        let slot = ArgonModule.shared.slot as! TypeClass
-        slot.printLayout()
-        let symbol = ArgonModule.shared.symbol
-        symbol.printLayout()
-        let aType = ArgonModule.shared.typeType
-        aType.printLayout()
-        let anEnum = ArgonModule.shared.enumeration
-        anEnum.printLayout()
-        let instance = ArgonModule.shared.methodInstance
-        instance.printLayout()
-        let bucket = ArgonModule.shared.bucket
-        bucket.printLayout()
-        let treeNode = ArgonModule.shared.treeNode
-        treeNode.printLayout()
-        let methodInstance = ArgonModule.shared.methodInstance
-        methodInstance.printLayout()
-        let instructionBlock = ArgonModule.shared.instructionBlock
-        instructionBlock.printLayout()
-        let caseInstance = ArgonModule.shared.enumerationCaseInstance
-        caseInstance.printLayout()
-        let metaclass = ArgonModule.shared.metaclassType
-        metaclass.printLayout()
-        let dictionary = ArgonModule.shared.dictionary
-        dictionary.printLayout()
-        let node = ArgonModule.shared.treeNode
-        node.printLayout()
-        let vector = ArgonModule.shared.vector
-        vector.printLayout()
-        let block = ArgonModule.shared.block
-        block.printLayout()
-        let testClass = ArgonModule.shared.lookup(label: "ClassE") as! TypeClass
-        testClass.printLayout()
-        print()
-        let classes = [ArgonModule.shared.array,ArgonModule.shared.slot,ArgonModule.shared.string,ArgonModule.shared.classType,ArgonModule.shared.treeNode,ArgonModule.shared.block].map{$0 as! TypeClass}
-        for someClass in classes
-            {
-            someClass.cacheIndices()
-            print("==============================================")
-            print("\(someClass.label)\nSIZE: \(someClass.instanceSizeInBytes)\n")
-            for (someLabel,someIndex) in someClass.slotIndexCache.sorted{$0.0 < $1.0}
-                {
-                let someString = String(format: "%6d",someIndex)
-                print("\(someString) \(someLabel)")
-                }
-            print("==============================================")
-            }
-        let payload = VMPayload()
-        array.printLayout()
-        block.printLayout()
-        string.printLayout()
-        ArrayPointer.test(inSegment: payload.staticSegment)
-        StringPointer.test(inSegment: payload.staticSegment)
-        let segment = payload.codeSegment
-        let newObject = segment.allocateObject(ofType: testClass, extraSizeInBytes: 0)
-        let pointer = ClassBasedPointer(address: newObject,type: testClass)
-        pointer.setInteger(234,atSlot: "b1")
-        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object as! TypeClass,depth:"")
-        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object.type as! TypeClass,depth:"")
-        let vulcan = ArgonModule.shared.lookup(label: "Vulcan") as! TypeClass
-        let sorter1 = TopologicalSorter(class: vulcan)
-        let sort1 = sorter1.sortedClasses()
-        print(sort1)
-        let human = ArgonModule.shared.lookup(label: "Human") as! TypeClass
-        let sorter2 = TopologicalSorter(class: human)
-        let sort2 = sorter2.sortedClasses()
-        print(sort2)
-        
-        let arrayAddress = payload.staticSegment.allocateArray(size: 21)
-        let arrayPointer = ArrayPointer(dirtyAddress: arrayAddress)!
-        for index in 0..<21
-            {
-            arrayPointer.append(Word(index))
-            }
-        let string1 = payload.staticSegment.allocateString("This is a rather long string that we want allocated so we can see if it overwrites the array.")
-        assert(arrayPointer.size == 21)
-        assert(arrayPointer.count == 21)
-        for index in 0..<21
-            {
-            assert(arrayPointer[index] == Word(index))
-            }
-            
-        let bitSet = BitSet()
-        bitSet.addBitField(named: "opcode", width: 8)
-        bitSet.addBitField(named: "mode", width: 4)
-        bitSet.addBitField(named: "operand1Kind", width: 5)
-        bitSet.addBitField(named: "operand2Kind", width: 5)
-        bitSet.addBitField(named: "resultKind",width: 5)
-        bitSet.addBitField(named: "operand1Value",width: 64)
-        bitSet.addBitField(named: "operand2Value",width: 64)
-        bitSet.addBitField(named: "resultValue",width: 64)
-        print("NUMBER OF BITS USED = \(bitSet.maximumFieldOffset)")
+//        ArgonModule.shared.layoutObjectSlots()
+//        object.printLayout()
+//        let array = ArgonModule.shared.array
+//        array.printLayout()
+//        let aClass = ArgonModule.shared.classType
+//        aClass.printLayout()
+//        let string = ArgonModule.shared.string
+//        string.printLayout()
+//        let slot = ArgonModule.shared.slot as! TypeClass
+//        slot.printLayout()
+//        let symbol = ArgonModule.shared.symbol
+//        symbol.printLayout()
+//        let aType = ArgonModule.shared.typeType
+//        aType.printLayout()
+//        let anEnum = ArgonModule.shared.enumeration
+//        anEnum.printLayout()
+//        let instance = ArgonModule.shared.methodInstance
+//        instance.printLayout()
+//        let bucket = ArgonModule.shared.bucket
+//        bucket.printLayout()
+//        let treeNode = ArgonModule.shared.treeNode
+//        treeNode.printLayout()
+//        let methodInstance = ArgonModule.shared.methodInstance
+//        methodInstance.printLayout()
+//        let instructionBlock = ArgonModule.shared.instructionBlock
+//        instructionBlock.printLayout()
+//        let caseInstance = ArgonModule.shared.enumerationCaseInstance
+//        caseInstance.printLayout()
+//        let metaclass = ArgonModule.shared.metaclassType
+//        metaclass.printLayout()
+//        let dictionary = ArgonModule.shared.dictionary
+//        dictionary.printLayout()
+//        let node = ArgonModule.shared.treeNode
+//        node.printLayout()
+//        let vector = ArgonModule.shared.vector
+//        vector.printLayout()
+//        let block = ArgonModule.shared.block
+//        block.printLayout()
+//        let testClass = ArgonModule.shared.lookup(label: "ClassE") as! TypeClass
+//        testClass.printLayout()
+//        print()
+//        let classes = [ArgonModule.shared.array,ArgonModule.shared.slot,ArgonModule.shared.string,ArgonModule.shared.classType,ArgonModule.shared.treeNode,ArgonModule.shared.block].map{$0 as! TypeClass}
+//        for someClass in classes
+//            {
+//            someClass.cacheIndices()
+//            print("==============================================")
+//            print("\(someClass.label)\nSIZE: \(someClass.instanceSizeInBytes)\n")
+//            for (someLabel,someIndex) in someClass.slotIndexCache.sorted{$0.0 < $1.0}
+//                {
+//                let someString = String(format: "%6d",someIndex)
+//                print("\(someString) \(someLabel)")
+//                }
+//            print("==============================================")
+//            }
+//        let payload = VMPayload()
+//        array.printLayout()
+//        block.printLayout()
+//        string.printLayout()
+//        ArrayPointer.test(inSegment: payload.staticSegment)
+//        StringPointer.test(inSegment: payload.staticSegment)
+//        let segment = payload.codeSegment
+//        let newObject = segment.allocateObject(ofType: testClass, extraSizeInBytes: 0)
+//        let pointer = ClassBasedPointer(address: newObject,type: testClass)
+//        pointer.setInteger(234,atSlot: "b1")
+//        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object as! TypeClass,depth:"")
+//        ArgonModule.shared.printHierarchy(class: ArgonModule.shared.object.type as! TypeClass,depth:"")
+//        let vulcan = ArgonModule.shared.lookup(label: "Vulcan") as! TypeClass
+//        let sorter1 = TopologicalSorter(class: vulcan)
+//        let sort1 = sorter1.sortedClasses()
+//        print(sort1)
+//        let human = ArgonModule.shared.lookup(label: "Human") as! TypeClass
+//        let sorter2 = TopologicalSorter(class: human)
+//        let sort2 = sorter2.sortedClasses()
+//        print(sort2)
+//
+//        let arrayAddress = payload.staticSegment.allocateArray(size: 21)
+//        let arrayPointer = ArrayPointer(dirtyAddress: arrayAddress)!
+//        for index in 0..<21
+//            {
+//            arrayPointer.append(Word(index))
+//            }
+//        let string1 = payload.staticSegment.allocateString("This is a rather long string that we want allocated so we can see if it overwrites the array.")
+//        assert(arrayPointer.size == 21)
+//        assert(arrayPointer.count == 21)
+//        for index in 0..<21
+//            {
+//            assert(arrayPointer[index] == Word(index))
+//            }
+//
+//        let bitSet = BitSet()
+//        bitSet.addBitField(named: "opcode", width: 8)
+//        bitSet.addBitField(named: "mode", width: 4)
+//        bitSet.addBitField(named: "operand1Kind", width: 5)
+//        bitSet.addBitField(named: "operand2Kind", width: 5)
+//        bitSet.addBitField(named: "resultKind",width: 5)
+//        bitSet.addBitField(named: "operand1Value",width: 64)
+//        bitSet.addBitField(named: "operand2Value",width: 64)
+//        bitSet.addBitField(named: "resultValue",width: 64)
+//        print("NUMBER OF BITS USED = \(bitSet.maximumFieldOffset)")
 //        let timer = Timer()
 //        let dictionaryAddress = payload.staticSegment.allocateObject(ofType: ArgonModule.shared.dictionary)
 //        let dict = DictionaryPointer(address: dictionaryAddress, inSegment: payload.staticSegment)
@@ -258,62 +251,62 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //                }
 //            }
             
-        let module1 = Module(label: "Test")
-        let entity = TypeClass(label: "Entity")
-        entity.setModule(module1)
-        entity.addSupertype(ArgonModule.shared.object)
-        let legalEntity = TypeClass(label: "LegalEntity")
-        legalEntity.setModule(module1)
-        legalEntity.addSupertype(entity)
-        let person = TypeClass(label: "Person")
-        person.setModule(module1)
-        person.addSupertype(legalEntity)
-        let citizen = TypeClass(label: "Citizen")
-        citizen.setModule(module1)
-        citizen.addSupertype(person)
-        let method1 = MethodInstance(label: "name")
-        method1.setModule(module1)
-        method1.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method1.returnType = ArgonModule.shared.void
-        module1.addSymbol(method1)
-        let method2 = MethodInstance(label: "name")
-        method2.setModule(module1)
-        method2.parameters = [Parameter(label: "object", relabel: nil, type: legalEntity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method2.returnType = ArgonModule.shared.void
-        module1.addSymbol(method2)
-        let method3 = MethodInstance(label: "name")
-        method3.setModule(module1)
-        method3.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method3.returnType = ArgonModule.shared.void
-        module1.addSymbol(method3)
-        print(person.classPrecedenceList)
-        var instanceSet = module1.methodInstanceSet(withLabel: "name")
-        instanceSet.display()
-        var types = [person,ArgonModule.shared.string]
-        print(instanceSet.mostSpecificInstance(forTypes: types))
-        types = [legalEntity,ArgonModule.shared.string]
-        print(instanceSet.mostSpecificInstance(forTypes: types))
-        types = [entity,ArgonModule.shared.string]
-        print(instanceSet.mostSpecificInstance(forTypes: types))
-        print(person.classPrecedenceList)
-        let method4 = MethodInstance(label: "setName")
-        method4.setModule(module1)
-        method4.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method4.returnType = ArgonModule.shared.void
-        module1.addSymbol(method4)
-        let method5 = MethodInstance(label: "setName")
-        method5.setModule(module1)
-        method5.parameters = [Parameter(label: "object", relabel: nil, type: legalEntity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method5.returnType = ArgonModule.shared.void
-        module1.addSymbol(method5)
-        let method6 = MethodInstance(label: "setName")
-        method6.setModule(module1)
-        method6.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
-        method6.returnType = ArgonModule.shared.void
-        module1.addSymbol(method6)
-        types = [citizen,ArgonModule.shared.string]
-        instanceSet = module1.methodInstanceSet(withLabel: "setName")
-        print(instanceSet.mostSpecificInstance(forTypes: types))
+//        let module1 = Module(label: "Test")
+//        let entity = TypeClass(label: "Entity")
+//        entity.setModule(module1)
+//        entity.addSupertype(ArgonModule.shared.object)
+//        let legalEntity = TypeClass(label: "LegalEntity")
+//        legalEntity.setModule(module1)
+//        legalEntity.addSupertype(entity)
+//        let person = TypeClass(label: "Person")
+//        person.setModule(module1)
+//        person.addSupertype(legalEntity)
+//        let citizen = TypeClass(label: "Citizen")
+//        citizen.setModule(module1)
+//        citizen.addSupertype(person)
+//        let method1 = MethodInstance(label: "name")
+//        method1.setModule(module1)
+//        method1.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method1.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method1)
+//        let method2 = MethodInstance(label: "name")
+//        method2.setModule(module1)
+//        method2.parameters = [Parameter(label: "object", relabel: nil, type: legalEntity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method2.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method2)
+//        let method3 = MethodInstance(label: "name")
+//        method3.setModule(module1)
+//        method3.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method3.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method3)
+//        print(person.classPrecedenceList)
+//        var instanceSet = module1.methodInstanceSet(withLabel: "name")
+//        instanceSet.display()
+//        var types = [person,ArgonModule.shared.string]
+//        print(instanceSet.mostSpecificInstance(forTypes: types))
+//        types = [legalEntity,ArgonModule.shared.string]
+//        print(instanceSet.mostSpecificInstance(forTypes: types))
+//        types = [entity,ArgonModule.shared.string]
+//        print(instanceSet.mostSpecificInstance(forTypes: types))
+//        print(person.classPrecedenceList)
+//        let method4 = MethodInstance(label: "setName")
+//        method4.setModule(module1)
+//        method4.parameters = [Parameter(label: "object", relabel: nil, type: entity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method4.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method4)
+//        let method5 = MethodInstance(label: "setName")
+//        method5.setModule(module1)
+//        method5.parameters = [Parameter(label: "object", relabel: nil, type: legalEntity, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method5.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method5)
+//        let method6 = MethodInstance(label: "setName")
+//        method6.setModule(module1)
+//        method6.parameters = [Parameter(label: "object", relabel: nil, type: person, isVisible: false, isVariadic: false),Parameter(label: "value", relabel: nil, type: ArgonModule.shared.string, isVisible: false, isVariadic: false)]
+//        method6.returnType = ArgonModule.shared.void
+//        module1.addSymbol(method6)
+//        types = [citizen,ArgonModule.shared.string]
+//        instanceSet = module1.methodInstanceSet(withLabel: "setName")
+//        print(instanceSet.mostSpecificInstance(forTypes: types))
 ////        let enumeration = ArgonModule.shared.enumeration
 ////        enumeration.printLayout()
 ////        let module = ArgonModule.shared.moduleType
@@ -348,25 +341,25 @@ class AppDelegate: NSObject, NSApplicationDelegate
 //        assert(module2.lookup(label: "class1").isNotNil)
 //        assert(module2.lookup(label: "class2").isNotNil)
 
-        let vectorAddress = payload.staticSegment.allocateVector(size: 25)
-        let vectorInstance = VectorPointer(address: vectorAddress,segment: payload.staticSegment)
-        for index in 0..<10000
-            {
-            vectorInstance.append(Word(integer: index))
-            }
-        for index in 0..<10000
-            {
-            let value = vectorInstance[index]
-            assert(index == value.integerValue)
-            }
-        vectorInstance.remove(atIndex: 9999)
-        assert(vectorInstance.count == 9999)
-        vectorInstance.remove(atIndex: 9998)
-        assert(vectorInstance.count == 9998)
-        assert(vectorInstance[9997] == Word(9997))
-        vectorInstance.remove(atIndex: 0)
-        assert(vectorInstance[0] == Word(1))
-        assert(vectorInstance[200] == Word(201))
+//        let vectorAddress = payload.staticSegment.allocateVector(size: 25)
+//        let vectorInstance = VectorPointer(address: vectorAddress,segment: payload.staticSegment)
+//        for index in 0..<10000
+//            {
+//            vectorInstance.append(Word(integer: index))
+//            }
+//        for index in 0..<10000
+//            {
+//            let value = vectorInstance[index]
+//            assert(index == value.integerValue)
+//            }
+//        vectorInstance.remove(atIndex: 9999)
+//        assert(vectorInstance.count == 9999)
+//        vectorInstance.remove(atIndex: 9998)
+//        assert(vectorInstance.count == 9998)
+//        assert(vectorInstance[9997] == Word(9997))
+//        vectorInstance.remove(atIndex: 0)
+//        assert(vectorInstance[0] == Word(1))
+//        assert(vectorInstance[200] == Word(201))
         }
 
     func applicationWillTerminate(_ aNotification: Notification)
@@ -474,13 +467,12 @@ class AppDelegate: NSObject, NSApplicationDelegate
         if panel.runModal() == .OK
             {
             let url = panel.url!
-            let project = NSKeyedUnarchiver.unarchiveObject(withFile: url.path) as! Project
             let storyboard:NSStoryboard = NSStoryboard(name: "Main", bundle: nil)
             guard let controller:NSWindowController = storyboard.instantiateController(withIdentifier: "ArgonBrowser") as? NSWindowController else
                 {
                 return
                 }
-            (controller.contentViewController as! ArgonBrowserViewController).setProject(project)
+            (controller.contentViewController as! ArgonBrowserViewController).loadProject(fromURL: url)
             controller.showWindow(self)
             }
         }

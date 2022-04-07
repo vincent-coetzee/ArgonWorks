@@ -28,9 +28,9 @@ public class VirtualMachine
         self.loadedObjectFiles = []
         }
         
-    init()
+    init(argonModule: ArgonModule)
         {
-        self.payload = VMPayload()
+        self.payload = VMPayload(argonModule: argonModule)
         self.loadedObjectFiles = []
         }
         
@@ -41,10 +41,10 @@ public class VirtualMachine
         
     public func loadObjectFile(atPath path: String) throws
         {
-        if let objectFile = try ObjectFile.read(atPath: path,topModule: TopModule.shared)
-            {
-            self.loadedObjectFiles.append(objectFile)
-            }
+//        if let objectFile = try ObjectFile.read(atPath: path,topModule: TopModule.shared)
+//            {
+//            self.loadedObjectFiles.append(objectFile)
+//            }
         }
         
     public func prepareToExecute()
@@ -67,7 +67,7 @@ public class VirtualMachine
                 var objectString = ""
                 if word.tag == .pointer
                     {
-                    if let objectPointer = ObjectPointer(dirtyAddress: word)
+                    if let objectPointer = ObjectPointer(dirtyAddress: word,argonModule: self.payload.codeSegment.argonModule)
                         {
                         if objectPointer.classAddress == 0
                             {

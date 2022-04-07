@@ -16,7 +16,7 @@ public class InvocationExpression: Expression
         }
 
     private let name: Name
-    private let arguments: Arguments
+    private var arguments: Arguments
     private let location: Location
     
     required init?(coder: NSCoder)
@@ -37,8 +37,9 @@ public class InvocationExpression: Expression
         {
         self.name = name
         self.location = location
-        self.arguments = arguments
+        self.arguments = []
         super.init()
+        self.arguments = arguments.map{$0.withContainer(Container.expression(self))}
         }
         
     public override func initializeTypeConstraints(inContext context: TypeContext)

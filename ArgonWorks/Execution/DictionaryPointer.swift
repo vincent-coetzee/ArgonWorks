@@ -33,16 +33,16 @@ public class DictionaryPointer: ClassBasedPointer
     public init(address: Address,inSegment segment: Segment)
         {
         self.segment = segment
-        super.init(address: address.cleanAddress,class: ArgonModule.shared.dictionary as! TypeClass)
-        self.rootNode = self.rootAddress.isNil ? nil : TreeNodePointer(address: self.rootAddress!)
+        super.init(address: address.cleanAddress,class: segment.argonModule.dictionary as! TypeClass,argonModule: segment.argonModule)
+        self.rootNode = self.rootAddress.isNil ? nil : TreeNodePointer(address: self.rootAddress!,argonModule: segment.argonModule)
         }
         
     public func setValue(_ value: Address,forKey: String)
         {
         if self.rootNode.isNil
             {
-            self.rootAddress = self.segment.allocateObject(ofType: ArgonModule.shared.treeNode)
-            self.rootNode = TreeNodePointer(address: self.rootAddress!)
+            self.rootAddress = self.segment.allocateObject(ofType: segment.argonModule.treeNode)
+            self.rootNode = TreeNodePointer(address: self.rootAddress!,argonModule: segment.argonModule)
             self.rootNode?.valueAddress = value
             self.rootNode?.keyAddress = self.segment.allocateString(forKey)
             self.rootNode?.height = 1
@@ -51,7 +51,7 @@ public class DictionaryPointer: ClassBasedPointer
             {
             self.rootNode?.setValue(value,forKey: forKey,inSegment: self.segment)
             self.rootAddress = self.rootNode!.rebalance().address
-            self.rootNode = TreeNodePointer(address: self.rootAddress!)
+            self.rootNode = TreeNodePointer(address: self.rootAddress!,argonModule: segment.argonModule)
             }
         }
         
@@ -78,7 +78,7 @@ public class DictionaryPointer: ClassBasedPointer
             }
         else
             {
-            self.rootNode = TreeNodePointer(address: address!)
+            self.rootNode = TreeNodePointer(address: address!,argonModule: segment.argonModule)
             }
         }
         

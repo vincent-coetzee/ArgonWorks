@@ -22,38 +22,43 @@ public class Inline
     private let object1Type: Type
     private var object2Type: Type? = nil
     private var elements: Array<InlineElement> = []
+    private let argonModule: ArgonModule
     
-    public init(_ label: String,_ object1:Type)
+    public init(_ label: String,_ object1:Type,_ argonModule: ArgonModule)
         {
         self.label = label
         self.object1Type = object1
         self.object2Type = nil
+        self.argonModule = argonModule
         }
         
-    public init(_ label: String,_ element: InlineElement)
+    public init(_ label: String,_ element: InlineElement,_ argonModule: ArgonModule)
         {
         self.label = label
         self.elements = [element]
-        self.object1Type = ArgonModule.shared.void
+        self.object1Type = argonModule.void
+        self.argonModule = argonModule
         }
         
-    public init(_ label: String,_ object1:Type,_ object2:Type)
+    public init(_ label: String,_ object1:Type,_ object2:Type,_ argonModule: ArgonModule)
         {
         self.label = label
         self.object1Type = object1
         self.object2Type = object2
+        self.argonModule = argonModule
         }
         
-    public init(_ label: String,_ parameters: InlineElement...)
+    public init(_ label: String,_ argonModule: ArgonModule,_ parameters: InlineElement...)
         {
         self.label = label
         self.object1Type = TypeContext.freshTypeVariable()
         self.elements = parameters
+        self.argonModule = argonModule
         }
         
     public func returns(_ type: Type) -> InlineMethodInstance
         {
-        let instance = InlineMethodInstance(label: self.label)
+        let instance = InlineMethodInstance(label: self.label,argonModule: self.argonModule)
         if elements.isEmpty
             {
             instance.parameters = [Parameter(label: "object", relabel: nil, type: self.object1Type, isVisible: false, isVariadic: false)]
@@ -80,7 +85,7 @@ public class InlineMethodInstance: StandardMethodInstance
         }
         
     internal var closure: (Arguments,CodeGenerator,InstructionBuffer) -> Void = {a,b,c in }
-    
+        
     public func emitCode(into buffer:InstructionBuffer,using generator:CodeGenerator,arguments: Arguments)
         {
         self.closure(arguments,generator,buffer)
@@ -96,7 +101,7 @@ public class InlineMethodInstance: StandardMethodInstance
         context.append(TypeConstraint(left: self.type,right: self.returnType,origin: .symbol(self)))
         }
         
-    public func classMethod() -> StandardMethodInstance
+    public func classMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -104,11 +109,11 @@ public class InlineMethodInstance: StandardMethodInstance
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
             buffer.add(.i64,.CLASS,arguments[0].value.place,.register(.RR))
             }
-        self.returnType = ArgonModule.shared.classType
+        self.returnType = argonModule.classType
         return(self)
         }
         
-    public func listAppendMethod() -> StandardMethodInstance
+    public func listAppendMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -116,14 +121,14 @@ public class InlineMethodInstance: StandardMethodInstance
 //            try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
 //            try! arguments[1].value.emitAddressCode(into: buffer, using: generator)
 //            let temp = buffer.nextTemporary
-//            let address = ArgonModule.shared.listNode
+//            let address = argonModule.listNode
 //            buffer.add(.MAKE,.address(address.memoryAddress),temp)
-//            let slot1 = ArgonModule.shared.listNode.lookup(label: "element") as! Slot
+//            let slot1 = argonModule.listNode.lookup(label: "element") as! Slot
 //            let temp2 = buffer.nextTemporary
 //            buffer.add(.MOVE,temp,temp2)
 //            buffer.add(.i64,.ADD,temp2,.integer(Argon.Integer(slot1.offset)),temp2)
 //            buffer.add(.STOREP,arguments[1].value.place,temp2,.integer(0))
-//            let slot2 = ArgonModule.shared.list.lookup(label: "last") as! Slot
+//            let slot2 = argonModule.list.lookup(label: "last") as! Slot
 //            let temp3 = buffer.nextTemporary
 //            buffer.add(.MOVE,arguments[0].value.place,temp3)
 //            buffer.add(.i64,.ADD,temp3,.integer(Argon.Integer(slot2.offset)),temp3)
@@ -131,11 +136,11 @@ public class InlineMethodInstance: StandardMethodInstance
 //            buffer.add(.LOADP,temp3,.integer(0),temp4)
 //            buffer.add(.STOREP,
             }
-        self.returnType = ArgonModule.shared.classType
+        self.returnType = argonModule.classType
         return(self)
         }
         
-    public func addressMethod() -> StandardMethodInstance
+    public func addressMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -143,311 +148,311 @@ public class InlineMethodInstance: StandardMethodInstance
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
             buffer.add(.MOVE,arguments[0].value.place,.register(.RR))
             }
-        self.returnType = ArgonModule.shared.address
+        self.returnType = argonModule.address
         return(self)
         }
         
-    public func stringToFloatMethod() -> StandardMethodInstance
+    public func stringToFloatMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.string.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.float
+        self.returnType = argonModule.float
         return(self)
         }
         
-    public func stringToIntegerMethod() -> StandardMethodInstance
+    public func stringToIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.string.magicNumber)),.integer(Argon.Integer(argonModule.integer.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.integer
+        self.returnType = argonModule.integer
         return(self)
         }
         
-    public func stringToUIntegerMethod() -> StandardMethodInstance
+    public func stringToUIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.uInteger.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.string.magicNumber)),.integer(Argon.Integer(argonModule.uInteger.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.uInteger
+        self.returnType = argonModule.uInteger
         return(self)
         }
         
-    public func stringToByteMethod() -> StandardMethodInstance
+    public func stringToByteMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.string.magicNumber)),.integer(Argon.Integer(argonModule.byte.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.byte
+        self.returnType = argonModule.byte
         return(self)
         }
         
-    public func stringToCharacterMethod() -> StandardMethodInstance
+    public func stringToCharacterMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.string.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.character
+        self.returnType = argonModule.character
         return(self)
         }
         
-    public func integerToFloatMethod() -> StandardMethodInstance
+    public func integerToFloatMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitValueCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.integer.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.float
+        self.returnType = argonModule.float
         return(self)
         }
         
-    public func integerToStringMethod() -> StandardMethodInstance
+    public func integerToStringMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.integer.magicNumber)),.integer(Argon.Integer(argonModule.string.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.string
+        self.returnType = argonModule.string
         return(self)
         }
         
-    public func integerToUIntegerMethod() -> StandardMethodInstance
+    public func integerToUIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.uInteger.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.integer.magicNumber)),.integer(Argon.Integer(argonModule.uInteger.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.uInteger
+        self.returnType = argonModule.uInteger
         return(self)
         }
         
-    public func integerToByteMethod() -> StandardMethodInstance
+    public func integerToByteMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.integer.magicNumber)),.integer(Argon.Integer(argonModule.byte.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.byte
+        self.returnType = argonModule.byte
         return(self)
         }
         
-    public func integerToCharacterMethod() -> StandardMethodInstance
+    public func integerToCharacterMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.integer.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.character
+        self.returnType = argonModule.character
         return(self)
         }
         
-    public func floatToStringMethod() -> StandardMethodInstance
+    public func floatToStringMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.float.magicNumber)),.integer(Argon.Integer(argonModule.string.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.string
+        self.returnType = argonModule.string
         return(self)
         }
         
-    public func floatToIntegerMethod() -> StandardMethodInstance
+    public func floatToIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.float.magicNumber)),.integer(Argon.Integer(argonModule.integer.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.integer
+        self.returnType = argonModule.integer
         return(self)
         }
         
-    public func floatToUIntegerMethod() -> StandardMethodInstance
+    public func floatToUIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.uInteger.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.float.magicNumber)),.integer(Argon.Integer(argonModule.uInteger.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.uInteger
+        self.returnType = argonModule.uInteger
         return(self)
         }
         
-    public func floatToByteMethod() -> StandardMethodInstance
+    public func floatToByteMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.float.magicNumber)),.integer(Argon.Integer(argonModule.byte.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.byte
+        self.returnType = argonModule.byte
         return(self)
         }
         
-    public func floatToCharacterMethod() -> StandardMethodInstance
+    public func floatToCharacterMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.float.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.character
+        self.returnType = argonModule.character
         return(self)
         }
         
-    public func byteToStringMethod() -> StandardMethodInstance
+    public func byteToStringMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.byte.magicNumber)),.integer(Argon.Integer(argonModule.string.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.string
+        self.returnType = argonModule.string
         return(self)
         }
         
-    public func byteToIntegerMethod() -> StandardMethodInstance
+    public func byteToIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.byte.magicNumber)),.integer(Argon.Integer(argonModule.integer.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.integer
+        self.returnType = argonModule.integer
         return(self)
         }
         
-    public func byteToUIntegerMethod() -> StandardMethodInstance
+    public func byteToUIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.uInteger.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.byte.magicNumber)),.integer(Argon.Integer(argonModule.uInteger.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.uInteger
+        self.returnType = argonModule.uInteger
         return(self)
         }
         
-    public func byteToFloatMethod() -> StandardMethodInstance
+    public func byteToFloatMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.byte.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.float
+        self.returnType = argonModule.float
         return(self)
         }
         
-    public func byteToCharacterMethod() -> StandardMethodInstance
+    public func byteToCharacterMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.byte.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.character
+        self.returnType = argonModule.character
         return(self)
         }
         
-    public func characterToStringMethod() -> StandardMethodInstance
+    public func characterToStringMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.character.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.string.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.character.magicNumber)),.integer(Argon.Integer(argonModule.string.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.string
+        self.returnType = argonModule.string
         return(self)
         }
         
-    public func characterToIntegerMethod() -> StandardMethodInstance
+    public func characterToIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.character.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.integer.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.character.magicNumber)),.integer(Argon.Integer(argonModule.integer.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.integer
+        self.returnType = argonModule.integer
         return(self)
         }
         
-    public func characterToUIntegerMethod() -> StandardMethodInstance
+    public func characterToUIntegerMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.character.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.uInteger.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.character.magicNumber)),.integer(Argon.Integer(argonModule.uInteger.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.uInteger
+        self.returnType = argonModule.uInteger
         return(self)
         }
         
-    public func characterToFloatMethod() -> StandardMethodInstance
+    public func characterToFloatMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.character.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.float.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.character.magicNumber)),.integer(Argon.Integer(argonModule.float.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.float
+        self.returnType = argonModule.float
         return(self)
         }
         
-    public func characterToByteMethod() -> StandardMethodInstance
+    public func characterToByteMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
             (arguments,generator,buffer) -> Void in
             try! arguments[0].value.emitAddressCode(into: buffer, using: generator)
-            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(ArgonModule.shared.character.magicNumber)),.integer(Argon.Integer(ArgonModule.shared.byte.magicNumber)))
+            buffer.add(.CONVERT,arguments[0].value.place,.integer(Argon.Integer(argonModule.character.magicNumber)),.integer(Argon.Integer(argonModule.byte.magicNumber)))
             }
-        self.returnType = ArgonModule.shared.byte
+        self.returnType = argonModule.byte
         return(self)
         }
         
-    public func addDateToDateComponent() -> StandardMethodInstance
+    public func addDateToDateComponent(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -459,7 +464,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subDateComponentFromDate() -> StandardMethodInstance
+    public func subDateComponentFromDate(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -471,7 +476,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func addTimeToTimeComponent() -> StandardMethodInstance
+    public func addTimeToTimeComponent(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -483,7 +488,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subTimeComponentFromTime() -> StandardMethodInstance
+    public func subTimeComponentFromTime(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -495,7 +500,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func addDateTimeToComponent() -> StandardMethodInstance
+    public func addDateTimeToComponent(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -507,7 +512,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subComponentFromDateTime() -> StandardMethodInstance
+    public func subComponentFromDateTime(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -519,7 +524,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subDateFromDate() -> StandardMethodInstance
+    public func subDateFromDate(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -531,7 +536,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subTimeFromTime() -> StandardMethodInstance
+    public func subTimeFromTime(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -543,7 +548,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func subDateTimeFromDateTime() -> StandardMethodInstance
+    public func subDateTimeFromDateTime(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -555,7 +560,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func differenceBetweenDatesMethod() -> StandardMethodInstance
+    public func differenceBetweenDatesMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -572,7 +577,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func differenceBetweenTimesMethod() -> StandardMethodInstance
+    public func differenceBetweenTimesMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -589,7 +594,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func setInsertMethod() -> StandardMethodInstance
+    public func setInsertMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -606,7 +611,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func setContainsMethod() -> StandardMethodInstance
+    public func setContainsMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -623,7 +628,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func setIntersectionMethod() -> StandardMethodInstance
+    public func setIntersectionMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -640,7 +645,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func setUnionMethod() -> StandardMethodInstance
+    public func setUnionMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -657,7 +662,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func setRemoveMethod() -> StandardMethodInstance
+    public func setRemoveMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -674,7 +679,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func listRemoveMethod() -> StandardMethodInstance
+    public func listRemoveMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -691,7 +696,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func listInsertMethod() -> StandardMethodInstance
+    public func listInsertMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -708,7 +713,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-//    public func listAppendMethod() -> StandardMethodInstance
+//    public func listAppendMethod(argonModule: ArgonModule) -> StandardMethodInstance
 //        {
 //        self.closure =
 //            {
@@ -725,7 +730,7 @@ public class InlineMethodInstance: StandardMethodInstance
 //        return(self)
 //        }
         
-    public func listContainsMethod() -> StandardMethodInstance
+    public func listContainsMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -742,7 +747,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func listInsertBeforeMethod() -> StandardMethodInstance
+    public func listInsertBeforeMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -759,7 +764,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func listInsertAfterMethod() -> StandardMethodInstance
+    public func listInsertAfterMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -776,7 +781,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func arrayInsertMethod() -> StandardMethodInstance
+    public func arrayInsertMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -793,7 +798,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func arrayRemoveMethod() -> StandardMethodInstance
+    public func arrayRemoveMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -810,7 +815,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func arrayAppendMethod() -> StandardMethodInstance
+    public func arrayAppendMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -827,7 +832,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func arrayAppendArrayMethod() -> StandardMethodInstance
+    public func arrayAppendArrayMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -844,7 +849,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func arrayContainsMethod() -> StandardMethodInstance
+    public func arrayContainsMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -861,7 +866,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func rawValueMethod() -> StandardMethodInstance
+    public func rawValueMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {
@@ -872,7 +877,7 @@ public class InlineMethodInstance: StandardMethodInstance
         return(self)
         }
         
-    public func makeEnumerationMethod() -> StandardMethodInstance
+    public func makeEnumerationMethod(argonModule: ArgonModule) -> StandardMethodInstance
         {
         self.closure =
             {

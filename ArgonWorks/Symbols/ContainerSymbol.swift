@@ -183,6 +183,7 @@ public class ContainerSymbol:Symbol
         {
         self.symbols.append(symbol)
         Self.affectedSymbols.append(symbol)
+        symbol.container = .symbol(self)
         }
         
         

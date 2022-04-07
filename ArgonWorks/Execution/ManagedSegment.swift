@@ -134,7 +134,7 @@ public class ManagedSegment: Segment
         {
         let sizeInBytes = self.align(someClass.instanceSizeInBytes + someClass.extraSizeInBytes)
         let address = try self.currentSpace.allocateSizeInBytes(sizeInBytes)
-        let pointer = ClassBasedPointer(address: address,type: someClass)
+        let pointer = ClassBasedPointer(address: address,type: someClass,argonModule: self.argonModule)
         pointer.setClass(someClass)
         pointer.sizeInBytes = Word(sizeInBytes)
         return(Word(pointer: address))

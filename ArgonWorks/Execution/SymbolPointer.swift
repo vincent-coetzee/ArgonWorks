@@ -14,14 +14,14 @@ public class SymbolPointer: StringPointer
         return(lhs.string == rhs)
         }
         
-    public override class func sizeInBytes() -> Int
+    public override class func sizeInBytes(argonModule: ArgonModule) -> Int
         {
-        (ArgonModule.shared.symbol as! TypeClass).instanceSizeInBytes
+        (argonModule.symbol as! TypeClass).instanceSizeInBytes
         }
         
     internal override func storeString(_ string: String)
         {
-        let sizeInBytes = Word(Self.sizeInBytes() + 1)
+        let sizeInBytes = Word(Self.sizeInBytes(argonModule: self.argonModule) + 1)
         let bytesAddress = self.someAddress + sizeInBytes
         self.count = string.utf16.count
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
@@ -45,7 +45,7 @@ public class SymbolPointer: StringPointer
         
     internal override func loadString() -> String
         {
-        let sizeInBytes = Word(Self.sizeInBytes() + 1)
+        let sizeInBytes = Word(Self.sizeInBytes(argonModule: self.argonModule) + 1)
         let bytesAddress = self.someAddress + sizeInBytes
         let charPointer = UInt16Pointer(bitPattern: bytesAddress)
         var offset = 0

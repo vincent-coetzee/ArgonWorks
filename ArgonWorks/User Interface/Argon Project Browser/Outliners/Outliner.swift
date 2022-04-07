@@ -23,11 +23,11 @@ public enum OutlinerContext: Int
             case .default:
                 return(false)
             case .classes:
-                return(symbol is TypeClass)
+                return(symbol is TypeClass && ((symbol as! TypeClass).subtypes.count > 0 || (symbol as! TypeClass).instanceSlots.count > 0))
             case .enumerations:
                 return(symbol is TypeEnumeration)
             case .modules:
-                return(symbol is Module || symbol is TypeClass)
+                return(symbol is Module || symbol is TypeClass || symbol is TypeEnumeration || symbol is Method)
             case .constants:
                 return(false)
             case .methods:
@@ -104,8 +104,10 @@ public enum OutlinerContext: Int
         }
     }
     
-public class Outliner: NSViewController
+public class Outliner: NSViewController,Dependent
     {
+    public let dependentKey = DependentSet.nextDependentKey
+    
     public var rootItems: OutlineItems = []
         {
         didSet
@@ -134,6 +136,8 @@ public class Outliner: NSViewController
             self.scrollView.backgroundColor = self.backgroundColor!
             }
         }
+        
+    public let selectionValueModel: ValueModel = ValueHolder(value: nil)
         
     public var outlineItemsByKey = Dictionary<Int,OutlineItem>()
     private let scrollView: NSScrollView
@@ -206,6 +210,21 @@ public class Outliner: NSViewController
         fatalError("init(coder:) has not been implemented")
         }
     
+    public func update(aspect: String,with argument: Any?,from sender: Model)
+        {
+        if sender.dependentKey == self.selectionValueModel.dependentKey
+            {
+            self.selectionValueModel.removeDependent(self)
+            let item = self.selectionValueModel.value as! SymbolHolder
+            let rowIndex = self.outlineView.row(forItem: item)
+            if rowIndex != -1
+                {
+                self.outlineView.selectRowIndexes(IndexSet(integer: rowIndex), byExtendingSelection: false)
+                }
+            self.selectionValueModel.addDependent(self)
+            }
+        }
+        
     private func initViews()
         {
         self.scrollView.autohidesScrollers = true
@@ -235,6 +254,7 @@ public class Outliner: NSViewController
         {
         NotificationCenter.default.addObserver(self, selector: #selector(self.itemDidExpand), name: NSOutlineView.itemDidExpandNotification, object: self.outlineView)
         NotificationCenter.default.addObserver(self, selector: #selector(self.itemDidCollapse), name: NSOutlineView.itemDidCollapseNotification, object: self.outlineView)
+        self.selectionValueModel.addDependent(self)
         }
         
    @IBAction public func itemDidExpand(_ notification: Notification)
@@ -262,6 +282,14 @@ public class Outliner: NSViewController
     public func itemChanged(_ item: OutlineItem)
         {
         self.outlineView.reloadItem(item)
+        }
+        
+    public func expandItemsIfNeeded()
+        {
+        for item in self.rootItems
+            {
+            item.expandIfNeeded(inOutliner: self.outlineView)
+            }
         }
         
     public func removeSymbol(_ symbol: Symbol)
@@ -366,20 +394,20 @@ extension Outliner: NSOutlineViewDataSource
     
 extension Outliner: NSOutlineViewDelegate
     {
-//    public func outlineViewSelectionDidChange(_ notification: Notification)
-//        {
-//        let selectedRow = self.outliner.selectedRow
-//        if selectedRow == -1
-//            {
-//            self.selectedItem = nil
-//            }
-//        else
-//            {
-//            self.selectedItem = (self.outliner.item(atRow: selectedRow) as! BrowserViewItem)
-//            let source = selectedItem!.symbol.source
-//            self.editor.string = source
-//            }
-//        }
+    public func outlineViewSelectionDidChange(_ notification: Notification)
+        {
+        let selectedRow = self.outlineView.selectedRow
+        self.selectionValueModel.removeDependent(self)
+        if selectedRow == -1
+            {
+            self.selectionValueModel.value = nil
+            }
+        else
+            {
+            self.selectionValueModel.value = self.outlineView.item(atRow: selectedRow)
+            }
+        self.selectionValueModel.addDependent(self)
+        }
 
     public func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView?
         {

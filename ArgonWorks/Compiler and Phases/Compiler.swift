@@ -11,17 +11,15 @@ import Combine
 public class Compiler
     {
     private static var instanceCounter = 1
-    
+    internal var argonModule: ArgonModule
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
     internal let source: String
     internal let tokenHandler: TokenHandler?
     
-    init(source: String,tokenHandler: TokenHandler? = nil)
+    init(source: String,argonModule: ArgonModule,tokenHandler: TokenHandler? = nil)
         {
-        Argon.resetStatics()
-        Argon.resetTypes()
-        TopModule.resetTopModule()
+        self.argonModule = argonModule
         self.source = source
         self.currentPass = nil
         self.tokenHandler = tokenHandler
@@ -58,7 +56,7 @@ public class Compiler
     @discardableResult
     public func compile(parseOnly: Bool = false) -> Module?
         {
-        let addressAllocator = AddressAllocator()
+        let addressAllocator = AddressAllocator(argonModule: self.argonModule)
         let parser = Parser(self)
         parser.tokenHandler = self.tokenHandler
         guard let parsedModule = parser.processModule(nil) else
@@ -77,10 +75,10 @@ public class Compiler
             {
             return(addressAllocatedModule)
             }
-        addressAllocator.payload.installArgonModule(ArgonModule.shared)
+        addressAllocator.payload.installArgonModule(self.argonModule)
         addressAllocator.payload.installClientModule(codeGeneratedModule)
         addressAllocator.payload.installMainMethod(codeGeneratedModule.mainMethod)
-        try! ObjectFile.write(module: addressAllocatedModule, topModule: TopModule.shared, atPath: "/Users/vincent/Desktop/Test.armod")
+//        try! ObjectFile.write(module: addressAllocatedModule, topModule: TopModule.shared, atPath: "/Users/vincent/Desktop/Test.armod")
         let vm = VirtualMachine(payload: addressAllocator.payload)
         try! vm.payload.write(toPath: "/Users/vincent/Desktop/InferenceSample.carton")
         codeGeneratedModule.display(indent: "")

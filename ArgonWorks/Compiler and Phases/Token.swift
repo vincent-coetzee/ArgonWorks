@@ -15,6 +15,8 @@ public protocol TokenHandler
     
 public class Token:CustomStringConvertible
     {
+    public static var systemClassNames: Array<String> = []
+    
     public enum Keyword:String,CaseIterable,Equatable
         {
         case ALIAS
@@ -1226,7 +1228,7 @@ public class IdentifierToken: Token
         
     public override var isSystemClassName: Bool
         {
-        ArgonModule.shared.systemClassNames.contains(self._identifier)
+        Self.systemClassNames.contains(self.identifier)
         }
         
     public override var isIdentifier: Bool

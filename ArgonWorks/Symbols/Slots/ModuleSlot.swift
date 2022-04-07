@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ModuleSlot: Slot
+public class ModuleSlot: MemberSlot
     {
     public override var symbolType: SymbolType
         {

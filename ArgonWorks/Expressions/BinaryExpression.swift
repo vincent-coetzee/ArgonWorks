@@ -44,6 +44,8 @@ public class BinaryExpression: Expression
         self.rhs = rhs
         self.lhs = lhs
         super.init()
+        self.lhs.container = .expression(self)
+        self.rhs.container = .expression(self)
         }
         
     public override var displayString: String

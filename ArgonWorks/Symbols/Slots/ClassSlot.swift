@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class ClassSlot: Slot
+public class ClassSlot: InstanceSlot
     {
 //    public var value: ValueHolder = .none
     }

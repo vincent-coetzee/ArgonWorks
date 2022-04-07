@@ -45,8 +45,8 @@ public class BucketPointer: ClassBasedPointer
             }
         }
         
-    public init(address: Address)
+    public init(address: Address,argonModule: ArgonModule)
         {
-        super.init(address: address, class: ArgonModule.shared.bucket as! TypeClass)
+        super.init(address: address, class: argonModule.bucket as! TypeClass,argonModule: argonModule)
         }
     }

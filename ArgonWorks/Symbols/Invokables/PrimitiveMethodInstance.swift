@@ -9,9 +9,9 @@ import Foundation
 
 public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
     {
-    static func label(_ label:Label,_ arg1:Label,_ arg1Type: Type,ret: Type) -> PrimitiveMethodInstance
+    static func label(_ label:Label,_ argonModule: ArgonModule,_ arg1:Label,_ arg1Type: Type,ret: Type) -> PrimitiveMethodInstance
         {
-        let instance = PrimitiveMethodInstance(label: label)
+        let instance = PrimitiveMethodInstance(label: label,argonModule: argonModule)
         instance.parameters = [Parameter(label: arg1, relabel: nil, type: arg1Type, isVisible: true, isVariadic: false)]
         instance.returnType = ret
         return(instance)
@@ -24,9 +24,9 @@ public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
         
     public var primitiveIndex:Argon.Integer = 0
     
-    convenience init(label: Label,parameters: Parameters,returnType:Type)
+    convenience init(label: Label,argonModule: ArgonModule,parameters: Parameters,returnType:Type)
         {
-        self.init(label: label)
+        self.init(label: label,argonModule: argonModule)
         self.parameters = parameters
         self.returnType = returnType
         self.isPrimitiveMethodInstance = true

@@ -70,6 +70,21 @@ public class ProjectGroupItem: ProjectItem
             }
         }
         
+    public override func expandIfNeeded(inOutliner outliner: NSOutlineView)
+        {
+        if self.isExpanded
+            {
+            outliner.expandItem(self)
+            if self.childCount > 0
+                {
+                for item in self.items
+                    {
+                    item.expandIfNeeded(inOutliner: outliner)
+                    }
+                }
+            }
+        }
+        
     public override func index(of item: ProjectItem) -> Int?
         {
         return(self.items.firstIndex(of: item))
@@ -78,7 +93,7 @@ public class ProjectGroupItem: ProjectItem
     public override func initValidActions() -> BrowserActionSet
         {
         var set = super.initValidActions()
-        set.insert([.newSymbolAction,.newModuleAction,.newGroupAction,.newCommentAction])
+        set.insert([.newSymbolAction,.newModuleAction,.newGroupAction,.newCommentAction,.newImportAction])
         return(set)
         }
         
@@ -131,11 +146,5 @@ public class ProjectGroupItem: ProjectItem
             let newIndex = index >= self.items.count ? self.items.count : index
             self.items.insert(contentsOf: items,at: newIndex)
             }
-        }
-        
-    public override func updateMenu(_ menu: NSMenu,forTarget: ArgonBrowserViewController)
-        {
-        menu.addItem(withTitle: "New Symbol", action: #selector(ArgonBrowserViewController.onNewSymbolClicked), keyEquivalent: "").target = forTarget
-        menu.addItem(withTitle: "New Group", action: #selector(ArgonBrowserViewController.onNewGroupClicked), keyEquivalent: "").target = forTarget
         }
     }

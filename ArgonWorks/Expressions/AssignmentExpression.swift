@@ -31,6 +31,8 @@ public class AssignmentExpression: Expression
         self.rhs = rhs
         self.lhs = lhs
         super.init()
+        rhs.container = .expression(self)
+        lhs.container = .expression(self)
         }
         
     public override func visit(visitor: Visitor) throws
@@ -84,7 +86,7 @@ public class AssignmentExpression: Expression
         {
         self.lhs.initializeType(inContext: context)
         self.rhs.initializeType(inContext: context)
-        self.type = ArgonModule.shared.void
+        self.type = context.voidType
         }
 
     public override var displayString: String

@@ -9,6 +9,14 @@ import Cocoa
 
 public class ProjectSourceItem: ProjectItem
     {
+    public override var isExpanded: Bool
+        {
+        didSet
+            {
+            self.elementItem.isExpanded = self.isExpanded
+            }
+        }
+        
     public var symbolValue: SymbolValue!
         {
         didSet

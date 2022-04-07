@@ -15,6 +15,7 @@ public class WhileBlock: Block
         {
         self.condition = condition
         super.init()
+        condition.container = .block(self)
         }
         
     public required init?(coder: NSCoder)
@@ -64,7 +65,7 @@ public class WhileBlock: Block
             {
             block.initializeTypeConstraints(inContext: context)
             }
-        context.append(TypeConstraint(left: self.condition.type,right: ArgonModule.shared.boolean,origin: .block(self)))
+        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
         }
         
     public override func initializeType(inContext context: TypeContext)

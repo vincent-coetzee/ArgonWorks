@@ -277,6 +277,7 @@ extension NSCoder
         
     public func encodeLocation(_ location:Location,forKey: String)
         {
+        self.encode(location.itemKey.isNil ? -1 : location.itemKey!,forKey: forKey + "itemKey")
         self.encode(location.line,forKey: forKey + "lineNumber")
         self.encode(location.lineStart,forKey: forKey + "lineStart")
         self.encode(location.lineStop,forKey: forKey + "lineStop")
@@ -286,15 +287,71 @@ extension NSCoder
         
     public func decodeLocation(forKey: String) -> Location
         {
+        let value = self.decodeInteger(forKey: forKey + "itemKey")
         let lineNumber = self.decodeInteger(forKey: forKey + "lineNumber")
         let lineStart = self.decodeInteger(forKey: forKey + "lineStart")
         let lineStop = self.decodeInteger(forKey: forKey + "lineStop")
         let tokenStart = self.decodeInteger(forKey: forKey + "tokenStart")
         let tokenStop = self.decodeInteger(forKey: forKey + "tokenStop")
-        return(Location(line: lineNumber, lineStart: lineStart, lineStop: lineStop, tokenStart: tokenStart, tokenStop: tokenStop))
+        var location = Location(line: lineNumber, lineStart: lineStart, lineStop: lineStop, tokenStart: tokenStart, tokenStop: tokenStop)
+        location.itemKey = value == -1 ? nil : value
+        return(location)
         }
         
-
+    public func encodeContainer(_ container: Container?,forKey: String)
+        {
+        if container.isNil
+            {
+            self.encode("containerIsNil",forKey: forKey + "__flag")
+            return
+            }
+        else
+            {
+            self.encode("containerIsNotNil",forKey: forKey + "__flag")
+            }
+        switch(container!)
+            {
+        case .none:
+            self.encode(1,forKey: forKey + "_discriminator")
+        case .block(let aBlock):
+            self.encode(2,forKey: forKey + "_discriminator")
+            self.encode(aBlock,forKey: forKey + "_block")
+        case .expression(let expression):
+            self.encode(3,forKey: forKey + "_discriminator")
+            self.encode(expression,forKey: forKey + "_expression")
+        case .symbol(let symbol):
+            self.encode(4,forKey: forKey + "_discriminator")
+            self.encode(symbol,forKey: forKey + "_symbol")
+            }
+        }
+        
+    public func decodeContainer(forKey: String) -> Container?
+        {
+        let flag = self.decodeString(forKey: forKey + "__flag")
+        if flag == "containerIsNil"
+            {
+            return(nil)
+            }
+        let discriminator = self.decodeInteger(forKey: forKey + "_discriminator")
+        if discriminator == 1
+            {
+            return(Container.none)
+            }
+        else if discriminator == 2
+            {
+            return(.block(self.decodeObject(forKey: forKey + "_block") as! Block))
+            }
+        else if discriminator == 3
+            {
+            return(.expression(self.decodeObject(forKey: forKey + "_expression") as! Expression))
+            }
+        else if discriminator == 4
+            {
+            return(.symbol(self.decodeObject(forKey: forKey + "_symbol") as! Symbol))
+            }
+        fatalError("This should never happen")
+        }
+        
     public func encodeNodeLocations(_ locations: NodeLocations,forKey: String)
         {
         self.encode(locations.count,forKey: forKey + "count")

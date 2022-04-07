@@ -22,6 +22,7 @@ public protocol OutlineItem: AnyObject
     func insertionIndex(forSymbol: Symbol) -> Int
     func child(atIndex: Int) -> OutlineItem
     func makeView(for: Outliner) -> OutlineItemNSView
+    func expandIfNeeded(inOutliner: NSOutlineView)
     }
 
 public typealias OutlineItems = Array<OutlineItem>
