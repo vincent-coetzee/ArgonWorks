@@ -174,6 +174,11 @@ public class MethodInstance: Function
         false
         }
         
+    public override var symbolValue: SymbolValue
+        {
+        .methodInstance(self)
+        }
+        
     public var mangledName: String
         {
         let start = self.label
@@ -296,7 +301,7 @@ public class MethodInstance: Function
         instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
         instance.returnType = substitution.substitute(self.returnType)
         instance.isMainMethod = self.isMainMethod
-        let newInstance = Self(label: self.label)
+//        let newInstance = Self(label: self.label)
         instance.setModule(self.module)
         instance.setMemoryAddress(self.memoryAddress)
         return(self)

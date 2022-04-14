@@ -237,6 +237,11 @@ public class TypeClass: TypeConstructor
         true
         }
         
+    public override var symbolValue: SymbolValue
+        {
+        .class(self)
+        }
+        
     public override  var isSystemClass: Bool
         {
         self.typeFlags.contains(.kSystemTypeFlag)
@@ -357,7 +362,7 @@ public class TypeClass: TypeConstructor
     public var _subtypes = Types()
     public var supertypes = Types()
     public var instanceSlots = InstanceSlots()
-    public var metaclass:TypeClass!
+//    public var metaclass:TypeClass!
     public var layoutSlots = LayoutSlots()
     public private(set) var hasBytes: Bool = false
     private var classLayoutOffsets = Dictionary<TypeClass,Int>()
@@ -372,7 +377,7 @@ public class TypeClass: TypeConstructor
         newClass._subtypes = self._subtypes.map{$0 as! TypeClass}.map{substitution.substitute($0)}
         newClass.supertypes = self.supertypes.map{$0 as! TypeClass}.map{substitution.substitute($0)}
         newClass.instanceSlots = self.instanceSlots.map{substitution.substitute($0) as! InstanceSlot}
-        newClass.metaclass = substitution.substitute(self.metaclass) as? TypeClass
+//        newClass.metaclass = substitution.substitute(self.metaclass) as? TypeClass
         newClass.layoutSlots = self.layoutSlots.map{substitution.substitute($0) as! LayoutSlot}
         newClass.hasBytes = self.hasBytes
         newClass.classLayoutOffsets = self.classLayoutOffsets
@@ -392,7 +397,7 @@ public class TypeClass: TypeConstructor
         self.instanceSlots = coder.decodeObject(forKey: "instanceSlots") as! InstanceSlots
         self.layoutSlots = coder.decodeObject(forKey: "layoutSlots") as! LayoutSlots
         self.hasBytes = coder.decodeBool(forKey: "hasBytes")
-        self.metaclass = coder.decodeObject(forKey: "metaclassClass") as? TypeClass
+//        self.metaclass = coder.decodeObject(forKey: "metaclass") as? TypeMetaclass
         super.init(coder: coder)
         }
     
@@ -414,7 +419,8 @@ public class TypeClass: TypeConstructor
         coder.encode(supertypeSurrogates,forKey: "supertypes")
         coder.encode(self.instanceSlots,forKey: "instanceSlots")
         coder.encode(self.layoutSlots,forKey: "layoutSlots")
-        coder.encode(self.metaclass,forKey: "metaclassClass")
+//        self.metaclass.type = nil
+//        coder.encode(self.metaclass,forKey: "metaclass")
         super.encode(with: coder)
         }
         
@@ -425,6 +431,8 @@ public class TypeClass: TypeConstructor
             return
             }
         super.patchSymbols(topModule: topModule)
+//        self.metaclass.patchSymbols(topModule: topModule)
+//        self.metaclass.type = topModule.argonModule.metaclassType
         self.supertypes = self.supertypes.map{$0 as! TypeSurrogate}.map{$0.patchClass(topModule: topModule)}
         for slot in self.instanceSlots
             {
@@ -461,10 +469,10 @@ public class TypeClass: TypeConstructor
         return(nil)
         }
         
-    public func relinkSupertypes(topModule: TopModule)
-        {
-        self.supertypes = self.supertypes.map{($0 as! SurrogateType).actualType(topModule: topModule)}
-        }
+//    public func relinkSupertypes(topModule: TopModule)
+//        {
+//        self.supertypes = self.supertypes.map{($0 as! SurrogateType).actualType(topModule: topModule)}
+//        }
         
     public override func withGenerics(_ types: Types) -> Type
         {
@@ -495,11 +503,11 @@ public class TypeClass: TypeConstructor
         
     public func configureMetaclass(argonModule: ArgonModule)
         {
-        self.metaclass.generics = self.generics.compactMap{$0 as? TypeClass}.map{$0.metaclass}
-        self.metaclass.supertypes = self.superclasses.map{$0.metaclass}
-        self.metaclass.subtypes = self.subtypes.compactMap{$0 as? TypeClass}.map{$0.metaclass}
-        self.metaclass.metaclass = argonModule.metaclassType as? TypeClass
-        self.metaclass.type = argonModule.metaclassType
+        let metaclass = self.type as! TypeMetaclass
+        metaclass.generics = self.generics.compactMap{$0 as? TypeClass}.map{$0.type}
+        metaclass.supertypes = self.superclasses.map{$0.type}
+        metaclass.subtypes = self.subtypes.compactMap{$0 as? TypeClass}.map{$0.type}
+        metaclass.type = argonModule.metaclassType
         }
         
     public override func setType(_ type: Argon.ObjectType) -> Type
@@ -578,10 +586,9 @@ public class TypeClass: TypeConstructor
     @discardableResult
     public func makeMetaclass() -> TypeClass
         {
-        self.metaclass = TypeMetaclass(label: self.label + "Class")
-        self.metaclass.setModule(self.module)
-        self.type = self.metaclass
-        return(self.metaclass)
+        self.type = TypeMetaclass(label: self.label + "Class")
+        self.type.setModule(self.module)
+        return(self.type as! TypeClass)
         }
         
 //    public override func setType(_ objectType:Argon.ObjectType) -> Type
@@ -802,7 +809,7 @@ public class TypeClass: TypeConstructor
             }
         self.wasMemoryLayoutDone = true
         let segment = allocator.segment(for: self.segmentType)
-        self.metaclass.layoutInMemory(using: allocator)
+        self.type.layoutInMemory(using: allocator)
         let classPointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: self.classType,argonModule: self.container.argonModule)
         classPointer.objectType = self.objectType
         classPointer.setClass(self.classType)
@@ -1071,7 +1078,7 @@ public class TypeClass: TypeConstructor
             slot.virtualTable.allocateAddresses(using: allocator)
             }
         allocator.allocateAddress(for: self)
-        self.metaclass.allocateAddresses(using: allocator)
+        self.type.allocateAddresses(using: allocator)
         for aClass in self.superclasses
             {
             aClass.allocateAddresses(using: allocator)

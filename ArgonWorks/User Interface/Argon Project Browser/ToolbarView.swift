@@ -38,11 +38,11 @@ public class ToolbarView: BarView
         {
         super.awakeFromNib()
         self.needsLayout = true
-        self.textFont = NSFont(name: "SunSans-Demi",size: 11)!
-        self.addTextLabel(atEdge: .left, key: "name", valueModel: ValueHolder(value: "Project"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
-        self.addTextLabel(atEdge: .left, key: "warnings", valueModel: ValueHolder(value: "0 warnings"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
-        self.addTextLabel(atEdge: .left, key: "errors", valueModel: ValueHolder(value: "0 errors"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
-        self.addTextLabel(atEdge: .left, key: "records", valueModel: ValueHolder(value: "1 record"), textColor: NSColor.argonLightGray, borderColor: NSColor.argonDarkerGray, borderWidth: 1, cornerRadius: 3, backgroundColor: .argonDarkerGray)
+        self.textFontIdentifier = .toolbarLabelFont
+        self.addTextLabel(atEdge: .left, key: "name", valueModel: ValueHolder(value: "Project"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+        self.addTextLabel(atEdge: .left, key: "warnings", valueModel: ValueHolder(value: "0 warnings"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+        self.addTextLabel(atEdge: .left, key: "errors", valueModel: ValueHolder(value: "0 errors"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+        self.addTextLabel(atEdge: .left, key: "records", valueModel: ValueHolder(value: "1 record"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
         self.addSpacer(atEdge: .right,key: "edge",ofWidth: 10)
         self.addActionButton(browserAction: .settingsAction,atEdge: .right,key: "settings",image: NSImage(named: "IconSettings")!,toolTip: "Configure...",target: self,action: #selector(ArgonBrowserViewController.onSettings))
         self.addSpacer(atEdge: .right,key: "edge+1",ofWidth: 20)
@@ -59,7 +59,7 @@ public class ToolbarView: BarView
         self.addSpacer(atEdge: .right,key: "thirdSpace",ofWidth: 20)
         self.addActionButton(browserAction: .buildAction,atEdge: .right,key: "build",image: NSImage(named: "IconBuild")!,toolTip: "Build Project",target: self,action: #selector(ArgonBrowserViewController.onBuild))
         self.drawsHorizontalBorder = true
-        self.horizontalBorderColor = .argonDarkGray
+        self.horizontalBorderColorIdentifier = .lineColor
         }
         
     @IBAction func someAction(_ sender: Any?)
@@ -93,11 +93,11 @@ public class ToolbarButton: NSButton,Control,Dependent
     
     public var key: String = ""
         
-    public var textFont: NSFont = NSFont.systemFont(ofSize: 10)
+    public var textFontIdentifier: StyleFontIdentifier = .defaultFont
         {
         didSet
             {
-            self.font = self.textFont
+            self.font = Palette.shared.font(for: self.textFontIdentifier)
             }
         }
         
@@ -121,7 +121,6 @@ public class ToolbarButton: NSButton,Control,Dependent
         if aspect == "value" && sender.dependentKey == self.enabledValueModel.dependentKey
             {
             self.isEnabled = (argument as? BrowserActionSet)?.contains(self.browserAction) ?? false
-            print("ENABLE \(self.browserAction) \((argument as? BrowserActionSet)?.contains(self.browserAction) ?? false)")
             }
         }
     }

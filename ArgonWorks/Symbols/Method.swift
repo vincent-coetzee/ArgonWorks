@@ -107,7 +107,7 @@ public class Method: Symbol
         {
         for instance in self.instances
             {
-            if instance.parameters.map{$0.type} == types && instance.returnType == returnType
+            if instance.parameters.map({$0.type}) == types && instance.returnType == returnType
                 {
                 return(instance)
                 }

@@ -504,6 +504,7 @@ public class ArgonModule: SystemModule
         self.addSystemEnumeration(TypeEnumeration(label: "SlotType").flags([.kSystemTypeFlag]).cases("#instanceSlot","#localSlot","#moduleSlot","#classSlot","#magicNumberSlot","#headerSlot","#virtualReadSlot","#virtualReadWriteSlot","#cocoonSlot").setType(.enumeration))
         }
         
+    @discardableResult
     private func addClass(_ aClass: Type) -> TypeClass
         {
         self.addSymbol(aClass)

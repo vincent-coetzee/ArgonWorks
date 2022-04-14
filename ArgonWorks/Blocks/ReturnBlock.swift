@@ -41,7 +41,6 @@ public class ReturnBlock: Block
         
     public required init()
         {
-        self.value = Expression()
         super.init()
         }
         

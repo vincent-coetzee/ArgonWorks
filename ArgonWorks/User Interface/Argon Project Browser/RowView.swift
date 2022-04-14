@@ -9,12 +9,12 @@ import Cocoa
 
 public class RowView:NSTableRowView
     {
-    private let selectionColorIdentifier: StyleIdentifier
+    private let selectionColorIdentifier: StyleColorIdentifier
     public var indent:CGFloat = 0
     public var drawsLines = false
-    public var lineColor = NSColor.white
+    public var lineColorIdentifier: StyleColorIdentifier = .lineColor
     
-    init(selectionColorIdentifier: StyleIdentifier)
+    init(selectionColorIdentifier: StyleColorIdentifier)
         {
         self.selectionColorIdentifier = selectionColorIdentifier
         super.init(frame: .zero)
@@ -41,7 +41,7 @@ public class RowView:NSTableRowView
         if self.drawsLines
             {
             let size = self.bounds.size
-            self.lineColor.set()
+            Palette.shared.color(for: self.lineColorIdentifier).set()
             let start = CGPoint(x:self.indent,y:0)
             let end = CGPoint(x:self.indent,y:size.height)
             NSBezierPath.defaultLineWidth = 3

@@ -29,13 +29,21 @@ public class MethodInstanceBlock: Block
         self.container = .symbol(methodInstance)
         }
         
-        required init()
-            {
-            super.init()
-            }
+    required init()
+        {
+        super.init()
+        }
+    
+    public required init?(coder: NSCoder)
+        {
+        self.methodInstance = coder.decodeObject(forKey: "methodInstance") as? MethodInstance
+        super.init(coder: coder)
+        }
         
-        public required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.methodInstance,forKey: "methodInstance")
+        super.encode(with: coder)
         }
         
     public override func freshTypeVariable(inContext context: TypeContext) -> Self

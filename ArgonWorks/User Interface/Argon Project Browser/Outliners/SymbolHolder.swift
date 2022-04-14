@@ -19,12 +19,12 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
         self.symbol.isSystemType
         }
         
-    public var textColorIdentifier: StyleIdentifier
+    public var textColorIdentifier: StyleColorIdentifier
         {
         .textColor
         }
         
-    public var iconTintIdentifier: StyleIdentifier
+    public var iconTintIdentifier: StyleColorIdentifier
         {
         if self.symbol is TypeClass
             {
@@ -209,6 +209,15 @@ public class SymbolHolder: NSObject,NSCoding,OutlineItem
             return(index)
             }
         return(0)
+        }
+        
+    public override func isEqual(to: Any?) -> Bool
+        {
+        if let other = to as? SymbolHolder
+            {
+            return(other.symbol.identityHash == self.symbol.identityHash)
+            }
+        return(false)
         }
     }
 

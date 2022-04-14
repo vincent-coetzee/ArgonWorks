@@ -21,21 +21,28 @@ public class IconLabelView: CustomView,Control,Dependent
         textSize.height += self.padding.height * 2
         if self.image.isNotNil
             {
-            textSize.width += 6 + textSize.height
+            textSize.width += self.padding.width + textSize.height
             }
         return(textSize)
         }
         
-    public override var textFont: NSFont
+    private var textColor: NSColor
+        {
+        Palette.shared.color(for: self.textColorIdentifier)
+        }
+        
+    public override var textFontIdentifier: StyleFontIdentifier
         {
         didSet
             {
-            self.textLayer.font = self.textFont
-            self.textLayer.fontSize = self.textFont.pointSize
+            let font = Palette.shared.font(for: self.textFontIdentifier)
+            self.textLayer.font = font
+            self.textLayer.fontSize = font.pointSize
+            self.invalidateIntrinsicContentSize()
             }
         }
         
-    public var iconTintColorValueModel: ValueModel = ValueHolder(value: NSColor.white)
+    public var iconTintColorValueModel: ValueModel = ValueHolder(value: StyleColorIdentifier.defaultColor)
         {
         willSet
             {
@@ -44,29 +51,34 @@ public class IconLabelView: CustomView,Control,Dependent
         didSet
             {
             self.iconTintColorValueModel.addDependent(self)
-            self.iconTintColor = self.iconTintColorValueModel.value as? NSColor
+            self.iconTintColorIdentifier = self.iconTintColorValueModel.value as? StyleColorIdentifier
             }
         }
         
-    public var iconTintColor: NSColor?
+    public var iconTintColorIdentifier: StyleColorIdentifier?
         {
         didSet
-                {
-            if let color = self.iconTintColor
+            {
+            if let identifier = self.iconTintColorIdentifier
                 {
                 var image = self.imageValueModel.value as? NSImage
                 image?.isTemplate = true
-                image = image?.image(withTintColor: color)
+                image = image?.image(withTintColor: Palette.shared.color(for: identifier))
                 self.imageLayer.contents = image
                 }
             }
         }
         
-    public var textColor: NSColor = NSColor.white
+    private var textFont: NSFont
+        {
+        Palette.shared.font(for: self.textFontIdentifier)
+        }
+        
+    public var textColorIdentifier: StyleColorIdentifier = .textColor
         {
         didSet
             {
-            self.textLayer.foregroundColor = self.textColor.cgColor
+            self.textLayer.foregroundColor = Palette.shared.color(for: self.textColorIdentifier).cgColor
             }
         }
         
@@ -149,10 +161,37 @@ public class IconLabelView: CustomView,Control,Dependent
         {
         self.imageLayer.contents = self.imageValueModel.value as! NSImage
         self.textLayer.string = self.valueModel.value as? String
-        self.textLayer.font = self.textFont
-        self.textLayer.fontSize = self.textFont.pointSize
+        let font = self.textFont
+        self.textLayer.font = font
+        self.textLayer.fontSize = font.pointSize
         }
     
+    private func imageRect() -> NSRect
+        {
+        let height = self.bounds.size.height
+        var rect = NSRect(x: 0,y: 0,width: height,height: height).insetBy(dx: self.padding.width, dy: self.padding.height)
+        if self.imageEdge == .left
+            {
+            return(rect)
+            }
+        rect.origin.x = self.bounds.size.width - rect.size.width
+        return(rect)
+        }
+        
+    private func textRect() -> NSRect
+        {
+        let textSize = NSAttributedString(string: self.text,attributes: [.font: self.textFont,.foregroundColor: self.textColor]).size()
+        let imageRect = self.imageRect()
+        let delta = (self.bounds.size.height - textSize.height) / 2
+        if self.imageEdge == .left
+            {
+            let rect = NSRect(x: imageRect.maxX + self.padding.width,y: delta,width: textSize.width,height: textSize.height)
+            return(rect)
+            }
+        let rect = NSRect(x: imageRect.minX - self.padding.width - textSize.width,y: delta,width: textSize.width,height: textSize.height)
+        return(rect)
+        }
+        
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -160,12 +199,8 @@ public class IconLabelView: CustomView,Control,Dependent
     public override func layout()
         {
         super.layout()
-        let theBounds = self.bounds
-        let textSize = NSAttributedString(string: self.text,attributes: [.font: self.textFont,.foregroundColor: self.textColor]).size()
-        var offset = self.imageEdge == .left ? self.padding.width : theBounds.size.width - self.padding.width - theBounds.height
-        self.imageLayer.frame = NSRect(x: offset,y: self.padding.height,width: self.bounds.size.height,height: self.bounds.size.height)
-        offset += self.imageEdge == .left ? 6 + theBounds.size.height : -( 6 + textSize.width )
-        self.textLayer.frame = NSRect(x: offset,y: self.padding.height,width: textSize.width,height: textSize.height)
+        self.imageLayer.frame = self.imageRect()
+        self.textLayer.frame = self.textRect()
         }
         
     public func update(aspect: String,with argument: Any?,from sender: Model)
@@ -186,7 +221,7 @@ public class IconLabelView: CustomView,Control,Dependent
             }
         else if aspect == "value" && sender.dependentKey == self.iconTintColorValueModel.dependentKey
             {
-            self.iconTintColor = self.iconTintColorValueModel.value as? NSColor
+            self.iconTintColorIdentifier = self.iconTintColorValueModel.value as? StyleColorIdentifier
             self.needsLayout =  true
             self.needsDisplay = true
             }

@@ -29,9 +29,8 @@ import Cocoa
 
 internal protocol SourceEditorDelegate
     {
-    func sourceEditorGutter(_ view: LineNumberGutter,selectedAnnotation: LineAnnotation, atLine: Int)
-    func sourceEditorKeyPressed(_ editor: LineNumberTextView)
-    func sourceEditor(_ editor: LineNumberTextView,changedLine: Int,offset: Int)
+    func sourceEditorKeyPressed(_ editor: NSTextView)
+    func sourceEditor(_ editor: NSTextView,changedLine: Int,offset: Int)
     }
     
 /// A NSTextView with a line number gutter attached to it.
@@ -361,7 +360,6 @@ public class LineNumberTextView: NSTextView
             line += 1
             }
         location = self.selectedRanges.first!.rangeValue.location
-
         self.sourceEditorDelegate?.sourceEditor(self,changedLine: line + 1,offset: location - offset)
         }
 

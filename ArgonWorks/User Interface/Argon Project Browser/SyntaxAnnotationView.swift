@@ -100,13 +100,18 @@ public class SyntaxAnnotationView: NSView
                 return
                 }
             }
-        let offset = self.lineHeight * CGFloat(issue.location.line)
+        let offset = self.offset(forLine: issue.location.line)
         let rect = NSRect(x: 5,y:self.bounds.size.height - offset,width: lineHeight,height: lineHeight)
         let annotation = SyntaxAnnotation(issue: issue, frame: rect)
         self.annotations.append(annotation)
         let theLayer = annotation.annotationLayer
         self.layer?.addSublayer(theLayer)
         theLayer.frame = annotation.frame
+        }
+        
+    private func offset(forLine: Int) -> CGFloat
+        {
+        self.lineHeight * CGFloat(forLine - 1 )
         }
         
     public func resetAnnotations()
@@ -123,7 +128,7 @@ public class SyntaxAnnotationView: NSView
         for annotation in self.annotations
             {
             let issue = annotation.issue
-            let offset = self.lineHeight * CGFloat(issue.location.line)
+            let offset = self.offset(forLine: issue.location.line)
             let rect = NSRect(x: 5,y:self.bounds.size.height - offset,width: lineHeight,height: lineHeight)
             annotation.frame = rect
             let layer = annotation.annotationLayer
@@ -133,7 +138,7 @@ public class SyntaxAnnotationView: NSView
         
     public override func mouseDown(with event: NSEvent)
         {
-        var point = self.convert(event.locationInWindow,from: nil)
+        let point = self.convert(event.locationInWindow,from: nil)
         for annotation in self.annotations
             {
             if annotation.frame.contains(point)

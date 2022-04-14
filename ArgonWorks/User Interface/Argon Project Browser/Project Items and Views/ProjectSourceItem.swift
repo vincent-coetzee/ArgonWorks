@@ -52,8 +52,8 @@ public class ProjectSourceItem: ProjectItem
         
     public override func height(inWidth: CGFloat) -> CGFloat
         {
-        let stringSize = self.measureString(self.sourceRecord.text,withFont: self.controller.sourceOutlinerFont,inWidth: inWidth)
-        let theHeight = stringSize.height + self.controller.sourceOutlinerFont.lineHeight
+        let stringSize = self.measureString(self.sourceRecord.text,withFont: Palette.shared.font(for: .editorFont),inWidth: inWidth)
+        let theHeight = stringSize.height + (Palette.shared.font(for: .editorFont)).lineHeight
         return(theHeight)
         }
         
@@ -76,6 +76,16 @@ public class ProjectSourceItem: ProjectItem
             }
         }
         
+    public func hideBorder()
+        {
+        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemView)?.hideBorder()
+        }
+        
+    public func showBorder()
+        {
+        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemView)?.showBorder()
+        }
+        
     public override func markVersionState(as state: VersionState)
         {
         self.versionState = state
@@ -85,8 +95,9 @@ public class ProjectSourceItem: ProjectItem
     public func sourceDidChange(_ view: BrowserEditorView)
         {
         let width = view.bounds.size.width
-        var stringSize = self.measureString(self.sourceRecord.text, withFont: self.controller.sourceOutlinerFont, inWidth: width)
-        stringSize.height += self.controller.sourceOutlinerFont.lineHeight
+        let font = Palette.shared.font(for: .editorFont)
+        var stringSize = self.measureString(self.sourceRecord.text, withFont: font, inWidth: width)
+        stringSize.height += font.lineHeight
         if stringSize.height != self.height
             {
             self.height = stringSize.height

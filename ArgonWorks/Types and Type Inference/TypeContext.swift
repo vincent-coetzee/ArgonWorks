@@ -348,7 +348,7 @@ public class TypeContext
                 {
                 return(symbol)
                 }
-            let newReturnType = self.substitute(methodInstance.returnType as! Type)
+            let newReturnType = self.substitute(methodInstance.returnType)
             let newParameters = methodInstance.parameters.map{Parameter(label: $0.label, relabel: $0.relabel, type: self.substitute($0.type), isVisible: $0.isVisible, isVariadic: $0.isVariadic)}
             let newInstance = methodInstance.substitute(from: self)
             newInstance.setIndex(methodInstance.index)

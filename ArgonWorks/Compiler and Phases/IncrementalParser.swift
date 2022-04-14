@@ -506,20 +506,20 @@ public class IncrementalParser: CompilerPass
                         case .MODULE:
                             try self.parseModule()
                         case .CLASS:
-                            try self.parseClass()
+                            self.parseClass()
                         case .TYPE:
-                            try self.parseTypeAlias()
+                            self.parseTypeAlias()
                         case .PRIMITIVE:
                             try self.parsePrimitiveMethod()
                         case .METHOD:
-                            try self.parseMethodInstance()
+                            self.parseMethodInstance()
                         case .CONSTANT:
                             try self.parseConstant()
                         case .SCOPED:
                             let scoped = try self.parseScopedSlot()
                             module.addSymbol(scoped)
                         case .ENUMERATION:
-                            try self.parseEnumeration()
+                            self.parseEnumeration()
                         case .SLOT:
                             let slot = try self.parseSlot(.moduleSlot)
                             module.addSymbol(slot)
@@ -835,6 +835,10 @@ public class IncrementalParser: CompilerPass
             {
             let location = self.token.location
             let name = try self.parseHashString()
+            if enumeration.case(forSymbol: name).isNotNil
+                {
+                enumeration.appendIssue(at: location, message: "There is already a case with label '\(name)'.")
+                }
             var types = Array<Type>()
             if self.token.isLeftPar
                 {
@@ -1727,7 +1731,7 @@ public class IncrementalParser: CompilerPass
             let location = self.token.location
             let nameToken = self.token
             let label = try self.parseLabel()
-            let instance = StandardMethodInstance(label: label)
+            let instance = StandardMethodInstance(label: label,argonModule: self.argonModule)
             var isGenericMethod = false
             instance.setModule(self.enclosingModule)
             self.pushSymbol(instance)
@@ -2161,7 +2165,7 @@ public class IncrementalParser: CompilerPass
             }
         else if self.token.isLeftBracket
             {
-            let location = self.token.location
+//            let location = self.token.location
             try self.nextToken()
             let expression = try self.parseExpression()
 //            if expression.isUnresolved
@@ -2948,16 +2952,24 @@ public class IncrementalParser: CompilerPass
         {
         try self.nextToken()
         let location = self.token.location
-        let value = try self.parseParentheses
+        var returnBlock: ReturnBlock
+        if self.token.isLeftPar
             {
-            () -> Expression? in
-            if self.token.isRightPar
+            let value = try self.parseParentheses
                 {
-                return(nil)
+                () -> Expression? in
+                if self.token.isRightPar
+                    {
+                    return(nil)
+                    }
+                return(try self.parseExpression())
                 }
-            return(try self.parseExpression())
+            returnBlock = ReturnBlock(expression: value)
             }
-        let returnBlock = ReturnBlock(expression: value)
+        else
+            {
+            returnBlock = ReturnBlock()
+            }
         returnBlock.addDeclaration(itemKey: self.itemKey,location: location)
         block.addBlock(returnBlock)
         }
@@ -3188,6 +3200,7 @@ public class IncrementalParser: CompilerPass
             self.tokenKind = .type
             let label = try self.parseLabel()
             let alias = TypeAlias(label: label)
+            alias.setModule(self.enclosingModule)
             self.pushSymbol(alias)
             defer
                 {
@@ -3274,6 +3287,8 @@ public class IncrementalParser: CompilerPass
             }
         self.tokenHandler = tokenHandler
         self.token = self.tokenSource.nextToken()
+        self.argonModule = context.argonModule
+        self.topModule = context.argonModule.topModule
         var result = SymbolValue.error([])
         do
             {

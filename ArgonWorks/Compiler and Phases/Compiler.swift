@@ -86,7 +86,7 @@ public class Compiler
             {
             return(codeGeneratedModule)
             }
-        let visitor = IssueVisitor.visit(optimizedModule)
+//        let visitor = IssueVisitor.visit(optimizedModule)
 //        print(visitor.allIssues)
         let someIssues = optimizedModule.issues
         print(someIssues)

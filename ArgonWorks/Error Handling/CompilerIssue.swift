@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct CompilerIssue: Error
+public class CompilerIssue: NSCopying,Error
     {
     public var isError: Bool
         {
@@ -30,6 +30,11 @@ public struct CompilerIssue: Error
         self.location = .zero
         self.message = message
         self.isWarning = false
+        }
+        
+    public func copy(with zone: NSZone?) -> Any
+        {
+        return(CompilerIssue(location: self.location,message: self.message,isWarning: self.isWarning))
         }
     }
 

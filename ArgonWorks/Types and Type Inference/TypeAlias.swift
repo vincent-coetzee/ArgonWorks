@@ -63,6 +63,11 @@ public class TypeAlias:Type
         "IconType"
         }
         
+    public override var symbolValue: SymbolValue
+        {
+        .typeAlias(self)
+        }
+        
     public override var iconTint: NSColor
         {
         SyntaxColorPalette.typeColor

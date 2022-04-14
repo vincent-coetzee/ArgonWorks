@@ -65,8 +65,6 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                     return(expression.diagnosticString)
                 case .block(let block):
                     return(block.displayString)
-                default:
-                    return("")
                 }
             }
             
@@ -85,8 +83,6 @@ public class TypeConstraint: Displayable,CustomStringConvertible
                     expression.appendIssue(issue)
                 case .block(let block):
                     block.appendIssue(issue)
-                default:
-                    break
                 }
             }
         }

@@ -25,10 +25,11 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             }
         }
     public private(set) var previousText: String = ""
-    public var primarySymbol: Symbol!
+    public var primarySymbol: Symbol?
     public var attributes = Attributes()
     public var versionState: VersionState = .added
     public unowned var elementItem: ProjectElementItem!
+    public var primarySymbolKind: SymbolKind = .none
     
     public var issues = CompilerIssues()
         {
@@ -49,6 +50,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         
     required public init?(coder: NSCoder)
         {
+        self.primarySymbolKind = SymbolKind(rawValue: coder.decodeInteger(forKey: "primarySymbolKind"))!
         self.primarySymbol = coder.decodeObject(forKey: "primarySymbol") as? Symbol
         self.affectedSymbols = coder.decodeObject(forKey: "affectedSymbols") as! Symbols
         self.elementItem = coder.decodeObject(forKey: "elementItem") as? ProjectElementItem
@@ -62,6 +64,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         
     public func encode(with coder:NSCoder)
         {
+        coder.encode(self.primarySymbolKind.rawValue,forKey: "primarySymbolKind")
         coder.encode(self.primarySymbol,forKey: "primarySymbol")
         coder.encode(self.affectedSymbols,forKey: "affectedSymbols")
         coder.encode(self.elementItem,forKey: "elementItem")
@@ -118,6 +121,8 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
             }
         self.affectedSymbols = Array(symbols)
         self.elementItem.controller.insertSymbolsInHierarchies(self.affectedSymbols)
+        self.primarySymbol = symbolValue.symbol
+        self.primarySymbolKind = symbolValue.symbolKind
         symbolValue.symbol.postCompile(inSourceRecord: self,inModule: self.elementItem.module)
         }
         
@@ -158,6 +163,7 @@ public class SourceRecord:NSObject,NSCoding,AspectModel
         
     public func compilationWillStart(_ browserEditorView: BrowserEditorView)
         {
+        browserEditorView.lineNumberRuler.removeAllIssues()
         self.issues = []
         self.issuesChanged()
         self.text = browserEditorView.sourceString

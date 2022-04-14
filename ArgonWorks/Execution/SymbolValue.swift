@@ -7,6 +7,20 @@
 
 import Foundation
 
+public enum SymbolKind: Int
+    {
+    case none
+    case `class`
+    case module
+    case enumeration
+    case moduleSlot
+    case slot
+    case typeAlias
+    case primitive
+    case method
+    case methodInstance
+    }
+    
 public enum SymbolValue
     {
     case error(CompilerIssues)
@@ -18,6 +32,27 @@ public enum SymbolValue
     case primitive(MethodInstance)
     case methodInstance(MethodInstance)
     
+    public var symbolKind: SymbolKind
+        {
+        switch(self)
+            {
+            case .class:
+                return(.class)
+            case .module:
+                return(.module)
+            case .enumeration:
+                return(.enumeration)
+            case .typeAlias:
+                return(.typeAlias)
+            case .primitive:
+                return(.primitive)
+            case .methodInstance:
+                return(.methodInstance)
+            default:
+                return(.none)
+            }
+        }
+        
     public var symbol: Symbol
         {
         switch(self)

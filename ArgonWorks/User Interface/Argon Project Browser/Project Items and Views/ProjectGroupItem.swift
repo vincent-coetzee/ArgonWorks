@@ -124,6 +124,22 @@ public class ProjectGroupItem: ProjectItem
         self.items[atIndex]
         }
         
+    public override func item(atItemKey: Int) -> ProjectItem?
+        {
+        if self.itemKey == atItemKey
+            {
+            return(self)
+            }
+        for item in self.items
+            {
+            if let foundItem = item.item(atItemKey: atItemKey)
+                {
+                return(foundItem)
+                }
+            }
+        return(nil)
+        }
+        
     public override func removeItem(_ item: ProjectItem)
         {
         if let index = self.items.firstIndex(of: item)

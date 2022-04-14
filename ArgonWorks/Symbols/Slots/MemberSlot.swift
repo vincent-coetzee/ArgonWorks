@@ -118,7 +118,7 @@ public class MemberSlot: Slot
         slotPointer.setInteger(self.offset,atSlot: "offset")
         slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
         slotPointer.setInteger(self.classIndexInVirtualTable,atSlot: "vtIndex")
-        if !(self is GlobalSlot || self is ModuleSlot)
+        if !(self is ModuleSlot)
             {
             slotPointer.setAddress(self.owningClass.memoryAddress,atSlot: "owningClass")
             }

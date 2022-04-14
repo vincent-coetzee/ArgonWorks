@@ -20,14 +20,14 @@ public class BarView: CustomView
         self.controlsByKey.values.compactMap{$0 as? ToolbarButton}
         }
         
-    public override var textFont: NSFont
+    public override var textFontIdentifier: StyleFontIdentifier
         {
         didSet
             {
             for control in self.controlsByKey.values
                 {
                 let hack = control
-                hack.textFont = self.textFont
+                hack.textFontIdentifier = self.textFontIdentifier
                 }
             }
         }
@@ -67,7 +67,7 @@ public class BarView: CustomView
         super.draw(rect)
         if self.drawsHorizontalBorder
             {
-            self.horizontalBorderColor.set()
+            Palette.shared.color(for: self.horizontalBorderColorIdentifier).set()
             let path = NSBezierPath()
             path.move(to: NSPoint(x: 0,y: 1))
             path.line(to: NSPoint(x: self.bounds.size.width,y: 1))
@@ -78,9 +78,9 @@ public class BarView: CustomView
             }
         }
         
-    public func addTextLabel(atEdge: ViewEdge,key: String,valueModel: ValueModel,textColor: NSColor,borderColor: NSColor = NSColor.argonDarkerGray,borderWidth: CGFloat = 1,cornerRadius: CGFloat = 3,backgroundColor: NSColor = NSColor.argonDarkerGray)
+    public func addTextLabel(atEdge: ViewEdge,key: String,valueModel: ValueModel,textColorIdentifier: StyleColorIdentifier,borderColorIdentifier: StyleColorIdentifier = .defaultBorderColor,borderWidth: CGFloat = 1,cornerRadius: CGFloat = 3,backgroundColorIdentifier: StyleColorIdentifier = .buttonBackgroundColor)
         {
-        let newLabel = PaddedTextLabel(text: "Project: Name", textFont: self.textFont, textColor: NSColor.argonLightGray,padding: NSSize(width: 20,height: 5),alignment: .left)
+        let newLabel = PaddedTextLabel(text: "Project: Name", textFontIdentifier: self.textFontIdentifier, textColorIdentifier: textColorIdentifier,padding: NSSize(width: 20,height: 5),alignment: .left)
         newLabel.translatesAutoresizingMaskIntoConstraints = false
         self.addSubview(newLabel)
         if atEdge == .left
@@ -96,9 +96,9 @@ public class BarView: CustomView
         newLabel.topAnchor.constraint(equalTo: self.topAnchor,constant: 3).isActive = true
         newLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor,constant: -3).isActive = true
         newLabel.cornerRadius = cornerRadius
-        newLabel.borderColor = borderColor
+        newLabel.borderColorIdentifier = borderColorIdentifier
         newLabel.borderWidth = borderWidth
-        newLabel.backgroundColor = backgroundColor
+        newLabel.backgroundColorIdentifier = backgroundColorIdentifier
         self.controlsByKey[key] = newLabel
         }
         
@@ -157,6 +157,6 @@ public class BarView: CustomView
 fileprivate class Spacer: NSView,Control
     {
     public var key: String = ""
-    public var textFont: NSFont = NSFont.systemFont(ofSize: 10)
+    public var textFontIdentifier: StyleFontIdentifier = .defaultFont
     public var valueModel: ValueModel = ValueHolder(value: "")
     }

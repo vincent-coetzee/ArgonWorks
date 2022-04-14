@@ -78,9 +78,7 @@ public class StandardMethodInstance: MethodInstance
         
     required init(label:Label)
         {
-        super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-//        self.block.container = .methodInstance(self)
+        fatalError()
         }
         
 //    public init(_ label:Label)
@@ -89,9 +87,9 @@ public class StandardMethodInstance: MethodInstance
 ////        self.block.container = .methodInstance(self)
 //        }
         
-    convenience init(label: Label,parameters: Parameters,returnType:Type)
+    convenience init(label: Label,argonModule: ArgonModule,parameters: Parameters,returnType:Type)
         {
-        self.init(label: label)
+        self.init(label: label,argonModule: argonModule)
         self.parameters = parameters
         self.returnType = returnType
         for parameter in parameters
@@ -153,7 +151,7 @@ public class StandardMethodInstance: MethodInstance
     public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
         let instance = super.substitute(from: substitution)
-        instance.block = substitution.substitute(self.block) as! MethodInstanceBlock
+        instance.block = substitution.substitute(self.block) as? MethodInstanceBlock
         return(instance)
         }
 

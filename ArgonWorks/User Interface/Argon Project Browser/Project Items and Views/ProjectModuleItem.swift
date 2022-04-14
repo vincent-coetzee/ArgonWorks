@@ -5,10 +5,18 @@
 //  Created by Vincent Coetzee on 31/3/22.
 //
 
-import Foundation
+import Cocoa
 
 public class ProjectModuleItem: ProjectGroupItem
     {
+    public override var controller: ArgonBrowserViewController!
+        {
+        didSet
+            {
+            self.module.type = self.controller.argonModule.moduleType
+            }
+        }
+        
     public override var module: Module
         {
         self._module
@@ -20,6 +28,8 @@ public class ProjectModuleItem: ProjectGroupItem
         {
         self._module = Module(label: label)
         super.init(label: label)
+        self.icon = NSImage(named: "IconModule")!
+        self.iconTintIdentifier = .moduleColor
         }
         
     public required init?(coder: NSCoder)

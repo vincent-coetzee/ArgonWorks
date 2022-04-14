@@ -91,10 +91,10 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
     public var controller: ArgonBrowserViewController!
     public var height: CGFloat = 0
     public var icon: NSImage!
-    public var iconTintIdentifier: StyleIdentifier = .none
-    public var textColorIdentifier: StyleIdentifier = .recordTextColor
-    public var backgroundColorIdentifier: StyleIdentifier = .recordBackgroundColor
-    public var fontIdentifier: StyleIdentifier = .recordTextFont
+    public var iconTintIdentifier: StyleColorIdentifier = .defaultColor
+    public var textColorIdentifier: StyleColorIdentifier = .recordTextColor
+    public var backgroundColorIdentifier: StyleColorIdentifier = .recordBackgroundColor
+    public var fontIdentifier: StyleFontIdentifier = .recordTextFont
     public var itemKey: Int = 0
     public var validActions: BrowserActionSet = []
     public var isExpanded = false
@@ -129,10 +129,10 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         self.label = coder.decodeObject(forKey: "label") as! String
         self.parentItem = coder.decodeObject(forKey: "parentItem") as? ProjectItem
         self.icon = coder.decodeObject(forKey: "icon") as? NSImage
-        self.iconTintIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "iconTint")!)!
-        self.textColorIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "textColor")!)!
-        self.backgroundColorIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "backgroundColor")!)!
-        self.fontIdentifier = StyleIdentifier(rawValue: coder.decodeString(forKey: "font")!)!
+        self.iconTintIdentifier = StyleColorIdentifier(rawValue: coder.decodeString(forKey: "iconTint")!)!
+        self.textColorIdentifier = StyleColorIdentifier(rawValue: coder.decodeString(forKey: "textColor")!)!
+        self.backgroundColorIdentifier = StyleColorIdentifier(rawValue: coder.decodeString(forKey: "backgroundColor")!)!
+        self.fontIdentifier = StyleFontIdentifier(rawValue: coder.decodeString(forKey: "font")!)!
         self.itemKey = coder.decodeInteger(forKey: "itemKey")
         self.isExpanded = coder.decodeBool(forKey: "isExpanded")
         super.init()
@@ -156,6 +156,15 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         if forAspect == "versionState"
             {
             return(self.versionState)
+            }
+        return(nil)
+        }
+        
+    public func item(atItemKey: Int) -> ProjectItem?
+        {
+        if self.itemKey == atItemKey
+            {
+            return(self)
             }
         return(nil)
         }

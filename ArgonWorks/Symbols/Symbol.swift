@@ -339,6 +339,11 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         false
         }
         
+    public var symbolValue: SymbolValue
+        {
+        fatalError()
+        }
+        
     public var moduleScope: Module?
         {
         self.module
@@ -543,7 +548,7 @@ public class Symbol:Node,VisitorReceiver,IssueHolder
         
     public override func replacementObject(for archiver: NSKeyedArchiver) -> Any?
         {
-        if let exporter = archiver as? ImportArchiver
+        if (archiver as? ImportArchiver).isNotNil
             {
             if self.isSystemType
                 {

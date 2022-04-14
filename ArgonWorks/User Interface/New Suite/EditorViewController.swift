@@ -68,7 +68,7 @@ extension UserDefaults
         }
     }
     
-class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWindowDelegate
+class EditorViewController: NSViewController,Reporter,NSWindowDelegate
     {
     private static let kWindowFrameKey = "EditorViewControllerWindowFrame"
     private static let kWindowURLKey = "EditorViewControllerWindowURL"
@@ -153,7 +153,7 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
         self.view.layer?.backgroundColor = NSColor.black.cgColor
         self.topBar.wantsLayer = true
         self.topBar.layer?.backgroundColor = self.editorView.backgroundColor.cgColor
-        self.editorView.sourceEditorDelegate = self
+//        self.editorView.sourceEditorDelegate = self
         self.topLeftText.stringValue = "LOADED..."
         self.topRightText.stringValue = ""
         self.bottomRightText.stringValue = ""
@@ -486,47 +486,47 @@ class EditorViewController: NSViewController,SourceEditorDelegate,Reporter,NSWin
             lastPart = string.appendingPathExtension("argono")!
             panel.nameFieldStringValue  = lastPart
             }
-        if panel.runModal() == .OK
-            {
-            if let theUrl = panel.url
-                {
-                let aCompiler = Compiler(source: self.editorView.string,argonModule: ArgonModule(instanceNumber: 1),tokenHandler: nil)
-                if let module = aCompiler.compile()
-                    {
-                    do
-                        {
-//                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date())
-//                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
-//                        let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
-//                        try data.write(to: theUrl)
-//                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
-//                        print("\(exporter.swappedImportedSymbolNames.count) imported symbols swapped.")
-//                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
-//                        try! data.write(to: theUrl)
-                        let newData = try Data(contentsOf: theUrl)
-//                        ImportUnarchiver.topModule = aCompiler.topModule
-                        let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
-//                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
-//                        let result = importer.decodeObject(forKey: "root")
-                        print(result!)
-                        self.updateStatusBar("SAVED OBJECT FILE \(theUrl.absoluteString)")
-                        }
-                    catch let error
-                        {
-                        print(error)
-                        let alert = NSAlert()
-                        alert.icon = NSImage(named: "ObjectIcon")!
-                        alert.messageText = "Object writing error."
-                        alert.informativeText = "An error occured while writing the object file for this Argon module out to disk."
-                        alert.beginSheetModal(for: self.view.window!)
-                            {
-                            response in
-                            alert.window.endSheet(self.view.window!)
-                            }
-                        }
-                    }
-                }
-            }
+//        if panel.runModal() == .OK
+//            {
+//            if let theUrl = panel.url
+//                {
+//                let aCompiler = Compiler(source: self.editorView.string,argonModule: ArgonModule(instanceNumber: 1),tokenHandler: nil)
+//                if let module = aCompiler.compile()
+//                    {
+//                    do
+//                        {
+////                        let objectFile = ObjectFile(filename: theUrl.absoluteString,module: module,root: TopModule.shared,date: Date())
+////                        let exporter = ImportArchiver(requiringSecureCoding: false, swapSystemSymbols: true, swapImportedSymbols: true)
+////                        let data = try ImportArchiver.archivedData(withRootObject: objectFile, requiringSecureCoding: false)
+////                        try data.write(to: theUrl)
+////                        print("\(exporter.swappedSystemSymbolNames.count) system symbols swapped.")
+////                        print("\(exporter.swappedImportedSymbolNames.count) imported symbols swapped.")
+////                        let data = NSKeyedArchiver.archivedData(withRootObject: objectFile)
+////                        try! data.write(to: theUrl)
+//                        let newData = try Data(contentsOf: theUrl)
+////                        ImportUnarchiver.topModule = aCompiler.topModule
+//                        let result = try ImportUnarchiver.unarchiveTopLevelObjectWithData(newData)
+////                        let importer = try! NSKeyedUnarchiver(forReadingFrom: newData)
+////                        let result = importer.decodeObject(forKey: "root")
+//                        print(result!)
+//                        self.updateStatusBar("SAVED OBJECT FILE \(theUrl.absoluteString)")
+//                        }
+//                    catch let error
+//                        {
+//                        print(error)
+//                        let alert = NSAlert()
+//                        alert.icon = NSImage(named: "ObjectIcon")!
+//                        alert.messageText = "Object writing error."
+//                        alert.informativeText = "An error occured while writing the object file for this Argon module out to disk."
+//                        alert.beginSheetModal(for: self.view.window!)
+//                            {
+//                            response in
+//                            alert.window.endSheet(self.view.window!)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
         
     @IBAction func onCompileFile(_ sender: Any?)

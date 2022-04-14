@@ -40,6 +40,11 @@ public class TopModule: SystemModule
         
     public static var shared: TopModule!
     
+    public override var topModule: TopModule
+        {
+        return(self)
+        }
+        
     public override var typeCode:TypeCode
         {
         .topModule
@@ -124,10 +129,10 @@ public class TopModule: SystemModule
         self.argonModule.lookupMethod(label: label)
         }
         
-    public func relinkSupertypes()
-        {
-        self.relinkSupertypes(topModule: self)
-        }
+//    public func relinkSupertypes()
+//        {
+//        self.relinkSupertypes(topModule: self)
+//        }
         
     public override func lookupN(label: Label) -> Symbols?
         {
@@ -148,6 +153,7 @@ public class TopModule: SystemModule
         
     public func patchSymbols()
         {
+        self.type = self.argonModule.moduleType
         for symbol in self.allSymbols
             {
             symbol.patchSymbols(topModule: self)

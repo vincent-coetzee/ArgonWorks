@@ -47,7 +47,7 @@ public class TypeMetaclass: TypeClass
         {
         .metaclass
         }
-        
+
     public func resetInheritance()
         {
         self.supertypes = []
@@ -59,7 +59,7 @@ public class TypeMetaclass: TypeClass
             {
             print("HALT")
             }
-        if let aType = type as? TypeMetaclass
+        if (type as? TypeMetaclass).isNotNil
             {
             super.addSupertype(type)
             return
@@ -70,13 +70,42 @@ public class TypeMetaclass: TypeClass
     @discardableResult
     public override func makeMetaclass() -> TypeClass
         {
-        self.metaclass = self.container.argonModule.metaclassType as? TypeClass
-        self.type = self.metaclass
-        return(self.metaclass as! TypeClass)
+        self.type = self.container.argonModule.metaclassType
+        return(self.type as! TypeClass)
         }
         
     public override func configureMetaclass(argonModule: ArgonModule)
         {
-        self.metaclass.type = argonModule.metaclassType
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        let oldType = self.type
+        self.type = nil
+        super.encode(with: coder)
+        self.type = oldType
+        }
+        
+    public override func patchSymbols(topModule: TopModule)
+        {
+        guard !self.wasSymbolPatchingDone else
+            {
+            return
+            }
+        self.wasSymbolPatchingDone = true
+        self.type = topModule.argonModule.metaclassType
+        self.supertypes = self.supertypes.map{$0 as! TypeSurrogate}.map{$0.patchClass(topModule: topModule)}
+        for slot in self.instanceSlots
+            {
+            slot.patchSymbols(topModule: topModule)
+            }
+        for slot in self.layoutSlots
+            {
+            slot.patchSymbols(topModule: topModule)
+            }
+        for aType in self.supertypes
+            {
+            aType.patchSymbols(topModule: topModule)
+            }
         }
     }

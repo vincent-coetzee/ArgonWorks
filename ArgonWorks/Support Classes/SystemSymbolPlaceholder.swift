@@ -33,10 +33,10 @@ public class SystemSymbolPlaceholder: NSObject, NSCoding
         
     public override func awakeAfter(using coder: NSCoder) -> Any?
         {
-        if let importer = coder as? ImportUnarchiver
-            {
-            fatalError("Can not resolve system symbol \(self.originalKey) in topModule.")
-            }
+//        if let importer = coder as? ImportUnarchiver
+//            {
+//            fatalError("Can not resolve system symbol \(self.originalKey) in topModule.")
+//            }
         return(self)
         }
     }

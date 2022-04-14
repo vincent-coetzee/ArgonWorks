@@ -1821,9 +1821,9 @@ public class Parser: CompilerPass
                     }
                 }
             }
-        self.addSymbol(aClass.metaclass)
+//        self.addSymbol(aClass.metaclass)
         aClass.layoutObjectSlots()
-        aClass.metaclass.layoutObjectSlots()
+        aClass.type.layoutObjectSlots()
         if !errors.isEmpty
             {
             throw(errors)
@@ -2723,7 +2723,7 @@ public class Parser: CompilerPass
             }
         else if self.token.isLeftBracket
             {
-            let location = self.token.location
+//            let location = self.token.location
             try self.nextToken()
             let expression = try self.parseExpression()
 //            if expression.isUnresolved

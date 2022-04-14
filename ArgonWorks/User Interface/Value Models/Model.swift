@@ -44,6 +44,13 @@ extension Model
         {
         self.dependents.changed(aspect: aspect,with: with,from: from)
         }
+        
+    public func retractInterest(of dependent: Dependent,during closure: () -> Void)
+        {
+        self.dependents.removeDependent(dependent)
+        closure()
+        self.dependents.addDependent(dependent)
+        }
     }
 
 public typealias Models = Array<Model>

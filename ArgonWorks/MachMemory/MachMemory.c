@@ -12,9 +12,9 @@ mach_vm_address_t AllocateSegment(mach_vm_address_t address,vm_size_t size)
     {
     mach_vm_address_t vmAddress = address;
     int error;
-    vm_size_t hostPageSize = 0;
+//    vm_size_t hostPageSize = 0;
     
-    int pageSize = host_page_size(mach_host_self(),&hostPageSize);
+//    int pageSize = host_page_size(mach_host_self(),&hostPageSize);
     error = mach_vm_allocate(mach_task_self(),&vmAddress,size, 0);
     if (error == 0)
         {

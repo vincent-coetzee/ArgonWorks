@@ -43,11 +43,11 @@ public class PaddedTextLabel: NSView,Dependent,Control
             }
         }
         
-    public var backgroundColor: NSColor = NSColor.black
+    public var backgroundColorIdentifier: StyleColorIdentifier = .defaultBackgroundColor
         {
         didSet
             {
-            self.layer?.backgroundColor = self.backgroundColor.cgColor
+            self.layer?.backgroundColor = Palette.shared.color(for: self.backgroundColorIdentifier).cgColor
             }
         }
         
@@ -59,11 +59,11 @@ public class PaddedTextLabel: NSView,Dependent,Control
             }
         }
         
-    public var borderColor: NSColor = NSColor.clear
+    public var borderColorIdentifier: StyleColorIdentifier = .defaultBorderColor
         {
         didSet
             {
-            self.layer?.borderColor = self.borderColor.cgColor
+            self.layer?.borderColor = Palette.shared.color(for: self.borderColorIdentifier).cgColor
             }
         }
         
@@ -77,13 +77,18 @@ public class PaddedTextLabel: NSView,Dependent,Control
         
     public override var intrinsicContentSize: NSSize
         {
-        var size = NSAttributedString(string: (self.textLayer.string as? String) ?? "",attributes: [.font: self.textFont,.foregroundColor: self.textLayer.foregroundColor]).size()
+        var size = NSAttributedString(string: (self.textLayer.string as? String) ?? "",attributes: [.font: self.textFont,.foregroundColor: self.textLayer.foregroundColor!]).size()
         size.width += self.padding.width * 2
         size.height += self.padding.height * 2
         return(size)
         }
         
     public var textFont: NSFont
+        {
+        Palette.shared.font(for: self.textFontIdentifier)
+        }
+        
+    public var textFontIdentifier: StyleFontIdentifier
         {
         didSet
             {
@@ -94,58 +99,62 @@ public class PaddedTextLabel: NSView,Dependent,Control
             }
         }
         
-    public var textColor: NSColor = NSColor.white
+    public var textColorIdentifier: StyleColorIdentifier
         {
         didSet
             {
-            self.textLayer.foregroundColor = self.textColor.cgColor
+            self.textLayer.foregroundColor = Palette.shared.color(for: self.textColorIdentifier).cgColor
             }
         }
-        
+
     internal let textLayer = CATextLayer()
     private let padding: NSSize
     public let alignment: TextAlignment
     
-    init(text: String,textFont: NSFont,textColor: NSColor,padding: NSSize = .zero,alignment: TextAlignment = .left)
+    init(text: String,textFontIdentifier: StyleFontIdentifier,textColorIdentifier: StyleColorIdentifier,padding: NSSize = .zero,alignment: TextAlignment = .left)
         {
         self.alignment = alignment
         self.padding = padding
-        self.textFont = textFont
+        self.textFontIdentifier = textFontIdentifier
+        self.textColorIdentifier = textColorIdentifier
         super.init(frame: .zero)
         self.textLayer.string = text
         self.valueModel = ValueHolder(value: text)
         self.textLayer.font = textFont
         self.textLayer.fontSize = textFont.pointSize
-        self.textLayer.foregroundColor = textColor.cgColor
         self.textLayer.masksToBounds = true
         self.wantsLayer = true
         self.layer?.addSublayer(self.textLayer)
+        self.textColorIdentifier = textColorIdentifier
         self.textLayer.contentsScale = NSScreen.main!.backingScaleFactor
         self.stringValue = self.valueModel.stringValue
+        self.textLayer.foregroundColor = Palette.shared.color(for: self.textColorIdentifier).cgColor
         }
     
-    init(model: ValueModel,textFont: NSFont,textColor: NSColor,padding: NSSize = .zero,alignment: TextAlignment = .left)
+    init(model: ValueModel,textFontIdentifier: StyleFontIdentifier,textColorIdentifier: StyleColorIdentifier,padding: NSSize = .zero,alignment: TextAlignment = .left)
         {
         self.alignment = alignment
         self.padding = padding
-        self.textFont = textFont
+        self.textFontIdentifier = textFontIdentifier
+        self.textColorIdentifier = textColorIdentifier
         super.init(frame: .zero)
         self.textLayer.string = model.value as? String
         self.valueModel = model
         self.textLayer.font = textFont
         self.textLayer.fontSize = textFont.pointSize
-        self.textLayer.foregroundColor = textColor.cgColor
         self.textLayer.masksToBounds = true
         self.wantsLayer = true
         self.layer?.addSublayer(self.textLayer)
         self.textLayer.contentsScale = NSScreen.main!.backingScaleFactor
+        self.textColorIdentifier = textColorIdentifier
         self.stringValue = self.valueModel.stringValue
+        self.textLayer.foregroundColor = Palette.shared.color(for: self.textColorIdentifier).cgColor
         }
         
     public override func layout()
         {
         super.layout()
-        let size = NSAttributedString(string: (self.textLayer.string as? String) ?? "",attributes: [.font: self.textFont,.foregroundColor: self.textLayer.foregroundColor]).size()
+        let size = NSAttributedString(string: (self.textLayer.string as? String) ?? "",attributes: [.font: self.textFont,.foregroundColor: self.textLayer.foregroundColor!]).size()
         var xDelta:CGFloat = 0
         switch(self.alignment)
             {

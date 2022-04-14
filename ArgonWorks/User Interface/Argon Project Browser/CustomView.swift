@@ -10,20 +10,20 @@ import Cocoa
 public protocol Control: AnyObject
     {
     var key: String { get }
-    var textFont: NSFont { get set }
+    var textFontIdentifier: StyleFontIdentifier { get set }
     var valueModel: ValueModel { get set }
     }
     
 public class CustomView: NSView
     {
-    public var textFont: NSFont = NSFont(name: "SunSans-Demi",size: 11)!
+    public var textFontIdentifier: StyleFontIdentifier = .defaultFont
         
-    public var backgroundColor: NSColor?
+    public var backgroundColorIdentifier: StyleColorIdentifier = .defaultBackgroundColor
         {
         didSet
             {
             self.wantsLayer = true
-            self.layer!.backgroundColor = self.backgroundColor?.cgColor
+            self.layer!.backgroundColor = Palette.shared.color(for: self.backgroundColorIdentifier).cgColor
             }
         }
         
@@ -35,7 +35,7 @@ public class CustomView: NSView
             }
         }
         
-    public var horizontalBorderColor: NSColor = .white
+    public var horizontalBorderColorIdentifier: StyleColorIdentifier = .lineColor
         {
         didSet
             {

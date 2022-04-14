@@ -61,7 +61,7 @@ public class PrimitiveMethodInstance: MethodInstance,PrimitiveInstance
         {
         self.parameters.forEach{$0.initializeTypeConstraints(inContext: context)}
         self.returnType.initializeTypeConstraints(inContext: context)
-        let parameterTypes = self.parameters.map{$0.type!}
+//        let parameterTypes = self.parameters.map{$0.type!}
 //        context.append(TypeConstraint(left: self.type,right: TypeFunction(label: self.label,types: parameterTypes, returnType: self.returnType),origin: .symbol(self)))
         context.append(TypeConstraint(left: self.type,right: self.returnType,origin: .symbol(self)))
         }

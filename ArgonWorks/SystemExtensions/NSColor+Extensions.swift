@@ -111,11 +111,13 @@ extension NSColor
     public static let argonDarkestGray:NSColor = NSColor(hex: 0x121212)
     
     public static let argonBlack = NSColor(hex: 0x030303)
+    public static let argonBlack10 = NSColor(hex: 0x060606)
     public static let argonBlack20 = NSColor(hex: 0x070707)
+    public static let argonBlack30 = NSColor(hex: 0x090909)
     public static let argonBlack40 = NSColor(hex: 0x111111)
-    public static let argonBlack50 = NSColor(hex: 0x1B1B1B)
-    public static let argonBlack60 = NSColor(hex: 0x202020)
-    public static let argonBlack70 = NSColor(hex: 0x282828)
+    public static let argonBlack50 = NSColor(hex: 0x141414)
+    public static let argonBlack60 = NSColor(hex: 0x161616)
+    public static let argonBlack70 = NSColor(hex: 0x222222)
     public static let argonBlack80 = NSColor(hex: 0x303030)
     
     public static let argonQuinacridoneMagenta = NSColor(hex: 0x8F2D56)

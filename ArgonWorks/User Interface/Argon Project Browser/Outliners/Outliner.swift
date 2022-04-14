@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import SwiftUI
 
 public enum OutlinerContext: Int
     {
@@ -129,11 +130,11 @@ public class Outliner: NSViewController,Dependent
             }
         }
         
-    public var backgroundColor: NSColor?
+    public var backgroundColorIdentifier: StyleColorIdentifier = .defaultOutlinerBackgroundColor
         {
         didSet
             {
-            self.scrollView.backgroundColor = self.backgroundColor!
+            self.scrollView.backgroundColor = Palette.shared.color(for: self.backgroundColorIdentifier)
             }
         }
         
@@ -299,25 +300,48 @@ public class Outliner: NSViewController,Dependent
             let parent = self.outlineView.parent(forItem: item)
             if parent.isNil
                 {
-                var index = 0
-                while index < self.rootItems.count
+                if let index = self.rootIndex(of: item)
                     {
-                    if (self.rootItems[index] as! SymbolHolder).symbol.identityHash == symbol.identityHash
+                    self.rootItems.remove(at: index)
+                    guard self.wasActive && self.outlineView.isItemExpanded(nil) else
                         {
-                        self.rootItems.remove(at: index)
-                        break
+                        return
                         }
-                    index += 1
+                    self.outlineView.removeItems(at: IndexSet(integer: index),inParent: nil,withAnimation: .slideUp)
+                    self.outlineItemsByKey[symbol.identityHash] = nil
+                    return
+                    }
+                else
+                    {
+                    fatalError()
                     }
                 }
-            guard self.wasActive else
+            guard self.wasActive && self.outlineView.isItemExpanded(parent) else
                 {
                 return
                 }
             let childIndex = self.outlineView.childIndex(forItem: item)
+            guard childIndex != -1 else
+                {
+                return
+                }
             self.outlineView.removeItems(at: IndexSet(integer: childIndex), inParent: parent, withAnimation: .slideUp)
             self.outlineItemsByKey[symbol.identityHash] = nil
             }
+        }
+        
+    private func rootIndex(of other: OutlineItem) -> Int?
+        {
+        var index = 0
+        for item in self.rootItems
+            {
+            if item.isEqual(to: other)
+                {
+                return(index)
+                }
+            index += 1
+            }
+        return(nil)
         }
         
     public func insertSymbol(_ symbol: Symbol)
@@ -330,14 +354,16 @@ public class Outliner: NSViewController,Dependent
                 }
             for aParent in parentSymbols
                 {
+                // found parent because it's parent was expanded
                 if let parent = self.outlineItemsByKey[aParent.identityHash]
                     {
+                    parent.invalidateChildren()
                     let index = parent.insertionIndex(forSymbol: symbol)
                     self.outlineView.insertItems(at: IndexSet(integer: index), inParent: parent)
                     }
+                // have to handle when parent not expanded
                 else
                     {
-                    fatalError("Could not find parent item")
                     }
                 }
             }
@@ -346,13 +372,12 @@ public class Outliner: NSViewController,Dependent
             let newItem = SymbolHolder(symbol: symbol,context: self.context)
             self.outlineItemsByKey[symbol.identityHash] = newItem
             self.rootItems.append(newItem)
+            self.rootItems = self.rootItems.sorted{$0.label < $1.label}
+            let index = self.rootItems.map{$0.label}.firstIndex(of: newItem.label)!
             guard self.wasActive else
                 {
                 return
                 }
-            self.rootItems = self.rootItems.sorted{$0.label < $1.label}
-            let labels = self.rootItems.map{$0.label}
-            let index = labels.firstIndex(of: symbol.label)!
             self.outlineView.insertItems(at: IndexSet(integer: index),inParent: nil,withAnimation: .slideDown)
             }
         }
@@ -397,16 +422,17 @@ extension Outliner: NSOutlineViewDelegate
     public func outlineViewSelectionDidChange(_ notification: Notification)
         {
         let selectedRow = self.outlineView.selectedRow
-        self.selectionValueModel.removeDependent(self)
-        if selectedRow == -1
+        self.selectionValueModel.retractInterest(of: self)
             {
-            self.selectionValueModel.value = nil
+            if selectedRow == -1
+                {
+                self.selectionValueModel.value = nil
+                }
+            else
+                {
+                self.selectionValueModel.value = self.outlineView.item(atRow: selectedRow)
+                }
             }
-        else
-            {
-            self.selectionValueModel.value = self.outlineView.item(atRow: selectedRow)
-            }
-        self.selectionValueModel.addDependent(self)
         }
 
     public func outlineView(_ outlineView: NSOutlineView, viewFor tableColumn: NSTableColumn?, item: Any) -> NSView?

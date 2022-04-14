@@ -12,6 +12,11 @@ public var AddressTable = Dictionary<IdentityKey,Address>()
 
 public class Module:ContainerSymbol,Scope
     {
+    public var topModule: TopModule
+        {
+        self.module.topModule
+        }
+        
     public override var enclosingModule: Module
         {
         return(self)
@@ -25,6 +30,14 @@ public class Module:ContainerSymbol,Scope
     public override var symbolType: SymbolType
         {
         .module
+        }
+        
+    public override var identityHash: Int
+        {
+        var hash = "\(Swift.type(of: self))".polynomialRollingHash
+        hash = hash << 13 ^ self.label.polynomialRollingHash
+        hash = hash << 13 ^ (self.module?.identityHash ?? 0)
+        return(hash)
         }
         
     public var mainMethod: MethodInstance?
@@ -145,19 +158,6 @@ public class Module:ContainerSymbol,Scope
         return(nil)
         }
         
-    public override var type: Type!
-        {
-        get
-            {
-            super.type = self.argonModule.moduleType
-            return(super.type)
-            }
-        set
-            {
-            super.type = newValue
-            }
-        }
-        
 //    public var firstMainMethod: Method?
 //        {
 //        return(self.firstMainModule?.mainMethod)
@@ -227,20 +227,20 @@ public class Module:ContainerSymbol,Scope
             }
         }
 
-    public func relinkSupertypes(topModule: TopModule)
-        {
-        for symbol in self.allSymbols
-            {
-            if symbol is Module
-                {
-                (symbol as! Module).relinkSupertypes(topModule: topModule)
-                }
-            else if symbol is TypeClass
-                {
-                (symbol as! TypeClass).relinkSupertypes(topModule: topModule)
-                }
-            }
-        }
+//    public func relinkSupertypes(topModule: TopModule)
+//        {
+//        for symbol in self.allSymbols
+//            {
+//            if symbol is Module
+//                {
+//                (symbol as! Module).relinkSupertypes(topModule: topModule)
+//                }
+//            else if symbol is TypeClass
+//                {
+//                (symbol as! TypeClass).relinkSupertypes(topModule: topModule)
+//                }
+//            }
+//        }
         
     public func emitCode(using generator: CodeGenerator) throws -> Module
         {
@@ -462,7 +462,7 @@ public class Module:ContainerSymbol,Scope
         {
         if let second = object as? Module
             {
-            return(self.label == second.label && self.module == second.module && self.allSymbols == second.allSymbols)
+            return(self.identityHash == second.identityHash)
             }
         return(super.isEqual(object))
         }

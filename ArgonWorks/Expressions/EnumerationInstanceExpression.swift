@@ -68,7 +68,7 @@ public class EnumerationInstanceExpression: Expression
         
     public override func initializeType(inContext context: TypeContext)
         {
-        let types = self.associatedValues.isNil ? [] : self.associatedValues!.map{$0.type}
+//        let types = self.associatedValues.isNil ? [] : self.associatedValues!.map{$0.type}
         self.associatedValues?.forEach{$0.initializeType(inContext: context)}
         self.enumeration.initializeType(inContext: context)
         self.type = self.enumeration

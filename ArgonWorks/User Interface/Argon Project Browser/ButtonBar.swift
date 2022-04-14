@@ -22,7 +22,7 @@ public class ButtonBar: BarView
         {
         super.init()
         self.drawsHorizontalBorder = true
-        self.horizontalBorderColor = .argonDarkGray
+        self.horizontalBorderColorIdentifier = .lineColor
         }
     
     required init?(coder: NSCoder)

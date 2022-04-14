@@ -10,7 +10,6 @@ import Cocoa
 public protocol TokenHandler
     {
     func kindChanged(token: Token)
-    func issueAdded(token: Token,issue: CompilerIssue)
     }
     
 public class Token:CustomStringConvertible

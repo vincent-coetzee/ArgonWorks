@@ -122,6 +122,11 @@ public class TypeEnumeration: TypeConstructor
         return(Int(bitPattern: word))
         }
         
+    public override var symbolValue: SymbolValue
+        {
+        .enumeration(self)
+        }
+        
     public override var iconName: String
         {
         "IconEnumeration"
