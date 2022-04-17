@@ -121,11 +121,10 @@ public class Outliner: NSViewController,Dependent
             }
         }
     
-    public var font: NSFont = Palette.shared.font(for: .textFont)
+    public var fontIdentifier: StyleFontIdentifier = .outlineTextFont
         {
         didSet
             {
-            self.outlineView.font = self.font
             self.outlineView.reloadData()
             }
         }
@@ -232,8 +231,6 @@ public class Outliner: NSViewController,Dependent
         self.scrollView.translatesAutoresizingMaskIntoConstraints = false
         self.outlineView.frame = self.scrollView.bounds
         self.outlineView.headerView = nil
-        self.scrollView.drawsBackground = true
-        self.scrollView.backgroundColor = .clear
         self.outlineView.appearance = NSAppearance(named: NSAppearance.Name.vibrantDark)
         self.scrollView.documentView = self.outlineView
         self.outlineView.delegate = self
@@ -243,9 +240,9 @@ public class Outliner: NSViewController,Dependent
         self.outlineView.addTableColumn(column)
         self.scrollView.hasHorizontalScroller = false
         self.scrollView.hasVerticalScroller = true
-        self.outlineView.rowHeight = self.font.lineHeight
+        self.outlineView.rowHeight = Palette.shared.font(for: self.fontIdentifier).lineHeight
         self.outlineView.intercellSpacing = NSSize(width: 0,height: 2)
-        self.outlineView.style = .plain
+        self.outlineView.style = .fullWidth
         self.scrollView.borderType = .noBorder
         self.scrollView.drawsBackground = false
         self.outlineView.backgroundColor = NSColor.argonBlack70

@@ -9,6 +9,15 @@ import Cocoa
 
 public class ConcreteOutlineItemView: NSTableCellView,OutlineItemView
     {
+    public var textFont: NSFont = Palette.shared.font(for: .outlineTextFont)
+        {
+        didSet
+            {
+            self.textView.font = self.textFont
+            self.needsLayout = true
+            }
+        }
+        
     public var outlineItem: OutlineItem?
         {
         didSet
@@ -65,10 +74,11 @@ public class ConcreteOutlineItemView: NSTableCellView,OutlineItemView
         let height = self.bounds.size.height
         self.iconView.frame = NSRect(x: height,y: 0,width: height,height: height).insetBy(dx: 1, dy: 0)
         self.systemView.frame = NSRect(x: 0,y:0,width: height,height: height).insetBy(dx: 1,dy: 0)
-        let font = Palette.shared.font(for: .textFont)
+        let font = self.textFont.fontToFit(height: height)
         let string = self.textView.stringValue
         let size = NSAttributedString(string: string,attributes: [.font: font]).size()
         let delta = (height - size.height) / 2
         self.textView.frame = NSRect(x: height + height,y: delta,width: self.bounds.size.width - height,height: size.height)
+        self.textView.font = font
         }
     }

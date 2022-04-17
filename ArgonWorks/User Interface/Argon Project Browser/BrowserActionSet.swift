@@ -35,6 +35,9 @@ public struct BrowserActionSet: OptionSet
     public static let settingsAction = BrowserActionSet(rawValue: 1 << 11)
     public static let newCommentAction = BrowserActionSet(rawValue: 1 << 11)
     public static let newImportAction = BrowserActionSet(rawValue: 1 << 12)
+    public static let colorsAction = BrowserActionSet(rawValue: 1 << 13)
+    public static let fontsAction = BrowserActionSet(rawValue: 1 << 14)
+    public static let printAction = BrowserActionSet(rawValue: 1 << 15)
     
     public let rawValue: Int
     
@@ -64,7 +67,7 @@ public struct BrowserActionSet: OptionSet
         if self.contains(.loadAction)
             {
             diskCount += 1
-            menu.addItem(withTitle: "Open project...", action: #selector(ArgonBrowserViewController.onLoad),keyEquivalent: "")
+            menu.addItem(withTitle: "Open project...", action: #selector(ArgonBrowserViewController.onOpen),keyEquivalent: "")
             }
         if self.contains(.saveAction)
             {

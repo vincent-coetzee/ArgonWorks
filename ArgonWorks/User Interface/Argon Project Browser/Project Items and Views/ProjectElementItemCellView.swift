@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class ProjectElementItemView: ProjectItemView
+public class ProjectElementItemCellView: ProjectItemCellView
     {
     private let warningCounter: IconLabelView
     private let errorCounter: IconLabelView

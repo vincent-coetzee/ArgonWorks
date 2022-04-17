@@ -127,7 +127,7 @@ public class ProjectElementItem: ProjectItem
         {
         if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "Primary")
             {
-            let view = ProjectElementItemView(frame: .zero,elementItem: self)
+            let view = ProjectElementItemCellView(frame: .zero,elementItem: self)
             view.item = self
             view.font = Palette.shared.font(for: self.fontIdentifier)
             view.viewText.attributedStringValue = self.attributedLabelString
@@ -149,7 +149,7 @@ public class ProjectElementItem: ProjectItem
         
     private func updateCellViews()
         {
-        let cellView = self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectItemView
+        let cellView = self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectItemCellView
         cellView?.viewText.attributedStringValue = self.attributedLabelString
         self.icon.isTemplate = true
         cellView?.viewImage.image = self.icon

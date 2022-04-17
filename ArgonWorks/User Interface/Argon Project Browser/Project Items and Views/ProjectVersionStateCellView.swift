@@ -7,7 +7,7 @@
 
 import Cocoa
 
-class ProjectVersionStateView: NSTableCellView
+class ProjectVersionStateCellView: NSTableCellView
     {
     public weak var item: ProjectItem!
         {

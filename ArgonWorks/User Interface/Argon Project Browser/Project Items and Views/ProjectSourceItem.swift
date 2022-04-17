@@ -61,7 +61,7 @@ public class ProjectSourceItem: ProjectItem
         {
         if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "Primary")
             {
-            let view = ProjectSourceItemView(frame: .zero)
+            let view = ProjectSourceItemCellView(frame: .zero)
             view.item = self
             view.font = self.controller.sourceOutlinerFont
             view.editorView.font = self.controller.sourceOutlinerFont
@@ -78,12 +78,12 @@ public class ProjectSourceItem: ProjectItem
         
     public func hideBorder()
         {
-        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemView)?.hideBorder()
+        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemCellView)?.hideBorder()
         }
         
     public func showBorder()
         {
-        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemView)?.showBorder()
+        (self.cellViews[NSUserInterfaceItemIdentifier(rawValue: "Primary")]?.tableCellView as? ProjectSourceItemCellView)?.showBorder()
         }
         
     public override func markVersionState(as state: VersionState)

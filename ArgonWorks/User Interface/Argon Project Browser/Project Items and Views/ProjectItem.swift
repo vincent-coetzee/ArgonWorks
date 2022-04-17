@@ -246,7 +246,7 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
         {
         if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "Primary")
             {
-            let view = ProjectItemView(frame: .zero)
+            let view = ProjectItemCellView(frame: .zero)
             view.item = self
             view.font = Palette.shared.font(for: self.fontIdentifier)
             view.viewText.stringValue = self.label
@@ -258,7 +258,7 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
             }
         else if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "VersionState")
             {
-            let view = ProjectVersionStateView(frame: .zero)
+            let view = ProjectVersionStateCellView(frame: .zero)
             view.item = self
             return(view)
             }

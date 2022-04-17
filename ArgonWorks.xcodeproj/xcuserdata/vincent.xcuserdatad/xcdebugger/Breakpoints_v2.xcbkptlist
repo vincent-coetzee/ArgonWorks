@@ -62,8 +62,8 @@
             filePath = "ArgonWorks/User Interface/Argon Project Browser/Outliners/Outliner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "372"
-            endingLineNumber = "372"
+            startingLineNumber = "369"
+            endingLineNumber = "369"
             landmarkName = "insertSymbol(_:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -94,8 +94,8 @@
             filePath = "ArgonWorks/User Interface/Argon Project Browser/ArgonBrowserViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "560"
-            endingLineNumber = "560"
+            startingLineNumber = "665"
+            endingLineNumber = "665"
             landmarkName = "loadProject(fromURL:)"
             landmarkType = "7">
          </BreakpointContent>

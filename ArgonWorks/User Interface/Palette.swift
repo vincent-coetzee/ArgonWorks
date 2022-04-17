@@ -13,8 +13,10 @@ public enum StyleFontIdentifier: String
     case editorFont
     case labelFont
     case lineNumberFont
+    case outlineTextFont
     case recordTextFont
     case textFont
+    case titlebarTextFont
     case toolbarLabelFont
     }
     
@@ -97,6 +99,7 @@ public class Palette
     public init()
         {
         self.fontStyles[.editorFont] = NSFont(name: "SunSans-SemiBold",size: 11)!
+        self.fontStyles[.titlebarTextFont] = NSFont(name: "SunSans-SemiBold",size: 14)!
         self.fontStyles[.lineNumberFont] = self.fontStyles[.editorFont]
         self.metricStyles[.lineNumberIndent] = CGFloat(16)
         self.metricStyles[.lineNumberRulerWidth] = CGFloat(40 + 10)
@@ -159,6 +162,7 @@ public class Palette
         self.colorStyles[.lineColor] = NSColor.argonWhite20
         self.metricStyles[.recordIconHeight] = self.font(for: .recordTextFont).lineHeight + 4
         self.colorStyles[.importColor] = NSColor.argonOpal
+        self.fontStyles[.outlineTextFont] = self.fontStyles[.recordTextFont]
         }
         
     public func setFont(_ font: NSFont,for identifier: StyleFontIdentifier)
@@ -208,5 +212,28 @@ public class Palette
         attributes[.font] = self.font(for: .recordTextFont)
         attributes[.foregroundColor] = self.color(for: .recordTextColor)
         return(attributes)
+        }
+        
+    public func color(for identifier: NSToolbarItem.Identifier) -> NSColor?
+        {
+        switch(identifier)
+            {
+            case .deleteItem:
+                return(NSColor.argonSizzlingRed)
+            case .groupItem:
+                return(self.color(for: .groupColor))
+            case .moduleItem:
+                return(self.color(for: .moduleColor))
+            case .importItem:
+                return(self.color(for: .importColor))
+            case .commentItem:
+                return(self.color(for: .commentColor))
+            case .addItem:
+                return(self.color(for: .classColor))
+            case .addItem:
+                return(NSColor.white)
+            default:
+                return(NSColor.white)
+            }
         }
     }

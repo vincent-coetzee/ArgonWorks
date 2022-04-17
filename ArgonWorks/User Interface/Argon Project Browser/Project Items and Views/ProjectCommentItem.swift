@@ -35,7 +35,7 @@ public class ProjectCommentItem: ProjectItem,NSTextViewDelegate
         {
         if columnIdentifier == NSUserInterfaceItemIdentifier(rawValue: "Primary")
             {
-            let view = ProjectCommentItemView(frame: .zero,font: Palette.shared.font(for: self.fontIdentifier))
+            let view = ProjectCommentItemCellView(frame: .zero,font: Palette.shared.font(for: self.fontIdentifier))
             view.item = self
             return(view)
             }

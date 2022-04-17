@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class ProjectItemView: NSTableCellView,NSTextFieldDelegate
+public class ProjectItemCellView: NSTableCellView,NSTextFieldDelegate
     {
     public unowned var item: ProjectItem!
     public let viewImage: NSImageView

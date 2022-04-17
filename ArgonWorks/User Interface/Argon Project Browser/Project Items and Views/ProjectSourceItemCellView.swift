@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class ProjectSourceItemView: ProjectItemView
+public class ProjectSourceItemCellView: ProjectItemCellView
     {
     public var editorView: BrowserEditorView!
     

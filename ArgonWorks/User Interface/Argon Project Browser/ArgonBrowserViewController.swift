@@ -9,12 +9,78 @@ import Cocoa
 
 public class ArgonBrowserViewController: NSViewController,Dependent
     {
+    private enum ToggleState
+        {
+        case expanded
+        case contracted(CGFloat)
+        
+        public var amount: CGFloat
+            {
+            switch(self)
+                {
+                case .contracted(let amount):
+                    return(amount)
+                default:
+                    fatalError()
+                }
+            }
+            
+        public var isExpanded: Bool
+            {
+            switch(self)
+                {
+                case .expanded:
+                    return(true)
+                default:
+                    return(false)
+                }
+            }
+            
+        public func toggledState(_ amount: CGFloat? = nil) -> Self
+            {
+            switch(self)
+                {
+                case .expanded:
+                    assert(amount.isNotNil)
+                    return(.contracted(amount!))
+                case .contracted:
+                    return(.expanded)
+                }
+            }
+        }
+        
+    public var warningCountValueModel: ValueModel
+        {
+        let adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "warningCount"))
+            {
+            incoming in
+            let total = incoming as! Int
+            let string = "\(total) warning\(total == 1 ? "" : "s")"
+            return(string)
+            }
+        return(adaptor)
+        }
+        
+    public var errorCountValueModel: ValueModel
+        {
+        let adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "errorCount"))
+            {
+            incoming in
+            let total = incoming as! Int
+            let string = "\(total) error\(total == 1 ? "" : "s")"
+            return(string)
+            }
+        return(adaptor)
+        }
+        
     private let selectedItemValueModel = ValueHolder(value: nil)
     
-    @IBOutlet internal var outliner: NSOutlineView!
-    @IBOutlet private var toolbar: ToolbarView!
-    @IBOutlet internal var leftView: NSView!
-    @IBOutlet internal var rightView: NSView!
+    @IBOutlet internal weak var outliner: NSOutlineView!
+    @IBOutlet private weak var toolbar: ToolbarView!
+    @IBOutlet internal weak var leftView: NSView!
+    @IBOutlet internal weak var rightView: NSView!
+    @IBOutlet internal weak var toolbarView: NSToolbar!
+    @IBOutlet internal weak var splitView: NSSplitView!
     
     public let dependentKey = DependentSet.nextDependentKey
     
@@ -37,6 +103,8 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     public private(set) var toolbarHeight: CGFloat = 0
     private var fileWrapper: FileWrapper!
     private var browsingContext = BrowsingContext()
+    private var leftSidebarState = ToggleState.expanded
+    private var rightSidebarState = ToggleState.contracted
     
     public var argonModule: ArgonModule
         {
@@ -60,6 +128,11 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.configureTabs()
         self.configureOutlinerAndBars()
         self.configureLeftView()
+        }
+        
+    public override func viewWillAppear()
+        {
+        super.viewWillAppear()
         }
         
     private func initCompiler()
@@ -146,6 +219,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             return(BrowserActionSet(rawValue: 0))
             }
         self.toolbar.enabledValueModel = adaptor
+        self.selectedItemValueModel.addDependent(self)
         }
         
     public override func viewDidAppear()
@@ -156,9 +230,15 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     public func update(aspect: String,with: Any?,from: Model)
         {
+        if aspect == "value" && from.dependentKey == self.selectedItemValueModel.dependentKey
+            {
+            self.view.window?.toolbar?.validateVisibleItems()
+            return
+            }
         if aspect == "label" && from.dependentKey == self.rootItem.dependentKey
             {
             self.setProjectLabel()
+            return
             }
         if aspect == "value" && from.dependentKey == self.classesController.selectionValueModel.dependentKey
             {
@@ -226,6 +306,19 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.buttonBarHeightConstraint.isActive = true
         }
         
+    @objc public func validateToolbarItem(_ item: NSToolbarItem) -> Bool
+        {
+        if item.tag <= 0
+            {
+            return(true)
+            }
+        if let selectedItem = self.selectedItemValueModel.value as? ProjectItem
+            {
+            return(selectedItem.validActions.contains(BrowserActionSet(rawValue: item.tag)))
+            }
+        return(false)
+        }
+        
     @IBAction public func onSettings(_ sender: Any?)
         {
         }
@@ -234,12 +327,13 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         {
         }
         
-    @IBAction public func onLoad(_ sender: Any?)
+    @IBAction public func onOpen(_ sender: Any?)
         {
         }
         
     @IBAction public func onSave(_ sender: Any?)
         {
+        self.saveProject()
         }
         
     @IBAction public func onNewSymbol(_ sender: Any?)
@@ -369,6 +463,17 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     @IBAction public func onToggleLeftSidebar(_ sender: Any?)
         {
+        if self.leftSidebarState.isExpanded
+            {
+            let amount = self.leftView.frame.width
+            self.leftSidebarState = self.leftSidebarState.toggledState(amount)
+            self.splitView.setPosition(0, ofDividerAt: 0)
+            }
+        else
+            {
+            self.splitView.setPosition(self.leftSidebarState.amount,ofDividerAt: 0)
+            self.leftSidebarState = self.leftSidebarState.toggledState()
+            }
         }
         
     @IBAction public func onToggleRightSidebar(_ sender: Any?)
@@ -572,6 +677,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.enumerationController.expandItemsIfNeeded()
         self.methodsController.expandItemsIfNeeded()
         }
+        
     @IBAction func outlinerDoubleClicked(_ any: Any?)
         {
         let row = self.outliner.clickedRow
@@ -583,127 +689,9 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         item.doubleClicked(inOutliner: self.outliner)
         }
         
-    @IBAction func onNewGroupClicked(_ any: Any?)
-        {
-        let row = self.outliner.clickedRow
-        guard row != -1 else
-            {
-            NSSound.beep()
-            return
-            }
-        let item = ProjectGroupItem(label: "Group")
-        item.controller = self
-        let forItem = self.outliner.item(atRow: row) as! ProjectItem
-        forItem.addItem(item)
-        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
-        self.outliner.beginUpdates()
-        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideUp)
-        self.outliner.endUpdates()
-        if !self.outliner.isItemExpanded(forItem)
-            {
-            self.outliner.expandItem(forItem)
-            }
-        }
-        
-    @IBAction func onDeleteClicked(_ any: Any?)
-        {
-        let row = self.outliner.clickedRow
-        guard row != -1 else
-            {
-            NSSound.beep()
-            return
-            }
-        let item = self.outliner.item(atRow: row) as! ProjectItem
-        let parentItem = item.parentItem!
-        if let index = parentItem.index(of: item)
-            {
-            item.removeFromParent()
-            let indexSet = IndexSet(integer: index)
-            self.outliner.removeItems(at: indexSet, inParent: parentItem, withAnimation: .slideUp)
-            }
-        else
-            {
-            NSSound.beep()
-            }
-        }
-        
-    @IBAction func onNewSymbolClicked(_ any: Any?)
-        {
-        let row = self.outliner.clickedRow
-        guard row != -1 else
-            {
-            NSSound.beep()
-            return
-            }
-        let item = ProjectElementItem(label: "Symbol")
-        item.controller = self
-        let forItem = self.outliner.item(atRow: row) as! ProjectItem
-        forItem.addItem(item)
-        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
-        self.outliner.beginUpdates()
-        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideUp)
-        self.outliner.endUpdates()
-        if !self.outliner.isItemExpanded(forItem)
-            {
-            self.outliner.expandItem(forItem)
-            self.outliner.expandItem(item)
-            }
-        }
-        
-    @IBAction func onNewModuleClicked(_ any: Any?)
-        {
-        let row = self.outliner.clickedRow
-        guard row != -1 else
-            {
-            NSSound.beep()
-            return
-            }
-        let item = ProjectModuleItem(label: "Module")
-        item.controller = self
-        let forItem = self.outliner.item(atRow: row) as! ProjectItem
-        forItem.addItem(item)
-        let indexSet = IndexSet(integer: max(forItem.childCount-1,0))
-        self.outliner.beginUpdates()
-        self.outliner.insertItems(at: indexSet, inParent: forItem, withAnimation: .slideUp)
-        self.outliner.endUpdates()
-        if !self.outliner.isItemExpanded(forItem)
-            {
-            self.outliner.expandItem(forItem)
-            self.outliner.expandItem(item)
-            }
-        }
-        
     @IBAction func onSaveFile(_ any: Any?)
         {
         self.saveProject()
-        }
-        
-    @IBAction func onDeleteFileClicked(_ any: Any?)
-        {
-        }
-        
-    @IBAction func onModuleClicked(_ any: Any?)
-        {
-//        let row = self.outliner.clickedRow
-//        guard row != -1 else
-//            {
-//            return
-//            }
-//        let item = self.outliner.item(atRow: row) as! BrowserProject
-//        item.targetType = .module
-//        self.outliner.reloadData()
-        }
-
-    @IBAction func onCartonClicked(_ any: Any?)
-        {
-//        let row = self.outliner.clickedRow
-//        guard row != -1 else
-//            {
-//            return
-//            }
-//        let item = self.outliner.item(atRow: row) as! BrowserProject
-//        item.targetType = .carton
-//        self.outliner.reloadData()
         }
 
     public func saveProject()
@@ -743,10 +731,6 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             alert.informativeText = "There was an error while serializing the project data."
             alert.messageText = "Unable to save project data."
             }
-        catch let error
-            {
-            alert = NSAlert(error: error)
-            }
         alert.icon = NSImage(named: "AppIcon")!
         alert.alertStyle = .critical
         alert.runModal()
@@ -780,6 +764,8 @@ public class ArgonBrowserViewController: NSViewController,Dependent
             }
         }
     }
+    
+
     
 extension ArgonBrowserViewController: NSMenuDelegate
     {

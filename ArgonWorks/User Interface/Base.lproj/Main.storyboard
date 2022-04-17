@@ -619,7 +619,7 @@
                                         <menuItem title="Customize Toolbar…" id="1UK-8n-QPP">
                                             <modifierMask key="keyEquivalentModifierMask"/>
                                             <connections>
-                                                <action selector="runToolbarCustomizationPalette:" target="Ady-hI-5gd" id="pQI-g3-MTW"/>
+                                                <action selector="runToolbarCustomizationPalette:" target="Ady-hI-5gd" id="sCw-i6-ago"/>
                                             </connections>
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="hB3-LF-h0Y"/>
@@ -690,16 +690,26 @@
         <!--Window Controller-->
         <scene sceneID="jIb-WK-6D2">
             <objects>
-                <windowController storyboardIdentifier="ArgonBrowser" id="WtR-hF-r9P" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="ArgonBrowser" id="WtR-hF-r9P" customClass="ArgonBrowserWindowController" customModule="ArgonWorks" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="S9n-cX-gJ2">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-                        <rect key="contentRect" x="555" y="611" width="480" height="270"/>
+                        <rect key="contentRect" x="323" y="611" width="832" height="270"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="3200" height="1775"/>
                         <view key="contentView" id="SgK-4U-tpF">
-                            <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                            <rect key="frame" x="0.0" y="0.0" width="832" height="270"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
+                        <toolbar key="toolbar" implicitIdentifier="D4BE4D32-8375-4419-85AF-DAAC42829DAC" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="GPD-4J-dOO">
+                            <allowedToolbarItems>
+                                <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="QvH-i6-AEQ"/>
+                                <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="qHE-Z9-qQf"/>
+                            </allowedToolbarItems>
+                            <defaultToolbarItems/>
+                            <connections>
+                                <outlet property="delegate" destination="WtR-hF-r9P" id="1OC-6S-l8D"/>
+                            </connections>
+                        </toolbar>
                         <connections>
                             <outlet property="delegate" destination="WtR-hF-r9P" id="K6v-M1-fQq"/>
                         </connections>
@@ -710,7 +720,7 @@
                 </windowController>
                 <customObject id="L5G-44-R4n" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1162" y="-103"/>
+            <point key="canvasLocation" x="1111" y="-106"/>
         </scene>
         <!--Argon Browser View Controller-->
         <scene sceneID="XKV-09-fyv">
@@ -869,6 +879,7 @@
                         <outlet property="leftView" destination="0zM-k7-54l" id="T08-Xy-75M"/>
                         <outlet property="outliner" destination="PHq-bR-m8Y" id="Bdx-Xh-dsV"/>
                         <outlet property="rightView" destination="WES-yJ-dzD" id="yKk-ie-gh9"/>
+                        <outlet property="splitView" destination="LP0-Mh-Uly" id="9xb-AT-GRQ"/>
                         <outlet property="toolbar" destination="fLp-uU-BfK" id="zS7-tQ-lxP"/>
                     </connections>
                 </viewController>

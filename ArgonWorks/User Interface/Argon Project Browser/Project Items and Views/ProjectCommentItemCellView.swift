@@ -7,7 +7,7 @@
 
 import Cocoa
 
-public class ProjectCommentItemView: NSTableCellView,NSTextViewDelegate
+public class ProjectCommentItemCellView: NSTableCellView,NSTextViewDelegate
     {
     public var item: ProjectCommentItem!
         {

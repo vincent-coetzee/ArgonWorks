@@ -31,4 +31,9 @@ extension NSFont
         {
         NSFontManager.shared.convert(self,toHaveTrait: .boldFontMask)
         }
+        
+    public func fontToFit(height: CGFloat) -> NSFont
+        {
+        return(NSFont(name: self.fontName,size: height - 2)!)
+        }
     }
