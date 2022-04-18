@@ -63,8 +63,8 @@ public class ProjectSourceItem: ProjectItem
             {
             let view = ProjectSourceItemCellView(frame: .zero)
             view.item = self
-            view.font = self.controller.sourceOutlinerFont
-            view.editorView.font = self.controller.sourceOutlinerFont
+//            view.font = self.controller.sourceOutlinerFont
+//            view.editorView.font = self.controller.sourceOutlinerFont
             view.editorView.incrementalParser = self.controller.incrementalParser
             view.editorView.sourceItem = self
             view.editorView.sourceRecord = self.sourceRecord

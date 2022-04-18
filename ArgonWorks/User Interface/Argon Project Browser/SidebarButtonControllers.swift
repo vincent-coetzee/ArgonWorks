@@ -31,7 +31,7 @@ class LeftSidebarButtonController: NSTitlebarAccessoryViewController
         {
         self.layoutAttribute = .left
         self.automaticallyAdjustsSize = false
-        let button = TitlebarButton(image: NSImage(named: "IconLeftSidebar")!,target: self.target!, action: #selector(ArgonBrowserWindowController.onToggleLeftSidebar),layoutAttribute: .left)
+        let button = TitlebarButton(image: NSImage(named: "IconLeftSidebar")!.image(withTintColor: Palette.shared.color(for: .toolbarIconTint)),target: self.target!, action: #selector(ArgonBrowserWindowController.onToggleLeftSidebar),layoutAttribute: .left)
         button.frame = NSRect(x: 0,y: 0,width: 200,height: 20)
         self.view = button
         self.view.needsLayout = true

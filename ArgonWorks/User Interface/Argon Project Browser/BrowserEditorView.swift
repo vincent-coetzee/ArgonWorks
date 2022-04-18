@@ -36,12 +36,13 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,TextFocus
             self.textView.string = self.sourceRecord.text
 //            self.annotationView.lineCount = self.sourceRecord.lineCount
             self.textView.textStorage?.beginEditing()
+            let font = Palette.shared.font(for: .editorFont)
             for attribute in self.sourceRecord.attributes
                 {
                 let range = attribute.range
                 if range.location + range.length < self.sourceRecord.text.count
                     {
-                    self.textView.textStorage?.setAttributes([.foregroundColor: attribute.color,.font: self.font], range: attribute.range)
+                    self.textView.textStorage?.setAttributes([.foregroundColor: attribute.color,.font: font], range: attribute.range)
                     }
                 }
             self.textView.textStorage?.endEditing()
@@ -76,14 +77,14 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,TextFocus
             }
         }
         
-    public var font: NSFont = Palette.shared.font(for: .editorFont)
-        {
-        didSet
-            {
-            self.textView.font = self.font
-            self.rulerView.font = self.font
-            }
-        }
+//    public var font: NSFont = Palette.shared.font(for: .editorFont)
+//        {
+//        didSet
+//            {
+//            self.textView.font = self.font
+//            self.rulerView.font = self.font
+//            }
+//        }
         
     public var lineCount:Int = 0
         {
@@ -185,8 +186,9 @@ public class BrowserEditorView: NSView,NSTextViewDelegate,TokenHandler,TextFocus
         newLayer.backgroundColor = issue.isWarning ? NSColor.argonBrightYellowCrayola.cgColor : NSColor.argonNeonPink.cgColor
         newLayer.foregroundColor = NSColor.black.cgColor
         newLayer.frame = self.textView.endOfLineRect(forLine: line)
-        newLayer.font = self.font
-        newLayer.fontSize = self.font.pointSize
+        let font = Palette.shared.font(for: .editorFont)
+        newLayer.font = font
+        newLayer.fontSize = font.pointSize
         self.textView.layer?.addSublayer(newLayer)
         self.activeAnnotations[line] = newLayer
         }

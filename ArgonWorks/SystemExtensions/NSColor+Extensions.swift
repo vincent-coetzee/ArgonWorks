@@ -127,7 +127,7 @@ extension NSColor
     
     public static let argonWindowFrameGray = NSColor(red: 47, green: 47, blue: 47)
     
-    public func lighten(by amount: CGFloat) -> NSColor
+    public func lighten(by amount: CGFloat) -> Self
         {
         var colors = Array<CGFloat>(repeating: 0, count: 4)
         self.getComponents(&colors)
@@ -135,15 +135,15 @@ extension NSColor
         let green = min(255,colors[1] + amount * 255.0)
         let blue = min(255,colors[2] + amount * 255.0)
         let alpha = colors[3]
-        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        return(Self(red: red, green: green, blue: blue,alpha: alpha))
         }
         
-    public var darker: NSColor
+    public var darker: Self
         {
         return(self.darken(by: 0.5))
         }
         
-    public func darken(by amount: CGFloat) -> NSColor
+    public func darken(by amount: CGFloat) -> Self
         {
 //        var colors = Array<CGFloat>(repeating: 0, count: 4)
 //        self.getComponents(&colors)
@@ -152,10 +152,27 @@ extension NSColor
 //        let blue = max(0,colors[2] * 255.0 - amount * 255.0)
 //        let alpha = colors[3]
 //        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
-        return(self.blended(withFraction: amount,of: .black)!)
+        return(self.blended(withFraction: amount,of: .argonMidGray)! as! Self)
         }
         
-    public var lighter: NSColor
+    //
+    // If amount = 0 then color remans the same, if amount = 1 then color is gray
+    //
+    public func muted(by amount: CGFloat) -> Self
+        {
+        var colors = Array<CGFloat>(repeating: 0, count: 4)
+        self.getComponents(&colors)
+        let i = (colors[0] + colors[1] + colors[2]) / 3
+        let dr = i - colors[0]
+        let dg = i - colors[1]
+        let db = i - colors[2]
+        let newR = colors[0] + dr * amount
+        let newG = colors[1] + dg * amount
+        let newB = colors[2] + db * amount
+        return(Self(red: newR,green: newG,blue: newB,alpha: colors[3]))
+        }
+        
+    public var lighter: Self
         {
         let correctionFactor:CGFloat = 0.5;
         var colors = Array<CGFloat>(repeating: 0, count: 4)
@@ -164,7 +181,7 @@ extension NSColor
         let green = (255 - colors[1]) * correctionFactor + colors[1];
         let blue = (255 - colors[2]) * correctionFactor + colors[2];
         let alpha = colors[3]
-        return(NSColor(red: red, green: green, blue: blue,alpha: alpha))
+        return(Self(red: red, green: green, blue: blue,alpha: alpha))
         }
         
     public var swiftUIColor: Color
@@ -187,11 +204,11 @@ extension NSColor
         self.init(red: CGFloat(red)/255.0,green: CGFloat(green)/255.0,blue:CGFloat(blue)/255.0,alpha: 1.0)
         }
         
-    public func withAlpha(_ alpha:CGFloat) -> NSColor
+    public func withAlpha(_ alpha:CGFloat) -> Self
         {
         var components:[CGFloat] = [0,0,0]
         self.getComponents(&components)
-        return(NSColor(red:components[0],green:components[1],blue:components[2],alpha: alpha))
+        return(Self(red:components[0],green:components[1],blue:components[2],alpha: alpha))
         }
     }
 

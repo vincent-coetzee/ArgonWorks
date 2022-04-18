@@ -94,10 +94,10 @@
             filePath = "ArgonWorks/User Interface/Argon Project Browser/ArgonBrowserViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "665"
-            endingLineNumber = "665"
+            startingLineNumber = "637"
+            endingLineNumber = "637"
             landmarkName = "loadProject(fromURL:)"
-            landmarkType = "7">
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy

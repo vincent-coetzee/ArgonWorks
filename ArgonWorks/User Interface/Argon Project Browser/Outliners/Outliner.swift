@@ -175,7 +175,7 @@ public class Outliner: NSViewController,Dependent
     public func changeHeight(inView leftView: NSView,inController controller: ArgonBrowserViewController)
         {
         self.outlineView.removeConstraint(self.topConstraint)
-        self.topConstraint = self.scrollView.topAnchor.constraint(equalTo: leftView.topAnchor,constant: controller.toolbarHeight)
+        self.topConstraint = self.scrollView.topAnchor.constraint(equalTo: leftView.topAnchor,constant: controller.baseRowHeight)
         self.topConstraint.isActive = true
         }
         
@@ -189,7 +189,7 @@ public class Outliner: NSViewController,Dependent
     public func becomeActiveController(inController controller: ArgonBrowserViewController)
         {
         controller.leftView.addSubview(self.scrollView)
-        self.bindEdgesToEdgesOfView(controller.leftView,withHeight: controller.toolbarHeight)
+        self.bindEdgesToEdgesOfView(controller.leftView,withHeight: controller.baseRowHeight)
         controller.leftController = self
         controller.buttonBar.highlightButton(atTag: self.tag)
         self.isActive = true

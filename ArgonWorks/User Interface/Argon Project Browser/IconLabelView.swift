@@ -169,7 +169,8 @@ public class IconLabelView: CustomView,Control,Dependent
     private func imageRect() -> NSRect
         {
         let height = self.bounds.size.height
-        var rect = NSRect(x: 0,y: 0,width: height,height: height).insetBy(dx: self.padding.width, dy: self.padding.height)
+        let amount = min(self.padding.width,self.padding.height)
+        var rect = NSRect(x: 0,y: 0,width: height,height: height).insetBy(dx: amount, dy: amount)
         if self.imageEdge == .left
             {
             return(rect)

@@ -80,7 +80,7 @@ public enum StyleColorIdentifier: String
     case systemClassColor
     case systemTypeColor
     case textColor
-    case toolbarLabelTextColor
+    case toolbarIconTint
     case typeColor
     case warningColor
     case warningAnnotationColor
@@ -116,7 +116,7 @@ public class Palette
         self.colorStyles[.editorBackgroundColor] = NSColor.black
         self.colorStyles[.editorTextColor] = NSColor.argonNeonPink
         self.fontStyles[.toolbarLabelFont] = NSFont(name: "SunSans-Demi",size: 12)!
-        self.colorStyles[.toolbarLabelTextColor] = NSColor.argonMidGray
+        self.colorStyles[.toolbarIconTint] = NSColor.argonLighterGray
         self.colorStyles[.keywordColor] = NSColor(red: 63,green: 149,blue: 116)
         self.colorStyles[.labelBackgroundColor] = NSColor.clear
         self.colorStyles[.labelTextColor] = NSColor.argonMidGray

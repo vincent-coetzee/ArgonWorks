@@ -315,6 +315,7 @@
 		BFEB0F092768908F00DF8F4F /* UnsafeMutableRawPointer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEB0F082768908F00DF8F4F /* UnsafeMutableRawPointer+Extensions.swift */; };
 		BFEE9E1727FAE2760028C8DE /* BrowsingContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEE9E1627FAE2760028C8DE /* BrowsingContext.swift */; };
 		BFEE9E1927FB74B10028C8DE /* SurrogateType.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEE9E1827FB74B10028C8DE /* SurrogateType.swift */; };
+		BFEF8193280CA96800476A29 /* PathControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEF8192280CA96800476A29 /* PathControl.swift */; };
 		BFEFA9BD276B527D00894140 /* UnsafeMutablePointer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9BC276B527D00894140 /* UnsafeMutablePointer+Extensions.swift */; };
 		BFEFA9BF276B529800894140 /* UInt16Pointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9BE276B529800894140 /* UInt16Pointer.swift */; };
 		BFEFA9C1276B52B400894140 /* WordPointer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFEFA9C0276B52B400894140 /* WordPointer.swift */; };
@@ -668,6 +669,7 @@
 		BFEB0F082768908F00DF8F4F /* UnsafeMutableRawPointer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnsafeMutableRawPointer+Extensions.swift"; sourceTree = "<group>"; };
 		BFEE9E1627FAE2760028C8DE /* BrowsingContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowsingContext.swift; sourceTree = "<group>"; };
 		BFEE9E1827FB74B10028C8DE /* SurrogateType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurrogateType.swift; sourceTree = "<group>"; };
+		BFEF8192280CA96800476A29 /* PathControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathControl.swift; sourceTree = "<group>"; };
 		BFEFA9BC276B527D00894140 /* UnsafeMutablePointer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UnsafeMutablePointer+Extensions.swift"; sourceTree = "<group>"; };
 		BFEFA9BE276B529800894140 /* UInt16Pointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UInt16Pointer.swift; sourceTree = "<group>"; };
 		BFEFA9C0276B52B400894140 /* WordPointer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPointer.swift; sourceTree = "<group>"; };
@@ -1277,6 +1279,7 @@
 				BFDD0CDB27D36ACD0027717C /* SyntaxAnnotationView.swift */,
 				BFCF837E27D6DA2B005E9BC3 /* TextAttribute.swift */,
 				BF67DCCE27DF3000008D0933 /* ToolbarView.swift */,
+				BFEF8192280CA96800476A29 /* PathControl.swift */,
 			);
 			path = "Argon Project Browser";
 			sourceTree = "<group>";
@@ -1659,6 +1662,7 @@
 				BF6132BD276FCCCA00AB6E67 /* Pointer.swift in Sources */,
 				BFC1EE1F26CFFAE7009B7C34 /* Dictionary+Extensions.swift in Sources */,
 				BF48384027C3846600E700FD /* TokenWrapper.swift in Sources */,
+				BFEF8193280CA96800476A29 /* PathControl.swift in Sources */,
 				BF781AF427D767B000590E67 /* ProjectGroupItem.swift in Sources */,
 				BFC1EDD726CFFADC009B7C34 /* Argument.swift in Sources */,
 				BFC1EDFA26CFFADC009B7C34 /* SymbolGroup.swift in Sources */,

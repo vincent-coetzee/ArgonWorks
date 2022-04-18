@@ -16,6 +16,11 @@ public class ProjectItem: NSObject,NSCoding,AspectModel
     {
     public static let kIconHeight:CGFloat = 12
     
+    public var pathToProject: Array<ProjectItem>
+        {
+        [self] + (self.parentItem?.pathToProject ?? [])
+        }
+        
     public var itemCount: Int
         {
         1

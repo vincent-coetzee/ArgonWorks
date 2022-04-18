@@ -700,7 +700,7 @@
                             <rect key="frame" x="0.0" y="0.0" width="832" height="270"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </view>
-                        <toolbar key="toolbar" implicitIdentifier="D4BE4D32-8375-4419-85AF-DAAC42829DAC" autosavesConfiguration="NO" displayMode="iconAndLabel" sizeMode="regular" id="GPD-4J-dOO">
+                        <toolbar key="toolbar" implicitIdentifier="D4BE4D32-8375-4419-85AF-DAAC42829DAC" displayMode="iconOnly" sizeMode="regular" id="GPD-4J-dOO">
                             <allowedToolbarItems>
                                 <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="QvH-i6-AEQ"/>
                                 <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="qHE-Z9-qQf"/>
@@ -726,19 +726,19 @@
         <scene sceneID="XKV-09-fyv">
             <objects>
                 <viewController id="ife-RL-kXY" customClass="ArgonBrowserViewController" customModule="ArgonWorks" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" id="Ved-M0-nr7">
+                    <view key="view" misplaced="YES" id="Ved-M0-nr7">
                         <rect key="frame" x="0.0" y="0.0" width="1316" height="735"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <splitView arrangesAllSubviews="NO" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LP0-Mh-Uly">
-                                <rect key="frame" x="0.0" y="0.0" width="1316" height="735"/>
+                            <splitView arrangesAllSubviews="NO" autosaveName="ArgonBrowserSplitView" dividerStyle="thin" vertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LP0-Mh-Uly">
+                                <rect key="frame" x="0.0" y="0.0" width="1316" height="734"/>
                                 <subviews>
-                                    <customView misplaced="YES" id="0zM-k7-54l">
-                                        <rect key="frame" x="0.0" y="0.0" width="286" height="735"/>
+                                    <customView id="0zM-k7-54l">
+                                        <rect key="frame" x="0.0" y="0.0" width="279" height="734"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
                                             <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sg9-bB-Fxa">
-                                                <rect key="frame" x="0.0" y="710" width="323" height="25"/>
+                                                <rect key="frame" x="0.0" y="709" width="279" height="25"/>
                                             </customView>
                                         </subviews>
                                         <constraints>
@@ -748,21 +748,18 @@
                                             <constraint firstItem="sg9-bB-Fxa" firstAttribute="top" secondItem="0zM-k7-54l" secondAttribute="top" id="7Ck-WQ-AeE"/>
                                         </constraints>
                                     </customView>
-                                    <customView misplaced="YES" id="WES-yJ-dzD">
-                                        <rect key="frame" x="287" y="0.0" width="1029" height="735"/>
+                                    <customView id="WES-yJ-dzD">
+                                        <rect key="frame" x="280" y="0.0" width="1036" height="734"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <subviews>
-                                            <customView ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fLp-uU-BfK" customClass="ToolbarView" customModule="ArgonWorks" customModuleProvider="target">
-                                                <rect key="frame" x="0.0" y="710" width="992" height="25"/>
-                                            </customView>
                                             <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qnf-y2-2gL">
-                                                <rect key="frame" x="0.0" y="0.0" width="992" height="710"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="1036" height="709"/>
                                                 <clipView key="contentView" id="TQb-FL-PJJ">
-                                                    <rect key="frame" x="1" y="1" width="990" height="708"/>
+                                                    <rect key="frame" x="1" y="1" width="1034" height="707"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
                                                         <outlineView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" tableStyle="fullWidth" columnReordering="NO" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" rowSizeStyle="automatic" viewBased="YES" indentationPerLevel="15" autoresizesOutlineColumn="YES" outlineTableColumn="XGI-28-sC6" id="PHq-bR-m8Y">
-                                                            <rect key="frame" x="0.0" y="0.0" width="990" height="708"/>
+                                                            <rect key="frame" x="0.0" y="0.0" width="1034" height="707"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
@@ -851,14 +848,25 @@
                                                     <autoresizingMask key="autoresizingMask"/>
                                                 </scroller>
                                             </scrollView>
+                                            <pathControl verticalHuggingPriority="750" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0Po-7J-8ak" customClass="PathControl" customModule="ArgonWorks" customModuleProvider="target">
+                                                <rect key="frame" x="0.0" y="709" width="1036" height="25"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="25" id="cVk-iM-e2K"/>
+                                                </constraints>
+                                                <pathCell key="cell" controlSize="small" selectable="YES" alignment="left" id="p75-CC-68P">
+                                                    <font key="font" metaFont="cellTitle"/>
+                                                    <url key="url" string="file:///Project"/>
+                                                </pathCell>
+                                            </pathControl>
                                         </subviews>
                                         <constraints>
+                                            <constraint firstAttribute="trailing" secondItem="0Po-7J-8ak" secondAttribute="trailing" id="0m0-ia-TCo"/>
                                             <constraint firstAttribute="bottom" secondItem="qnf-y2-2gL" secondAttribute="bottom" id="CUq-RG-dxP"/>
-                                            <constraint firstAttribute="trailing" secondItem="qnf-y2-2gL" secondAttribute="trailing" id="IIU-Dx-Yf1"/>
-                                            <constraint firstAttribute="trailing" secondItem="fLp-uU-BfK" secondAttribute="trailing" id="MIT-YV-e58"/>
                                             <constraint firstItem="qnf-y2-2gL" firstAttribute="leading" secondItem="WES-yJ-dzD" secondAttribute="leading" id="NRd-kn-yKN"/>
-                                            <constraint firstItem="fLp-uU-BfK" firstAttribute="top" secondItem="WES-yJ-dzD" secondAttribute="top" id="S1T-Yu-rgD"/>
-                                            <constraint firstItem="fLp-uU-BfK" firstAttribute="leading" secondItem="WES-yJ-dzD" secondAttribute="leading" id="xRz-wD-KO1"/>
+                                            <constraint firstAttribute="trailing" secondItem="qnf-y2-2gL" secondAttribute="trailing" id="aXG-sk-QvH"/>
+                                            <constraint firstItem="0Po-7J-8ak" firstAttribute="leading" secondItem="WES-yJ-dzD" secondAttribute="leading" id="d6B-gQ-Alp"/>
+                                            <constraint firstItem="qnf-y2-2gL" firstAttribute="top" secondItem="WES-yJ-dzD" secondAttribute="top" constant="25" id="etd-jJ-gCk"/>
+                                            <constraint firstItem="0Po-7J-8ak" firstAttribute="top" secondItem="WES-yJ-dzD" secondAttribute="top" id="m5g-KQ-Gic"/>
                                         </constraints>
                                     </customView>
                                 </subviews>
@@ -878,14 +886,14 @@
                     <connections>
                         <outlet property="leftView" destination="0zM-k7-54l" id="T08-Xy-75M"/>
                         <outlet property="outliner" destination="PHq-bR-m8Y" id="Bdx-Xh-dsV"/>
+                        <outlet property="pathControl" destination="0Po-7J-8ak" id="k4E-Li-SG2"/>
                         <outlet property="rightView" destination="WES-yJ-dzD" id="yKk-ie-gh9"/>
                         <outlet property="splitView" destination="LP0-Mh-Uly" id="9xb-AT-GRQ"/>
-                        <outlet property="toolbar" destination="fLp-uU-BfK" id="zS7-tQ-lxP"/>
                     </connections>
                 </viewController>
                 <customObject id="zTA-15-78q" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2252" y="-110"/>
+            <point key="canvasLocation" x="2252" y="-110.5"/>
         </scene>
         <!--Editor View Controller-->
         <scene sceneID="6E4-gj-yaX">

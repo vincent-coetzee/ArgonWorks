@@ -36,30 +36,30 @@ public class ToolbarView: BarView
         
     public override func awakeFromNib()
         {
-        super.awakeFromNib()
-        self.needsLayout = true
-        self.textFontIdentifier = .toolbarLabelFont
-        self.addTextLabel(atEdge: .left, key: "name", valueModel: ValueHolder(value: "Project"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
-        self.addTextLabel(atEdge: .left, key: "warnings", valueModel: ValueHolder(value: "0 warnings"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
-        self.addTextLabel(atEdge: .left, key: "errors", valueModel: ValueHolder(value: "0 errors"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
-        self.addTextLabel(atEdge: .left, key: "records", valueModel: ValueHolder(value: "1 record"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
-        self.addSpacer(atEdge: .right,key: "edge",ofWidth: 10)
-        self.addActionButton(browserAction: .settingsAction,atEdge: .right,key: "settings",image: NSImage(named: "IconSettings")!,toolTip: "Configure...",target: self,action: #selector(ArgonBrowserViewController.onSettings))
-        self.addSpacer(atEdge: .right,key: "edge+1",ofWidth: 20)
-        self.addActionButton(browserAction: .newSymbolAction,atEdge: .right,key: "add",image: NSImage(named: "IconAdd")!,toolTip: "Add Record",target: self,action: #selector(ArgonBrowserViewController.onNewSymbol))
-        self.addActionButton(browserAction: .deleteItemAction,atEdge: .right,key: "delete",image: NSImage(named: "IconDelete")!,toolTip: "Delete Record",target: self,action: #selector(ArgonBrowserViewController.onDeleteItem))
-        self.addSpacer(atEdge: .right,key: "firstSpace",ofWidth: 20)
-        self.addActionButton(browserAction: .newModuleAction,atEdge: .right,key: "module",image: NSImage(named: "IconModule")!,toolTip: "New Module",target: self,action: #selector(ArgonBrowserViewController.onNewModule))
-        self.addActionButton(browserAction: .newCommentAction,atEdge: .right,key: "comment",image: NSImage(named: "IconFile")!,toolTip: "New Comment",target: self,action: #selector(ArgonBrowserViewController.onNewComment))
-        self.addActionButton(browserAction: .newImportAction,atEdge: .right,key: "import",image: NSImage(named: "IconImport")!,toolTip: "New Import",target: self,action: #selector(ArgonBrowserViewController.onNewImport))
-        self.addActionButton(browserAction: .newGroupAction,atEdge: .right,key: "group",image: NSImage(named: "IconGroup")!,toolTip: "New Group",target: self,action: #selector(ArgonBrowserViewController.onNewGroup))
-        self.addSpacer(atEdge: .right,key: "secondSpace",ofWidth: 20)
-        self.addActionButton(browserAction: .loadAction,atEdge: .right,key: "load",image: NSImage(named: "IconLoad")!,toolTip: "Open Project...",target: self,action: #selector(ArgonBrowserViewController.onOpen))
-        self.addActionButton(browserAction: .saveAction,atEdge: .right,key: "save",image: NSImage(named: "IconSave")!,toolTip: "Save Project...",target: self,action: #selector(ArgonBrowserViewController.onSave))
-        self.addSpacer(atEdge: .right,key: "thirdSpace",ofWidth: 20)
-        self.addActionButton(browserAction: .buildAction,atEdge: .right,key: "build",image: NSImage(named: "IconBuild")!,toolTip: "Build Project",target: self,action: #selector(ArgonBrowserViewController.onBuild))
-        self.drawsHorizontalBorder = true
-        self.horizontalBorderColorIdentifier = .lineColor
+//        super.awakeFromNib()
+//        self.needsLayout = true
+//        self.textFontIdentifier = .toolbarLabelFont
+//        self.addTextLabel(atEdge: .left, key: "name", valueModel: ValueHolder(value: "Project"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+//        self.addTextLabel(atEdge: .left, key: "warnings", valueModel: ValueHolder(value: "0 warnings"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+//        self.addTextLabel(atEdge: .left, key: "errors", valueModel: ValueHolder(value: "0 errors"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+//        self.addTextLabel(atEdge: .left, key: "records", valueModel: ValueHolder(value: "1 record"), textColorIdentifier: .toolbarLabelTextColor, borderColorIdentifier: .defaultBorderColor, borderWidth: 1, cornerRadius: 3, backgroundColorIdentifier: .labelBackgroundColor)
+//        self.addSpacer(atEdge: .right,key: "edge",ofWidth: 10)
+//        self.addActionButton(browserAction: .settingsAction,atEdge: .right,key: "settings",image: NSImage(named: "IconSettings")!,toolTip: "Configure...",target: self,action: #selector(ArgonBrowserViewController.onSettings))
+//        self.addSpacer(atEdge: .right,key: "edge+1",ofWidth: 20)
+//        self.addActionButton(browserAction: .newSymbolAction,atEdge: .right,key: "add",image: NSImage(named: "IconAdd")!,toolTip: "Add Record",target: self,action: #selector(ArgonBrowserViewController.onNewSymbol))
+//        self.addActionButton(browserAction: .deleteItemAction,atEdge: .right,key: "delete",image: NSImage(named: "IconDelete")!,toolTip: "Delete Record",target: self,action: #selector(ArgonBrowserViewController.onDeleteItem))
+//        self.addSpacer(atEdge: .right,key: "firstSpace",ofWidth: 20)
+//        self.addActionButton(browserAction: .newModuleAction,atEdge: .right,key: "module",image: NSImage(named: "IconModule")!,toolTip: "New Module",target: self,action: #selector(ArgonBrowserViewController.onNewModule))
+//        self.addActionButton(browserAction: .newCommentAction,atEdge: .right,key: "comment",image: NSImage(named: "IconFile")!,toolTip: "New Comment",target: self,action: #selector(ArgonBrowserViewController.onNewComment))
+//        self.addActionButton(browserAction: .newImportAction,atEdge: .right,key: "import",image: NSImage(named: "IconImport")!,toolTip: "New Import",target: self,action: #selector(ArgonBrowserViewController.onNewImport))
+//        self.addActionButton(browserAction: .newGroupAction,atEdge: .right,key: "group",image: NSImage(named: "IconGroup")!,toolTip: "New Group",target: self,action: #selector(ArgonBrowserViewController.onNewGroup))
+//        self.addSpacer(atEdge: .right,key: "secondSpace",ofWidth: 20)
+//        self.addActionButton(browserAction: .loadAction,atEdge: .right,key: "load",image: NSImage(named: "IconLoad")!,toolTip: "Open Project...",target: self,action: #selector(ArgonBrowserViewController.onOpen))
+//        self.addActionButton(browserAction: .saveAction,atEdge: .right,key: "save",image: NSImage(named: "IconSave")!,toolTip: "Save Project...",target: self,action: #selector(ArgonBrowserViewController.onSave))
+//        self.addSpacer(atEdge: .right,key: "thirdSpace",ofWidth: 20)
+//        self.addActionButton(browserAction: .buildAction,atEdge: .right,key: "build",image: NSImage(named: "IconBuild")!,toolTip: "Build Project",target: self,action: #selector(ArgonBrowserViewController.onBuild))
+//        self.drawsHorizontalBorder = true
+//        self.horizontalBorderColorIdentifier = .lineColor
         }
         
     @IBAction func someAction(_ sender: Any?)

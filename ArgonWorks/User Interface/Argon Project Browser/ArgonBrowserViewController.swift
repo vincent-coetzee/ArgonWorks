@@ -76,19 +76,15 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private let selectedItemValueModel = ValueHolder(value: nil)
     
     @IBOutlet internal weak var outliner: NSOutlineView!
-    @IBOutlet private weak var toolbar: ToolbarView!
     @IBOutlet internal weak var leftView: NSView!
     @IBOutlet internal weak var rightView: NSView!
-    @IBOutlet internal weak var toolbarView: NSToolbar!
     @IBOutlet internal weak var splitView: NSSplitView!
+    @IBOutlet internal weak var pathControl: NSPathControl!
     
     public let dependentKey = DependentSet.nextDependentKey
     
     private var rootItem: Project = Project(label: "Project")
-    private var tokenColors = Dictionary<TokenColor,NSColor>()
-    internal var font = NSFont(name: "Menlo",size: 12)!
     public var incrementalParser: IncrementalParser!
-    public var sourceOutlinerFont: NSFont!
     private var draggingItems: Array<ProjectItem>?
     internal var buttonBar: ButtonBar!
     private let classesController = Outliner(tag: "classes")
@@ -97,10 +93,8 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     private let methodsController = Outliner(tag: "methods")
     private let modulesController = Outliner(tag: "modules")
     internal var leftController: Outliner?
-    private var baseRowHeight: CGFloat = 14
-    private var toolbarHeightConstraint: NSLayoutConstraint!
+    internal var baseRowHeight: CGFloat = 14
     private var buttonBarHeightConstraint: NSLayoutConstraint!
-    public private(set) var toolbarHeight: CGFloat = 0
     private var fileWrapper: FileWrapper!
     private var browsingContext = BrowsingContext()
     private var leftSidebarState = ToggleState.expanded
@@ -114,9 +108,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
     public override func viewDidLoad()
         {
         super.viewDidLoad()
-        self.font = NSFont(name: "SunSans-SemiBold",size: 10)!
-        self.baseRowHeight = self.font.lineHeight
-        self.sourceOutlinerFont = self.font
+        self.baseRowHeight = Palette.shared.font(for: .recordTextFont).lineHeight + 13
         self.rootItem.controller = self
         self.outliner.registerForDraggedTypes([.string])
         self.browsingContext.project = self.rootItem
@@ -124,10 +116,10 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         self.configureOutlinerMenu()
         self.setProjectLabel()
         self.configureDependencies()
-        self.configureToolbar()
         self.configureTabs()
         self.configureOutlinerAndBars()
         self.configureLeftView()
+        self.configurePathControl()
         }
         
     public override func viewWillAppear()
@@ -147,13 +139,11 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         Token.systemClassNames = self.browsingContext.argonModule.allClasses.map{$0.label}
         }
         
-    private func configureToolbar()
+    private func configurePathControl()
         {
-        self.toolbarHeight = self.sourceOutlinerFont.lineHeight + 4 + 4 + 2 + 2
-        self.toolbarHeightConstraint = self.toolbar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
-        self.toolbarHeightConstraint.isActive = true
-        self.outliner.topAnchor.constraint(equalTo: self.toolbar.bottomAnchor).isActive = true
-        self.toolbar.target = self
+        self.pathControl.font = Palette.shared.font(for: .recordTextFont)
+        self.pathControl.backgroundColor = Palette.shared.color(for: .barBackgroundColor)
+        self.pathControl.pathItems = []
         }
         
     private func configureOutlinerAndBars()
@@ -170,55 +160,12 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         NotificationCenter.default.addObserver(self, selector: #selector(self.recordDidExpand), name: NSOutlineView.itemDidExpandNotification, object: self.outliner)
         NotificationCenter.default.addObserver(self, selector: #selector(self.recordDidCollapse), name: NSOutlineView.itemDidCollapseNotification, object: self.outliner)
         self.buttonBar.backgroundColorIdentifier = .barBackgroundColor
-        self.toolbar.backgroundColorIdentifier = .barBackgroundColor
         self.outliner.enclosingScrollView!.borderType = .noBorder
         }
         
     private func configureDependencies()
         {
         self.rootItem.addDependent(self)
-        var adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "warningCount"))
-            {
-            incoming in
-            let total = incoming as! Int
-            let string = "\(total) warning\(total == 1 ? "" : "s")"
-            return(string)
-            }
-        self.toolbar.control(atKey: "warnings")!.valueModel = adaptor
-        adaptor = Transformer(model: AspectAdaptor(on: self.rootItem, aspect: "errorCount"))
-            {
-            incoming in
-            let total = incoming as! Int
-            let string = "\(total) error\(total == 1 ? "" : "s")"
-            return(string)
-            }
-        self.toolbar.control(atKey: "errors")!.valueModel = adaptor
-        adaptor = Transformer(model: AspectAdaptor(on: self.rootItem,aspect: "label"))
-            {
-            incoming in
-            let string = incoming as! String
-            let label = "Project: Model(\(string))"
-            return(label)
-            }
-        self.toolbar.control(atKey: "name")!.valueModel = adaptor
-        adaptor = Transformer(model: AspectAdaptor(on: self.rootItem,aspect: "itemCount"))
-            {
-            incoming in
-            let count = incoming as! Int
-            let label = "\(count) item\(count == 1 ? "" : "s")"
-            return(label)
-            }
-        self.toolbar.control(atKey: "records")!.valueModel = adaptor
-        adaptor = Transformer(model: self.selectedItemValueModel)
-            {
-            incoming in
-            if let value = incoming as? ProjectItem
-                {
-                return(value.validActions)
-                }
-            return(BrowserActionSet(rawValue: 0))
-            }
-        self.toolbar.enabledValueModel = adaptor
         self.selectedItemValueModel.addDependent(self)
         }
         
@@ -233,6 +180,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         if aspect == "value" && from.dependentKey == self.selectedItemValueModel.dependentKey
             {
             self.view.window?.toolbar?.validateVisibleItems()
+            self.updatePathControl(from: self.selectedItemValueModel.value as? ProjectItem)
             return
             }
         if aspect == "label" && from.dependentKey == self.rootItem.dependentKey
@@ -250,6 +198,24 @@ public class ArgonBrowserViewController: NSViewController,Dependent
                     }
                 }
             }
+        }
+        
+    private func updatePathControl(from item: ProjectItem?)
+        {
+        guard item.isNotNil else
+            {
+            self.pathControl.pathItems = []
+            return
+            }
+        var items = Array<NSPathControlItem>()
+        for anItem in item!.pathToProject.reversed()
+            {
+            let pathControlItem = NSPathControlItem()
+            pathControlItem.attributedTitle = NSAttributedString(string: anItem.label,attributes: [.font: Palette.shared.font(for: .recordTextFont),.foregroundColor: Palette.shared.color(for: .recordTextColor)])
+            pathControlItem.image = anItem.icon.image(withTintColor: Palette.shared.color(for: anItem.iconTintIdentifier))
+            items.append(pathControlItem)
+            }
+        self.pathControl.pathItems = items
         }
         
     @objc public func outlinerFrameChanged(_ sender: Any?)
@@ -302,7 +268,7 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         bar.leadingAnchor.constraint(equalTo: self.leftView.leadingAnchor).isActive = true
         bar.trailingAnchor.constraint(equalTo: self.leftView.trailingAnchor).isActive = true
         bar.topAnchor.constraint(equalTo: self.leftView.topAnchor).isActive = true
-        self.buttonBarHeightConstraint = bar.heightAnchor.constraint(equalToConstant: self.toolbarHeight)
+        self.buttonBarHeightConstraint = bar.heightAnchor.constraint(equalToConstant: self.baseRowHeight)
         self.buttonBarHeightConstraint.isActive = true
         }
         
@@ -463,16 +429,22 @@ public class ArgonBrowserViewController: NSViewController,Dependent
         
     @IBAction public func onToggleLeftSidebar(_ sender: Any?)
         {
-        if self.leftSidebarState.isExpanded
+        NSAnimationContext.runAnimationGroup
             {
-            let amount = self.leftView.frame.width
-            self.leftSidebarState = self.leftSidebarState.toggledState(amount)
-            self.splitView.setPosition(0, ofDividerAt: 0)
-            }
-        else
-            {
-            self.splitView.setPosition(self.leftSidebarState.amount,ofDividerAt: 0)
-            self.leftSidebarState = self.leftSidebarState.toggledState()
+            context in
+            context.allowsImplicitAnimation = true
+            context.duration = 0.75
+            if self.leftSidebarState.isExpanded
+                {
+                let amount = self.leftView.frame.width
+                self.leftSidebarState = self.leftSidebarState.toggledState(amount)
+                self.splitView.setPosition(0, ofDividerAt: 0)
+                }
+            else
+                {
+                self.splitView.setPosition(self.leftSidebarState.amount,ofDividerAt: 0)
+                self.leftSidebarState = self.leftSidebarState.toggledState()
+                }
             }
         }
         
