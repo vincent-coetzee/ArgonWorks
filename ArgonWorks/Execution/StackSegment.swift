@@ -1,135 +1,206 @@
 //
 //  StackSegment.swift
-//  StackSegment
+//  ArgonWorks
 //
-//  Created by Vincent Coetzee on 2/8/21.
+//  Created by Vincent Coetzee on 16/12/21.
 //
 
 import Foundation
 
+///
+///
+/// ARGON METHOD CALLING CONVENTION
+///
+/// --------------------
+/// | ARGUMENT N       |
+/// --------------------
+/// | ARGUMENT N - 1   |
+/// --------------------
+///        \
+///        \
+/// --------------------
+/// | ARGUMENT 1       | ARGUMENT 1 = [BP + 32]
+/// --------------------
+/// | ARGUMENT 0       | ARGUMENT 0 = [BP + 24]
+/// --------------------
+/// | CONTEXT ADDRESS  |
+/// --------------------
+/// | RETURN IP        |
+/// --------------------
+/// | OLD FRAME PTR=BP | <----- BP
+/// --------------------
+/// | LOCAL COUNT      |
+/// --------------------
+/// | LOCAL 0          | LOCAL 0 = [BP -  16]
+/// --------------------
+/// | LOCAL 1          | LOCAL 1 = [BP - 24]
+/// --------------------
+///         \
+///         \
+/// --------------------
+/// | LOCAL N - 1      |
+/// --------------------
+/// | LOCAL N          | <----- SP
+/// --------------------
+///
+///
 public class StackSegment: Segment
     {
-    public override var spaceFree: MemorySize
-        {
-        return(MemorySize.bytes(Int(self.stackTop) - Int(self.stackPointer)))
-        }
-        
-    public override var spaceUsed: MemorySize
-        {
-        return(MemorySize.bytes(Int(self.stackPointer-self.baseAddress)))
-        }
-        
-    public override var segmentType:SegmentType
+    public override class var segmentType: SegmentType
         {
         .stack
         }
         
-    public let base: UnsafeMutableRawPointer
-    public let baseAddress: Word
-    public let stackTop: Word
-    public var stackPointer: Word
+    public static let kFirstTemporaryOffset = -2 * Argon.kWordSizeInBytesInt
+    public static let kFirstArgumentOffset = 3 * Argon.kWordSizeInBytesInt
+    
+    internal private(set) var stackPointer: Word = 0
+    internal private(set) var framePointer: Word = 0
 
-    public override init(size: MemorySize)
+    public override init(memorySize: MemorySize,argonModule: ArgonModule) throws
         {
-        self.base = malloc(size.inBytes)
-        self.baseAddress = Word(bitPattern: Int64(Int(bitPattern: self.base)))
-        self.stackTop = self.baseAddress + Word(size.inBytes)
-        if self.stackTop.doesWordHaveBitsInSecondFromTopByte
+        try super.init(memorySize: memorySize,argonModule: argonModule)
+        self.stackPointer = self.lastAddress
+        self.framePointer = self.stackPointer
+        }
+        
+    public override func display(indent: String,count: Int)
+        {
+        var pointer = WordPointer(bitPattern: self.lastAddress - Argon.kWordSizeInBytesWord)
+        for index in 0..<count
             {
-            fatalError("This address has bits in the top two bytes of it which means it can't be used for enumerations etc.")
+            let address = Word(bitPattern: pointer)
+            let addressString = String(format: "%012X",address)
+            let offset = String(format: "%06d",index)
+            let value = pointer[0]
+            let data = String(format: "%012X",value)
+            var extra = ""
+            extra = address == self.stackPointer ? "<--SP" : ""
+            extra = address == self.framePointer ? extra + "<--FP" : extra
+            print("\(indent)\(addressString) [\(offset)] \(data) \(value) \(extra)")
+            pointer -= 1
             }
-        self.stackPointer = self.stackTop - Word(MemoryLayout<Word>.size)
-        super.init(size: size)
-        }
-            
-    deinit
-        {
-        free(self.base)
         }
         
-    public override func allocateAddress(sizeInBytes: Int) -> Address
+    @inline(__always)
+    public func push(_ word: Word)
         {
-        let newAddress = self.allocateObject(sizeInBytes: sizeInBytes)
-        let address = Address.relative(self.segmentRegister,Int(newAddress - baseAddress))
-        return(address)
+        self.stackPointer -= Argon.kWordSizeInBytesWord
+        self.wordPointer[Int(self.stackPointer - self.baseAddress) / Argon.kWordSizeInBytesInt] = word
         }
         
-    public override func allocateObject(sizeInBytes:Int) -> Word
-        {
-        if self.stackPointer >= self.baseAddress
-            {
-            fatalError("The StackSegment has run out of space, allocate a larger space and rerun the system")
-            }
-        let size = ((sizeInBytes / 8) + 1) * 8
-        self.stackPointer -= Word(size)
-        let newPointer = self.stackPointer
-        let pointer = UnsafeMutablePointer<Word>(bitPattern: UInt(newPointer))!
-        var header:Header = 0
-        header.tag = .header
-        header.sizeInWords = sizeInBytes / MemoryLayout<Word>.size
-        header.isForwarded = false
-        header.flipCount = 0
-        header.hasBytes = false
-        pointer[0] = header
-        return(newPointer)
-        }
-        
-    public override func allocateString(_ input:String) -> Word
-        {
-        let extraBytes = ((input.utf8.count / 7) + 1) * 8
-        let theClass = self.virtualMachine.topModule.argonModule.string
-        let totalBytes = theClass.sizeInBytes + extraBytes
-        let address = self.allocateObject(sizeInBytes: totalBytes)
-        if address.isZero
-            {
-            print("ERROR IN ManagedSegment.allocateString")
-            print("ERROR ALLOCATING STRING AT \(address.addressString)")
-            return(0)
-            }
-        let object = WordPointer(address: address)!
-        object[1] = Word(bitPattern: Int64(theClass.magicNumber))      // WRITE THE _magicNumber
-        object[2] = theClass.memoryAddress                             // WRITE THE _classPointer
-        let objectClass = self.virtualMachine.topModule.argonModule.object
-        object[3] = Word(bitPattern: Int64(0))                         // WRITE THE _ObjectHeader
-        object[4] = Word(bitPattern: Int64(objectClass.magicNumber))   // WRITE THE _ObjectMagicNumber
-        object[5] = objectClass.memoryAddress                          // WRITE THE _ObjectClassPointer
-        let offset = UInt(address) + UInt(theClass.sizeInBytes)
-        let offsetOfCount = theClass.layoutSlot(atLabel: "count")!.offset
-        let bytePointer = UnsafeMutablePointer<UInt8>(bitPattern: offset)!
-        let countAddress = Word(offsetOfCount) + address
-        let wordPointer = WordPointer(address: countAddress)!          // WRITE THE count
-        wordPointer[0] = Word(input.utf8.count)
-        let string = input.utf8
-        var position = 0
-        var index = string.startIndex
-        var count = string.count
-        while position < count
-            {
-            if position % 7 == 0
-                {
-                bytePointer[position] = Self.kBitsByte
-                position += 1
-                count += 1
-                }
-            else
-                {
-                bytePointer[position] = string[index]
-                position += 1
-                index = string.index(after: index)
-                }
-            }
-        return(address)
-        }
-        
-    public func push(_ word:Word)
-        {
-        WordPointer(address: self.stackPointer)!.pointee = word
-        self.stackPointer -= Word(MemoryLayout<Word>.size)
-        }
-        
+    @inline(__always)
+    @discardableResult
     public func pop() -> Word
         {
-        self.stackPointer += Word(MemoryLayout<Word>.size)
-        return(WordPointer(address: self.stackPointer)!.pointee)
+        let value = self.wordPointer[Int(self.stackPointer - self.baseAddress) / Argon.kWordSizeInBytesInt]
+        self.stackPointer += Argon.kWordSizeInBytesWord
+        return(value)
         }
+        
+    @inline(__always)
+    private func valueAt(base: Word,offset: Int) -> Word
+        {
+        let index = ((Int(base) + offset) - Int(self.baseAddress)) / Argon.kWordSizeInBytesInt
+        return(self.wordPointer[index])
+        }
+        
+    @inline(__always)
+    private func setValue(_ value: Word,atBase: Word,offset: Int)
+        {
+        let index = ((Int(atBase) + offset) - Int(self.baseAddress)) / Argon.kWordSizeInBytesInt
+        self.wordPointer[index] = value
+        }
+        
+    @inline(__always)
+    public func localSlot(atOffset: Int) -> Word
+        {
+        let index = ((Int(self.framePointer) + atOffset) - Int(self.baseAddress) - Argon.kWordSizeInBytesInt) / Argon.kWordSizeInBytesInt
+        return(self.wordPointer[index])
+        }
+        
+    @inline(__always)
+    public func setLocalSlot(_ slotValue:Word,atOffset: Int)
+        {
+        let index = ((Int(self.framePointer) + atOffset) - Int(self.baseAddress) - Argon.kWordSizeInBytesInt) / Argon.kWordSizeInBytesInt
+        self.wordPointer[index] = slotValue
+        }
+        
+    @inline(__always)
+    public func argument(atOffset: Int) -> Word
+        {
+        let index = ((Int(self.framePointer) + atOffset) - Int(self.baseAddress) - Argon.kWordSizeInBytesInt) / Argon.kWordSizeInBytesInt
+        return(self.wordPointer[index])
+        }
+        
+    public func enterFrame(arguments: Words,localCount: Int,currentFrameAddress: Word)
+        {
+        for argument in arguments.reversed()
+            {
+            self.push(argument)
+            }
+        self.push(self.framePointer)
+        self.framePointer = self.stackPointer
+        self.push(currentFrameAddress)
+        self.push(Word(localCount))
+        self.stackPointer -= Word(localCount) * Argon.kWordSizeInBytesWord
+        }
+        
+    public func exitFrame() -> Word
+        {
+        let localCount = self.valueAt(base: self.framePointer,offset: -2 * Argon.kWordSizeInBytesInt)
+        self.stackPointer += localCount * Argon.kWordSizeInBytesWord
+        self.pop() /// GET RID OF LOCAL COUNT
+        let returnAddress = self.pop()
+        self.framePointer = self.pop()
+        return(returnAddress)
+        }
+        
+    public static func testStackSegment()
+        {
+//        struct Local
+//            {
+//            let offset: Int
+//            }
+//            
+//        var arguments = Words()
+//        for index in 0..<23
+//            {
+//            arguments.append(Word(index))
+//            }
+//        var locals = Array<Local>()
+//        var offset = StackSegment.kFirstTemporaryOffset
+//        for _ in 0..<8
+//            {
+//            locals.append(Local(offset: offset))
+//            offset -= 8
+//            }
+//        let returnAddress:Word = 210674577
+//        let stackSegment = StackSegment(memorySize: MemorySize(megabytes: 100),argonModule: ArgonModule())
+//        stackSegment.enterFrame(arguments: arguments, localCount: locals.count, currentFrameAddress: returnAddress)
+//        var index:Word = 0
+//        for local in locals
+//            {
+//            stackSegment.setLocalSlot(index,atOffset: local.offset)
+//            index += 1
+//            }
+//        stackSegment.display(indent: "",count: 50)
+//        offset = StackSegment.kFirstArgumentOffset
+//        for index in 0..<arguments.count
+//            {
+//            let value = stackSegment.argument(atOffset: offset)
+//            assert(value == index,"Argument[\(offset)] != \(index) but is \(value)")
+//            offset += 8
+//            }
+//        index = 0
+//        for local in locals
+//            {
+//            let value = stackSegment.localSlot(atOffset: local.offset)
+//            assert(value == index,"Local[\(local.offset)] != \(index) but is \(value)")
+//            index += 1
+//            }
+//        let address = stackSegment.exitFrame()
+//        assert(address == returnAddress,"Return address = \(address) and should == \(returnAddress)")
+        }
+        
     }

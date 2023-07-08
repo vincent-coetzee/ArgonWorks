@@ -7,41 +7,17 @@
 
 import Foundation
 
-public class ArrayClass:GenericSystemClass
-    {
-    private static var allInstances = Array<ArrayClassInstance>()
-    
-    public override var internalClass: Class
-        {
-        return(self.topModule.argonModule.generic)
-        }
-        
-    public override var isArrayClass: Bool
-        {
-        return(true)
-        }
-        
-    public func withElement(_ type: Type) -> ArrayClassInstance
-        {
-        let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withType: type)
-        let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
-        Self.allInstances.append(instance)
-        return(instance)
-        }
-        
-   public override func of(_ type:Class) -> ArrayClassInstance
-        {
-        let parameter = GenericClassParameter(label: "ELEMENT")
-        let concreteClass = parameter.instanciate(withType: type.type)
-        let instance = ArrayClassInstance(label: Argon.nextName("_ARRAY"), sourceClass: self, genericClassParameterInstances: [concreteClass])
-        instance.slotClassType = self.slotClassType
-        Self.allInstances.append(instance)
-        return(instance)
-        }
-        
-    public override func layoutInMemory(in vm: VirtualMachine)
-        {
-        super.layoutInMemory(in: vm)
-        }
-    }
+//public class ArrayClass:GenericSystemClass
+//    {
+//    public override var isSystemSymbol: Bool
+//        {
+//        return(true)
+//        }
+//        
+//    private static var allInstances = Array<ArrayClass>()
+//    
+//    public override var mangledName: String
+//        {
+//        fatalError()
+//        }
+//    }

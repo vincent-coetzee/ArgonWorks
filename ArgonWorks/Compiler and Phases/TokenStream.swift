@@ -9,7 +9,7 @@
 import Foundation
 import Combine
 
-public class TokenStream:Equatable
+public class TokenStream:Equatable, TokenSource
     {
     public static func == (lhs: TokenStream, rhs: TokenStream) -> Bool
         {
@@ -36,7 +36,7 @@ public class TokenStream:Equatable
             }
         }
         
-    private var reportingContext:ReportingContext = NullReportingContext.shared
+    private var reportingContext:Reporter = NullReporter.shared
     private var source:String = ""
     private var line:Int = 0
     private var lineAtTokenStart = 0
@@ -45,23 +45,20 @@ public class TokenStream:Equatable
     private var currentString:String  = ""
     private var keywords:[String] = []
     private var startIndex:Int = 0
-//    private var keyValueCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_:"))
-//    private var typeParameterCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._"))
     private var identifierCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-?"))
     private var nameCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "\\_-?"))
     private var identifierStartCharacters = NSCharacterSet.letters.union(CharacterSet(charactersIn: "_$"))
     private var pathCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_/."))
     private let alphanumerics = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
-//    private let symbolString = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
     private let letters = NSCharacterSet.letters.union(CharacterSet(charactersIn: "_"))
-    private let quoteCharacters = CharacterSet(charactersIn: "\"")
+//    private let quoteCharacters = CharacterSet(charactersIn: "\"")
     private let digits = NSCharacterSet.decimalDigits
     private let whitespace = NSCharacterSet.whitespaces
     private let newline = NSCharacterSet.newlines
-    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@")
+    private let symbols = CharacterSet(charactersIn: "=<>-+*/%!&|^\\/~:.,$()[]:.{},@;")
     private let hexDigits = CharacterSet(charactersIn: "avbdefABCDEF0123456789_")
     private let binaryDigits = CharacterSet(charactersIn: "01_")
-    private let operatorSymbols = CharacterSet(charactersIn: "=<>-+*/%!&|^~@")
+    private let operatorSymbols = CharacterSet(charactersIn: "=>-+*/%!&|^~@")
     private let hashStringCharacters = NSCharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_-"))
     private var tokenStart:Int = 0
     private var tokenStop:Int = 0
@@ -75,25 +72,24 @@ public class TokenStream:Equatable
     private var tokenLine:Int = 0
     private var positionStack = Stack<StreamPosition>()
     private var _braceDepth = 0
-//    public var lexicalState:LexicalState = .scanning
-//    private var errorSubject: PassthroughSubject<CompilerIssue, Never>?
-    
+    public var lineNumber:LineNumber = EmptyLineNumber()
+    private var withComments = false
     public var braceDepth:Int
         {
         return(self._braceDepth)
         }
         
-    public var lineNumber:Int
-        {
-        get
-            {
-            return(self.line)
-            }
-        set
-            {
-            self.line = newValue
-            }
-        }
+//    public var lineNumber:Int
+//        {
+//        get
+//            {
+//            return(self.line)
+//            }
+//        set
+//            {
+//            self.line = newValue
+//            }
+//        }
         
     private var atEnd:Bool
         {
@@ -105,8 +101,9 @@ public class TokenStream:Equatable
         return(newline.contains(self.currentChar))
         }
     
-    init(source:String,context:ReportingContext)
+    init(source:String,context:Reporter,withComments: Bool = true)
         {
+        self.withComments = withComments
         self.reportingContext = context
         self.source = source
         self.initState()
@@ -120,7 +117,7 @@ public class TokenStream:Equatable
         self.initKeywords()
         }
         
-    public func allTokens(withComments:Bool,context:ReportingContext) -> [Token]
+    public func allTokens(withComments:Bool,context:Reporter) -> [Token]
         {
         self.reportingContext = context
         self.parseComments = withComments
@@ -208,7 +205,11 @@ public class TokenStream:Equatable
             {
             index = source.index(after: index)
             }
-        return(source.unicodeScalars[index])
+        if index < source.endIndex
+            {
+            return(source.unicodeScalars[index])
+            }
+        return(UnicodeScalar(" "))
         }
         
     public func rewindChar()
@@ -300,6 +301,25 @@ public class TokenStream:Equatable
         return(text)
         }
         
+    @discardableResult
+    public func scanTextUntilMacroEnd() -> String
+        {
+        let scalar1:UnicodeScalar = "}"
+        let scalar2:UnicodeScalar = "$"
+        var text:String = ""
+        while self.currentChar != scalar1 && self.peekChar(at: 0) != scalar2 && !self.atEnd
+            {
+            text.append(String(self.currentChar))
+            self.nextChar()
+            }
+        if !atEnd
+            {
+            self.nextChar()
+            self.nextChar()
+            }
+        return(text)
+        }
+        
     private func scanInvisible()
         {
         self.eatSpace()
@@ -313,8 +333,10 @@ public class TokenStream:Equatable
             self.scanToEndOfLine()
             if self.parseComments
                 {
+//                let anIndex = self.source.index(self.source.startIndex,offsetBy: self.startIndex)
                 let endIndex = source.distance(from: source.startIndex, to: offset)
-                return(Token.comment(source.substring(with: startIndex..<endIndex),self.sourceLocation()))
+                print("Comments are '\(source.substring(with: (startIndex-1)..<endIndex))'")
+                return(Token.comment(source.substring(with: (startIndex-1)..<endIndex),self.sourceLocation()))
                 }
             return(self.nextToken())
             }
@@ -349,6 +371,11 @@ public class TokenStream:Equatable
             string += self.currentChar
             self.nextChar()
             }
+        if self.identifierCharacters.contains(self.currentChar) && !(self.currentChar == "-" && self.peekChar(at:0) == ">")
+            {
+            string += self.currentChar
+            self.nextChar()
+            }
         if self.keywords.contains(string)
             {
             return(.keyword(Token.Keyword(rawValue: string)!,self.sourceLocation()))
@@ -372,14 +399,38 @@ public class TokenStream:Equatable
         return(.path(string,self.sourceLocation()))
         }
         
+    public func peekToken(count: Int) -> Token
+        {
+        for index in 0..<count
+            {
+            let token = self.nextToken()
+            self.tokenStack.append(token)
+            if index == count - 1
+                {
+                return(token)
+                }
+            }
+        return(self.tokenStack[count-1])
+        }
+        
     public func nextToken() -> Token
         {
-        self.tokenLine = line
-        if !tokenStack.isEmpty
+        let token = self.scanToken()
+        if !self.withComments && token.isWhitespace
             {
-            return(tokenStack.removeFirst())
+            return(self.nextToken())
             }
-        tokenStart = characterOffset
+        return(token)
+        }
+        
+    private func scanToken() -> Token
+        {
+        self.tokenLine = line
+        if !self.tokenStack.isEmpty
+            {
+            return(self.tokenStack.removeFirst())
+            }
+        self.tokenStart = self.characterOffset
         self.scanInvisible()
 //            {
 //            return(invisible)
@@ -393,7 +444,26 @@ public class TokenStream:Equatable
         if self.currentChar == "<" && self.peekChar(at:0) == "/" && CharacterSet.letters.contains(self.peekChar(at:1))
             {
             self.nextChar()
-            return(.symbol(Token.Symbol(rawValue:"<")!,self.sourceLocation()))
+            return(.symbol(.leftBrocket,self.sourceLocation()))
+            }
+        else if self.currentChar == "<"
+            {
+            self.nextChar()
+            if self.currentChar == "="
+                {
+                self.nextChar()
+                return(.symbol(.leftBrocketEquals,self.sourceLocation()))
+                }
+            return(.symbol(.leftBrocket,self.sourceLocation()))
+            }
+        else if self.currentChar == "$" && self.peekChar(at: 0) == "{"
+            {
+            self.nextChar()
+            self.nextChar()
+            let text = self.scanTextUntilMacroEnd()
+            self.tokenStack.append(.string(text,self.sourceLocation()))
+//            self.tokenStack.append(.symbol(.macroStop,self.sourceLocation()))
+            return(.symbol(.macroStart,self.sourceLocation()))
             }
         ///
         ///
@@ -465,7 +535,8 @@ public class TokenStream:Equatable
                 }
             else
                 {
-                return(.symbol(Token.Symbol(rawValue:"%")!,self.sourceLocation()))
+                self.rewindChar()
+                return(self.scanSymbol())
                 }
             }
         //
@@ -612,9 +683,9 @@ public class TokenStream:Equatable
     private func scanString() -> Token
         {
         self.startIndex = self.characterOffset
-        var string = "\""
+        var string = ""
         self.nextChar()
-        while !self.quoteCharacters.contains(self.currentChar) && !self.atEnd && !self.atEndOfLine
+        while self.currentChar != "\"" && !self.atEnd && !self.atEndOfLine
             {
             string += String(self.currentChar)
             self.nextChar()
@@ -858,7 +929,7 @@ public class TokenStream:Equatable
             if self.currentChar == "$"
                 {
                 self.nextChar()
-                return(.symbol(.macroEnd,self.sourceLocation()))
+                return(.symbol(.macroStop,self.sourceLocation()))
                 }
             self._braceDepth -= 1
             return(.symbol(.rightBrace,self.sourceLocation()))
@@ -909,6 +980,11 @@ public class TokenStream:Equatable
                 {
                 return(self.scanOperator(withPrefix:">"))
                 }
+            }
+        else if self.currentChar == ";"
+            {
+            self.nextChar()
+            return(.symbol(.semicolon,self.sourceLocation()))
             }
         else if self.currentChar == ":"
             {
@@ -1038,13 +1114,17 @@ public class TokenStream:Equatable
         {
         self.tokenStop = self.characterOffset
         self.tokenStart = self.startIndex
-        return(Location(line:tokenLine,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
+        return(Location(line: self.line,lineStart: lineStart,lineStop: self.lineStart + self.lineLength,tokenStart:max(tokenStart - 1,0),tokenStop:tokenStop-1))
         }
     
     private func scanOperator(withPrefix startString:String) -> Token
         {
         var operatorString = startString
         if startString == "<" && self.currentChar == "/" && self.alphanumerics.contains(self.peekChar(at:0))
+            {
+            return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
+            }
+        if self.currentChar == "<"
             {
             return(.symbol(Token.Symbol(rawValue: operatorString)!,self.sourceLocation()))
             }

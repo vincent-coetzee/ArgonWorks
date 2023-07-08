@@ -14,17 +14,53 @@ public class TupleExpression: Expression
         let string = "(" + self.expressions.map{$0.displayString}.joined(separator: ",") + ")"
         return("TUPLE\(string)")
         }
-        
-    public override var resultType: Type
-        {
-        return(.class(Tuple(label: Argon.nextName("1TUPLE"))))
-        }
-        
+
     private var expressions = Expressions()
+    public var isArrayDestructure: Bool = false
+    internal var tuple: Tuple
     
     public override init()
         {
+        self.tuple = Tuple()
         super.init()
+        }
+        
+    public init(_ expressions: Expression...)
+        {
+        self.expressions = expressions
+        self.tuple = Tuple(expressions)
+        super.init()
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        let expressions = coder.decodeObject(forKey: "expressions") as! Expressions
+        self.isArrayDestructure = coder.decodeBool(forKey: "isArrayDestructure")
+        self.tuple = Tuple(expressions)
+        self.expressions = expressions
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.expressions,forKey: "expressions")
+        coder.encode(self.isArrayDestructure,forKey: "isArrayDestructure")
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        for expression in self.expressions
+            {
+            try expression.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.tuple.initializeType(inContext: context)
+        self.type = self.tuple.type
         }
         
     public func append(_ expression: Expression)
@@ -36,15 +72,7 @@ public class TupleExpression: Expression
         {
         }
         
-    public override func realize(using realizer:Realizer)
-        {
-        for expression in self.expressions
-            {
-            expression.realize(using: realizer)
-            }
-        }
-        
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
         print("TupleExpression NEEDS TO GENERATE CODE")
         }

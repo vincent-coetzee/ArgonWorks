@@ -7,26 +7,20 @@
 
 import Foundation
 
+
+    
 public class AddressAllocator: CompilerPass
     {
-    @discardableResult
-    public static func allocateAddresses(_ node:ParseNode,in compiler: Compiler) -> Bool
-        {
-        let allocator = AddressAllocator(compiler: compiler)
-        return(allocator.allocateAddresses(node))
-        }
-        
-    public var virtualMachine: VirtualMachine
-        {
-        return(self.compiler.virtualMachine)
-        }
-        
     public let compiler: Compiler
     public var wasCancelled = false
+    public var payload: VMPayload
+    public let argonModule: ArgonModule
     
-    init(compiler: Compiler)
+    init(_ compiler: Compiler)
         {
         self.compiler = compiler
+        self.payload = VMPayload()
+        self.argonModule = ArgonModule.shared
         }
         
     public func cancelCompletion()
@@ -34,9 +28,59 @@ public class AddressAllocator: CompilerPass
         self.wasCancelled = true
         }
         
-    private func allocateAddresses(_ node:ParseNode) -> Bool
+    public func processModule(_ module: Module?) -> Module?
         {
-        node.allocateAddresses(using: self)
-        return(!self.wasCancelled)
+        guard let module = module else
+            {
+            return(nil)
+            }
+        ArgonModule.shared.moduleWithAllocatedAddresses(using: self)
+        let newModule = module.moduleWithAllocatedAddresses(using: self)
+        guard !self.wasCancelled else
+            {
+            return(nil)
+            }
+        return(newModule)
+        }
+        
+    public func registerSymbol(_ symbol: Argon.Symbol) -> Address
+        {
+        self.payload.symbolRegistry.registerSymbol(symbol)
+        }
+        
+    public func segment(for segmentType: Segment.SegmentType) -> Segment
+        {
+        switch(segmentType)
+            {
+            case .null:
+                break
+            case .static:
+                return(self.payload.staticSegment)
+            case .managed:
+                return(self.payload.managedSegment)
+            case .stack:
+                return(self.payload.stackSegment)
+            case .code:
+                return(self.payload.codeSegment)
+            }
+        fatalError("Can not determine segment")
+        }
+        
+    public func allocateAddress(for symbol: Symbol)
+        {
+        let segment = self.segment(for: symbol.segmentType)
+        segment.allocateMemoryAddress(for: symbol)
+        }
+        
+    public func allocateAddress(for methodInstance: MethodInstance)
+        {
+        let segment = self.segment(for: methodInstance.segmentType)
+        segment.allocateMemoryAddress(for: methodInstance)
+        }
+        
+    public func allocateAddress(for aStatic: StaticObject)
+        {
+        let segment = self.segment(for: aStatic.segmentType)
+        segment.allocateMemoryAddress(for: aStatic)
         }
     }

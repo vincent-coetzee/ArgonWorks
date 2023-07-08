@@ -7,423 +7,124 @@
 
 import Foundation
 
-///
-///
-/// A MethodSignature is used in generating the dispatch tree for a Method
-///
-///
-public struct MethodSignature:Displayable,CustomDebugStringConvertible,CustomStringConvertible
+   public enum SpecificOrdering
+        {
+        case more
+        case unordered
+        case less
+        }
+        
+public struct TagSignature: Equatable
     {
-    public var description: String
-        {
-        return(self.displayString)
-        }
-        
-    public var debugDescription: String
-        {
-        return(self.displayString)
-        }
-        
-    public var displayString: String
-        {
-        let parmString = "[" + self.parameters.map{$0.type.displayString}.joined(separator: ",") + "]"
-        return("\(self.instance.label) \(parmString)")
-        }
-        
-    public let parameters: Parameters
-    public let instance: MethodInstance
+    internal let tags: Array<Label?>
     
-    public var isEmpty: Bool
+    init(tags:  Array<Label?>)
         {
-        self.parameters.isEmpty
+        self.tags = tags
         }
         
-    public var firstParameter: Parameter
+    init(arguments: Arguments)
         {
-        self.parameters.first!
+        self.tags = arguments.map{$0.tag}
         }
         
-    public func withoutFirst() -> MethodSignature
+    internal func withArguments(_ arguments: Arguments) -> TagSignature
         {
-        MethodSignature(parameters: Parameters(self.parameters.dropFirst()),instance: self.instance)
+        var newTags = Array<Label>()
+        var index = 0
+        for argument in arguments
+            {
+            if argument.tag.isNil
+                {
+                newTags.append(self.tags[index]!)
+                }
+            else
+                {
+                newTags.append(argument.tag!)
+                }
+            index += 1
+            }
+        return(TagSignature(tags: newTags))
         }
     }
     
-public typealias MethodSignatures = Array<MethodSignature>
-
-///
-///
-/// A MethodInstance is the functional part of a method. A method has multiple
-/// instance of itself, but one of those instances will get selected based on the
-/// typesof the arguments and that instance will then execute. A Method is not
-/// directly executable. When the method instances are compiled code is actually
-/// generated for each method instance but not for the method.
-///
-/// A MethodInstance has an instruction buffer, which is a high level form
-/// of the generated code, that instruction buffer is translated into an
-/// InnerInstructionBufferPointer which contains the encoded form of the
-/// instructions and the buffer represented by the InnerInstructionBufferPointer
-/// will actually be used when this instance of a method is called.
-///
-///
-public class MethodInstance:Function
+public class MethodInstance: Function
     {
-    public var methodSignature: MethodSignature
+    public override var isMethodInstanceScope: Bool
         {
-        MethodSignature(parameters: self.parameters,instance: self)
+        true
         }
         
-    public var isSystemMethodInstance: Bool
+    public override var segmentType: Segment.SegmentType
         {
-        return(false)
+        .code
         }
         
-    public var localSlots: Slots
+    public override var sizeInBytes: Int
         {
-        self.localSymbols.filter{$0 is Slot}.map{$0 as! Slot}.sorted(by: {$0.offset < $1.offset})
+        let instanceClass = ArgonModule.shared.methodInstance
+        var size = instanceClass.instanceSizeInBytes
+        size += Argon.kWordSizeInBytesInt
+        size += self.codeBuffer.count + T3AInstruction.sizeInBytes
+        return(size)
         }
         
-    internal private(set) var block: MethodInstanceBlock! = nil
-    
-    private var localSymbols = Symbols()
-    private var _method:Method?
-    public let buffer = InstructionBuffer()
-    public var instructionsAddress: Word = 0
-    public var isGenericMethod = false
-    public var genericParameters = GenericClassParameters()
-    
-    public var systemMethod: ArgonWorks.Method
+    public override var argonHash: Int
         {
-        if self._method.isNotNil
+        var hashValue = super.argonHash
+        for slot in self.parameters
             {
-            return(self._method!)
+            hashValue = hashValue << 13 ^ slot.argonHash
             }
-        let method = SystemMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
+        hashValue = hashValue << 13 ^ self.returnType.argonHash
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
         }
         
-    public var libraryMethod: ArgonWorks.Method
+    public var isBlockContextScope: Bool
         {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = LibraryMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
+        false
         }
         
-    public var intrinsicMethod: ArgonWorks.Method
+    public override var declaration: Location?
         {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = IntrinsicMethod(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
+        self.locations.declaration
         }
         
-    public var method: ArgonWorks.Method
+    public var isSlotScope: Bool
         {
-        if self._method.isNotNil
-            {
-            return(self._method!)
-            }
-        let method = Method(label: self.label)
-        method.addInstance(self)
-        self._method = method
-        return(method)
+        false
         }
         
-    override init(label:Label)
+    public var typeSignature:TypeSignature
         {
-        super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
+        TypeSignature(label: self.label,types: self.parameters.map{$0.type},returnType: self.returnType)
         }
         
-    public init(_ label:Label)
+    public var mangledName: String
         {
-        super.init(label:label)
-        self.block = MethodInstanceBlock(methodInstance: self)
-        self.block.setParent(self)
+        let start = self.label
+        let next = self.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let end = "=" + self.returnType.mangledName
+        return(start + "." + next + end)
         }
         
-    convenience init(left:String,_ operation:Token.Symbol,right:String,out:String)
+    ///
+    ///
+    /// A method instance is concrete if all the parameters and the return type
+    /// have types that contain a concrete type, i.e. there are no type variables
+    /// in place of types anywhere.
+    ///
+    ///
+    public var isConcreteInstance: Bool
         {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = Class(label:out)
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:String,_ operation:String,right:String,out:String)
-        {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = Class(label:out)
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:String,_ operation:String,right:String,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: .class(Class(label: left)),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(Class(label: right)),isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(left:Class,_ operation:Token.Symbol,right:Class,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: .class(left),isVisible: false)
-        let rightParm = Parameter(label: "right", type: .class(right),isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-   convenience init(left:Class,_ operation: String,right:Class,out:Class)
-        {
-        let leftParm = Parameter(label: "left", type: left.type,isVisible: false)
-        let rightParm = Parameter(label: "right", type: right.type,isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-   convenience init(_ operation: String,arg:Class,out:Class)
-        {
-        let rightParm = Parameter(label: "arg", type: arg.type,isVisible: false)
-        let name = "\(operation)"
-        let result = out
-        self.init(label: name)
-        self.parameters = [rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:String,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: Class(label:op2).type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ out:String)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let result = Class(label:out)
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(VoidClass.voidClass)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:String,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: Class(label:op3).type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ op3:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let lastParm = Parameter(label: "op3", type: op3.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm,lastParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:String)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let result = Class(label:out)
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ op2:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let rightParm = Parameter(label: "op2", type: op2.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm,rightParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(_ label:String,_ op1:Class,_ out:Class)
-        {
-        let leftParm = Parameter(label: "op1", type: op1.type,isVisible: false)
-        let result = out
-        self.init(label: label)
-        self.parameters = [leftParm]
-        self.returnType = .class(result)
-        }
-        
-    convenience init(label: Label,parameters: Parameters,returnType:Type? = nil)
-        {
-        self.init(label: label)
-        self.parameters = parameters
-        self.returnType = returnType ?? .class(VoidClass.voidClass)
-        for parameter in parameters
-            {
-            self.addLocalSlot(parameter)
-            }
-        }
-        
-    public func generic(_ name:String) -> Self
-        {
-        self.parameters.append(Parameter(label: name,type: GenericType(label: name).type))
-        return(self)
-        }
-        
-    public func `where`(_ name:String,_ aClass:Class) -> MethodInstance
-        {
-        return(self)
-        }
-        
-    public func dump()
-        {
-        if self.isSystemMethodInstance
-            {
-            return
-            }
-        print(";; ====================================================")
-        print(";; CODE FOR \(self.label)")
-        print(";; \(self.buffer.count) INSTRUCTIONS")
-        print(";;")
-        print(";; LINE \(self.declaration!.line)")
-        print(";;")
-        for instruction in self.buffer
-            {
-            print(instruction.displayString)
-            }
-        }
-        
-    public func mergeTemporaryScope(_ scope: TemporaryLocalScope)
-        {
-        for symbol in scope.symbols.values
-            {
-            self.localSymbols.append(symbol)
-            }
-        }
-        
-    public func addLocalSlot(_ localSlot:Slot)
-        {
-        self.localSymbols.append(localSlot)
-        }
-        
-    public func hasSameReturnType(_ clazz: Class) -> Bool
-        {
-        return(self.returnType == Type.class(clazz))
-        }
-        
-    public override func lookup(label: String) -> Symbol?
-        {
-        for slot in self.localSymbols
-            {
-            if slot.label == label
-                {
-                return(slot)
-                }
-            }
-        return(self.parent.lookup(label: label))
-        }
-        
-    public func layoutSymbol(in vm: VirtualMachine)
-        {
-        guard !self.isMemoryLayoutDone else
-            {
-            return
-            }
-        let pointer = InnerInstructionBufferPointer.allocate(bufferCount: buffer.count, in: vm)
-        for instruction in self.buffer
-            {
-            pointer.append(instruction)
-            }
-        self.addresses.append(Address.absolute(pointer.address))
-        self.isMemoryLayoutDone = true
-        }
-        
-    public override func emitCode(using generator: CodeGenerator) throws
-        {
-        var stackOffset = MemoryLayout<Word>.size
-        for parameter in self.parameters
-            {
-            parameter.addresses.append(.stack(.BP,stackOffset))
-            stackOffset += MemoryLayout<Word>.size
-            }
-        stackOffset = 0
-        for slot in self.localSymbols
-            {
-            slot.addresses.append(.stack(.BP,stackOffset))
-            stackOffset -= MemoryLayout<Word>.size
-            }
-        try block.emitCode(into: self.buffer,using: generator)
-        }
-        
-    public override func realize(using realizer: Realizer)
-        {
-        for parameter in self.parameters
-            {
-            parameter.realize(using: realizer)
-            }
-        self.returnType.realize(using: realizer)
-        self.block.realize(using: realizer)
-        }
-
-    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
-        {
-        self.block.analyzeSemantics(using: analyzer)
-        }
-    
-        
-    public func isParameterSetCoherent(with input: Arguments) -> Bool
-        {
-        if self.parameters.count != input.count
+        if self.returnType.isTypeVariable
             {
             return(false)
             }
-        for (mine,yours) in zip(self.parameters,input)
+        for parameter in self.parameters
             {
-            if !yours.value.resultType.isEquivalent(to: mine.type)
+            if parameter.type.isTypeVariable
                 {
                 return(false)
                 }
@@ -431,16 +132,308 @@ public class MethodInstance:Function
         return(true)
         }
         
-    public func dispatchScore(for classes:Types) -> Int
+    public override var iconName: String
         {
-//        var answer = 0
-//        for (mine,theirs) in zip(self.parameters.map{$0.type},classes)
-//            {
-//            answer  += theirs.depth - mine.depth
-//            }
-//        return(answer)
-        return(0)
+        "IconMethodInstance"
+        }
+        
+    public var isSystemMethodInstance: Bool
+        {
+        return(false)
+        }
+        
+    public var tagSignature: TagSignature
+        {
+        TagSignature(tags: self.parameters.map{$0.tag})
+        }
+        
+    public override var displayString: String
+        {
+        let parmString = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
+        return("\(self.label)\(parmString) -> \(self.returnType.displayString)")
+        }
+        
+    public var hasVariableTypes: Bool
+        {
+        for parameter in self.parameters
+            {
+            if parameter.type.hasVariableTypes
+                {
+                return(true)
+                }
+            }
+        return(self.returnType.hasVariableTypes)
+        }
+        
+    public var isGenericMethod = false
+    public var isMainMethod: Bool = false
+    public var conditionalTypes: Types = []
+    internal var originalMethodInstance: MethodInstance?
+    public var codeBuffer:T3ABuffer
+    
+    public required init?(coder: NSCoder)
+        {
+        self.isGenericMethod = coder.decodeBool(forKey: "isGeneric")
+        self.conditionalTypes = coder.decodeObject(forKey: "conditionalTypes") as! Types
+        self.originalMethodInstance = coder.decodeObject(forKey: "originalMethodInstance") as? MethodInstance
+        self.isMainMethod = coder.decodeBool(forKey: "isMainMethod")
+        self.codeBuffer = coder.decodeObject(forKey: "codeBuffer") as! T3ABuffer
+        super.init(coder: coder)
+        }
+    
+    public required init(label: Label)
+        {
+        self.codeBuffer = T3ABuffer()
+        super.init(label: label)
+        }
+    
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.isGenericMethod,forKey: "isGeneric")
+        coder.encode(self.conditionalTypes,forKey: "conditionalTypes")
+        coder.encode(self.originalMethodInstance,forKey: "orginalMethodInstance")
+        coder.encode(self.isMainMethod,forKey: "isMainMethod")
+        coder.encode(self.codeBuffer,forKey: "codeBuffer")
+        super.encode(with: coder)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let instance = MethodInstance(label: self.label)
+        instance.parameters = self.parameters.map{$0.substitute(from: substitution)}
+        instance.returnType = substitution.substitute(self.returnType)
+        return(instance as! Self)
+        }
+        
+    public var methodSignature: MethodSignature
+        {
+        let signature = MethodSignature(label: self.label,methodInstance: self)
+        signature.parameters = self.parameters
+        signature.returnType = self.returnType
+        return(signature)
+        }
+        
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
+        {
+        guard !self.wasAddressAllocationDone else
+            {
+            return
+            }
+        allocator.allocateAddress(for: self)
+        self.wasAddressAllocationDone = true
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let newParameters = self.parameters.map{$0.freshTypeVariable(inContext: context)}
+        let newReturnType = self.returnType.freshTypeVariable(inContext: context)
+        let newInstance = Self(label: self.label)
+        newInstance.parameters = newParameters
+        newInstance.returnType = newReturnType
+        return(newInstance)
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        }
+        
+    public override func install(inContext context: ExecutionContext)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let addressString = String(format: "%16X",self.memoryAddress)
+        print("STARTING DUMP OF METHOD INSTANCE \(self.label) AT ADDRESS \(addressString)")
+        MemoryPointer.dumpMemory(atAddress: self.memoryAddress.cleanAddress,count: 200)
+        let segment = context.segment(for: self)
+        let methodInstanceType = ArgonModule.shared.lookup(label: "MethodInstance") as! Type
+        let instancePointer = ClassBasedPointer(address: self.memoryAddress.cleanAddress,type: methodInstanceType)
+        instancePointer.setClass(methodInstanceType)
+        instancePointer.flipCount = 0
+        instancePointer.hasBytes = false
+        instancePointer.objectType = .methodInstance
+        instancePointer.setStringAddress(segment.allocateString(self.label),atSlot: "name")
+        if let module = self.module
+            {
+            instancePointer.setAddress(module.memoryAddress,atSlot: "module")
+            }
+        else
+            {
+            fatalError("Parent of method instance should be a module but is not.")
+            }
+        let parameterType = ArgonModule.shared.parameter
+        if let parmArray = ArrayPointer(dirtyAddress: segment.allocateArray(size: self.parameters.count,elements: Array<Address>()))
+            {
+            for parm in self.parameters
+                {
+                let parmPointer = ClassBasedPointer(address: segment.allocateObject(ofType: parameterType, extraSizeInBytes: 0),type: parameterType)
+                parmPointer.setStringAddress(segment.allocateString(parm.label),atSlot: "tag")
+                parmPointer.setBoolean(parm.isVisible,atSlot: "tagIsShown")
+                parmPointer.setBoolean(parm.isVariadic,atSlot: "isVariadic")
+                parm.type.install(inContext: context)
+                parmPointer.setAddress(parm.type.memoryAddress,atSlot: "type")
+                parmPointer.setStringAddress(parm.relabel.isNil ? 0 : segment.allocateString(parm.relabel!),atSlot: "retag")
+                parmArray.append(parmPointer.address)
+                }
+            }
+        let baseSizeInBytes = methodInstanceType.instanceSizeInBytes
+        var wordPointer = WordPointer(bitPattern: self.memoryAddress + Word(baseSizeInBytes))
+        wordPointer.pointee = Word(integer: self.codeBuffer.count)
+        wordPointer += 1
+        for instruction in self.codeBuffer
+            {
+            instruction.install(intoPointer:wordPointer,context: context)
+            wordPointer += instruction.sizeInWords
+            }
+        print("STARTING DUMP OF METHOD INSTANCE \(self.label) AT ADDRESS \(addressString)")
+        MemoryPointer.dumpMemory(atAddress: self.memoryAddress.cleanAddress,count: 200)
+        }
+        
+    public func parametersMatchArguments(_ arguments: Arguments,for expression: Expression,at: Location) -> Bool
+        {
+        var failed = false
+        for (parameter,argument) in zip(self.parameters,arguments)
+            {
+            if parameter.tag != argument.tag
+                {
+                failed = true
+                if parameter.tag != nil
+                    {
+                    expression.appendIssue(at: at, message: "Expected argument tag '\(parameter.tag!)' but found '\(argument.tag ?? "")'")
+                    }
+                }
+            }
+        return(!failed)
+        }
+        
+    public override func emitCode(using generator: CodeGenerator) throws
+        {
+        self.codeBuffer = T3ABuffer()
+        try self.emitCode(into: self.codeBuffer,using: generator)
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.type = self.returnType
+        }
+        
+    public func moreSpecific(than instance:MethodInstance,forTypes types: Types) -> Bool
+        {
+        var orderings = Array<SpecificOrdering>()
+        for index in 0..<types.count
+            {
+            let argumentType = types[index]
+            let typeA = self.parameters[index].type!
+            let typeB = instance.parameters[index].type!
+            if typeA.isSubtype(of: typeB)
+                {
+                orderings.append(.more)
+                }
+            else if typeA.isClass && typeB.isClass && argumentType.isClass
+                {
+                let argumentClassList = (argumentType as! TypeClass).precedenceList
+                if let typeAIndex = argumentClassList.firstIndex(of: typeA as! TypeClass),let typeBIndex = argumentClassList.firstIndex(of: typeB as! TypeClass)
+                    {
+                    orderings.append(typeAIndex > typeBIndex ? .more : .less)
+                    }
+                else
+                    {
+                    orderings.append(.unordered)
+                    }
+                }
+            else
+                {
+                orderings.append(.unordered)
+                }
+            }
+        for ordering in orderings
+            {
+            if ordering == .more
+                {
+                return(true)
+                }
+            }
+        return(false)
+        }
+
+    public func parametersAreCongruent(withArguments arguments: TaggedTypes) -> Bool
+        {
+        guard self.parameters.count == arguments.count else
+            {
+            return(false)
+            }
+        for (parameter,argument) in zip(self.parameters,arguments)
+            {
+            if argument.tag.isNil && parameter.isVisible
+                {
+                return(false)
+                }
+            if argument.tag.isNotNil && argument.tag! != parameter.label
+                {
+                return(false)
+                }
+            if argument.type!.isClass && parameter.type.isClass && !argument.type!.isSubtype(of: parameter.type)
+                {
+                return(false)
+                }
+            if argument.type!.isEnumeration && parameter.type.isEnumeration && argument.type! != parameter.type
+                {
+                return(false)
+                }
+            }
+        return(true)
+        }
+        
+    public func parameterTypesAreSupertypes(ofTypes types: Types) -> Bool
+        {
+        for (inType,myType) in zip(types,self.parameters.map{$0.type!})
+            {
+            if !inType.isSubtype(of: myType)
+                {
+                return(false)
+                }
+            }
+        return(true)
         }
     }
 
 public typealias MethodInstances = Array<MethodInstance>
+
+public protocol NSCodable
+    {
+    init(coder: NSCoder,forKey: String)
+    func encode(with coder: NSCoder,forKey: String)
+    }
+    
+extension NSCoder
+    {
+    func encode<T:NSCodable>(_ array:Array<T>,forKey: String)
+        {
+        self.encode(array.count,forKey: forKey + "count")
+        var index = 0
+        for element in array
+            {
+            element.encode(with: self,forKey: forKey + "\(index)")
+            index += 1
+            }
+        }
+        
+    func decode<T>(_ type:Array<T>.Type,forKey: String) -> Array<T> where T:NSCodable
+        {
+        let theCount = self.decodeInteger(forKey: forKey + "count")
+        var elements = Array<T>()
+        for index in 0..<theCount
+            {
+            let element = T(coder: self,forKey: forKey + "\(index)")
+            elements.append(element)
+            }
+        return(elements)
+        }
+    }

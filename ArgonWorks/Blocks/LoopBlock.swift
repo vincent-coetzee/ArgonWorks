@@ -9,16 +9,132 @@ import Foundation
 
 public class LoopBlock: Block
     {
-    private let startExpressions: Array<Expression>
-    private let endExpression: Expression
-    private let updateExpressions: Array<Expression>
+    public var startExpressions: Array<Expression>!
+    public var endExpression: Expression!        
+    public var updateExpressions: Array<Expression>!
     
+    required init()
+        {
+        super.init()
+        }
+        
     init(start: Array<Expression>,end: Expression,update: Array<Expression>)
         {
         self.startExpressions = start
         self.endExpression = end
         self.updateExpressions = update
         super.init()
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.startExpressions = (coder.decodeObject(forKey: "startExpressions") as! Expressions)
+        self.endExpression = (coder.decodeObject(forKey: "endExpression") as! Expression)
+        self.updateExpressions = (coder.decodeObject(forKey: "updateExpressions") as! Expressions)
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encode(self.startExpressions,forKey: "startExpressions")
+        coder.encode(self.endExpression,forKey: "endExpression")
+        coder.encode(self.updateExpressions,forKey: "updateExpressions")
+        super.encode(with: coder)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.startExpressions.visit(visitor: visitor)
+        try self.endExpression?.visit(visitor: visitor)
+        try self.updateExpressions.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let starts = self.startExpressions.map{$0.freshTypeVariable(inContext: context)}
+        let updates = self.updateExpressions.map{$0.freshTypeVariable(inContext: context)}
+        let end = self.endExpression.freshTypeVariable(inContext: context)
+        let block = LoopBlock(start: starts, end: end, update: updates)
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        for expression in self.startExpressions
+            {
+            expression.initializeTypeConstraints(inContext: context)
+            }
+        for expression in self.updateExpressions
+            {
+            expression.initializeTypeConstraints(inContext: context)
+            }
+        self.endExpression.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.endExpression.type,right: context.booleanType,origin: .block(self)))
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self))")
+        print("\(indent)START:")
+        for expression in self.startExpressions
+            {
+            expression.display(indent: indent + "\t")
+            }
+        print("\(indent)END:")
+        self.endExpression.display(indent: indent + "\t")
+        print("\(indent)UPDATE:")
+        for expression in self.updateExpressions
+            {
+            expression.display(indent: indent + "\t")
+            }
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let newStarts = self.startExpressions.map{substitution.substitute($0)}
+        let newUpdates = self.updateExpressions.map{substitution.substitute($0)}
+        let newEnd = substitution.substitute(endExpression)
+        let loop = LoopBlock(start: newStarts, end: newEnd, update: newUpdates)
+        for block in self.blocks
+            {
+            let newBlock = substitution.substitute(block)
+            newBlock.type = substitution.substitute(block.type)
+            loop.addBlock(newBlock)
+            }
+        loop.type = substitution.substitute(self.type)
+        return(loop as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        for expression in self.startExpressions
+            {
+            expression.initializeType(inContext: context)
+            }
+       for expression in self.updateExpressions
+            {
+            expression.initializeType(inContext: context)
+            }
+        self.endExpression.initializeType(inContext: context)
+        self.type = context.voidType
+        for block in self.blocks
+            {
+            block.initializeType(inContext: context)
+            }
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -38,48 +154,34 @@ public class LoopBlock: Block
             }
         }
         
-    public override func dump(depth: Int)
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)LOOP")
         for expression in self.startExpressions
             {
-            expression.dump(depth: depth+1)
+            try expression.emitCode(into: buffer, using: using)
             }
-        self.endExpression.dump(depth: depth+1)
-        for expression in self.updateExpressions
-            {
-            expression.dump(depth: depth+1)
-            }
+        let label = buffer.nextLabel()
+        buffer.pendingLabel = label
         for block in self.blocks
             {
-            block.dump(depth: depth + 1)
+            try block.emitCode(into: buffer,using: using)
             }
+        for expression in self.updateExpressions
+            {
+            try expression.emitCode(into: buffer,using: using)
+            }
+        try self.endExpression.emitCode(into: buffer,using: using)
+        buffer.append(nil,.BRAF,.none,.none,.label(label))
         }
-        
-    public override func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    }
+
+extension Array where Element:Expression
+    {
+    public func visit(visitor: Visitor) throws
         {
-        for expression in self.startExpressions
+        for expression in self
             {
-            try expression.emitCode(into: into, using: using)
-            }
-        let marker = into.fromHere()
-        for block in self.blocks
-            {
-            try block.emitCode(into: into,using: using)
-            }
-        for expression in self.updateExpressions
-            {
-            try expression.emitCode(into: into,using: using)
-            }
-        try self.endExpression.emitCode(into: into,using: using)
-        do
-            {
-            into.append(.BRT,self.endExpression.place,.none,.label(try into.toHere(marker)))
-            }
-        catch let error
-            {
-            using.compiler.reportingContext.dispatchError(at: .zero, message: "\(error) Code generator has caught a throws when attemping to dereference a label marker, this is because some idiot used the marker incorrectly, fix it")
+            try expression.visit(visitor: visitor)
             }
         }
     }

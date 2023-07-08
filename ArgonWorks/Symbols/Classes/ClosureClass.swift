@@ -7,6 +7,6 @@
 
 import Foundation
 
-public class ClosureClass:SystemClass
-    {
-    }
+//public class ClosureClass:SystemClass
+//    {
+//    }

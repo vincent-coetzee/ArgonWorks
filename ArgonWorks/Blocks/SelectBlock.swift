@@ -10,13 +10,35 @@ import Foundation
 public class SelectBlock: Block
     {
     private let value:Expression
-    private var whenBlocks:Array<WhenBlock>
+    private var whenBlocks:Array<WhenBlock> = []
     public var otherwiseBlock: OtherwiseBlock?
     
     init(value: Expression)
         {
         self.value = value
         whenBlocks = Array<WhenBlock>()
+        super.init()
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.value = coder.decodeObject(forKey: "value") as! Expression
+        self.whenBlocks = coder.decodeObject(forKey: "whenBlocks") as! Array<WhenBlock>
+        self.otherwiseBlock = coder.decodeObject(forKey: "otherwiseBlock") as? OtherwiseBlock
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.value,forKey: "value")
+        coder.encode(self.whenBlocks,forKey: "whenBlocks")
+        coder.encode(self.otherwiseBlock,forKey: "otherwiseBlock")
+        super.encode(with: coder)
+        }
+        
+    public required init()
+        {
+        self.value = Expression()
         super.init()
         }
         
@@ -30,61 +52,81 @@ public class SelectBlock: Block
         self.otherwiseBlock = block
         }
         
-    public override func realize(using realizer: Realizer)
+    public override func visit(visitor: Visitor) throws
         {
-        self.value.realize(using: realizer)
-        for block in self.whenBlocks
+        try self.value.visit(visitor: visitor)
+        for when in self.whenBlocks
             {
-            block.realize(using: realizer)
+            try when.visit(visitor: visitor)
             }
-        self.otherwiseBlock?.realize(using: realizer)
+        try self.otherwiseBlock?.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
         }
         
-    public override func dump(depth: Int)
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)SELECT")
-        value.dump(depth: depth+1)
-        for block in self.whenBlocks
-            {
-            block.dump(depth: depth + 1)
-            }
+        SelectBlock(value: substitution.substitute(self.value)) as! Self
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
         {
-        let aClass = self.value.resultType
-        try self.value.emitCode(into: buffer,using: generator)
-        var linksToBottom = Array<Instruction.LabelMarker>()
-        var fromCompare:Instruction.LabelMarker?
-        for when in whenBlocks
+        let block = SelectBlock(value: self.value.freshTypeVariable(inContext: context))
+        for innerBlock in self.blocks
             {
-            let outputRegister = generator.registerFile.findRegister(forSlot: nil, inBuffer: buffer)
-            if aClass.isPrimitiveClass && !aClass.isStringClass
-                {
-                buffer.append(.CMPW,self.value.place,when.condition.place,.register(outputRegister))
-                }
-            else
-                {
-                buffer.append(.CMPO,self.value.place,when.condition.place,.register(outputRegister))
-                }
-            if fromCompare.isNotNil
-                {
-                try buffer.toHere(fromCompare!)
-                }
-            buffer.append(.BRNEQ,.register(outputRegister),.none,.label(0))
-            fromCompare = buffer.triggerFromHere()
-            try when.emitCode(into: buffer,using: generator)
-            buffer.append(.BR,.none,.none,.label(0))
-            linksToBottom.append(buffer.triggerFromHere())
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
             }
-        if self.otherwiseBlock.isNotNil
+        block.type = self.type.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.value.initializeTypeConstraints(inContext: context)
+        for block in self.whenBlocks
             {
-            try self.otherwiseBlock!.emitCode(into: buffer,using: generator)
+            block.initializeTypeConstraints(inContext: context)
+            context.append(TypeConstraint(left: self.value.type,right: block.condition.type,origin: .block(self)))
             }
-        for link in linksToBottom
+        self.otherwiseBlock?.initializeTypeConstraints(inContext: context)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.value.initializeType(inContext: context)
+        for block in self.whenBlocks
             {
-            try buffer.toHere(link)
+            block.initializeType(inContext: context)
             }
+        self.otherwiseBlock?.initializeType(inContext: context)
+        self.type = context.voidType
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+//        let aClass = self.value.type
+//        try self.value.emitCode(into: buffer,using: generator)
+//        var nextWhen: T3ALabel?
+//        let endLabel = buffer.nextLabel()
+//        for when in whenBlocks
+//            {
+//            if aClass.isPrimitiveClass && !aClass.isStringClass
+//                {
+//                buffer.append(nextWhen,"CMPW",self.value.place,when.condition.place,.none)
+//                }
+//            else
+//                {
+//                buffer.append(nextWhen,"CMPO",self.value.place,when.condition.place,.none)
+//                }
+//            nextWhen = buffer.nextLabel()
+//            buffer.append(nil,"BRNEQ",.none,.none,.label(nextWhen!))
+//            try when.emitCode(into: buffer,using: generator)
+//            buffer.append(nil,"BR",.none,.none,.label(endLabel))
+//            }
+//        if self.otherwiseBlock.isNotNil
+//            {
+//            buffer.pendingLabel = nextWhen
+//            try self.otherwiseBlock!.emitCode(into: buffer,using: generator)
+//            }
+//        buffer.pendingLabel = endLabel
         }
     }

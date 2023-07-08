@@ -1,326 +1,257 @@
 //
 //  Type.swift
-//  Type
+//  ArgonWorks
 //
-//  Created by Vincent Coetzee on 16/8/21.
+//  Created by Vincent Coetzee on 15/11/21.
 //
 
 import Foundation
 import FFI
 
-public enum TypeError: Error,Equatable
+public class Type: Symbol,Displayable,UserDisplayable
     {
-    case mismatch
-    case undefined
-    }
-    
-public indirect enum Type: Equatable
-    {
-    public static func ==(lhs:Type,rhs:Type) -> Bool
+    public static func ==(lhs: Type,rhs: Type) -> Bool
         {
-        switch(lhs,rhs)
-            {
-            case (.error(let error1),.error(let error2)):
-                return(error1 == error2)
-            case (.class(let error1),.class(let error2)):
-                return(error1 == error2)
-            case (.enumeration(let error1),.enumeration(let error2)):
-                return(error1 == error2)
-            case (.method(let label1,let types1,let type1),.method(let label2,let types2,let type2)):
-                return(label1 == label2 && types1 == types2 && type1 == type2)
-            case (.methodApplication(let error1),.methodApplication(let error2)):
-                return(error1 == error2)
-            default:
-                return(false)
-            }
-        }
-        
-    public static func +(lhs:Type,rhs:Type) -> Type
-        {
-        switch(lhs,rhs)
-            {
-            case (.class(let class1),.class(let class2)):
-                if class1 == class2
-                    {
-                    return(.class(class1))
-                    }
-                return(.error(.mismatch))
-            default:
-                return(.error(.mismatch))
-            }
-        }
-        
-    case error(TypeError)
-    case `class`(Class)
-    case enumeration(Enumeration)
-    case method(Label,Types,Type)
-    case methodApplication(MethodInstance)
-    case forwardReference(Name,Context)
-    
-    public var displayString: String
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return("TYPE(class: \(aClass.label))")
-            case .enumeration(let aClass):
-                return("TYPE(enumeration: \(aClass.label))")
-            case .method(let label,_,_):
-                return("TYPE(method: \(label))")
-            case .methodApplication(let aClass):
-                return("TYPE(application: \(aClass.label))")
-            default:
-                return("")
-            }
-        }
-        
-    public var isGenericClassParameter: Bool
-        {
-        return(false)
-        }
-        
-    public var isError: Bool
-        {
-        switch(self)
-            {
-            case .error:
-                return(true)
-            default:
-                return(false)
-            }
-        }
-        
-    public var label: Label
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.label)
-            case .enumeration(let aClass):
-                return(aClass.label)
-            case .method(let label,_,_):
-                return(label)
-            case .methodApplication(let aClass):
-                return(aClass.label)
-            default:
-                return("")
-            }
-        }
-        
-    public var `class`: Class
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass)
-            default:
-                fatalError()
-            }
-        }
-        
-    public var memoryAddress: Word
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.memoryAddress)
-            case .enumeration(let aClass):
-                return(aClass.memoryAddress)
-            case .method:
-                fatalError()
-            case .methodApplication(let aClass):
-                return(aClass.memoryAddress)
-            default:
-                return(0)
-            }
-        }
-        
-    public var typeCode: TypeCode
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.typeCode)
-            case .enumeration(let aClass):
-                return(aClass.typeCode)
-            case .method:
-                return(.method)
-            case .methodApplication(let aClass):
-                return(aClass.typeCode)
-            default:
-                return(.none)
-            }
-        }
-        
-    public var depth: Int
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.depth)
-            default:
-                return(0)
-            }
-        }
-        
-    public var isGenericClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isGenericClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isStringClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isStringClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isPrimitiveClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isPrimitiveClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isObjectClass: Bool
-        {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.isObjectClass)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isEnumeration: Bool
-        {
-        switch(self)
-            {
-            case .enumeration:
-                return(true)
-            default:
-                return(false)
-            }
-        }
-        
-    public var isNotClass: Bool
-        {
-        switch(self)
-            {
-            case .class:
-                return(false)
-            default:
-                return(true)
-            }
-        }
-        
-    public func isSameClass(_ aClass:Class) -> Bool
-        {
-        switch(self)
-            {
-            case .class(let theClass):
-                return(theClass == aClass)
-            default:
-                return(true)
-            }
+        lhs.index == rhs.index
         }
         
     public var ffiType: ffi_type
         {
-        return(ffi_type_uint64)
+        fatalError()
         }
         
     public var isVoidType: Bool
         {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass == VoidClass.voidClass)
-            default:
-                return(false)
-            }
+        false
         }
         
-    public func isEquivalent(to type:Type) -> Bool
+    public var userString: String
         {
-        switch(self,type)
-            {
-            case (.class(let class1),.class(let class2)):
-                return(class1.isInclusiveSubclass(of: class2))
-            case (.enumeration(let enum1),.enumeration(let enum2)):
-                return(enum1 == enum2)
-            case (.method(let label1,let types1,let type1),.method(let label2,let types2,let type2)):
-                return(label1 == label2 && types1 == types2 && type1 == type2)
-            case (.methodApplication(let m1),.methodApplication(let m2)):
-                return(m1 == m2)
-            default:
-                return(false)
-            }
+        "Type"
         }
         
-    public func isSubtype(of type:Type) -> Bool
+    public override var description: String
         {
-        switch(self,type)
-            {
-            case (.class(let class1),.class(let class2)):
-                return(class1.isInclusiveSubclass(of: class2))
-            case (.enumeration(let enum1),.enumeration(let enum2)):
-                return(enum1 == enum2)
-            default:
-                return(false)
-            }
+        self.displayString
         }
         
-    public func realize(using realizer: Realizer)
+    public var typeVariables: TypeVariables
         {
-        switch(self)
-            {
-            case .class(let aClass):
-                aClass.realize(using: realizer)
-            case .enumeration(let aClass):
-                aClass.realize(using: realizer)
-            case .method:
-                break
-            case .methodApplication(let aClass):
-                aClass.realize(using: realizer)
-            default:
-                break
-            }
+        []
         }
         
-    public func instanciate(withTypes: Types,reportingContext: ReportingContext) -> Type
+    public var hasVariableTypes: Bool
         {
-        switch(self)
-            {
-            case .class(let aClass):
-                return(aClass.instanciate(withTypes: withTypes,reportingContext: reportingContext))
-            case .enumeration:
-                fatalError("Need to define a subclass of Enumeration for Generic Enumerations")
-            case .method:
-                break
-            case .methodApplication:
-                break
-            default:
-                break
-            }
-        return(.error(.undefined))
+        false
+        }
+        
+    public var instanceSizeInBytes: Int
+        {
+        fatalError()
+        }
+        
+    public var arrayElementType: Type
+        {
+        fatalError()
+        }
+        
+    public var isArray: Bool
+        {
+        false
+        }
+        
+    public var isTypeVariable: Bool
+        {
+        false
+        }
+        
+    public var isFunction: Bool
+        {
+        false
+        }
+        
+    public var isTypeConstructor: Bool
+        {
+        false
+        }
+        
+    public var isGenericClass: Bool
+        {
+        false
+        }
+        
+    public var mangledName: String
+        {
+        fatalError()
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        fatalError()
+        }
+        
+    public var subtypes: Types
+        {
+        []
+        }
+        
+    public override var displayString: String
+        {
+        "Type()"
+        }
+        
+    public var isGeneric: Bool
+        {
+        false
+        }
+        
+    public override var isSystemType: Bool
+        {
+        false
         }
     
+    public override var fullName: Name
+        {
+        self.module.fullName
+        }
+        
+    public override var isType: Bool
+        {
+        true
+        }
+        
+    public var superclassType: Type
+        {
+        fatalError()
+        }
+        
+    private var _isSystemType = false
+    
+    required init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
+    init()
+        {
+        super.init(label: "")
+        }
+        
+    required init?(coder: NSCoder)
+        {
+        print("START DECODE TYPE")
+        super.init(coder: coder)
+        print("END DECODE TYPE")
+        }
+        
+    public func of(_ type: Type) -> Type
+        {
+        fatalError("of should not have been sent to a non generic class")
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        print("START ENCODE TYPE \(self.label)")
+        super.encode(with: coder)
+        print("END ENCODE TYPE")
+        }
+        
+    internal func freshType(inContext: TypeContext) -> Type
+        {
+        return(self)
+        }
+        
+    public func isSubtype(of: Type) -> Bool
+        {
+        false
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        substitution.substitute(self) as! Self
+        }
+        
+    public override func freshTypeVariable(inContext: TypeContext) -> Self
+        {
+        self
+        }
+        
+    public func superclass(_ type:Type) -> Type
+        {
+        fatalError()
+        }
+        
+    public func contains(_ type:Type) -> Bool
+        {
+        false
+        }
+        
+    public func withGenerics(_ types: Types) -> Type
+        {
+        self
+        }
+        
+    public func mcode(_ string: String) -> Type
+        {
+        self
+        }
+        
+    public func setType(_ objectType:Argon.ObjectType) -> Type
+        {
+        self
+        }
+        
+    public func addLayoutSlot(_ slot: Slot)
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func slot(_ label: Label,_ type: Type) -> Type
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func hasBytes(_ bool:Bool) -> Type
+        {
+        fatalError()
+        }
+        
+    public func printLayout()
+        {
+        }
+        
+    public func addSubtype(_ type: Type)
+        {
+        fatalError()
+        }
+        
+    @discardableResult
+    public func typeVar(_ label: Label) -> Type
+        {
+        fatalError()
+        }
+        
+//    public override func setParent(_ parent: Parent)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ symbol: Symbol)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ expression: Expression)
+//        {
+//        fatalError()
+//        }
+//        
+//    public override func setParent(_ block: Block)
+//        {
+//        fatalError()
+//        }
     }
 
 public typealias Types = Array<Type>

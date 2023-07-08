@@ -11,28 +11,43 @@ public class UnaryExpression: Expression
     {
     public override var displayString: String
         {
-        return("\(self.operation)\(self.rhs.displayString)")
+        return("\(String(describing: self.operationName))\(String(describing: self.rhs.displayString))")
         }
         
-    private let operation: Token.Symbol
+    private let operationName: String
     private let rhs: Expression
     
     init(_ operation:Token.Symbol,_ rhs:Expression)
         {
-        self.operation = operation
+        self.operationName = operation.rawValue
         self.rhs = rhs
         super.init()
-        self.rhs.setParent(self)
         }
         
-    public override var resultType: Type
+    required init?(coder: NSCoder)
         {
-        return(self.rhs.resultType)
+        self.operationName = coder.decodeString(forKey: "operationName")!
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        super.init(coder: coder)
         }
         
-    public override func realize(using realizer:Realizer)
+    public override func encode(with coder: NSCoder)
         {
-        self.rhs.realize(using: realizer)
+        super.encode(with: coder)
+        coder.encode(self.rhs,forKey: "rhs")
+        coder.encode(self.operationName,forKey: "operationName")
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.rhs.initializeType(inContext: context)
+        self.type = self.rhs.type
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -40,38 +55,78 @@ public class UnaryExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer, using: CodeGenerator) throws
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
         {
-        try self.rhs.emitCode(into: instance, using: using)
-        var opcode:Instruction.Opcode = .NOP
-        switch(self.operation)
+        UnaryExpression(Token.Symbol(rawValue: self.operationName)!,substitution.substitute(self.rhs)) as! Self
+        }
+        
+    public override func emitValueCode(into instance: T3ABuffer,using: CodeGenerator) throws
+        {
+        if let location = self.declaration
             {
-            case .sub:
-                if self.resultType == self.topModule.argonModule.integer.type
+            instance.append(lineNumber: location.line)
+            }
+        try self.rhs.emitCode(into: instance, using: using)
+        var opcode = Opcode.NOP
+        switch(self.operationName)
+            {
+            case "-":
+                if self.type == ArgonModule.shared.integer || self.type == ArgonModule.shared.uInteger
                     {
-                    opcode = .INEG
+                    opcode = .INEG64
+                    }
+                else if self.type == ArgonModule.shared.byte
+                    {
+                    opcode = .INEG8
+                    }
+                else if self.type == ArgonModule.shared.character
+                    {
+                    opcode = .INEG16
+                    }
+                else if self.type == ArgonModule.shared.float
+                    {
+                    opcode = .FNEG64
+                    }
+            case "~":
+                opcode = .IBNOT64
+            case "!":
+                opcode = .NOT
+            default:
+                fatalError("Unhandled unary operation.")
+            }
+        let temp = instance.nextTemporary()
+        instance.append(opcode,rhs.place,.none,temp)
+        self._place = temp
+        }
+        
+    public override func emitCode(into instance: T3ABuffer, using: CodeGenerator) throws
+        {
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        try self.rhs.emitCode(into: instance, using: using)
+        var opcode:Opcode = .NOP
+        switch(self.operationName)
+            {
+            case "sub":
+                if self.type == ArgonModule.shared.integer.type
+                    {
+                    opcode = .INEG64
                     }
                 else
                     {
-                    opcode = .FNEG
+                    opcode = .FNEG64
                     }
-            case .bitNot:
-                opcode = .IBITNOT
-            case .not:
+            case "bitNot":
+                opcode = .IBNOT64
+            case "not":
                 opcode = .NOT
             default:
                 break
             }
-        let register = using.registerFile.findRegister(forSlot: nil, inBuffer: instance)
-        instance.append(opcode,rhs.place,.none,.register(register))
-        self._place = .register(register)
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)UNARY EXPRESSION()")
-        print("\(padding)\t\(self.operation)")
-        self.rhs.dump(depth: depth + 1)
+        let temp = instance.nextTemporary()
+        instance.append(nil,opcode,rhs.place,.none,temp)
+        self._place = temp
         }
     }

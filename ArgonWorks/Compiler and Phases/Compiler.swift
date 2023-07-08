@@ -10,76 +10,83 @@ import Combine
 
 public class Compiler
     {
-//    
-//    public static func tokenPublisher() -> AnyPublisher<VisualToken,Never>
-//        {
-//        let subject = PassthroughSubject<VisualToken,Never>()
-//        let newSubject:AnyPublisher<VisualToken,Never> = subject.map{$0.mapColors(systemClassNames: Self.systemClassNames)}.eraseToAnyPublisher()
-//        return(newSubject)
-//        }
-
-    public var tokenRenderer: TokenRenderer
-        {
-        return(self.parser?.visualToken ?? TokenRenderer(systemClassNames: self.systemClassNames))
-        }
-        
-    public var systemClassNames: Array<String>
-        {
-        self.virtualMachine.argonModule.classes.map{$0.label}
-        }
+    private static var instanceCounter = 1
     
-    internal private(set) var namingContext: NamingContext
-    private var parser: Parser?
-    internal var lastChunk: ParseNode?
     internal var currentPass: CompilerPass?
     internal var completionWasCancelled: Bool = false
-    internal var topModule: TopModule
-    internal var virtualMachine: VirtualMachine
-    
-    init(virtualMachine: VirtualMachine)
+    internal var tokenRenderer:SemanticTokenRenderer
+    internal let source: String
+            
+    init(source: String,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
-        self.virtualMachine = virtualMachine
-        let module = TopModule(virtualMachine: virtualMachine)
-        self.topModule = module
-        self.namingContext = module
+        Argon.resetStatics()
+        Argon.resetTypes()
+        TopModule.resetTopModule()
+        self.source = source
+        self.currentPass = nil
+        self.tokenRenderer = tokenRenderer
+        self.tokenRenderer.update(source)
+
         }
-        
-    public var reportingContext:ReportingContext
+
+    init(tokens: Tokens,reportingContext: Reporter,tokenRenderer: SemanticTokenRenderer)
         {
-        return(NullReportingContext.shared)
+        Argon.resetStatics()
+        Argon.resetTypes()
+        TopModule.resetTopModule()
+        self.currentPass = nil
+        self.source = ""
+        self.tokenRenderer = tokenRenderer
+//        let cleanTokens = tokens.filter{!$0.isWhitespace}
         }
-    
+
     public func cancelCompletion()
         {
+        self.completionWasCancelled = true
         }
-        
-    public func parseChunk(_ source:String) throws
+
+    @discardableResult
+    public func compile(parseOnly: Bool = false) -> Module?
         {
-        if source.isEmpty
+//        self.reportingContext.resetReporting()
+        if let module = Parser(self).processModule(nil)
             {
-            return
+            if let module = module.typeCheckModule()
+                {
+                let allocator = AddressAllocator(self)
+                if let module = allocator.processModule(module)
+                    {
+                    ArgonModule.shared.class.printLayout()
+                    ArgonModule.shared.array.printLayout()
+                    ArgonModule.shared.object.printLayout()
+                    ArgonModule.shared.slot.printLayout()
+                    let memoryPointer = MemoryPointer(address: ArgonModule.shared.object.memoryAddress)
+                    MemoryPointer.dumpMemory(atAddress: memoryPointer.address,count: 100)
+                    try! allocator.payload.write(toPath: "/Users/vincent/Desktop/TestFile.arv")
+                    try! ObjectFile.write(module: module, topModule: TopModule.shared, atPath: "file:///Users/vincent/Desktop/module.argono")
+                    let objectFile = try! ObjectFile.read(atPath: "file:///Users/vincent/Desktop/module.argono",topModule: TopModule.shared)
+                    objectFile!.module.display(indent: "")
+                    if let module = CodeGenerator(self,payload: allocator.payload).processModule(module)
+                        {
+                        let vm = VirtualMachine(payload: allocator.payload)
+                        module.install(inContext: vm.payload)
+                        module.display(indent: "")
+                        if let module = Optimizer(self).processModule(module)
+                            {
+                            let visitor = TestVisitor.visit(module)
+//                            self.allIssues = visitor.allIssues
+                            print(visitor.allIssues)
+                            let someIssues = module.issues
+                            print(someIssues)
+//                            self.reportingContext.pushIssues(self.allIssues)
+                            return(module)
+                            }
+                        }
+                    }
+                }
             }
-        self.parser = Parser(compiler: self)
-        self.parser!.parseChunk(source)
-        }
-        
-    public func compileChunk(_ source:String)
-        {
-        if source.isEmpty
-            {
-            return
-            }
-        self.parser = Parser(compiler: self)
-        self.lastChunk = parser!.parseChunk(source)!
-        if let chunk = self.lastChunk
-            {
-            Realizer.realize(chunk,in:self)
-            SemanticAnalyzer.analyze(chunk,in:self)
-            AddressAllocator.allocateAddresses(chunk,in: self)
-            CodeGenerator.emit(into: chunk,in:self)
-            Optimizer.optimize(chunk,in:self)
-            let module = self.namingContext.primaryContext as! TopModule
-            module.dumpMethods()
-            }
+//                }
+//            }
+        return(nil)
         }
     }

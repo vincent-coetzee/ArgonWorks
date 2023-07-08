@@ -7,23 +7,78 @@
 
 import Foundation
 
-public class Block:NSObject,NamingContext
+public class Block:NSObject,NSCoding,Displayable,VisitorReceiver,Scope,StackFrame
     {
-    public var isReturnBlock: Bool
+    public var parentScope: Scope?
         {
-        return(false)
+        get
+            {
+            self.container
+            }
+        set
+            {
+            self.setContainer(newValue)
+            }
         }
         
-    public var topModule: TopModule
+    public var isMethodInstanceScope: Bool
         {
-        return(self.parent.topModule)
+        false
         }
         
-    public var hasReturnBlock: Bool
+    public var module: Module!
+        {
+        self.container.module
+        }
+        
+    public var argonHash: Int
+        {
+        var hasher = Hasher()
+        hasher.combine(self)
+        for block in self.blocks
+            {
+            hasher.combine(block)
+            }
+        let hashValue = hasher.finalize()
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(abs(Int(bitPattern: word)))
+        }
+
+    public var allIssues: CompilerIssues
+        {
+        var myIssues = self.issues
+        for block in self.blocks
+            {
+            myIssues.append(contentsOf: block.allIssues)
+            }
+        return(myIssues)
+        }
+        
+    public var isEmpty: Bool
+        {
+        self.blocks.isEmpty
+        }
+        
+    public var displayString: String
+        {
+        "Block" + self.blocks.displayString
+        }
+        
+    public var returnBlocks: Array<ReturnBlock>
+        {
+        var returnBlocks = Array<ReturnBlock>()
+        for block in self.blocks
+            {
+            returnBlocks.append(contentsOf: block.returnBlocks)
+            }
+        return(returnBlocks)
+        }
+        
+    public var hasInlineReturnBlock: Bool
         {
         for block in self.blocks
             {
-            if block.isReturnBlock
+            if block.hasInlineReturnBlock
                 {
                 return(true)
                 }
@@ -31,103 +86,308 @@ public class Block:NSObject,NamingContext
         return(false)
         }
         
+    public var isReturnBlock: Bool
+        {
+        return(false)
+        }
+        
     public var declaration: Location?
         {
-        self.locations.declaration
+        self.locations.declaration.isNil ? .zero : self.locations.declaration
         }
         
+    public private(set) var container: Container = .none
+    public var type: Type = Type()
     internal var locations = SourceLocations()
     internal var blocks = Blocks()
-    internal var localSlots = Slots()
+    internal var localSymbols = Symbols()
     internal var source: String?
-    public let index:UUID
-    public private(set) var parent: Parent = .none
-        
-    public var methodInstance: MethodInstance
-        {
-        return(self.parent.block.methodInstance)
-        }
-        
-    public var primaryContext: NamingContext
-        {
-        return(self.parent.primaryContext)
-        }
-    
-    @discardableResult
-    public func addSymbol(_ symbol: Symbol) -> Symbol
-        {
-        if !(symbol is LocalSlot)
-            {
-            fatalError("Attempt to add a symbol to a block")
-            }
-        self.addLocalSlot(symbol as! LocalSlot)
-        return(symbol)
-        }
-    
-    public func setSymbol(_ symbol: Symbol,atName: Name)
-        {
-        self.parent.setSymbol(symbol,atName: atName)
-        }
-        
-    override init()
+    public private(set) var index:UUID
+    public var issues: CompilerIssues = []
+    private var nextLocalSlotOffset = 0
+    private var nextParameterOffset = 16
+
+    required override init()
         {
         self.index = UUID()
         }
         
-    init(coder: NSCoder)
+    public required init?(coder: NSCoder)
         {
+        self.container = coder.decodeContainer(forKey: "container")
         self.blocks = coder.decodeObject(forKey: "blocks") as! Array<Block>
-        self.localSlots = coder.decodeObject(forKey:"localSlots") as! Array<Slot>
+        self.localSymbols = coder.decodeObject(forKey:"localSymbols") as! Symbols
         self.index = coder.decodeObject(forKey: "index") as! UUID
-//        self.parent = coder.decodeObject(forKey: "parent") as?
+        self.nextLocalSlotOffset = coder.decodeInteger(forKey: "nextLocalSlotOffset")
+        self.nextParameterOffset = coder.decodeInteger(forKey: "nextParameterOffset")
+        self.type = coder.decodeObject(forKey: "type") as! Type
+        self.issues = coder.decodeCompilerIssues(forKey: "issues")
+        self.source = coder.decodeObject(forKey: "source") as? String
         }
+    
         
     public func encode(with coder: NSCoder)
         {
+        print("ENCODE \(Swift.type(of: self))")
+        coder.encode(self.container,forKey: "container")
         coder.encode(self.blocks,forKey: "blocks")
-        coder.encode(self.localSlots,forKey: "localSlots")
+        coder.encode(self.localSymbols,forKey: "localSymbols")
         coder.encode(self.index,forKey: "index")
-        coder.encode(self.parent,forKey: "parent")
+        coder.encode(self.nextLocalSlotOffset,forKey: "nextLocalSlotOffset")
+        coder.encode(self.nextParameterOffset,forKey: "nextParameterOffset")
+        coder.encode(self.type,forKey: "type")
+        coder.encodeCompilerIssues(self.issues,forKey: "issues")
+        coder.encode(self.source,forKey: "source")
+        }
+        
+    public func setContainer(_ container: Container)
+        {
+        self.container = container
+        }
+        
+    public func setContainer(_ scope: Scope?)
+        {
+        self.container = .scope(scope!)
+        }
+        
+    public func appendIssue(at: Location, message: String)
+        {
+        self.issues.append(CompilerIssue(location: at,message: message))
+        }
+    
+    public func appendWarningIssue(at: Location, message: String)
+        {
+        self.issues.append(CompilerIssue(location: at,message: message,isWarning: true))
+        }
+        
+    public func addSymbol(_ symbol: Symbol)
+        {
+        if symbol is Parameter
+            {
+            self.addParameterSlot(symbol as! Parameter)
+            }
+        else if symbol is Slot
+            {
+            self.addLocalSlot(symbol as! LocalSlot)
+            }
+        else
+            {
+            self.localSymbols.append(symbol)
+            }
+        }
+        
+    public func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let newBlock = Self.init()
+        newBlock.index = self.index
+        for block in self.blocks
+            {
+            newBlock.addBlock(block.freshTypeVariable(inContext: context))
+            }
+        newBlock.type = self.type.freshTypeVariable(inContext: context)
+        return(newBlock)
+        }
+        
+    public func addLocalSlot(_ localSlot: LocalSlot)
+        {
+        self.localSymbols.append(localSlot)
+        localSlot.frame = self
+        localSlot.offset = self.nextLocalSlotOffset
+        self.nextLocalSlotOffset -= 8
+        }
+    
+    public func setIndex(_ index: UUID)
+        {
+        self.index = index
+        }
+        
+    public func addParameterSlot(_ parameter: Parameter)
+        {
+        self.localSymbols.append(parameter)
+        parameter.frame = self
+        parameter.offset = self.nextParameterOffset
+        self.nextLocalSlotOffset += 8
+        }
+        
+    public func appendIssue(at: Location,message: String,isWarning:Bool = false)
+        {
+        self.issues.append(CompilerIssue(location: at, message: message,isWarning: isWarning))
+        }
+        
+    public func appendIssues(_ issues: CompilerIssues)
+        {
+        self.issues.append(contentsOf: issues)
+        }
+        
+    public func appendIssue(_ issue: CompilerIssue)
+        {
+        self.issues.append(issue)
+        }
+        
+    public func lookupN(label: Label) -> Symbols?
+        {
+        var found = Symbols()
+        for symbol in self.localSymbols
+            {
+            if symbol.label == label
+                {
+                found.append(symbol)
+                }
+            }
+        if let more = self.container.lookupN(label: label)
+            {
+            found.append(contentsOf: more)
+            }
+        return(found.isEmpty ? nil : found)
+        }
+        
+    public func lookupN(name: Name) -> Symbols?
+        {
+        if name.isRooted
+            {
+            return(self.container.lookupN(name: name))
+            }
+        else if name.count == 1
+            {
+            var results = Symbols()
+            for symbol in self.localSymbols
+                {
+                if symbol.label == name.last
+                    {
+                    results.append(symbol)
+                    }
+                }
+            if let upper = self.container.lookupN(name: name)
+                {
+                results.append(contentsOf: upper)
+                }
+            return(results.isEmpty ? nil : results)
+            }
+        else
+            {
+            return(self.container.lookupN(name: name))
+            }
+        }
+        
+    public func lookup(name: Name) -> Symbol?
+        {
+        if name.isRooted
+            {
+            if name.count == 1
+                {
+                return(nil)
+                }
+            if let start = TopModule.shared.lookup(label: name.first)
+                {
+                if name.count == 2
+                    {
+                    return(start)
+                    }
+                if let symbol = start.lookup(name: name.withoutFirst)
+                    {
+                    return(symbol)
+                    }
+                }
+            }
+        if name.isEmpty
+            {
+            return(nil)
+            }
+        else if name.count == 1
+            {
+            if let symbol = self.lookup(label: name.first)
+                {
+                return(symbol)
+                }
+            }
+        else if let start = self.lookup(label: name.first)
+            {
+            if let symbol = (start as? Scope)?.lookup(name: name.withoutFirst)
+                {
+                return(symbol)
+                }
+            }
+        return(self.container.lookup(name: name))
+        }
+        
+    public func lookup(label: String) -> Symbol?
+        {
+        for symbol in self.localSymbols
+            {
+            if symbol.label == label
+                {
+                return(symbol)
+                }
+            }
+        return(self.container.lookup(label: label))
+        }
+        
+    public func visit(visitor: Visitor) throws
+        {
+        for block in self.blocks
+            {
+            try block.visit(visitor: visitor)
+            }
+        try visitor.accept(self)
+        }
+        
+    public func typeCheck() throws
+        {
+        for block in self.blocks
+            {
+            try block.typeCheck()
+            }
+        }
+        
+    public func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
+        }
+        
+    internal func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let newBlock = Self.init()
+        newBlock.index = self.index
+        for block in self.blocks
+            {
+            newBlock.addBlock(substitution.substitute(block))
+            }
+        newBlock.type = substitution.substitute(self.type)
+        newBlock.issues = self.issues
+        return(newBlock)
+        }
+        
+    public func display(indent: String)
+        {
+        print("\(indent)\(Swift.type(of: self))")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
         }
         
     public func addBlock(_ block:Block)
         {
         self.blocks.append(block)
-        block.setParent(self)
+        block.setContainer(.block(self))
         }
         
-    public func addLocalSlot(_ localSlot:Slot)
-        {
-        self.localSlots.append(localSlot)
-        }
-        
-    public func setParent(_ block:Block)
-        {
-        self.parent = .block(block)
-        }
-        
-    public func setParent(_ node:Node)
-        {
-        self.parent = .node(node)
-        }
-        
-    public func setParent(_ context: Context)
-        {
-        switch(context)
-            {
-            case .block(let block):
-                self.parent = .block(block)
-            case .node(let node):
-                self.parent = .node(node)
-            }
-        }
-        
-    public func emitCode(into: InstructionBuffer,using: CodeGenerator) throws
+    public func emitCode(into: T3ABuffer,using: CodeGenerator) throws
         {
         for block in self.blocks
             {
             try block.emitCode(into: into,using: using)
             }
+        }
+        
+    public func deepCopy() -> Self
+        {
+        let newBlock = Self.init()
+        newBlock.blocks = self.blocks.map{$0.deepCopy()}
+        return(newBlock)
         }
         
     public func addDeclaration(_ location:Location)
@@ -140,12 +400,13 @@ public class Block:NSObject,NamingContext
         self.locations.append(.reference(location))
         }
         
-    public func realize(using realizer: Realizer)
+    public func initializeType(inContext context: TypeContext)
         {
         for block in self.blocks
             {
-            block.realize(using: realizer)
+            block.initializeType(inContext: context)
             }
+        self.type = context.voidType
         }
         
     public func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -156,39 +417,29 @@ public class Block:NSObject,NamingContext
             }
         }
         
-    public func lookup(label: String) -> Symbol?
+    public func hasPrimitiveBlock() -> Bool
         {
-        for slot in self.localSlots
+        for block in self.blocks
             {
-            if slot.label == label
+            if block.hasPrimitiveBlock()
                 {
-                return(slot)
+                return(true)
                 }
             }
-        return(self.parent.lookup(label: label))
+        return(false)
         }
         
-    public func lookup(name: Name) -> Symbol?
+    public func hasReturnBlock() -> Bool
         {
-        if name.isRooted
+        for block in self.blocks
             {
-            return(self.primaryContext.lookup(name: name.withoutFirst))
-            }
-        else if name.isEmpty
-            {
-            return(nil)
-            }
-        if let start = self.lookup(label: name.first)
-            {
-            if name.count == 1
+            if block.hasReturnBlock() || block.hasPrimitiveBlock()
                 {
-                return(start)
+                return(true)
                 }
-            return(start.lookup(name: name.withoutFirst))
             }
-        return(self.parent.lookup(name: name))
+        return(false)
         }
-        
         
     public func dump(depth: Int)
         {

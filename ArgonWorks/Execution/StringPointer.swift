@@ -1,102 +1,93 @@
 //
 //  StringPointer.swift
-//  ArgonWorx
+//  ArgonWorks
 //
-//  Created by Vincent Coetzee on 22/7/21.
+//  Created by Vincent Coetzee on 16/12/21.
 //
 
 import Foundation
 
-//public class StringPointer
-//    {
-//    private static let kBitsByte = UInt8(Argon.Tag.bits.rawValue) << 4
-//    
-//    private let address:Word
-//    private var wordPointer:WordPointer?
-////    private let theClass:Class = ArgonModule.argonModule.string
-//    private let extraOffset:Int
-//    private let countOffset:Int
-//    
-////    public var string:String
-////        {
-////        get
-////            {
-////            if self.address.isZero
-////                {
-////                return("nil")
-////                }
-////            let offset = UInt(address) + UInt(theClass.sizeInBytes)
-////            let bytePointer = UnsafeMutablePointer<UInt8>(bitPattern: offset)!
-////            let count = self.count
-////            var string = ""
-////            var position = 0
-////            var done = 0
-////            while done < count
-////                {
-////                if position % 7 == 0
-////                    {
-////                    position += 1
-////                    }
-////                else
-////                    {
-////                    let byte = bytePointer[position]
-////                    let character = UnicodeScalar(byte)
-////                    string += character
-////                    position += 1
-////                    done += 1
-////                    }
-////                }
-////            return(string)
-////            }
-////        set
-////            {
-////            if self.address.isZero
-////                {
-////                return
-////                }
-////            let offset = UInt(address) + UInt(theClass.sizeInBytes)
-////            let bytePointer = UnsafeMutablePointer<UInt8>(bitPattern: offset)!
-////            self.count = newValue.utf8.count
-////            let string = newValue.utf8
-////            var position = 0
-////            var index = string.startIndex
-////            var count = string.count
-////            while position < count
-////                {
-////                if position % 7 == 0
-////                    {
-////                    bytePointer[position] = Self.kBitsByte
-////                    position += 1
-////                    count += 1
-////                    }
-////                else
-////                    {
-////                    bytePointer[position] = string[index]
-////                    position += 1
-////                    index = string.index(after: index)
-////                    }
-////                }
-////            }
-////        }
-//        
-//    init(address:Word)
-//        {
-//        self.address = address
-//        self.wordPointer = WordPointer(address: address)
-//        fatalError()
-////        self.extraOffset = theClass.sizeInBytes / MemoryLayout<Word>.size
-////        self.countOffset = theClass.layoutSlot(atLabel: "count")!.offset / 8
-//        }
-//        
-//    public var count:Int
-//        {
-//        get
-//            {
-//            return(Int(self.wordPointer?[self.countOffset] ?? 0))
-//            }
-//        set
-//            {
-//            self.wordPointer?[self.countOffset] = Word(newValue)
-//            }
-//        }
-//    }
+public class StringPointer: ObjectPointer
+    {
+    public static func ==(lhs: StringPointer,rhs: String) -> Bool
+        {
+        return(lhs.string == rhs)
+        }
+        
+    public override class func sizeInBytes() -> Int
+        {
+        64
+        }
+    
+    public var count: Int
+        {
+        get
+            {
+            let count = Int(self.wordPointer[6])
+            return(count)
+            }
+        set
+            {
+            self.wordPointer[6] = Word(newValue)
+            }
+        }
+        
+    public var string: String
+        {
+        get
+            {
+            return(self.loadString())
+            }
+        set
+            {
+            self.storeString(newValue)
+            }
+        }
+        
+    private func storeString(_ string: String)
+        {
+        let sizeInBytes = self.align(Self.sizeInBytes(),to: Self.alignment)
+        let bytesOffset = self._cleanAddress + Word(sizeInBytes)
+        self.count = string.utf16.count
+        let charPointer = UInt16Pointer(bitPattern: bytesOffset)
+        var offset = 0
+        for character in string.utf16
+            {
+            if offset % 4 == 3
+                {
+                charPointer[offset] = 0
+                offset += 1
+                charPointer[offset] = character
+                }
+            else
+                {
+                charPointer[offset] = character
+                }
+            offset += 1
+            }
+        charPointer[offset] = 0
+        }
+        
+    public func loadString() -> String
+        {
+        let sizeInBytes = self.align(Self.sizeInBytes(),to: Self.alignment)
+        let bytesOffset = self._cleanAddress + Word(sizeInBytes)
+        let charPointer = UInt16Pointer(bitPattern: bytesOffset)
+        var offset = 0
+        var number = 0
+        var array = Array<UTF16.CodeUnit>()
+        let theCount = self.count
+        while number < theCount
+            {
+            if offset % 4 != 3
+                {
+                array.append(charPointer[offset])
+                number += 1
+                }
+            offset += 1
+            }
+        let string = String(utf16CodeUnits: array,count: array.count)
+        return(string)
+        }
+    }
+

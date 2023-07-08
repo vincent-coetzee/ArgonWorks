@@ -9,6 +9,11 @@ import Foundation
 
 public indirect enum MemorySize
     {
+    public static func megabytes(_ value:Int) -> MemorySize
+        {
+        MemorySize.megabytes(value,.bytes(0))
+        }
+        
     public static func *(lhs:MemorySize,rhs:Int) -> MemorySize
         {
         return(.bytes(lhs.inBytes * rhs))
@@ -36,6 +41,11 @@ public indirect enum MemorySize
     case megabytes(Int,MemorySize)
     case gigabytes(Int,MemorySize)
     
+    public init(megabytes: Int)
+        {
+        self = .megabytes(megabytes,.bytes(0))
+        }
+        
     public var displayString: String
         {
         switch(self)

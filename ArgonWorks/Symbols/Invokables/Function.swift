@@ -5,12 +5,41 @@
 //  Created by Vincent Coetzee on 3/7/21.
 //
 
-import Foundation
+import AppKit
 import FFI
-import Interpreter
 
-public class Function:Invokable
-    {        
+public class Function:Invocable,Displayable
+    {
+    public var library:DynamicLibrary = .emptyLibrary
+    
+    public override var displayString: String
+        {
+        let parms = "(" + self.parameters.map{$0.displayString}.joined(separator: ",") + ")"
+        return(self.label + parms + " -> " + self.returnType.displayString)
+        }
+        
+    public override var iconName: String
+        {
+        "IconFunction"
+        }
+        
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        }
+        
+    public required init?(coder: NSCoder)
+        {
+        self.library = coder.decodeDynamicLibrary(forKey: "library")
+        super.init(coder: coder)
+        }
+        
+    public override func encode(with coder:NSCoder)
+        {
+        coder.encodeDynamicLibrary(self.library,forKey: "library")
+        super.encode(with: coder)
+        }
+        
     public func call(withArguments: Words) -> Word?
         {
         let argTypes:UnsafeMutablePointer<ffi_type>? = UnsafeMutablePointer<ffi_type>.allocate(capacity: self.parameters.count)
@@ -33,10 +62,10 @@ public class Function:Invokable
             argumentPointers[index] = UnsafeMutableRawPointer(pointer)
             index += 1
             }
-        if let address = self.library.findSymbol(self.cName)
-            {
-            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
-            }
+//        if let address = self.library.findSymbol(self.cName)
+//            {
+////            ffi_call(&interface,MutateSymbol(address.address!),nil,argumentPointers)
+//            }
         return(0)
         }
     }

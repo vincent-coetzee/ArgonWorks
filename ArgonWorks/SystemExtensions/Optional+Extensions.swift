@@ -31,3 +31,107 @@ extension Optional
             }
         }
     }
+
+
+extension Optional where Wrapped:Collection
+    {
+    public var count: Int
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.count)
+            default:
+                return(0)
+            }
+        }
+    }
+    
+extension Optional where Wrapped:Nameable
+    {
+    public var fullName: Name
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.fullName)
+            default:
+                return(Name("\\\\"))
+            }
+        }
+    }
+    
+extension Optional where Wrapped:Displayable
+    {
+    public var displayString: String
+        {
+        switch(self)
+            {
+            case .some(let object):
+                return(object.displayString)
+            default:
+                return("nil value")
+            }
+        }
+    }
+
+extension Optional where Wrapped == Word
+    {
+    public var objectAddress: Word
+        {
+        switch(self)
+            {
+            case .some(let word):
+                return(word.objectAddress)
+            default:
+                return(Address(0).objectAddress)
+            }
+        }
+        
+   public var cleanAddress: Word
+        {
+        switch(self)
+            {
+            case .some(let word):
+                return(word.cleanAddress)
+            default:
+                return(Address(0))
+            }
+        }
+    }
+
+extension Optional where Wrapped:Pointer
+    {
+    public var dirtyAddress: Word
+        {
+        switch(self)
+            {
+            case .some(let word):
+                return(word.dirtyAddress)
+            default:
+                return(Address(0))
+            }
+        }
+        
+    public var objectAddress: Word
+        {
+        switch(self)
+            {
+            case .some(let word):
+                return(word.cleanAddress.objectAddress)
+            default:
+                return(Address(0).objectAddress)
+            }
+        }
+        
+   public var cleanAddress: Word
+        {
+        switch(self)
+            {
+            case .some(let word):
+                return(word.cleanAddress)
+            default:
+                return(Address(0))
+            }
+        }
+    }

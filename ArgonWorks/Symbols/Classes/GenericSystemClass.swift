@@ -7,10 +7,25 @@
 
 import Foundation
 
-public class GenericSystemClass:GenericClass
-    {
-    public override var isSystemClass: Bool
-        {
-        return(true)
-        }
-    }
+//public class GenericSystemClass:GenericClass
+//    {
+//    public override var segmentType: Segment.SegmentType
+//        {
+//        .static
+//        }
+//        
+//    public override var isSystemSymbol: Bool
+//        {
+//        return(true)
+//        }
+//        
+//    public override var isSystemClass: Bool
+//        {
+//        return(true)
+//        }
+//        
+//    internal override func createType() -> Type
+//        {
+//        Argon.addType(TypeClass(systemClass: self,generics: []))
+//        }
+//    }

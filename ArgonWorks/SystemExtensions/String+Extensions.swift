@@ -29,14 +29,18 @@ extension String
         return(Int(hash & mask))
         }
         
+    public var argonHash: Int
+        {
+        self.polynomialRollingHash
+        }
+        
     public var polynomialRollingHash:Int
         {
-        let p:Int64 = 31
+        let p:Int64 = 53   // Use 3 instead of 31 because strings contains uppercase and lowercase characters
         let m:Int64 = Int64(1e9) + 9
         var powerOfP:Int64 = 1
         var hashValue:Int64 = 0
         let aValue = Int64(Character("A").asciiValue!)
-        
         for char in self
             {
             hashValue = (hashValue + (Int64(char.asciiValue!) - aValue + 1) * powerOfP) % m
@@ -63,5 +67,51 @@ extension String
             return(String(self.dropFirst()))
             }
         return(self)
+        }
+        
+    public var hasFileExtension: Bool
+        {
+        let string = self as NSString
+        return(!string.pathExtension.isEmpty)
+        }
+        
+    public var fileExtension: String
+        {
+        let string = self as NSString
+        return(string.pathExtension)
+        }
+        
+    public var isAbsoluteFilePath: Bool
+        {
+        let string = self as NSString
+        return(!string.isAbsolutePath)
+        }
+        
+    public var isFilePath: Bool
+        {
+        return(self.contains("/"))
+        }
+        
+    public var fileComponents: Array<String>
+        {
+        return(self.components(separatedBy: "/"))
+        }
+        
+    public var uppercasingFirstLetter: String
+        {
+        guard !self.isEmpty else
+            {
+            return(self)
+            }
+        return(self.prefix(1).uppercased() + self.dropFirst())
+        }
+        
+    public var lowercasingFirstLetter: String
+        {
+        guard !self.isEmpty else
+            {
+            return(self)
+            }
+        return(self.prefix(1).lowercased() + self.dropFirst())
         }
     }

@@ -17,15 +17,95 @@ public class WhileBlock: Block
         super.init()
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public required init?(coder: NSCoder)
         {
-//        let start = buffer.toHere()
+        self.condition = coder.decodeObject(forKey: "condition") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public required init()
+        {
+        self.condition = Expression()
+        super.init()
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.condition,forKey: "condition")
+        super.encode(with: coder)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)WHILE: \(Swift.type(of: self))")
+        print("\(indent)CONDITION: \(self.condition.type.displayString)")
+        self.condition.display(indent: indent + "\t")
+        for block in self.blocks
+            {
+            block.display(indent: indent + "\t")
+            }
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let block = WhileBlock(condition: self.condition.freshTypeVariable(inContext: context))
+        for innerBlock in self.blocks
+            {
+            block.addBlock(innerBlock.freshTypeVariable(inContext: context))
+            }
+        block.type = self.type.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.condition.initializeTypeConstraints(inContext: context)
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
+        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.condition.initializeType(inContext: context)
+        for block in self.blocks
+            {
+            block.initializeType(inContext: context)
+            }
+        self.type = context.voidType
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        let startLabel = buffer.nextLabel()
+        let endLabel = buffer.nextLabel()
+        buffer.pendingLabel = startLabel
         try self.condition.emitCode(into: buffer,using: generator)
-        buffer.append(.BRF,self.condition.place,.none,.label(0))
+        buffer.append(nil,.BRAF,self.condition.place,.none,.label(endLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: generator)
             }
-        buffer.append(.BR,.none,.none,.label(0))
+        buffer.append(nil,.BRA,.none,.none,.label(startLabel))
+        buffer.pendingLabel = endLabel
+        }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let aBlock = WhileBlock(condition: substitution.substitute(self.condition))
+        aBlock.type = substitution.substitute(self.type)
+        for block in self.blocks
+            {
+            aBlock.addBlock(substitution.substitute(block))
+            }
+        return(aBlock as! Self)
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.condition.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
         }
     }

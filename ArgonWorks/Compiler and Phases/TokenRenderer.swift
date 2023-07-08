@@ -48,6 +48,8 @@ public class TokenRenderer
         case constant
         case enumeration
         case systemClass
+        case typeAlias
+        case classParameter
         
         init(_ token:Token)
             {
@@ -99,7 +101,7 @@ public class TokenRenderer
                 self = .name
             case .invisible(_, _):
                 self = .none
-            }
+                }
             }
         }
         
@@ -111,7 +113,7 @@ public class TokenRenderer
             }
         set
             {
-            self.attributes[self.currentToken.location.range]![.foregroundColor] = self.mapKindToForegroundColor(kind: newValue,systemClassNames: self.systemClassNames)
+//            self.attributes[self.currentToken.location.range]![.foregroundColor] = Self.mapKindToForegroundColor(kind: newValue,systemClassNames: self.systemClassNames)
             }
         }
         
@@ -125,9 +127,18 @@ public class TokenRenderer
         self.systemClassNames = systemClassNames
         }
         
+//    public func set(kind someKind: Kind,forToken someToken: Token)
+//        {
+//        guard !someToken.isEnd else
+//            {
+//            return
+//            }
+//        self.attributes[someToken.location.range]![.foregroundColor] = Self.mapKindToForegroundColor(kind: someKind,systemClassNames: self.systemClassNames)
+//        }
+        
     public func processTokens(_ tokens: Tokens)
         {
-        for token in tokens
+        for token in tokens where !token.isEnd
             {
             if self.attributes[token.location.range].isNotNil
                 {
@@ -145,7 +156,22 @@ public class TokenRenderer
         
     public func setToken(_ token: Token)
         {
+        guard !token.isEnd else
+            {
+            return
+            }
         self.currentToken = token
+        if var attributes = self.attributes[token.location.range]
+            {
+            attributes[.foregroundColor] = self.mapTokenToForegroundColor(token: token)
+            self.attributes[token.location.range] = attributes
+            }
+        else
+            {
+            var attributes:[NSAttributedString.Key:Any] = [:]
+            attributes[.foregroundColor] = self.mapTokenToForegroundColor(token: token)
+            self.attributes[token.location.range] = attributes
+            }
         }
         
     private func mapTokenToForegroundColor(token: Token) -> NSColor
@@ -161,7 +187,7 @@ public class TokenRenderer
             case .hashString:
                 return(SyntaxColorPalette.symbolColor)
             case .note:
-                return(NSColor.argonNeonFuchsia)
+                return(NSColor.cyan)
             case .directive:
                 return(SyntaxColorPalette.directiveColor)
             case .comment:
@@ -181,7 +207,7 @@ public class TokenRenderer
             case .symbol:
                 return(SyntaxColorPalette.operatorColor)
             case .none:
-                return(NSColor.argonNeonFuchsia)
+                return(NSColor.cyan)
             case .operator:
                 return(SyntaxColorPalette.operatorColor)
             case .character:
@@ -201,7 +227,7 @@ public class TokenRenderer
             }
         }
         
-    public func mapKindToForegroundColor(kind:Kind,systemClassNames: Array<String>) -> NSColor
+    public static func mapKindToForegroundColor(kind: TokenKind,systemClassNames: Array<String> = []) -> NSColor
         {
         var localAttributes:[NSAttributedString.Key:Any] = [:]
         switch(kind)
@@ -213,15 +239,7 @@ public class TokenRenderer
             case .keyword:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.keywordColor
             case .identifier:
-                let identifier = self.currentToken.identifier
-                if systemClassNames.contains(identifier)
-                    {
-                    localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
-                    }
-                else
-                    {
-                    localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
-                    }
+                localAttributes[.foregroundColor] = SyntaxColorPalette.identifierColor
             case .name:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.nameColor
             case .enumeration:
@@ -252,6 +270,8 @@ public class TokenRenderer
                 localAttributes[.foregroundColor] = SyntaxColorPalette.functionColor
             case .localSlot:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
+            case .systemClass:
+                localAttributes[.foregroundColor] = SyntaxColorPalette.systemClassColor
             case .classSlot:
                 localAttributes[.foregroundColor] = SyntaxColorPalette.slotColor
             case .type:

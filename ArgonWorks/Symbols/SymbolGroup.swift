@@ -5,15 +5,35 @@
 //  Created by Vincent Coetzee on 18/7/21.
 //
 
-import Foundation
+import AppKit
 
 public class SymbolGroup:ContainerSymbol
     {
-    public override var imageName: String
+    public override var fullName: Name
+        {
+        return(self.module.fullName)
+        }
+        
+    public override var isSymbolGroup: Bool
+        {
+        return(true)
+        }
+
+    public override var iconName: String
         {
         "IconGroup"
         }
         
+    public override var type: Type!
+        {
+        get
+            {
+            return(self.module!.type)
+            }
+        set
+            {
+            }
+        }
     ///
     ///
     /// Essentially make a SymbolGroup transparent so that
@@ -22,11 +42,14 @@ public class SymbolGroup:ContainerSymbol
     /// 
     public override func lookup(label:String) -> Symbol?
         {
-        if let symbol = self.symbols[label]
+        for symbol in self.symbols
             {
-            return(symbol)
+            if symbol.label == label
+                {
+                return(symbol)
+                }
             }
-        for element in self.symbols.values
+        for element in self.symbols
             {
             if let symbol = element.lookup(label: label)
                 {
@@ -34,6 +57,30 @@ public class SymbolGroup:ContainerSymbol
                 }
             }
         return(nil)
+        }
+        
+    public override var isSystemContainer: Bool
+        {
+        return(true)
+        }
+        
+    public override func configure(leaderCell: NSTableCellView,foregroundColor:NSColor? = nil)
+        {
+        let count = self.symbols.count
+        var text = ""
+        if count == 0
+            {
+            text = ""
+            }
+        else if count == 1
+            {
+            text = "1 child"
+            }
+        else
+            {
+            text = "\(count) children"
+            }
+        leaderCell.textField?.stringValue = text
         }
         
     public override func lookup(name:Name) -> Symbol?
@@ -44,7 +91,7 @@ public class SymbolGroup:ContainerSymbol
             }
         if name.isRooted
             {
-            if let context = self.primaryContext.lookup(label: name.first)
+            if let context = TopModule.shared.lookup(label: name.first)
                 {
                 return(context.lookup(name: name.withoutFirst))
                 }
@@ -58,7 +105,7 @@ public class SymbolGroup:ContainerSymbol
             {
             return(symbol)
             }
-        for element in self.symbols.values
+        for element in self.symbols.filter({$0.isSystemContainer})
             {
             if let symbol = element.lookup(name:name)
                 {
@@ -68,11 +115,16 @@ public class SymbolGroup:ContainerSymbol
         return(nil)
         }
         
+    public override func isElement(ofType: Group.ElementType) -> Bool
+        {
+        return(true)
+        }
+        
     public override func directlyContains(symbol:Symbol) -> Bool
         {
-        for aSymbol in self.symbols.values
+        for aSymbol in self.symbols
             {
-            if aSymbol.id == symbol.id
+            if aSymbol.index == symbol.index
                 {
                 return(true)
                 }
@@ -82,5 +134,19 @@ public class SymbolGroup:ContainerSymbol
                 }
             }
         return(false)
+        }
+    }
+
+public class SystemSymbolGroup: SymbolGroup
+    {
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
+    public override func configure(cell: HierarchyCellView,foregroundColor: NSColor? = nil)
+        {
+        let color =  foregroundColor.isNil ? Palette.shared.hierarchyBrowserSystemClassColor : foregroundColor!
+        super.configure(cell: cell,foregroundColor: color)
         }
     }

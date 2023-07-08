@@ -10,7 +10,7 @@ import Foundation
 
 public typealias Tokens = Array<Token>
 
-public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifiable
+public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifiable,Equatable
     {
     public static let systemClassNames = ["Object","Array","List","Set","Dictionary","Integer","Float","Boolean","Byte","Character","Pointer","Tuple","String","Symbol","Date","Time","DateTime"]
     
@@ -46,6 +46,60 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+        
+    public var stringValue: String
+        {
+        switch(self)
+            {
+            case .none:
+                return(".none")
+            case .comment(let string,_):
+                return("\(string)")
+            case .end:
+                return(".end")
+            case .identifier(let string,_):
+                return(string)
+            case .keyword(let keyword,_):
+                return("\(keyword)")
+            case .name(let string,_):
+                return("\(string.string)")
+            case .invisible(_,_):
+                return("")
+            case .path(let string,_):
+                return("\(string)")
+            case .hashString(let string,_):
+                return(string)
+            case .note(let string,_):
+                return(string)
+            case .directive(let string,_):
+                return(string)
+            case .string(let string,_):
+                return(string)
+            case .integer(let value,_):
+                return("\(value)")
+            case .float(let value,_):
+                return("\(value)")
+            case .symbol(let value,_):
+                return("\(value)")
+            case .operator(let string,_):
+                return("\(string)")
+            case .character(let char, _):
+                return("\(char)")
+            case .boolean(let boolean, _):
+                return("\(boolean)")
+            case .byte(let value,_):
+                return("\(value)")
+            case .keyPath(let value,_):
+                return("\(value)")
+            case .date(let date, _):
+                return("\(date)")
+            case .time(let time,_):
+                return("\(time)")
+            case .dateTime(let value,_):
+                return("\(value)")
+            }
+        }
+        
         
     public var id: Int
         {
@@ -115,6 +169,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case leftBracket = "["
         case rightBracket = "]"
         case colon = ":"
+        case semicolon = ";"
         case gluon = "::"
         case stop = "."
         case comma = ","
@@ -137,7 +192,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case modulus = "%"
         case modulusEquals = "%="
         case macroStart = "${"
-        case macroEnd = "}$"
+        case macroStop = "}$"
         case noteStart = "!*"
         case noteEnd = "*!"
         case pow = "**"
@@ -159,6 +214,23 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case cast = "to"
         case backslash = "\\"
 
+        public var isOperator: Bool
+            {
+            switch(self)
+                {
+                case .macroStart,.macroStop,.noteStart,.noteEnd,.semicolon,.colon:
+                    break
+                case .none,.doubleBackSlash,.leftParenthesis,.rightParenthesis,.leftBracket,.rightBracket,.leftBrace,.rightBrace:
+                    break
+                case .gluon,.stop,.comma,.dollar,.hash,.at,.assign,.rightArrow,.doubleQuote,.singleQuote,.leftBrocket,.rightBrocket:
+                    break
+                case .halfRange,.fullRange,.not,.other,.cast,.backslash:
+                    break
+                default:
+                    return(true)
+                }
+            return(false)
+            }
         }
 
     public enum Keyword:String,CaseIterable,Equatable
@@ -170,13 +242,15 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case CLAIMED
         case CLASS
         case CLOSED
+        case COCOON
         case CONSTANT
         case DELEGATE
         case ELSE
+        case ELSEIF
         case ENUMERATION
         case EXPORTED
         case EXTENSION
-        case LOOP
+        case FOR
         case FORK
         case FROM
         case FUNCTION
@@ -185,15 +259,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case IMPORT
         case IN
         case INFIX
+        case INIT
+        case CAST
         case IS
         case LET
         case LOADED
         case LOCAL
+        case LOOP
+        case MACRO
         case MAIN
         case MAKE
         case MAPPING
-        case me
-        case Me
         case METHOD
         case MODULE
         case NEXT
@@ -203,6 +279,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case OTHERWISE
         case POSTFIX
         case PREFIX
+        case PRIMITIVE
         case PRIVATE
         case PROTECTED
         case PUBLIC
@@ -212,8 +289,11 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case REPEAT
         case RETURN
         case RESUME
+        case ROLE
         case SEALED
         case SELECT
+        case `self`
+        case `Self`
         case SCOPED
         case SIGNAL
         case SLOT
@@ -261,6 +341,11 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             self.operatorName = string
             }
+            
+        init(_ symbol: Symbol)
+            {
+            self.operatorName = symbol.rawValue
+            }
         }
         
     public enum TokenType
@@ -289,6 +374,19 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         case directive
         case note
         case path
+        }
+        
+    public var isWhitespace: Bool
+        {
+        switch(self)
+            {
+            case .comment:
+                return(true)
+            case .invisible:
+                return(true)
+            default:
+                return(false)
+            }
         }
         
     public var tokenType:TokenType
@@ -341,6 +439,31 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(.dateTime)
             case .path:
                 return(.path)
+            }
+        }
+        
+    public var tokenColor: TokenColor
+        {
+        switch(self)
+            {
+            case .comment:
+                return(.comment)
+            case .identifier:
+                return(.identifier)
+            case .keyword:
+                return(.keyword)
+            case .integer:
+                return(.integer)
+            case .float:
+                return(.float)
+            case .string:
+                return(.string)
+            case .symbol:
+                fallthrough
+            case .operator:
+                return(.symbol)
+            default:
+                return(.text)
             }
         }
         
@@ -457,38 +580,66 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-//
-//    public var asSymbolAttribute: SymbolAttribute
-//        {
-//        if !self.isSymbolAttribute
-//            {
-//            fatalError("This should not happen")
-//            }
-//        else
-//            {
-//            switch(self.keyword)
-//                {
-//                case .EXPORTED:
-//                    return(.exported)
-//                case .PUBLIC:
-//                    return(.public)
-//                case .PROTECTED:
-//                    return(.protected)
-//                case .PRIVATE:
-//                    return(.private)
-//                case .OPEN:
-//                    return(.open)
-//                case .CLOSED:
-//                    return(.closed)
-//                case .SEALED:
-//                    return(.sealed)
-//                case .UNSEALED:
-//                    return(.unsealed)
-//                default:
-//                    fatalError("This should not happen")
-//                }
-//            }
-//        }
+    public func withLocation(_ location: Location) -> Self
+        {
+        switch(self)
+            {
+            case .name(let string,_):
+                return(.name(string,location))
+//                return(".name()")
+            case .invisible(let string,_):
+                return(.invisible(string,location))
+//                return(".invisible(...)")
+            case .path(let string,_):
+                return(.path(string,location))
+            case .hashString(let string,_):
+                return(.hashString(string,location))
+//                return(".symbolString()")
+            case .note(let string,_):
+                return(.note(string,location))
+//                return(".note()")
+            case .directive(let string,_):
+                return(.directive(string,location))
+//                return(".directive()")
+            case .comment(let string,_):
+                return(.comment(string,location))
+//                return(".comment()")
+            case .end:
+                return(.end(location))
+            case .identifier(let string,_):
+                return(.identifier(string,location))
+//                return(".identifier()")
+            case .keyword(let keyword,_):
+                return(.keyword(keyword,location))
+            case .string(let string,_):
+                return(.string(string,location))
+//                return(".string()")
+            case .integer(let value,_):
+                return(.integer(value,location))
+            case .float(let value,_):
+                return(.float(value,location))
+            case .symbol(let value,_):
+                return(.symbol(value,location))
+            case .none:
+                return(.none)
+            case .operator(let string,_):
+                return(.operator(string,location))
+            case .character(let char, _):
+                return(.character(char,location))
+            case .boolean(let boolean, _):
+                return(.boolean(boolean,location))
+            case .byte(let value,_):
+                return(.byte(value,location))
+            case .keyPath(let value,_):
+                return(.keyPath(value,location))
+            case .date(let date, _):
+                return(.date(date,location))
+            case .time(let time,_):
+                return(.time(time,location))
+            case .dateTime(let value,_):
+                return(.dateTime(value,location))
+            }
+        }
         
     public var isSystemClassKeyword: Bool
         {
@@ -646,18 +797,7 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 fatalError("Invalid call on String")
             }
         }
-        
-//    public var typeParameter:String
-//        {
-//        switch(self)
-//            {
-//            case .typeParameter(let value,_):
-//                return(value)
-//            default:
-//                fatalError("Invalid call on String")
-//            }
-//        }
-        
+
     public var hashStringLiteral:Argon.Symbol
         {
         switch(self)
@@ -825,6 +965,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         {
         switch(self)
             {
+            case .symbol(let symbol,_):
+                return(Operator(symbol))
             case .operator(let name,_):
                 return(Operator(name))
             default:
@@ -1145,6 +1287,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
+    public var isSemicolon:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .semicolon)
+            default:
+                return(false)
+            }
+        }
+        
     public var isIntegerLiteral:Bool
         {
         switch(self)
@@ -1204,6 +1357,8 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
         {
         switch(self)
             {
+            case .symbol(let symbol,_):
+                return(symbol.isOperator)
             case .operator:
                 return(true)
             default:
@@ -1283,6 +1438,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .SEALED)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isCocoon:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .COCOON)
             default:
                 return(false)
             }
@@ -1447,6 +1613,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
+    public var isMacro:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .MACRO)
+            default:
+                return(false)
+            }
+        }
+        
     public var isReadOnly:Bool
         {
         switch(self)
@@ -1485,6 +1662,18 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+        
+    public var isInit:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .INIT)
+            default:
+                return(false)
+            }
+        }
+        
         
     public var isSlot:Bool
         {
@@ -1584,13 +1773,25 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
+    
         
-    public var isLowerMe:Bool
+    public var isSELF:Bool
         {
         switch(self)
             {
             case .keyword(let value,_):
-                return(value == .me)
+                return(value == .Self)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isSelf:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .self)
             default:
                 return(false)
             }
@@ -1733,17 +1934,6 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
                 return(false)
             }
         }
-
-    public var isUpperMe:Bool
-        {
-        switch(self)
-            {
-            case .keyword(let keyword,_):
-                return(keyword == .Me)
-            default:
-                return(false)
-            }
-        }
         
     public var isElse:Bool
         {
@@ -1751,6 +1941,28 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .ELSE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isCast:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .CAST)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isElseIf:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .ELSEIF)
             default:
                 return(false)
             }
@@ -2431,12 +2643,12 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             }
         }
         
-    public var isMacroEnd:Bool
+    public var isMacroStop:Bool
         {
         switch(self)
             {
             case .symbol(let value,_):
-                return(value == .macroEnd)
+                return(value == .macroStop)
             default:
                 return(false)
             }
@@ -2459,6 +2671,39 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .keyword(let value,_):
                 return(value == .PRIVATE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isRole:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .ROLE)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isFor:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .FOR)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isPrimitive:Bool
+        {
+        switch(self)
+            {
+            case .keyword(let value,_):
+                return(value == .PRIMITIVE)
             default:
                 return(false)
             }
@@ -2635,6 +2880,17 @@ public enum Token:CustomStringConvertible,CustomDebugStringConvertible,Identifia
             {
             case .symbol(let value,_):
                 return(value == .gluon)
+            default:
+                return(false)
+            }
+        }
+        
+    public var isScope:Bool
+        {
+        switch(self)
+            {
+            case .symbol(let value,_):
+                return(value == .rightArrow)
             default:
                 return(false)
             }

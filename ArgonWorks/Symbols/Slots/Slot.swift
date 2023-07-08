@@ -10,6 +10,61 @@ import AppKit
 
 public class Slot:Symbol
     {
+    public override var argonHash: Int
+        {
+        var hashValue = super.argonHash
+        hashValue = hashValue << 13 ^ self.type.argonHash
+        hashValue = hashValue << 13 ^ self.slotType.symbolString.polynomialRollingHash
+        hashValue = hashValue << 13 ^ self.offset
+        let word = Word(bitPattern: hashValue) & ~Argon.kTagMask
+        return(Int(bitPattern: word))
+        }
+        
+    public enum SlotType:Int
+        {
+        case module
+        case instance
+        case `class`
+        case header
+        case magicNumber
+        case local
+        
+        public var symbolString: String
+            {
+            switch(self)
+                {
+                case .module:
+                    return("#moduleSlot")
+                case .instance:
+                    return("#instanceSlot")
+                case .class:
+                    return("#classSlot")
+                case .header:
+                    return("#headerSlot")
+                case .magicNumber:
+                    return("#magicNumberSlot")
+                case .local:
+                    return("#localSlot")
+                }
+            }
+        }
+        
+    public override var sizeInBytes: Int
+        {
+        let type = ArgonModule.shared.slot
+        return(type.instanceSizeInBytes)
+        }
+        
+    public var isSytemSymbol: Bool
+        {
+        false
+        }
+        
+    public override var asLiteralExpression: LiteralExpression?
+        {
+        fatalError()
+        }
+        
     public static func ==(lhs:Slot,rhs:Slot) -> Bool
         {
         return(lhs.index == rhs.index)
@@ -20,9 +75,9 @@ public class Slot:Symbol
         .slot
         }
         
-    public override var type: Type
+    public override var isSlot: Bool
         {
-        return(self._type ?? .class(VoidClass.voidClass))
+        return(true)
         }
         
     public var size:Int
@@ -30,19 +85,14 @@ public class Slot:Symbol
         return(MemoryLayout<Word>.size)
         }
         
-    public override var displayName: String
+    public override var displayString: String
         {
-        "\(self.label)::\(self._type?.displayString ?? "")"
+        "\(self.label)::\(self.type.displayString)"
         }
         
-    public override var imageName: String
+    public override var iconName: String
         {
         "IconSlot"
-        }
-        
-    public override var symbolColor: NSColor
-        {
-        .argonCoral
         }
         
     public override var weight: Int
@@ -50,10 +100,10 @@ public class Slot:Symbol
         100
         }
         
-    public var containedClassParameters: Array<GenericClassParameter>
-        {
-        return([])
-        }
+//    public var containedClassParameters: Array<GenericType>
+//        {
+//        return([])
+//        }
         
     public var isArraySlot:Bool
         {
@@ -72,7 +122,7 @@ public class Slot:Symbol
         
     public var cloned: Slot
         {
-        let newSlot = Slot(label: self.label,type:self._type)
+        let newSlot = Slot(label: self.label,type:self.type)
         newSlot.offset = self.offset
         return(newSlot)
         }
@@ -82,39 +132,53 @@ public class Slot:Symbol
         return(false)
         }
         
-    private var _type:Type?
-    public private(set) var offset:Int = 0
+    public var offset = 0
     public var initialValue: Expression? = nil
     public var isClassSlot = false
+    public var slotType: SlotType = .instance
     
-    init(label:Label,type:Type?)
+
+    init(label:Label,type:Type? = nil)
         {
-        self._type = type
         super.init(label:label)
+        self.type = type!
         }
         
     required init(labeled:Label,ofType:Type)
         {
-        self._type = ofType
         super.init(label:labeled)
+        self.type = ofType
         }
 
-    public func deepCopy() -> Slot
+    public required init?(coder: NSCoder)
         {
-        let newSlot = Slot(label: self.label,type: self._type)
-        newSlot.addresses = self.addresses
-        newSlot.locations = self.locations
-        newSlot.source = self.source
-        newSlot._type = self._type
-        newSlot.offset = self.offset
-        newSlot.initialValue = self.initialValue
-        newSlot.isClassSlot = self.isClassSlot
-        return(newSlot)
+//        print("START DECODE SLOT")
+        self.offset = coder.decodeInteger(forKey: "offset")
+        self.initialValue = coder.decodeObject(forKey: "initialValue") as? Expression
+        self.isClassSlot = coder.decodeBool(forKey: "isClassSlot")
+        self.slotType = SlotType(rawValue: coder.decodeInteger(forKey: "slotType"))!
+        super.init(coder: coder)
+//        print("END DECODE SLOT \(self.label)")
+        }
+
+    public required init(label: Label)
+        {
+        super.init(label: label)
+        self.type = TypeContext.freshTypeVariable()
         }
         
-    public override func realize(using realizer: Realizer)
+    public override func encode(with coder:NSCoder)
         {
-        self._type?.realize(using: realizer)
+        coder.encode(self.offset,forKey: "offset")
+        coder.encode(self.initialValue,forKey:"initialValue")
+        coder.encode(self.isClassSlot,forKey: "isClassSlot")
+        coder.encode(self.slotType.rawValue,forKey: "slotType")
+        super.encode(with: coder)
+        }
+    
+    public override func lookup(label: Label) -> Symbol?
+        {
+        return(self.type.lookup(label: label))
         }
         
     public func setOffset(_ integer:Int)
@@ -122,29 +186,113 @@ public class Slot:Symbol
         self.offset = integer
         }
         
-    public func printFormattedSlotContents(base:WordPointer)
+    public override func allocateAddresses(using allocator: AddressAllocator) throws
         {
-        let offsetValue = self.offset
-        let offsetString = String(format: "%08X",offsetValue)
-        let name = self.label.aligned(.left,in:25)
-        let word = base.word(atByteOffset: offsetValue)
-        print("\(offsetString) \(name) WRD \(word.bitString) \(word)")
-        }
-        
-    public func layoutSymbol(in vm: VirtualMachine)
-        {
-        guard !self.isMemoryLayoutDone else
+        guard !self.wasAddressAllocationDone else
             {
             return
             }
-        let pointer = InnerSlotPointer.allocate(in: vm)
-        self.addresses.append(.absolute(pointer.address))
-        assert( self.topModule.argonModule.slot.sizeInBytes == 88)
-        pointer.setSlotValue(vm.managedSegment.allocateString(self.label),atKey:"name")
-        pointer.setSlotValue(self._type?.memoryAddress ?? 0,atKey:"slotClass")
-        pointer.setSlotValue(self.offset,atKey:"offset")
-        pointer.setSlotValue(self._type?.typeCode.rawValue ?? 0,atKey:"typeCode")
-        self.isMemoryLayoutDone = true
+        self.wasAddressAllocationDone = true
+        allocator.allocateAddress(for: self)
+        try self.type.allocateAddresses(using: allocator)
+        }
+        
+    public override func layoutInMemory(using allocator: AddressAllocator)
+        {
+        guard !self.wasMemoryLayoutDone else
+            {
+            return
+            }
+        self.wasMemoryLayoutDone = true
+        let segment = allocator.segment(for: self.segmentType)
+        let slotType = ArgonModule.shared.slot
+        let slotPointer = ClassBasedPointer(address: self.memoryAddress,type: slotType)
+        slotPointer.setClass(slotType)
+        slotPointer.setAddress(self.type.memoryAddress,atSlot: "type")
+        slotPointer.setAddress(segment.allocateString(self.label),atSlot: "name")
+        slotPointer.setInteger(self.offset,atSlot: "offset")
+        slotPointer.setInteger(self.typeCode.rawValue,atSlot: "typeCode")
+        if self is InstanceSlot
+            {
+            let instanceSlot = self as! InstanceSlot
+            slotPointer.setAddress(instanceSlot.type.memoryAddress,atSlot: "class")
+            }
+        else if self is ModuleSlot
+            {
+            
+            }
+        slotPointer.setInteger(self.slotType.rawValue, atSlot: "slotType")
+        slotPointer.setInteger(self.argonHash,atSlot: "hash")
+        self.type.layoutInMemory(using: allocator)
+        }
+        
+    public override func assign(from expression: Expression,into buffer: T3ABuffer,using: CodeGenerator) throws
+        {
+        try self.emitLValue(into: buffer, using: using)
+        try expression.emitValueCode(into: buffer,using: using)
+        buffer.append(.STP,expression.place,.none,self.place)
+        }
+        
+    public override func emitRValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
+        }
+        
+    public override func emitLValue(into buffer: T3ABuffer,using generator: CodeGenerator) throws
+        {
+        fatalError("This should have been overriden in a subclass.")
+        }
+        
+    public override func analyzeSemantics(using analyzer: SemanticAnalyzer)
+        {
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let slot = Self.init(label: label)
+        slot.type = self.type.freshTypeVariable(inContext: context)
+        return(slot)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+//        if self.type.isNil
+//            {
+//            if let slotType = context.lookupBinding(atLabel: self.label)
+//                {
+//                self.type = slotType
+//                }
+//            else
+//                {
+//                self.type = context.freshTypeVariable()
+//                context.bind(self.type,to: self.label)
+//                }
+//            }
+//        else
+        if self.type.isTypeVariable
+            {
+            if let slotType = context.lookupBinding(atLabel: self.label)
+                {
+                self.type = slotType
+                }
+            else
+                {
+                context.bind(self.type,to: self.label)
+                }
+            }
+        else if self.type.isClass || self.type.isEnumeration
+            {
+            context.bind(self.type,to: self.label)
+            }
+        else if self.initialValue.isNotNil
+            {
+            self.type = self.initialValue!.type
+            context.bind(self.type,to: self.label)
+            }
+        else
+            {
+            self.appendIssue(at: self.declaration!, message: "Slot \(self.label) has an invalid type.")
+            }
         }
     }
 

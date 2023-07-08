@@ -1,40 +1,86 @@
 //
 //  AssignmentExpression.swift
-//  AssignmentExpression
+//  ArgonWorks
 //
-//  Created by Vincent Coetzee on 4/8/21.
+//  Created by Vincent Coetzee on 25/11/21.
 //
 
 import Foundation
 
 public class AssignmentExpression: Expression
     {
-    private let rhs: Expression
-    private let lhs: Expression
-    private let operation: Token.Operator
+    internal let rhs: Expression
+    internal let lhs: Expression
     
-    public override var resultType: Type
+    public required init?(coder: NSCoder)
         {
-        return(.error(.undefined))
+        self.rhs = coder.decodeObject(forKey: "rhs") as! Expression
+        self.lhs = coder.decodeObject(forKey: "lhs") as! Expression
+        super.init(coder: coder)
         }
-        
-    init(_ lhs:Expression,_ operation: Token.Operator,_ rhs:Expression)
+
+    public override func encode(with coder:NSCoder)
+        {
+        super.encode(with: coder)
+        coder.encode(self.rhs,forKey: "rhs")
+        coder.encode(self.lhs,forKey: "lhs")
+        }
+
+    init(_ lhs:Expression,_ rhs:Expression)
         {
         self.rhs = rhs
         self.lhs = lhs
-        self.operation = operation
         super.init()
         }
         
-    public override var displayString: String
+    public override func visit(visitor: Visitor) throws
         {
-        return("\(self.lhs.displayString) \(self.operation) \(self.rhs.displayString)")
+        try self.lhs.visit(visitor: visitor)
+        try self.rhs.visit(visitor: visitor)
+        try visitor.accept(self)
+        }
+        
+    public override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let expression = AssignmentExpression(substitution.substitute(self.lhs),substitution.substitute(self.rhs))
+        expression.type = substitution.substitute(self.type)
+        expression.issues = self.issues
+        return(expression as! Self)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let expression = AssignmentExpression(self.lhs.freshTypeVariable(inContext: context),self.rhs.freshTypeVariable(inContext: context))
+        expression.type = self.type.freshTypeVariable(inContext: context)
+        return(expression as! Self)
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)ASSIGNMENT EXPRESSION:")
+        print("\(indent)LHS: \(self.lhs.type.displayString)")
+        self.lhs.display(indent: indent + "\t")
+        print("\(indent)RHS: \(self.rhs.type.displayString)")
+        self.rhs.display(indent: indent + "\t")
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.lhs.initializeTypeConstraints(inContext: context)
+        self.rhs.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.lhs.type,right: self.rhs.type,origin: .expression(self)))
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.lhs.initializeType(inContext: context)
+        self.rhs.initializeType(inContext: context)
+        self.type = context.voidType
         }
 
-    public override func realize(using realizer:Realizer)
+    public override var displayString: String
         {
-        self.lhs.realize(using: realizer)
-        self.rhs.realize(using: realizer)
+        return("\(self.lhs.displayString) = \(self.rhs.displayString)")
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -43,11 +89,13 @@ public class AssignmentExpression: Expression
         self.rhs.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into instance: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func emitCode(into instance: T3ABuffer,using generator: CodeGenerator) throws
         {
-        try self.lhs.emitCode(into: instance,using: generator)
-        try self.rhs.emitCode(into: instance,using: generator)
-        instance.append(.STORE,self.lhs.place,.none,rhs.place)
-        self._place = rhs.place
+        if let location = self.declaration
+            {
+            instance.append(lineNumber: location.line)
+            }
+        try self.lhs.assign(from: self.rhs,into: instance,using: generator)
+        self._place = self.lhs.place
         }
     }

@@ -9,6 +9,16 @@ import Foundation
 
 public class SystemModule: Module
     {
+    public override var segmentType: Segment.SegmentType
+        {
+        .static
+        }
+        
+    public override var isSystemSymbol: Bool
+        {
+        return(true)
+        }
+        
     public override var typeCode:TypeCode
         {
         .systemModule
@@ -19,50 +29,64 @@ public class SystemModule: Module
         return(true)
         }
         
-    public var subModules: Modules
+    public override var isSystemContainer: Bool
         {
-        return(self.symbols.valuesByKey.compactMap{$0 as? SystemModule})
+        return(true)
         }
         
-    public override func lookup(label: Label) -> Symbol?
+    public var subModules: Modules
         {
-        if let value = self.symbols[label]
+        return(self.symbols.compactMap{$0 as? SystemModule})
+        }
+    
+    public override func lookup(name:Name) -> Symbol?
+        {
+        if name.isEmpty
             {
-            return(value)
+            return(nil)
             }
-        for module in self.subModules
+        if name.isRooted
             {
-            if let value = module.lookup(label: label)
+            if let context = TopModule.shared.lookup(label: name.first)
                 {
-                return(value)
+                return(context.lookup(name: name.withoutFirst))
+                }
+            return(nil)
+            }
+        if name.count == 1,let symbol = self.lookup(label: name.first)
+            {
+            return(symbol)
+            }
+        if let context = self.lookup(label: name.first),let symbol = context.lookup(name: name.withoutFirst)
+            {
+            return(symbol)
+            }
+        for module in self.symbols.filter({$0.isSystemContainer})
+            {
+            if let symbol = module.lookup(name: name)
+                {
+                return(symbol)
                 }
             }
         return(nil)
         }
         
-    internal override func layout(in vm: VirtualMachine)
+    public override func lookup(label: Label) -> Symbol?
         {
-        self.layoutSlots()
-        for aModule in self.symbols.valuesByKey.compactMap({$0 as? SystemModule})
+        for symbol in self.symbols
             {
-            aModule.layout(in: vm)
-            }
-        self.layoutInMemory(in: vm)
-        }
-        
-    internal func resolveReferences(in vm: VirtualMachine)
-        {
-        for symbol in self.symbols.valuesByKey
-            {
-            if let aClass = symbol as? Class
+            if symbol.label == label
                 {
-                aClass.realizeSuperclasses(in: vm)
-                }
-            else if let aModule = symbol as? SystemModule
-                {
-                print("RESOLVING MODULE \(aModule.label)")
-                aModule.resolveReferences(in: vm)
+                return(symbol)
                 }
             }
+        for symbol in self.symbols where symbol is SystemModule || symbol is SymbolGroup
+            {
+            if let innerSymbol = symbol.lookup(label: label)
+                {
+                return(innerSymbol)
+                }
+            }
+        return(nil)
         }
     }

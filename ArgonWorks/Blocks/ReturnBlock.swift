@@ -9,40 +9,91 @@ import Foundation
 
 public class ReturnBlock: Block
     {
+    public override var returnBlocks: Array<ReturnBlock>
+        {
+        [self]
+        }
+        
+    public override var hasInlineReturnBlock: Bool
+        {
+        return(true)
+        }
+        
     public override var isReturnBlock: Bool
         {
         return(true)
         }
         
     public var value: Expression = Expression()
-    
-    public override func realize(using realizer:Realizer)
+        
+    public init(expression: Expression)
         {
-        self.value.realize(using: realizer)
-        super.realize(using: realizer)
+        self.value = expression
+        super.init()
+        }
+    
+    public required init?(coder: NSCoder)
+        {
+        self.value = coder.decodeObject(forKey: "value") as! Expression
+        super.init(coder: coder)
+        }
+        
+    public required init()
+        {
+        self.value = Expression()
+        super.init()
+        }
+        
+    public override func encode(with coder: NSCoder)
+        {
+        coder.encode(self.value,forKey: "value")
+        super.encode(with:coder)
+        }
+    
+    public override func display(indent: String)
+        {
+        print("\(indent)RETURN: \(Swift.type(of: self))")
+        self.value.display(indent: indent + "\t")
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.value.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
+        }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let block = ReturnBlock(expression: substitution.substitute(self.value))
+        block.type = substitution.substitute(self.type)
+        return(block as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.value.initializeType(inContext: context)
+        self.type = self.value.type
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.value.initializeTypeConstraints(inContext: context)
         }
         
     public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
         {
-        self.value.analyzeSemantics(using: analyzer)
-        let returnValue = self.methodInstance.returnType
-        let valueType = self.value.resultType
-        if !valueType.isEquivalent(to: returnValue)
-            {
-            analyzer.compiler.reportingContext.dispatchError(at: self.declaration!, message: "The type of the return expression \(valueType.label) does not match that of the method \(returnValue)")
-            }
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using generator: CodeGenerator) throws
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let block = ReturnBlock(expression: self.value.freshTypeVariable(inContext: context))
+        block.type = self.type.freshTypeVariable(inContext: context)
+        return(block as! Self)
+        }
+        
+    public override func emitCode(into buffer: T3ABuffer,using generator: CodeGenerator) throws
         {
         try self.value.emitCode(into: buffer,using: generator)
-        buffer.append(.STORE,self.value.place,.none,.register(.RET))
-        }
-        
-    public override func dump(depth: Int)
-        {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)RETURN BLOCK")
-        self.value.dump(depth: depth+1)
+        buffer.append(nil,.MOV,self.value.place,.none,.returnValue)
         }
     }

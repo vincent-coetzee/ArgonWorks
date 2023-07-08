@@ -1,8 +1,8 @@
 //
 //  WordPointer.swift
-//  ArgonWorx
+//  ArgonWorks
 //
-//  Created by Vincent Coetzee on 22/7/21.
+//  Created by Vincent Coetzee on 16/12/21.
 //
 
 import Foundation
@@ -11,60 +11,36 @@ public typealias WordPointer = UnsafeMutablePointer<Word>
 
 extension WordPointer
     {
-    public var address: Word
-        {
-        Word(bitPattern: Int(bitPattern: self))
-        }
-        
-    public var header:Header
+    public subscript(_ index: Word) -> Word
         {
         get
             {
-            return(Header(self[0]))
+            return(self[Int(index)])
             }
         set
             {
-            self[0] = newValue
+            self[Int(index)] = newValue
             }
         }
         
-    public var classPointer:Word
+    public func display(indent: String,count: Int)
         {
-        get
+        for index in 0..<count
             {
-            return(self[1])
-            }
-        set
-            {
-            self[1] = newValue
-            }
-        }
-        
-    public var hash:Int
-        {
-        get
-            {
-            Int(bitPattern: UInt(self[2]))
-            }
-        set
-            {
-            self[2] = Word(bitPattern: Int64(newValue))
+            let address = Int(bitPattern: self) + index
+            let addressString = String(format: "%010X",address)
+            let value:Word = self[index]
+            let valueHexString = String(format: "%010X",value)
+            let valueString = String(format: "% 10d",value)
+            let bitString = value.bitString
+            print("[\(addressString)] \(valueHexString) \(valueString) \(bitString)")
             }
         }
         
-    init?(address:Int)
+    public func header(atIndex: Int) -> Header
         {
-        self.init(bitPattern: address)
-        }
-        
-    init?(address:Word)
-        {
-        self.init(bitPattern: UInt(address))
-        }
-        
-    public func word(atByteOffset:Int) -> Word
-        {
-        let offset = atByteOffset / 8
-        return(self[offset])
+        let headerAddress = UInt(bitPattern: self) + UInt(atIndex * Argon.kWordSizeInBytesInt)
+        return(Header(atAddress: Word(headerAddress)))
         }
     }
+    

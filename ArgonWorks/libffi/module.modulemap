@@ -1,0 +1,7 @@
+
+module FFI [system] [extern_c] {
+    header "ffi.h"
+    export *
+}
+
+

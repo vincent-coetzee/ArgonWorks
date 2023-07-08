@@ -9,42 +9,99 @@ import Foundation
 
 public class IfBlock: Block
     {
-    private let condition:Expression
-    internal var elseBlock: Block?
+    public override var displayString: String
         {
-        didSet
-            {
-            self.elseBlock?.setParent(self)
-            }
+        "IFBlock " + self.condition.displayString  + " " + self.elseBlock.displayString
         }
+        
+    internal var condition:Expression
+    
+    internal var elseBlock: Block?
+//        {
+//        didSet
+//            {
+//            self.elseBlock?.setParent(self)
+//            }
+//        }
     
     public init(condition: Expression)
         {
         self.condition = condition
         super.init()
-        self.condition.setParent(self)
         }
         
-    public override func realize(using realizer:Realizer)
+    public required init?(coder: NSCoder)
         {
-        super.realize(using: realizer)
-        self.condition.realize(using: realizer)
-        for block in self.blocks
-            {
-            block.realize(using: realizer)
-            }
-        self.elseBlock?.realize(using: realizer)
+        self.condition = Expression()
+        super.init(coder: coder)
         }
         
-    public override func dump(depth: Int)
+    public required init()
         {
-        let padding = String(repeating: "\t", count: depth)
-        print("\(padding)IF")
-        condition.dump(depth: depth+1)
+        self.condition = Expression()
+        super.init()
+        }
+        
+    public override func display(indent: String)
+        {
+        print("\(indent)IF \(Swift.type(of: self))")
+        self.condition.display(indent: indent + "\t")
         for block in self.blocks
             {
-            block.dump(depth: depth + 1)
+            block.display(indent: indent + "\t")
             }
+        self.elseBlock?.display(indent: indent + "\t")
+        }
+        
+    internal override func substitute(from substitution: TypeContext.Substitution) -> Self
+        {
+        let ifBlock = IfBlock(condition: substitution.substitute(self.condition))
+        for block in self.blocks
+            {
+            ifBlock.addBlock(substitution.substitute(block))
+            }
+        ifBlock.type = substitution.substitute(self.type)
+        return(ifBlock as! Self)
+        }
+        
+    public override func freshTypeVariable(inContext context: TypeContext) -> Self
+        {
+        let ifBlock = IfBlock(condition: self.condition.freshTypeVariable(inContext: context))
+        for block in self.blocks
+            {
+            ifBlock.addBlock(block.freshTypeVariable(inContext: context))
+            }
+        ifBlock.type = self.type.freshTypeVariable(inContext: context)
+        return(ifBlock as! Self)
+        }
+        
+    public override func initializeType(inContext context: TypeContext)
+        {
+        self.condition.initializeType(inContext: context)
+        for block in self.blocks
+            {
+            block.initializeType(inContext: context)
+            }
+        self.elseBlock?.initializeType(inContext: context)
+        self.type = context.voidType
+        }
+        
+    public override func initializeTypeConstraints(inContext context: TypeContext)
+        {
+        self.condition.initializeTypeConstraints(inContext: context)
+        for block in self.blocks
+            {
+            block.initializeTypeConstraints(inContext: context)
+            }
+        self.elseBlock?.initializeTypeConstraints(inContext: context)
+        context.append(TypeConstraint(left: self.condition.type,right: context.booleanType,origin: .block(self)))
+        }
+        
+    public override func visit(visitor: Visitor) throws
+        {
+        try self.condition.visit(visitor: visitor)
+        try self.elseBlock?.visit(visitor: visitor)
+        try super.visit(visitor: visitor)
         }
         
    public override func analyzeSemantics(using analyzer:SemanticAnalyzer)
@@ -57,26 +114,24 @@ public class IfBlock: Block
         self.elseBlock?.analyzeSemantics(using: analyzer)
         }
         
-    public override func emitCode(into buffer: InstructionBuffer,using: CodeGenerator) throws
+    public override func emitCode(into buffer: T3ABuffer,using: CodeGenerator) throws
         {
+        let outLabel = buffer.nextLabel()
         try self.condition.emitCode(into: buffer,using: using)
-        buffer.append(.BRF,self.condition.place,.none,.label(0))
-        let fromThere = buffer.triggerFromHere()
+        buffer.append(nil,.BRAF,self.condition.place,.none,.label(outLabel))
         for block in self.blocks
             {
             try block.emitCode(into: buffer,using: using)
             }
-        let fromEnd = buffer.triggerFromHere()
         if self.elseBlock.isNotNil
             {
-            try buffer.toHere(fromThere)
+            buffer.pendingLabel = outLabel
             try self.elseBlock!.emitCode(into: buffer,using: using)
             }
         else
             {
-            try buffer.toHere(fromThere)
+            buffer.pendingLabel = outLabel
             }
-        try buffer.toHere(fromEnd)
         }
     }
     

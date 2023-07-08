@@ -18,23 +18,27 @@ public struct NameMangler
         
     private mutating func initNames()
         {
+        self.names["Boolean"] = "b"
         self.names["Integer"] = "i"
         self.names["UInteger"] = "u"
         self.names["Float"] = "f"
         self.names["String"] = "s"
-        self.names["Array"] = "a"
-        self.names["Dictionary"] = "d"
-        self.names["List"] = "l"
-        self.names["Set"] = "t"
+        self.names["Array"] = "A"
+        self.names["Dictionary"] = "D"
+        self.names["List"] = "L"
+        self.names["Set"] = "S"
         self.names["Object"] = "o"
         self.names["Pointer"] = "p"
-        self.names["Slot"] = "S"
+        self.names["Slot"] = "L"
         self.names["Instruction"] = "I"
         self.names["Class"] = "c"
-        self.names["Type"] = "y"
+        self.names["Type"] = "e"
         self.names["Variable"] = "v"
         self.names["Method"] = "m"
         self.names["Void"] = "V"
+        self.names["Symbol"] = "l"
+        self.names["Character"] = "h"
+        self.names["Byte"] = "y"
         }
         
     private func encoding(forKey: String) -> String
@@ -46,22 +50,22 @@ public struct NameMangler
         return("%\(forKey)*")
         }
         
-    private func mangle(type: Type) -> String
-        {
-        return("")
-        }
         
     public func mangle(_ methodInstance: MethodInstance) -> String
         {
-        var mangled = "m"
-        mangled += methodInstance.label
-        mangled += "_"
-        mangled += self.encoding(forKey: methodInstance.returnType.label)
-        mangled += "<>"
-//        for type in methodInstance.parameters
-//            {
-////            let encoding = self.mangle(type: type.type)
-//            }
-        return("")
+        let count = methodInstance.parameters.count
+        let start = "\(methodInstance.label)_\(count)_"
+        let middle = methodInstance.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let end = methodInstance.returnType.mangledName
+        return(start + middle + "_" + end)
+        }
+        
+    public func mangle(_ function: Function) -> String
+        {
+        let count = function.parameters.count
+        let start = "\(function.label)_\(count)_"
+        let middle = function.parameters.map{$0.type.mangledName}.joined(separator: "_")
+        let end = function.returnType.mangledName
+        return(start + middle + "_" + end)
         }
     }

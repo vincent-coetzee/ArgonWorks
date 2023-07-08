@@ -29,11 +29,19 @@ import Cocoa
 
 /// Defines the width of the gutter view.
 private let GUTTER_WIDTH: CGFloat = 40.0 + 10
-private let LINE_NUMBER_OFFSET: CGFloat  = 5.0
+private let LINE_NUMBER_OFFSET: CGFloat  = 16.0
 
 /// Adds line numbers to a NSTextField.
 class LineNumberGutter: NSRulerView {
 
+    private var lineNumberRects:Array<NSRect> = []
+    
+    internal var sourceEditorDelegate: SourceEditorDelegate?
+    
+    /// Holds the height of a line
+    internal var lineHeight: CGFloat = 0
+    /// Holds the number of lines
+    internal var totalLineCount = 0
     /// Holds the background color.
     internal var backgroundColor: NSColor {
         didSet {
@@ -112,6 +120,7 @@ class LineNumberGutter: NSRulerView {
     ///  - parameter rect: NSRect to draw the gutter view in.
     override func drawHashMarksAndLabels(in rect: NSRect)
         {
+        self.lineNumberRects = []
         // Set the current background color...
         self.backgroundColor.set()
         // ...and fill the given rect.
@@ -162,7 +171,7 @@ class LineNumberGutter: NSRulerView {
                 var effectiveRange = NSRange(location: 0, length: 0)
                 // Get the rect for the current line fragment.
                 let lineRect = layoutManager.lineFragmentRect(forGlyphAt: firstGlyphOfRowIndex, effectiveRange: &effectiveRange, withoutAdditionalLayout: true)
-
+                self.lineHeight = lineRect.height
                 // Draw the current line number;
                 // When lineWrapCount > 0 the current line spans multiple rows.
                 if lineWrapCount == 0 {
@@ -171,6 +180,7 @@ class LineNumberGutter: NSRulerView {
                         self.drawAnnotation(cartouche,atYPosition: lineRect.minY)
                         }
                     self.drawLineNumber(num: lineNumber, atYPosition: lineRect.minY)
+//                    self.lineNumberRects[lineNumber] = NSRect(x:0,y: lineRect.minY,width: 100,height: lineHeight)
                 } else {
                     break
                 }
@@ -188,8 +198,95 @@ class LineNumberGutter: NSRulerView {
         // Draw another line number for the extra line fragment.
         if let _ = layoutManager.extraLineFragmentTextContainer {
             self.drawLineNumber(num: lineNumber, atYPosition: layoutManager.extraLineFragmentRect.minY)
+        self.totalLineCount = lineNumber
         }
     }
+    
+    internal func annotation(atPoint: NSPoint) -> LineAnnotation?
+        {
+        for annotation in self.annotations.values
+            {
+            if annotation.area.contains(atPoint)
+                {
+                return(annotation)
+                }
+            }
+        return(nil)
+        }
+    
+    ///
+    ///  - parameter rect: NSRect to draw the gutter view in.
+    internal func find(lineNumber line:inout Int,andRectangle rectangle:inout NSRect,forPoint point: NSPoint)
+        {
+        guard let textView      = self.clientView as? NSTextView,
+              let layoutManager = textView.layoutManager,
+              let textContainer = textView.textContainer
+        else
+            {
+            return
+            }
+        let content = textView.string
+        // Get the range of the currently visible glyphs.
+        let visibleGlyphsRange = layoutManager.glyphRange(forBoundingRect: textView.visibleRect, in: textContainer)
+
+        // Check how many lines are out of the current bounding rect.
+        var lineNumber: Int = 1
+        do
+            {
+            // Define a regular expression to find line breaks.
+            let newlineRegex = try NSRegularExpression(pattern: "\n", options: [])
+            // Check how many lines are out of view; From the glyph at index 0
+            // to the first glyph in the visible rect.
+            lineNumber += newlineRegex.numberOfMatches(in: content, options: [], range: NSMakeRange(0, visibleGlyphsRange.location))
+            }
+        catch
+            {
+            lineNumber += 1
+            return
+            }
+
+        // Get the index of the first glyph in the visible rect, as starting point...
+        var firstGlyphOfLineIndex = visibleGlyphsRange.location
+
+        // ...then loop through all visible glyphs, line by line.
+        while firstGlyphOfLineIndex < NSMaxRange(visibleGlyphsRange)
+            {
+            // Get the character range of the line we're currently in.
+            let charRangeOfLine  = (content as NSString).lineRange(for: NSRange(location: layoutManager.characterIndexForGlyph(at: firstGlyphOfLineIndex), length: 0))
+            // Get the glyph range of the line we're currently in.
+            let glyphRangeOfLine = layoutManager.glyphRange(forCharacterRange: charRangeOfLine, actualCharacterRange: nil)
+
+            var firstGlyphOfRowIndex = firstGlyphOfLineIndex
+            var lineWrapCount        = 0
+
+            // Loop through all rows (soft wraps) of the current line.
+            while firstGlyphOfRowIndex < NSMaxRange(glyphRangeOfLine)
+                {
+                // The effective range of glyphs within the current line.
+                var effectiveRange = NSRange(location: 0, length: 0)
+                // Get the rect for the current line fragment.
+                let lineRect = layoutManager.lineFragmentRect(forGlyphAt: firstGlyphOfRowIndex, effectiveRange: &effectiveRange, withoutAdditionalLayout: true)
+                // Draw the current line number;
+                // When lineWrapCount > 0 the current line spans multiple rows.
+                if lineWrapCount != 0
+                    {
+                    break
+                    }
+                if lineRect.minY >= point.y
+                    {
+                    rectangle = lineRect
+                    line = lineNumber
+                    return
+                    }
+                // Move to the next row.
+                firstGlyphOfRowIndex = NSMaxRange(effectiveRange)
+                lineWrapCount+=1
+                }
+            // Move to the next line.
+            firstGlyphOfLineIndex = NSMaxRange(glyphRangeOfLine)
+            lineNumber+=1
+            }
+        }
     
     func drawAnnotation(_ cartouche:LineAnnotation,atYPosition y:CGFloat)
         {
@@ -198,8 +295,8 @@ class LineNumberGutter: NSRulerView {
         }
         let rect:NSRect = NSRect(x:4,y:y,width:15,height:15)
         let relativePoint    = self.convert(NSZeroPoint, from: textView)
-        let newRect = NSRect(x:rect.minX + 32,y:relativePoint.y + y - 1,width:rect.width,height:rect.height)
-        cartouche.icon.draw(in: newRect)
+        let newRect = NSRect(x:rect.minX + 31,y:relativePoint.y + y - 1,width:rect.width,height:rect.height)
+        cartouche.image.draw(in: newRect)
         cartouche.area = newRect
         let lineView = textView as! LineNumberTextView
         lineView.cartouche(cartouche, drawnIn: newRect)
@@ -222,4 +319,18 @@ class LineNumberGutter: NSRulerView {
         // Draw the attributed string to the calculated point.
         attributedString.draw(at: NSPoint(x: xPosition - LINE_NUMBER_OFFSET, y: relativePoint.y + yPos))
     }
+    
+    public override func mouseDown(with event: NSEvent)
+        {
+        let point = self.convert(event.locationInWindow, from: nil)
+        for annotation in self.annotations.values
+            {
+            if annotation.area.contains(point)
+                {
+                self.sourceEditorDelegate?.sourceEditorGutter(self, selectedAnnotation: annotation,atLine: annotation.line)
+                }
+            }
+        super.mouseDown(with: event)
+        }
+
 }

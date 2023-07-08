@@ -7,8 +7,13 @@
 
 import Foundation
 
-public enum TypeCode:Int
+public enum TypeCode:Int,Storable
     {
+    public func write(output: OutputFile) throws
+        {
+        try output.write(self)
+        }
+    
     public var isScalarValue: Bool
         {
         switch(self)
@@ -78,49 +83,50 @@ public enum TypeCode:Int
     case none = 0
     case integer = 1
     case uInteger = 2
-    case float = 3
-    case character = 4
-    case boolean = 5
-    case byte = 6
-    case string = 7
-    case symbol = 8
-    case enumeration = 9
-    case method = 10
-    case methodInstance = 11
-    case function = 12
-    case `class` = 13
-    case slot = 14
-    case tuple = 15
-    case type = 16
-    case array = 17
-    case void = 18
-    case stream = 19
-    case metaclass = 20
-    case module = 21
-    case pointer = 22
-    case other = 23
-    case mutableString = 24
-    case constant = 25
-    case enumerationCase = 26
-    case initializer = 27
-    case localSlot = 28
-    case argonModule = 29
-    case topModule = 30
-    case libraryModule = 31
-    case systemModule = 32
-    case mainModule = 33
-    case parameter = 34
-    case virtualSlot = 35
-    case typeAlias = 36
-    case interceptor = 37
-    case block = 38
-    case closure = 39
-    case byteArray = 40
-    case instruction = 41
-    case instructionArray = 42
-    case dictionary = 43
-    case dictionaryBucket = 44
-    case date = 45
-    case time = 46
-    case dateTime = 47
+    case float = 4
+    case character = 8
+    case boolean = 16
+    case byte = 32
+    case string = 64
+    case symbol = 128
+    case enumeration = 256
+    case method = 512
+    case methodInstance = 1024
+    case function = 2048
+    case `class` = 4096
+    case slot = 8192
+    case tuple = 16384
+    case type = 32768
+    case array = 65536
+    case void = 131072
+    case stream = 262144
+    case metaclass = 524288
+    case module = 1048576
+    case pointer = 2097152
+    case other = 4194304
+    case mutableString = 8388608
+    case constant = 16777216
+    case enumerationCase = 33554432
+    case initializer = 67108864
+    case localSlot = 134217728
+    case argonModule = 268435456
+    case topModule = 536870912
+    case libraryModule = 1073741824
+    case systemModule = 2147483648
+    case mainModule = 4294967296
+    case parameter = 8589934592
+    case virtualSlot = 17179869184
+    case typeAlias = 34359738368
+    case interceptor = 68719476736
+    case block = 137438953472
+    case closure = 274877906944
+    case byteArray = 549755813888
+    case instruction = 1099511627776
+    case instructionArray = 2199023255552
+    case dictionary = 4398046511104
+    case dictionaryBucket = 8796093022208
+    case date = 17592186044416
+    case time = 35184372088832
+    case dateTime = 70368744177664
     }
+

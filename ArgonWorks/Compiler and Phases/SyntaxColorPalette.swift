@@ -38,6 +38,19 @@ public enum SyntaxColor: String
     case enumeration
     }
     
+public enum TokenColor:Int
+    {
+    case text
+    case keyword
+    case identifier
+    case string
+    case integer
+    case float
+    case comment
+    case symbol
+    case systemClass
+    }
+    
 public typealias SyntaxColorPalette = Dictionary<String,NSColor>
 
 extension SyntaxColorPalette
@@ -47,26 +60,26 @@ extension SyntaxColorPalette
         () -> SyntaxColorPalette in
         var palette = SyntaxColorPalette()
         palette[SyntaxColor.enumeration.rawValue] = NSColor.argonThemeCyan
-        palette[SyntaxColor.keyword.rawValue] = NSColor.argonNeonPink
-        palette[SyntaxColor.text.rawValue] = NSColor.argonXcodePink
+        palette[SyntaxColor.keyword.rawValue] = NSColor(red: 63,green: 149,blue: 116)
+        palette[SyntaxColor.text.rawValue] = NSColor.argonLime
         palette[SyntaxColor.name.rawValue] = NSColor.argonXIvory
         palette[SyntaxColor.string.rawValue] = NSColor.argonXBlue
-        palette[SyntaxColor.comment.rawValue] = NSColor.argonXPurple
-        palette[SyntaxColor.class.rawValue] = NSColor.argonXOrange
-        palette[SyntaxColor.identifier.rawValue] = NSColor.argonXIdentifier
+        palette[SyntaxColor.comment.rawValue] = NSColor(red: 145,green: 92,blue: 176)
+        palette[SyntaxColor.class.rawValue] = NSColor(hex: 0xE7B339)
+        palette[SyntaxColor.identifier.rawValue] = NSColor.argonThemePink
         palette[SyntaxColor.integer.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.float.rawValue] = NSColor.argonSizzlingRed
         palette[SyntaxColor.symbol.rawValue] = NSColor.argonSalmonPink
-        palette[SyntaxColor.operator.rawValue] = NSColor.argonCheese
-        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonXLightBlue
+        palette[SyntaxColor.operator.rawValue] = NSColor(hex: 0xD0EE62)
+        palette[SyntaxColor.systemClass.rawValue] = NSColor.argonSalmonPink
         palette[SyntaxColor.byte.rawValue] = NSColor.argonXSmoke
         palette[SyntaxColor.character.rawValue] = NSColor.argonXSmoke
-        palette[SyntaxColor.type.rawValue] = NSColor.argonNeonPink
-        palette[SyntaxColor.method.rawValue] = NSColor.argonThemeBlueGreen
+        palette[SyntaxColor.type.rawValue] = NSColor.cyan
+        palette[SyntaxColor.method.rawValue] = NSColor.argonNeonOrange
         palette[SyntaxColor.function.rawValue] = NSColor.argonXSeaBlue
         palette[SyntaxColor.boolean.rawValue] = NSColor.argonBayside
-        palette[SyntaxColor.path.rawValue] = NSColor.argonXGray
-        palette[SyntaxColor.keypath.rawValue] = NSColor.argonXGray
+        palette[SyntaxColor.path.rawValue] = NSColor.argonZomp
+        palette[SyntaxColor.keypath.rawValue] = NSColor.argonZomp
         palette[SyntaxColor.slot.rawValue] = NSColor.argonCoral
         palette[SyntaxColor.directive.rawValue] = NSColor.argonYellow
         palette[SyntaxColor.lineNumbers.rawValue] = NSColor(hex: 0xA0A0A0)
